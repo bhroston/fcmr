@@ -27,19 +27,22 @@ fcmr <- function(adj_matrix = matrix()) {
   cols <- ncol(adj_matrix)
   rowIDs <- rownames(adj_matrix)
   colIDs <- colnames(adj_matrix)
-  n_datatypes <- length(typeof(adj_matrix))
+  data_types <- unique(vapply(adj_matrix, class, FUN.VALUE = character(1)))
   if (rows != cols) {
     stop("Failed Validation: Input adjacency matrix must be a square (n x n) matrix")
   }
-  if (n_datatypes != 1) {
+  if (!identical(data_types, "numeric")) {
     stop("Failed Validation: Input adjacency matrix must only contain numeric objects, and all
-         objects must be of the same")
+         objects must be numeric")
   }
 
   if (identical(rowIDs, colIDs) & identical(colIDs, NULL)) {
     IDs <- paste0("C", as.character(1:rows))
   } else if (!identical(rowIDs, colIDs) & identical(rowIDs, NULL)) {
     IDs <- colIDs
+  } else if (!identical(rowIDs, colIDs)) {
+    IDs <- colIDs
+    warning("Column names are different from row names. Using column names as node/concept names")
   } else if (identical(rowIDs, colIDs)) {
     IDs <- colIDs
   } else {
