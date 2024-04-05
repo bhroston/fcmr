@@ -113,3 +113,11 @@ test_that("get_grey_adj_matrix_from_lower_and_upper_adj_matrices and
 
   expect_identical(test_grey_adj_matrix_1, test_grey_adj_matrix_2)
 })
+
+
+test_that("c.grey_number works", {
+  expect_equal(
+    c(grey_number(0, 1), grey_number(0.5, 0.6)),
+    list(grey_number(0, 1), grey_number(0.5, 0.6))
+  )
+})
