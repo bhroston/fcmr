@@ -1,7 +1,3 @@
-
-lower = matrix(data = c(0, 0.2, 0, 0.5), nrow = 2, ncol = 2)
-upper = matrix(data = c(0, 0.4, 0, 0.7), nrow = 2, ncol = 2)
-
 #' get_grey_adj_matrix_from_lower_and_upper_adj_matrices
 #'
 #' @description
