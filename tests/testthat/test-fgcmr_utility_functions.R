@@ -26,4 +26,7 @@ test_that("get_grey_adj_matrix_from_list_of_grey_numbers works", {
   )
 
   testthat::expect_equal(methods::is(test_grey_adj_matrix), "grey_number")
+  testthat::expect_equal(nrow(test_grey_adj_matrix), 8)
+  testthat::expect_equal(ncol(test_grey_adj_matrix), 8)
+  testthat::expect_equal(test_grey_adj_matrix[[3]][[6]], grey_number(0.3, 0.5))
 })
