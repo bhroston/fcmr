@@ -143,16 +143,12 @@ grey_number <- function(lower = double(), upper = double()) {
     upper <- Inf
   }
 
-  if (lower > upper) {
-    stop("The lower value must be less than or equal to the upper value", call. = FALSE)
-  }
-
   if ((!is.numeric(lower)) | (!is.numeric(upper))) {
     stop("lower and upper must be single, numeric values", call. = FALSE)
   }
 
-  if ((length(lower) > 1) | (length(upper) > 1)) {
-    stop("lower and upper must be single, numeric values", call. = FALSE)
+  if (lower > upper) {
+    stop("The lower input must be less than or equal to the upper input", call. = FALSE)
   }
 
   vctrs::new_vctr(
