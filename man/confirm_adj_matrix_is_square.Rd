@@ -8,8 +8,6 @@ confirm_adj_matrix_is_square(adj_matrix = matrix())
 }
 \arguments{
 \item{adj_matrix}{An n x n adjacency matrix that represents an FCM}
-
-\item{IDs}{A list of names for each node (must have n items)}
 }
 \description{
 Confirm that an adjacency matrix is square (n x n)

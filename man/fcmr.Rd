@@ -8,6 +8,8 @@ fcmr(adj_matrix = matrix(), IDs = c())
 }
 \arguments{
 \item{adj_matrix}{An n x n adjacency matrix that represents an FCM}
+
+\item{IDs}{A list of names for each node (must have n items)}
 }
 \description{
 This class is an organization scheme for ordinary fuzzy cognitive maps (See
