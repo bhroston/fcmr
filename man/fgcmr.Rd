@@ -29,5 +29,5 @@ structure() because ...
 Use vignette("fgcmr-class") for more information.
 }
 \examples{
-fcmr(adj_matrix = matrix(data = c(0, 1, 1, 0), nrow = 2, ncol = 2))
+NULL
 }
