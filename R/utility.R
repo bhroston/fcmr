@@ -1,4 +1,60 @@
 
+#' squash
+#'
+#' @description
+#' Calculate squashing function output of an input value and lambda values
+#'
+#' @details
+#' This function calculates the 'squashed' value of a state based upon five
+#' available squashing functions typical in the literature (as identified in
+#' Gonzales et al. 2018 - https://doi.org/10.1142/S0218213018600102)
+#'
+#' @param value A numeric value to 'squash'
+#' @param squashing A squashing function to apply. Must be one of the following: 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'
+#' @param lambda A numeric value that defines the steepness of the slope of the squashing function when tanh or sigmoid are applied
+squash <- function(value = numeric(), squashing = "sigmoid", lambda = 1) {
+  if (lambda <= 0) {
+    stop("Input lambda must be greater than zero")
+  }
+
+  # Use full names here instead of abbreviations to improve readability even
+  # though developers will need to type more characters.
+  if (squashing == "bivalent") {
+    if (value > 0) {
+      squashed_value <- 1
+    } else if (value <= 0) {
+      squashed_value <- 0
+    }
+  } else if (squashing == "saturation") {
+    if (value <= 0) {
+      squashed_value <- 0
+    } else if (value > 0 & value < 1) {
+      squashed_value <- value
+    } else if (value >= 1) {
+      squashed_value <- 1
+    }
+  } else if (squashing == "trivalent") {
+    if (value < 0) {
+      squashed_value <- -1
+    } else if (value == 0) {
+      squashed_value <- 0
+    } else if (value > 0) {
+      squashed_value <- 1
+    }
+  } else if (squashing == "tanh") {
+    squashed_value <- (exp(2*lambda*value) - 1)/(exp(2*lambda*value) + 1)
+  } else if (squashing == "sigmoid") {
+    squashed_value <- 1/(1 + exp(-lambda*value))
+  } else {
+    stop("squashing value must be one of the following:
+      'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'")
+  }
+
+  squashed_value
+}
+
+
+
 #' confirm_adj_matrix_is_square
 #'
 #' @description
