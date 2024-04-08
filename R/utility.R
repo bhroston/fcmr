@@ -42,7 +42,7 @@ get_node_IDs_from_input <- function(adj_matrix = matrix(), IDs = c()) {
   empty_colnames <- identical(colnames(adj_matrix), NULL)
   no_IDs_given <- identical(IDs, c())
   colnames_same_as_IDs <- identical(colnames(adj_matrix), IDs)
-  if (empty_colnames | no_IDs_given) {
+  if (empty_colnames & no_IDs_given) {
     IDs <- paste0("C", 1:nrow(adj_matrix))
   } else if (empty_colnames & length(IDs) != nrow(adj_matrix)) {
     stop("Input IDs must be the same length as matrix dimensions. i.e. if matrix
@@ -52,6 +52,8 @@ get_node_IDs_from_input <- function(adj_matrix = matrix(), IDs = c()) {
   } else if (!colnames_same_as_IDs) {
     warning("Input adjacency matrix has different column names that input IDs.
             Using input IDs for node/concept names.")
+  } else {
+    stop("Unable to interpret input adjacency matrix and IDs objects")
   }
 
   IDs
