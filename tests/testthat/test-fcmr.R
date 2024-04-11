@@ -91,6 +91,7 @@ test_that("simulate_fcmr works", {
 
 
 test_that("optimize_fcmr_lambda works", {
+  # Test from Koutsellis et al. 2022 - https://doi.org/10.1007/s12351-022-00717-x
   test_source_nodes <- c(
     "C1", "C1", "C1", "C2", "C2", "C3", "C3", "C3", "C4", "C4",
     "C4", "C5", "C6", "C7", "C8", "C8", "C9", "C10", "C10", "C11",
