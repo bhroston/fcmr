@@ -17,7 +17,7 @@
 #' functions/algorithms alongside their originating sources.
 #'
 #' @param grey_adj_matrix An n x n grey_adjacency matrix that represents an FCM
-#' @param state_vector A list state values at the start of an fcm simulation
+#' @param initial_state_vector A list state values at the start of an fcm simulation
 #' @param activation The activation function to be applied. Must be one of the following:
 #' 'kosko', 'modified-kosko', or 'papageorgiou'.
 #' @param squashing A squashing function to apply. Must be one of the following:
@@ -28,8 +28,6 @@
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
 #' and the simulation will stop
-#' @param lambda_optimization A lambda optimization procedure to apply. Must be one
-#' of the following: 'none' or 'koutsellis'
 #' @param IDs A list of names for each node (must have n items). If empty, will use
 #' column names of adjacancy matrix (if given).
 #'
@@ -49,7 +47,7 @@ simulate_fgcmr <- function(grey_adj_matrix = matrix(),
 
 
   for (i in seq_along(initial_state_vector)) {
-    if (class(initial_state_vector[[i]]) == "numeric") {
+    if (is.numeric(initial_state_vector[[i]])) {
       initial_state_vector[[i]] <- grey_number(initial_state_vector[[i]], initial_state_vector[[i]])
     }
   }
@@ -83,7 +81,7 @@ simulate_fgcmr <- function(grey_adj_matrix = matrix(),
 
     total_error <- sum(errors[i, ])
     if (total_error < min_error) {
-      state_vectors <- na.omit(state_vectors)
+      state_vectors <- stats::na.omit(state_vectors)
       break
     }
   }
@@ -160,7 +158,7 @@ calculate_next_fgcm_state_vector <- function(grey_adj_matrix = matrix(), state_v
   for (k in 1:nrow(grey_adj_matrix)) {
     grey_adj_matrix_col_vector <- grey_adj_matrix[, k]
     for (j in seq_along(grey_adj_matrix_col_vector)) {
-      if (class(grey_adj_matrix_col_vector[[j]]) == "numeric") {
+      if (is.numeric(grey_adj_matrix_col_vector[[j]])) {
         grey_adj_matrix_col_vector[[j]] <- grey_number(grey_adj_matrix_col_vector[[j]], grey_adj_matrix_col_vector[[j]])
       }
     }
@@ -225,7 +223,7 @@ calculate_next_fgcm_state_vector <- function(grey_adj_matrix = matrix(), state_v
         lower = sum(unlist(state_vector_grey_adj_matrix_product[1,])),
         upper = sum(unlist(state_vector_grey_adj_matrix_product[2,]))
       )
-      next_state_vector[[i]] <- grey_number(
+      next_state_vector[[k]] <- grey_number(
         lower = (2*state_vector[[k]]$lower - 1) + state_vector_grey_adj_matrix_dot_product$lower,
         upper = (2*state_vector[[k]]$upper - 1) + state_vector_grey_adj_matrix_dot_product$upper
       )
@@ -292,6 +290,7 @@ confirm_initial_state_vector_is_compatible_with_grey_adj_matrix <- function(grey
 #' Use vignette("fgcmr-class") for more information.
 #'
 #' @param grey_adj_matrix An n x n adjacency matrix that represents an FCM
+#' @param IDs A list of names for each node (must have n items)
 #'
 #' @export
 #' @examples
@@ -520,9 +519,9 @@ get_edgelist_from_grey_adj_matrix <- function(grey_adj_matrix = matrix(), IDs = 
     edge_locs <- data.table::data.table(which(non_zero_locs_binary != 0, arr.ind = TRUE))
     edge_weights <- mapply(function(row, col) grey_adj_matrix[[col]][[row]], row = edge_locs$row, col = edge_locs$col, SIMPLIFY = FALSE)
     for (i in seq_along(edge_weights)) {
-      if (class(edge_weights[[i]]) == "numeric") {
+      if (is.numeric(edge_weights[[i]])) {
         edge_weights[[i]] <- grey_number(edge_weights[[i]], edge_weights[[i]])
-      } else if (class(edge_weights[[i]]) == "grey_number") {
+      } else if (methods::is(edge_weights[[i]]) == "grey_number") {
         NULL
       }
     }
@@ -611,13 +610,13 @@ grey_number <- function(lower = double(), upper = double()) {
 #'
 #' Use vignette("fgcmr-class") for more information.
 #'
-#' @param lower lower limit of a Grey Number set (the lower value must be less than or equal to the upper value)
-#' @param upper upper limit of a Grey Number set (the upper value must be greater or equal to the lower value)
+#' @param x a grey_number object
+#' @param ... additional inputs
 #'
 #' @export
 #' @examples
 #' grey_number(lower = 0, upper = 1)
-print.grey_number <- function(x) {
+print.grey_number <- function(x, ...) {
   cat(class(x), ": [", x$lower, ", ", x$upper, "]", sep = "")
 }
 

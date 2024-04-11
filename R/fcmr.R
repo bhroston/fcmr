@@ -17,7 +17,7 @@
 #' functions/algorithms alongside their originating sources.
 #'
 #' @param adj_matrix An n x n adjacency matrix that represents an FCM
-#' @param state_vector A list state values at the start of an fcm simulation
+#' @param initial_state_vector A list state values at the start of an fcm simulation
 #' @param activation The activation function to be applied. Must be one of the following:
 #' 'kosko', 'modified-kosko', or 'papageorgiou'.
 #' @param squashing A squashing function to apply. Must be one of the following:
@@ -70,7 +70,7 @@ simulate_fcmr <- function(adj_matrix = matrix(),
     errors[i, ] <- abs(as.matrix(state_vectors[i - 1,]) - as.matrix(state_vectors[i, ]))
     total_error <- sum(errors[i, ])
     if (total_error < min_error) {
-      state_vectors <- na.omit(state_vectors)
+      state_vectors <- stats::na.omit(state_vectors)
       break
     }
   }

@@ -18,6 +18,8 @@ simulate_fgcmr(
 \arguments{
 \item{grey_adj_matrix}{An n x n grey_adjacency matrix that represents an FCM}
 
+\item{initial_state_vector}{A list state values at the start of an fcm simulation}
+
 \item{activation}{The activation function to be applied. Must be one of the following:
 'kosko', 'modified-kosko', or 'papageorgiou'.}
 
@@ -35,11 +37,6 @@ and the simulation will stop}
 
 \item{IDs}{A list of names for each node (must have n items). If empty, will use
 column names of adjacancy matrix (if given).}
-
-\item{state_vector}{A list state values at the start of an fcm simulation}
-
-\item{lambda_optimization}{A lambda optimization procedure to apply. Must be one
-of the following: 'none' or 'koutsellis'}
 }
 \description{
 This calculates a sequence of iterations of a simulation over an fgcmr object

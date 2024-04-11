@@ -4,12 +4,12 @@
 \alias{print.grey_number}
 \title{print.grey_number}
 \usage{
-\method{print}{grey_number}(x)
+\method{print}{grey_number}(x, ...)
 }
 \arguments{
-\item{lower}{lower limit of a Grey Number set (the lower value must be less than or equal to the upper value)}
+\item{x}{a grey_number object}
 
-\item{upper}{upper limit of a Grey Number set (the upper value must be greater or equal to the lower value)}
+\item{...}{additional inputs}
 }
 \description{
 This improves the readability of the output

@@ -19,6 +19,8 @@ simulate_fcmr(
 \arguments{
 \item{adj_matrix}{An n x n adjacency matrix that represents an FCM}
 
+\item{initial_state_vector}{A list state values at the start of an fcm simulation}
+
 \item{activation}{The activation function to be applied. Must be one of the following:
 'kosko', 'modified-kosko', or 'papageorgiou'.}
 
@@ -39,8 +41,6 @@ of the following: 'none' or 'koutsellis'}
 
 \item{IDs}{A list of names for each node (must have n items). If empty, will use
 column names of adjacancy matrix (if given).}
-
-\item{state_vector}{A list state values at the start of an fcm simulation}
 }
 \description{
 This calculates a sequence of iterations of a simulation over an fcmr object
