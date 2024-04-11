@@ -92,6 +92,7 @@ test_that("simulate_fcmr works", {
 
 test_that("optimize_fcmr_lambda works", {
   # Test from Koutsellis et al. 2022 - https://doi.org/10.1007/s12351-022-00717-x
+  # Confirmed to reproduce results
   test_source_nodes <- c(
     "C1", "C1", "C1", "C2", "C2", "C3", "C3", "C3", "C4", "C4",
     "C4", "C5", "C6", "C7", "C8", "C8", "C9", "C10", "C10", "C11",
@@ -123,7 +124,7 @@ test_that("optimize_fcmr_lambda works", {
   g <- igraph::graph_from_data_frame(edgelist, directed = TRUE)
   test_adj_matrix <- t(igraph::as_adjacency_matrix(g, attr = "weight", sparse = FALSE))
 
-  expect_true(optimize_fcmr_lambda(test_adj_matrix, squashing = "tanh", method = "none"))
+  expect_null(optimize_fcmr_lambda(test_adj_matrix, squashing = "tanh", method = "none"))
   expect_equal(0.927, optimize_fcmr_lambda(test_adj_matrix, squashing = "sigmoid", method = "koutsellis"))
   expect_equal(0.421, optimize_fcmr_lambda(test_adj_matrix, squashing = "tanh", method = "koutsellis"))
   expect_error(optimize_fcmr_lambda(test_adj_matrix, squashing = "tanh", method = "asdcads"))
