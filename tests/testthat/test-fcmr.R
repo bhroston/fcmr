@@ -1,6 +1,10 @@
 
 test_that("simulate_fcmr works", {
-  test_adj_matrix <- data.frame(
+
+  # Test from Stylios & Groumpos, 2000 - J. Intell. Fuzzy Syst. Vol. 8 No. 1 pp.83-98
+  # Title: Fuzzy Cognitive Maps in modeling supervisory control systems (no doi available)
+  # Confirmed to reproduce results
+  test_adj_matrix_1 <- data.frame(
     "C1" = c(0, 0.36, 0.45, -0.90, 0),
     "C2" = c(-0.4, 0, 0, 0, 0.6),
     "C3" = c(-0.25, 0, 0, 0, 0),
@@ -8,15 +12,80 @@ test_that("simulate_fcmr works", {
     "C5" = c(0.3, 0, 0, 0, 0)
   )
 
-  test_initial_state_vector <- c(0.400, 0.707, 0.612, 0.717, 0.300)
+  test_initial_state_vector_1 <- c(0.400, 0.707, 0.612, 0.717, 0.300)
 
-  test_fcmr_1 <- simulate_fcmr(adj_matrix = test_adj_matrix, initial_state_vector = test_initial_state_vector,
+  test_fcmr_1 <- simulate_fcmr(adj_matrix = test_adj_matrix_1, initial_state_vector = test_initial_state_vector_1,
                 activation = "modified-kosko", squashing = "sigmoid", lambda = 1, max_iter = 10)
   test_fcmr_1_state_vectors <- test_fcmr_1$state_vectors
   final_state_fcmr_1 <- round(test_fcmr_1_state_vectors[nrow(test_fcmr_1_state_vectors), ], digits = 3)
   rownames(final_state_fcmr_1) <- NULL
   expect_identical(final_state_fcmr_1, data.frame("C1" = 0.625, "C2" = 0.708, "C3" = 0.612, "C4" = 0.717, "C5" = 0.711))
 
+  # Test from Salmeron & Papageorgiou, 2014 - https://doi.org/10.1007/s10489-013-0511-z
+  # Not confirmed to reproduce their results
+  test_adj_matrix_2 <- data.frame(
+    "C1" = c(0, 0, 0.755, -0.8, 0, 0, 0, 0),
+    "C2" = c(0, 0, 0, 0.8, 0.6, 0, 0, 0),
+    "C3" = c(0.28, 0, 0, 0, 0, 0.4, 0, 0),
+    "C4" = c(0.38, 0.7, 0, 0, 0, 0, 0.3, 0),
+    "C5" = c(0, -0.42, 0, 0, 0, 0, 0, 0),
+    "C6" = c(0, 0, 0, 0, 0, 0, 0, 0.6),
+    "C7" = c(0, 0, 0, 0.09, 0, 0, 0, 0),
+    "C8" = c(0, 0, 0, 0, 0, 0.53, 0, 0)
+  )
+  test_initial_state_vector_2 <- c(0.48, 0.57, 0.58, 0.68, 0.59, 0.58, 0.59, 0.52)
+  test_fcmr_2 <- simulate_fcmr(adj_matrix = test_adj_matrix_2, initial_state_vector = test_initial_state_vector_2,
+                               activation = "modified-kosko", squashing = "sigmoid", lambda = 1, max_iter = 10)
+  test_fcmr_2$state_vectors
+
+  # Test from Salmeron & Papageorgiou, 2014 - https://doi.org/10.1007/s10489-013-0511-z
+  # Not confirmed to reproduce their results
+  test_adj_matrix_3 <- data.frame(
+    "C1" = c(0, 0, 0.51, 1.0, 0, 0, 0, 0),
+    "C2" = c(0, 0, 0, 0.7, 0.5, 0, 0, 0),
+    "C3" = c(0.13, 0, 0, 0, 0, 0.3, 0, 0),
+    "C4" = c(0.28, 0.6, 0, 0, 0, 0, 0.2, 0),
+    "C5" = c(0, -0.52, 0, 0, 0, 0, 0, 0),
+    "C6" = c(0, 0, 0, 0, 0, 0, 0, 0.35),
+    "C7" = c(0, 0, 0, -0.16, 0, 0, 0, 0),
+    "C8" = c(0, 0, 0, 0, 0, 0.43, 0, 0)
+  )
+  test_initial_state_vector_3 <- c(0.48, 0.57, 0.58, 0.68, 0.59, 0.58, 0.59, 0.52)
+  test_fcmr_3 <- simulate_fcmr(adj_matrix = test_adj_matrix_3, initial_state_vector = test_initial_state_vector_3,
+                               activation = "modified-kosko", squashing = "sigmoid", lambda = 1, max_iter = 10)
+  test_fcmr_3$state_vectors
+
+
+  # test_edgelist <- rbind(
+  #   c("Poor Quality Input Material", "Product Degredation", 0.59),
+  #   c("Internal Process Variation", "Product Degredation", 0.5),
+  #   c("Reschedule Process", "Internal Process Variation", -0.17),
+  #   c("Poor Operation Settings", "Product Degredation", 0.7),
+  #   c("Reschedule Process", "Poor Operation Settings", -0.77),
+  #   c("Product Degredation", "Reschedule Process", 0.21),
+  #   c("Machine Shut Down", "Reschedule Process", 0.1),
+  #   c("Machine Shut Down", "Product Degredation", 0.2),
+  #   c("Machine Shut Down", "Maintenance", 0.8),
+  #   c("Maintenance", "Machine Shut Down", -0.83),
+  #   c("Technical Malfunction", "Machine Shut Down", 0.8),
+  #   c("Maintenance", "Technical Malfunction", -0.45),
+  #   c("Technical Malfunction", "Maintenance", 0.35),
+  #   c("Maintenance", "Product Degredation", -0.2),
+  #   c("Maintenance", "Wear and Tear Machine Parts", -0.68),
+  #   c("Technical Malfunction", "Product Degredation", 0.4),
+  #   c("Wear and Tear Machine Parts", "Product Degredation", 0.45),
+  #   c("Wear and Tearh Machine Parts", "Technical Malfunction", 0.7)
+  # )
+  # test_edgelist <- data.frame(test_edgelist)
+  # colnames(test_edgelist) <- c("source", "target", "weight")
+  # test_edgelist$weight <- as.numeric(test_edgelist$weight)
+  #
+  # g <- igraph::graph_from_data_frame(test_edgelist)
+  # igraph::as_adjacency_matrix(g, attr = "weight", sparse = FALSE)
+  #
+  # data.table(
+  #   "Poor Quality Input Material" = c(0, )
+  # )
 
 })
 
@@ -61,6 +130,9 @@ test_that("optimize_fcmr_lambda works", {
 
 
 test_that("fcmr works", {
+  # Test from Stylios & Groumpos, 2000 - J. Intell. Fuzzy Syst. Vol. 8 No. 1 pp.83-98
+  # Title: Fuzzy Cognitive Maps in modeling supervisory control systems (no doi available)
+  # Confirmed to reproduce results
   test_adj_matrix <- data.frame(
     "C1" = c(0, 0.36, 0.45, -0.90, 0),
     "C2" = c(-0.4, 0, 0, 0, 0.6),
