@@ -48,7 +48,6 @@ simulate_fcmr <- function(adj_matrix = matrix(),
   confirm_initial_state_vector_is_compatible_with_adj_matrix(adj_matrix, initial_state_vector)
   IDs <- get_node_IDs_from_input(adj_matrix, IDs)
 
-  print(squashing)
   if (lambda_optimization != "none") {
     lambda <- optimize_fcmr_lambda(adj_matrix, squashing, lambda_optimization)
   }
@@ -59,8 +58,6 @@ simulate_fcmr <- function(adj_matrix = matrix(),
 
   state_vectors[1, ] <- initial_state_vector
   errors[1, ] <- 0
-
-  print(squashing)
 
   for (i in 2:(max_iter + 1)) {
     state_vector <- state_vectors[i - 1, ]
@@ -132,7 +129,7 @@ simulate_fcmr <- function(adj_matrix = matrix(),
 #' 'kosko', 'modified-kosko', or 'papageorgiou'.
 #'
 #' @export
-calculate_next_fcm_state_vector <- function(adj_matrix = matrix(), state_vector = c(), activation = "standard") {
+calculate_next_fcm_state_vector <- function(adj_matrix = matrix(), state_vector = c(), activation = "modified-kosko") {
   adj_matrix <- as.matrix(adj_matrix)
   state_vector <- as.matrix(state_vector)
 
@@ -265,6 +262,31 @@ normalize_state_vector_with_optimized_lambda <- function(raw_state = numeric(),
 }
 
 
+#' confirm_initial_state_vector_is_compatible_with_adj_matrix
+#'
+#' @description
+#' Confirm that an initial state vector is algorithmically compatible with an adjacency matrix
+#'
+#' @details
+#' Boolean. TRUE if the number of entries in the initial
+#' state vector match the number of rows/columns in the adjacency matrix and 2. The
+#' datatypes stored within each object are the same (i.e. "numeric" vs "grey_number"),
+#' FALSE if not
+#'
+#' Intended for developer use only to improve package readability.
+#'
+#' @param adj_matrix An n x n adjacency matrix that represents an FCM
+#' @param initial_state_vector An n-length list of the initial states of each node in an fcm simulation
+confirm_initial_state_vector_is_compatible_with_adj_matrix <- function(adj_matrix = matrix(), initial_state_vector = c()) {
+  if (length(initial_state_vector) != unique(dim(adj_matrix))) {
+    stop("Length of input initial_state_vector is does not comply with the dimensions of the input adjacency matrix", .call = FALSE)
+  } else {
+    TRUE
+  }
+}
+
+
+
 #' fcmr (fuzzy cognitive map) S3 class
 #'
 #' @description
@@ -315,7 +337,7 @@ fcmr <- function(adj_matrix = matrix(), IDs = c()) {
 #' get_edgelist_from_adj_matrix
 #'
 #' @description
-#' This "gets" an edgelist representing graph described by the input adjacency
+#' This "gets" an edgelist representing a graph described by the input adjacency
 #' matrix.
 #'
 #' @details
