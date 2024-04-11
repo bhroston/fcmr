@@ -179,7 +179,9 @@ optimize_fcmr_lambda <- function(adj_matrix = matrix(), squashing = "sigmoid", m
     stop("Invalid squashing function. Input squashing must be one of the following: 'sigmoid' or 'tanh'")
   }
 
-  if (method == "koutsellis") {
+  if (method == "none") {
+    NULL # do nothing
+  } else if (method == "koutsellis") {
     input_node_locs <- which(colSums(adj_matrix) == 0)
     adj_matrix_has_input_only_nodes <- length(input_node_locs) > 0
     if (adj_matrix_has_input_only_nodes) {
