@@ -7,7 +7,8 @@
 calculate_next_fgcm_state_vector(
   grey_adj_matrix = matrix(),
   state_vector = c(),
-  activation = "modified-kosko"
+  activation = "modified-kosko",
+  algorithm = "salmeron"
 )
 }
 \arguments{
@@ -17,6 +18,12 @@ calculate_next_fgcm_state_vector(
 
 \item{activation}{The activation function to be applied. Must be one of the following:
 'kosko', 'modified-kosko', or 'papageorgiou'.}
+
+\item{algorithm}{The algorithm to run calculate the activation vector. Must
+be one of the following: 'salmeron' or 'concepcion'. The 'salmeron'
+algorithm is the traditional one applied in most papers (https://doi.org/10.1016%2Fj.eswa.2010.04.085),
+while the 'concepcion' algorithm is a recent advancement that reduces the
+calculation steps (https://doi.org/10.1007/978-3-030-52705-1_34) with a minimal reduction in accuracy}
 }
 \description{
 This calculates the next iteration of a state vector in an fcm simulation
@@ -35,5 +42,5 @@ papageorgiou: Like modified-kosko, but assigns nodes with no value with a
 value of 0.5 to reduce the influence that a lack of initial state information
 can have on the simulation output (Papageorgiou, 2011 - https://doi.org/10.1016/j.asoc.2009.12.010)=
 
-Use vignette("fcmr-class") for more information.
+Use vignette("fgcmr-class") for more information.
 }

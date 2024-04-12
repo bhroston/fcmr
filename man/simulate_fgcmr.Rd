@@ -10,9 +10,10 @@ simulate_fgcmr(
   activation = "modified-kosko",
   squashing = "sigmoid",
   lambda = 1,
-  max_iter = 10,
+  max_iter = 50,
   min_error = 1e-05,
-  IDs = c()
+  IDs = c(),
+  algorithm = "salmeron"
 )
 }
 \arguments{
@@ -37,6 +38,12 @@ and the simulation will stop}
 
 \item{IDs}{A list of names for each node (must have n items). If empty, will use
 column names of adjacancy matrix (if given).}
+
+\item{algorithm}{The algorithm to run calculate the activation vector. Must
+be one of the following: 'salmeron' or 'concepcion'. The 'salmeron'
+algorithm is the traditional one applied in most papers (https://doi.org/10.1016%2Fj.eswa.2010.04.085),
+while the 'concepcion' algorithm is a recent advancement that reduces the
+calculation steps with a minimal reduction in accuracy (https://doi.org/10.1007/978-3-030-52705-1_34)}
 }
 \description{
 This calculates a sequence of iterations of a simulation over an fgcmr object

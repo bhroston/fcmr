@@ -30,6 +30,11 @@
 #' and the simulation will stop
 #' @param IDs A list of names for each node (must have n items). If empty, will use
 #' column names of adjacancy matrix (if given).
+#' @param algorithm The algorithm to run calculate the activation vector. Must
+#' be one of the following: 'salmeron' or 'concepcion'. The 'salmeron'
+#' algorithm is the traditional one applied in most papers (https://doi.org/10.1016%2Fj.eswa.2010.04.085),
+#' while the 'concepcion' algorithm is a recent advancement that reduces the
+#' calculation steps with a minimal reduction in accuracy (https://doi.org/10.1007/978-3-030-52705-1_34)
 #'
 #' @export
 simulate_fgcmr <- function(grey_adj_matrix = matrix(),
@@ -37,9 +42,10 @@ simulate_fgcmr <- function(grey_adj_matrix = matrix(),
                           activation = "modified-kosko",
                           squashing = "sigmoid",
                           lambda = 1,
-                          max_iter = 10,
+                          max_iter = 50,
                           min_error = 1e-5,
-                          IDs = c()) {
+                          IDs = c(),
+                          algorithm = "salmeron") {
 
   confirm_adj_matrix_is_square(grey_adj_matrix)
   confirm_initial_state_vector_is_compatible_with_grey_adj_matrix(grey_adj_matrix, initial_state_vector)
@@ -62,7 +68,7 @@ simulate_fgcmr <- function(grey_adj_matrix = matrix(),
 
   for (i in 2:(max_iter + 1)) {
     state_vector <- state_vectors[i - 1, ]
-    next_state_vector <- calculate_next_fgcm_state_vector(grey_adj_matrix, state_vector, activation)
+    next_state_vector <- calculate_next_fgcm_state_vector(grey_adj_matrix, state_vector, activation, algorithm)
     normalized_next_state_vector <- state_vectors[i, ]
     for (j in seq_along(next_state_vector)) {
       normalized_next_state_vector[[j]] <- grey_number(
@@ -73,9 +79,7 @@ simulate_fgcmr <- function(grey_adj_matrix = matrix(),
       upper_value_error <- abs(state_vector[[j]]$upper - normalized_next_state_vector[[j]]$upper)
       errors[i, j] <- lower_value_error + upper_value_error
     }
-    #if (lambda_optimization != "none") {
-    #  normalized_state_vector <- normalize_state_vector_with_optimized_lambda(next_state_vector, normalized_state_vector, squashing, lambda, lambda_optimization)
-    #}
+
     state_vectors[i, ] <- normalized_next_state_vector
     ranges[i, ] <- vapply(normalized_next_state_vector, function(x) x$upper - x$lower, numeric(1))
 
@@ -97,9 +101,6 @@ simulate_fgcmr <- function(grey_adj_matrix = matrix(),
   rownames(state_vectors) <- 0:(nrow(state_vectors) - 1)
   rownames(errors) <- 0:(nrow(errors) - 1)
   rownames(ranges) <- 0:(nrow(ranges) - 1)
-  #state_vectors <- data.frame(cbind(iter = 0:(nrow(state_vectors) - 1), state_vectors))
-  #errors <- cbind(iter = 0:(nrow(errors) - 1), errors)
-  #ranges <- cbind(iter = 0:(nrow(ranges) - 1), ranges)
 
   structure(
     .Data = list(
@@ -114,7 +115,8 @@ simulate_fgcmr <- function(grey_adj_matrix = matrix(),
         lambda = lambda,
         max_iter = max_iter,
         min_error = min_error,
-        IDs = IDs
+        IDs = IDs,
+        algorithm = algorithm
       )
     ),
     class = "fgcmr_simulation"
@@ -141,20 +143,21 @@ simulate_fgcmr <- function(grey_adj_matrix = matrix(),
 #' value of 0.5 to reduce the influence that a lack of initial state information
 #' can have on the simulation output (Papageorgiou, 2011 - https://doi.org/10.1016/j.asoc.2009.12.010)=
 #'
-#' Use vignette("fcmr-class") for more information.
+#' Use vignette("fgcmr-class") for more information.
 #'
 #' @param grey_adj_matrix An n x n adjacency matrix that represents an FCM
 #' @param state_vector A list state values at a particular iteration in an fcm simulation
 #' @param activation The activation function to be applied. Must be one of the following:
 #' 'kosko', 'modified-kosko', or 'papageorgiou'.
+#' @param algorithm The algorithm to run calculate the activation vector. Must
+#' be one of the following: 'salmeron' or 'concepcion'. The 'salmeron'
+#' algorithm is the traditional one applied in most papers (https://doi.org/10.1016%2Fj.eswa.2010.04.085),
+#' while the 'concepcion' algorithm is a recent advancement that reduces the
+#' calculation steps (https://doi.org/10.1007/978-3-030-52705-1_34) with a minimal reduction in accuracy
 #'
 #' @export
-calculate_next_fgcm_state_vector <- function(grey_adj_matrix = matrix(), state_vector = c(), activation = "modified-kosko") {
-  #adj_matrix <- as.matrix(adj_matrix)
-  #state_vector <- as.matrix(state_vector)
-
+calculate_next_fgcm_state_vector <- function(grey_adj_matrix = matrix(), state_vector = c(), activation = "modified-kosko", algorithm = "salmeron") {
   next_state_vector <- vector(length = length(state_vector), mode = "list")
-
   for (k in 1:nrow(grey_adj_matrix)) {
     grey_adj_matrix_col_vector <- grey_adj_matrix[, k]
     for (j in seq_along(grey_adj_matrix_col_vector)) {
@@ -163,66 +166,26 @@ calculate_next_fgcm_state_vector <- function(grey_adj_matrix = matrix(), state_v
       }
     }
 
-    if (activation == "kosko" | activation == "modified-kosko") {
-      state_vector_grey_adj_matrix_product <- mapply(
-        function(state, adj_matrix_col) {
-          product_lower <- min(
-            state$lower*adj_matrix_col$lower,
-            state$lower*adj_matrix_col$upper,
-            state$upper*adj_matrix_col$lower,
-            state$upper*adj_matrix_col$upper
-          )
-          product_upper <- max(
-            state$lower*adj_matrix_col$lower,
-            state$lower*adj_matrix_col$upper,
-            state$upper*adj_matrix_col$lower,
-            state$upper*adj_matrix_col$upper
-          )
-          grey_number(product_lower, product_upper)
-        },
-        state = state_vector,
-        adj_matrix_col = grey_adj_matrix_col_vector
+    if (algorithm == "salmeron") {
+      state_vector_grey_adj_matrix_dot_product <- calculate_next_fgcm_state_vector_with_salmeron_algorithm(state_vector, grey_adj_matrix_col_vector, activation)
+    } else if (algorithm == "concepcion") {
+      state_vector_grey_adj_matrix_dot_product <- calculate_next_fgcm_state_vector_with_concepcion_algorithm(state_vector, grey_adj_matrix_col_vector, activation)
+    } else {
+      stop("Invalid algorithm. Must be one of the following: 'salmeron' or 'concepcion'.
+           Both return the same values, but concepcion is faster than salmeron.")
+    }
+
+    if (activation == "kosko") {
+      next_state_vector[[k]] <- grey_number(
+        lower = state_vector_grey_adj_matrix_dot_product$lower,
+        upper = state_vector_grey_adj_matrix_dot_product$upper
       )
-      state_vector_grey_adj_matrix_dot_product <- grey_number(
-        lower = sum(unlist(state_vector_grey_adj_matrix_product[1,])),
-        upper = sum(unlist(state_vector_grey_adj_matrix_product[2,]))
+    } else if (activation == "modified-kosko") {
+      next_state_vector[[k]] <- grey_number(
+        lower = state_vector[[k]]$lower + state_vector_grey_adj_matrix_dot_product$lower,
+        upper = state_vector[[k]]$upper + state_vector_grey_adj_matrix_dot_product$upper
       )
-      if (activation == "kosko") {
-        next_state_vector[[k]] <- grey_number(
-          lower = state_vector_grey_adj_matrix_dot_product$lower,
-          upper = state_vector_grey_adj_matrix_dot_product$upper
-        )
-      } else if (activation == "modified-kosko") {
-        next_state_vector[[k]] <- grey_number(
-          lower = state_vector[[k]]$lower + state_vector_grey_adj_matrix_dot_product$lower,
-          upper = state_vector[[k]]$upper + state_vector_grey_adj_matrix_dot_product$upper
-        )
-      }
     } else if (activation == "papageorgiou") {
-      # (2*state_vector - 1) %*% adj_matrix + (2*state_vector - 1)
-      state_vector_grey_adj_matrix_product <- mapply(
-        function(state, adj_matrix_col) {
-          product_lower <- min(
-            (2*state$lower - 1)*adj_matrix_col$lower,
-            (2*state$lower - 1)*adj_matrix_col$upper,
-            (2*state$upper - 1)*adj_matrix_col$lower,
-            (2*state$upper - 1)*adj_matrix_col$upper
-          )
-          product_upper <- max(
-            (2*state$lower - 1)*adj_matrix_col$lower,
-            (2*state$lower - 1)*adj_matrix_col$upper,
-            (2*state$upper - 1)*adj_matrix_col$lower,
-            (2*state$upper - 1)*adj_matrix_col$upper
-          )
-          grey_number(product_lower, product_upper)
-        },
-        state = state_vector,
-        adj_matrix_col = grey_adj_matrix_col_vector
-      )
-      state_vector_grey_adj_matrix_dot_product <- grey_number(
-        lower = sum(unlist(state_vector_grey_adj_matrix_product[1,])),
-        upper = sum(unlist(state_vector_grey_adj_matrix_product[2,]))
-      )
       next_state_vector[[k]] <- grey_number(
         lower = (2*state_vector[[k]]$lower - 1) + state_vector_grey_adj_matrix_dot_product$lower,
         upper = (2*state_vector[[k]]$upper - 1) + state_vector_grey_adj_matrix_dot_product$upper
@@ -230,6 +193,136 @@ calculate_next_fgcm_state_vector <- function(grey_adj_matrix = matrix(), state_v
     }
   }
   next_state_vector
+}
+
+#' calculate_next_fgcm_state_vector_with_salmeron_algorithm
+#'
+#' @description
+#' This calculates the next iteration of an individual node of a state vector in
+#' an fgcm simulation using the algorithm defined by Salmeron 2010 -
+#' https://doi.org/10.1016%2Fj.eswa.2010.04.085 and using the kosko,
+#' modified-kosko, or papageorgiou activation functions
+#'
+#' @details
+#' This algorithm from Salmeron 2010 - https://doi.org/10.1016%2Fj.eswa.2010.04.085
+# reduces the steps needed to calculate the next state vector
+#'
+#' Use vignette("fgcmr-class") for more information.
+#'
+#' @param state_vector A list state values at a particular iteration in an fcm simulation
+#' @param grey_adj_matrix_col_vector An column of an adjacency matrix, typically as a list
+#' @param activation The activation function to be applied. Must be one of the following:
+#' 'kosko', 'modified-kosko', or 'papageorgiou'.
+#'
+#' @export
+calculate_next_fgcm_state_vector_with_salmeron_algorithm <- function(state_vector = c(),
+                                                                     grey_adj_matrix_col_vector = c(),
+                                                                     activation = "modified-kosko") {
+  if (activation == "kosko" | activation == "modified-kosko") {
+    state_vector_grey_adj_matrix_product <- mapply(
+      function(state, adj_matrix_col) {
+        product_lower <- min(
+          state$lower*adj_matrix_col$lower,
+          state$lower*adj_matrix_col$upper,
+          state$upper*adj_matrix_col$lower,
+          state$upper*adj_matrix_col$upper
+        )
+        product_upper <- max(
+          state$lower*adj_matrix_col$lower,
+          state$lower*adj_matrix_col$upper,
+          state$upper*adj_matrix_col$lower,
+          state$upper*adj_matrix_col$upper
+        )
+        grey_number(product_lower, product_upper)
+      },
+      state = state_vector,
+      adj_matrix_col = grey_adj_matrix_col_vector
+    )
+  } else if (activation == "papageorgiou") {
+    # (2*state_vector - 1) %*% adj_matrix + (2*state_vector - 1)
+    state_vector_grey_adj_matrix_product <- mapply(
+      function(state, adj_matrix_col) {
+        product_lower <- min(
+          (2*state$lower - 1)*adj_matrix_col$lower,
+          (2*state$lower - 1)*adj_matrix_col$upper,
+          (2*state$upper - 1)*adj_matrix_col$lower,
+          (2*state$upper - 1)*adj_matrix_col$upper
+        )
+        product_upper <- max(
+          (2*state$lower - 1)*adj_matrix_col$lower,
+          (2*state$lower - 1)*adj_matrix_col$upper,
+          (2*state$upper - 1)*adj_matrix_col$lower,
+          (2*state$upper - 1)*adj_matrix_col$upper
+        )
+        grey_number(product_lower, product_upper)
+      },
+      state = state_vector,
+      adj_matrix_col = grey_adj_matrix_col_vector
+    )
+  }
+  state_vector_grey_adj_matrix_dot_product <- grey_number(
+    lower = sum(unlist(state_vector_grey_adj_matrix_product[1,])),
+    upper = sum(unlist(state_vector_grey_adj_matrix_product[2,]))
+  )
+  state_vector_grey_adj_matrix_dot_product
+}
+
+
+#' calculate_next_fgcm_state_vector_with_concepcion_algorithm
+#'
+#' @description
+#' This calculates the next iteration of an individual node of a state vector in
+#' an fgcm simulation using the algorithm defined by Cocepcicon et al. 2020 -
+#' https://doi.org/10.1007/978-3-030-52705-1_34 and using the kosko,
+#' modified-kosko, or papageorgiou activation functions
+#'
+#' @details
+#' This algorithm from Concepcícon et al. 2020 - https://doi.org/10.1007/978-3-030-52705-1_34
+#  reduces the steps needed to calculate the next state vector
+#'
+#' There is a minor reduction in accuracy with this algorithm, so practitioners
+#' should be aware of the cost-benefit of the faster run-time allowed
+#'
+#' Use vignette("fgcmr-class") for more information.
+#'
+#' @param state_vector A list state values at a particular iteration in an fcm simulation
+#' @param grey_adj_matrix_col_vector An column of an adjacency matrix, typically as a list
+#' @param activation The activation function to be applied. Must be one of the following:
+#' 'kosko', 'modified-kosko', or 'papageorgiou'.
+#'
+#' @export
+calculate_next_fgcm_state_vector_with_concepcion_algorithm <- function(state_vector = c(),
+                                                                       grey_adj_matrix_col_vector = c(),
+                                                                       activation = "modified-kosko") {
+  if (activation == "kosko" | activation == "modified-kosko") {
+    state_vector_grey_adj_matrix_product <- mapply(
+      function(state, edge) {
+        grey_number(
+          lower = (edge$lower*(state$upper*(1 - sin(edge$lower)) + state$lower*(1 + sin(edge$lower))))/2,
+          upper = (edge$upper*(state$lower*(1 - sin(edge$upper)) + state$upper*(1 + sin(edge$upper))))/2
+        )
+      },
+      state = state_vector,
+      edge = grey_adj_matrix_col_vector
+    )
+  } else if (activation == "papageorgiou") {
+    # (2*state_vector - 1) %*% adj_matrix + (2*state_vector - 1)
+    state_vector_grey_adj_matrix_product <- mapply(
+      function(state, edge) {
+        grey_number(
+          lower = (edge$lower*((2*state$upper - 1)*(1 - sin(edge$lower)) + (2*state$lower - 1)*(1 + sin(edge$lower))))/2,
+          upper = (edge$upper*((2*state$lower - 1)*(1 - sin(edge$upper)) + (2*state$upper - 1)*(1 + sin(edge$upper))))/2
+        )
+      },
+      state = state_vector,
+      edge = grey_adj_matrix_col_vector
+    )
+  }
+  state_vector_grey_adj_matrix_dot_product <- grey_number(
+    lower = sum(unlist(state_vector_grey_adj_matrix_product[1,])),
+    upper = sum(unlist(state_vector_grey_adj_matrix_product[2,]))
+  )
+  state_vector_grey_adj_matrix_dot_product
 }
 
 
@@ -639,4 +732,41 @@ print.grey_number <- function(x, ...) {
 #' c(grey_number(0, 1), grey_number(0.2, 0.5))
 c.grey_number <- function(...) {
   list(...)
+}
+
+
+#' print.fgcmr_simulation
+#'
+#' @description
+#' This improves the readability of the simulate_fgcmr output
+#'
+#' @details
+#' Show the first two iterations of the simulation, followed by a gap, and then
+#' the final state vector in an organized data frame. Additionally, show the
+#' activation, squashing, lambda, and algorithm inputs as well as the total
+#' number of iterations and goal minimum error.
+#'
+#' Use vignette("fgcmr-class") for more information.
+#'
+#' @param x an fgcmr_simulation object
+#' @param ... additional inputs
+#'
+#' @export
+print.fgcmr_simulation <- function(x, ...) {
+  first_iter <- lapply(x$state_vectors[1, ], function(x) grey_number(round(x[[1]]$lower, 4), round(x[[1]]$upper, 4)))
+  second_iter <- lapply(x$state_vectors[2, ], function(x) grey_number(round(x[[1]]$lower, 4), round(x[[1]]$upper, 4)))
+  skipped_iters_text <- rep("...", ncol(x$state_vectors))
+  final_iter <- lapply(x$state_vectors[nrow(x$state_vectors), ], function(x) grey_number(round(x[[1]]$lower, 4), round(x[[1]]$upper, 4)))
+
+  pretty_states <- data.frame(rbind(first_iter, second_iter, skipped_iters_text, final_iter))
+  rownames(pretty_states) <- c("1", "2", "...", as.character(nrow(x$state_vectors)))
+
+  cat("State Vectors:\n")
+  print(pretty_states)
+  cat("\n    Also: $errors $ranges\n")
+  cat("  Params: ", "activation = ", x$params$activation, ", squashing = ",
+      x$params$squashing, ", lambda = ", x$params$lambda,
+      ", algorithm = ", x$params$algorithm,
+      "\nRun Info: iters = ", nrow(x$state_vectors), ", min error = ", x$params$min_error,
+      sep = "")
 }

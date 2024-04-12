@@ -3,7 +3,8 @@ test_that("fgcmr_simulation works", {
   # Test from Salmeron & Papageorgiou, 2014 - https://doi.org/10.1007/s10489-013-0511-z
   # Test 1 (Exact as fcm)
   w5_2 <- grey_number(0.6, 0.6)
-  w2_5 <- grey_number(-0.42, -0.42)
+  #w2_5 <- grey_number(-0.42, -0.42)
+  w2_5 <- grey_number(0.42, 0.42)
   w4_2 <- grey_number(0.8, 0.8)
   w2_4 <- grey_number(0.7, 0.7)
   w4_1 <- grey_number(-0.8, -0.8)
@@ -29,6 +30,30 @@ test_that("fgcmr_simulation works", {
     locs = test_adj_matrix_edge_indeces,
     size = 8
   )
+
+  C1 <- grey_number(0.48, 0.48)
+  C2 <- grey_number(0.57, 0.57)
+  C3 <- grey_number(0.58, 0.58)
+  C4 <- grey_number(0.68, 0.68)
+  C5 <- grey_number(0.58, 0.58)
+  C6 <- grey_number(0.59, 0.59)
+  C7 <- grey_number(0.52, 0.52)
+  C8 <- grey_number(0.58, 0.58)
+  test_initial_state_vector = c(C1, C2, C3, C4, C5, C6, C7, C8)
+
+  C1 <- grey_number(0.48, 0.48)
+  C2 <- grey_number(0.57, 0.57)
+  C3 <- grey_number(0.58, 0.58)
+  C4 <- grey_number(0.68, 0.68)
+  C5 <- grey_number(0.59, 0.59)
+  C6 <- grey_number(0.58, 0.58)
+  C7 <- grey_number(0.59, 0.59)
+  C8 <- grey_number(0.52, 0.52)
+  test_initial_state_vector = c(C1, C2, C3, C4, C5, C6, C7, C8)
+
+  test_fgcmr_simulation <- simulate_fgcmr(test_grey_adj_matrix, test_initial_state_vector, lambda = 1, activation = "modified-kosko", max_iter = 100, min_error = 1e-8)
+
+
 
 
   # Test 2 (Proper grey adjacency matrix)
