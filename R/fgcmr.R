@@ -115,7 +115,8 @@ simulate_fgcmr <- function(grey_adj_matrix = matrix(),
         lambda = lambda,
         max_iter = max_iter,
         min_error = min_error,
-        IDs = IDs
+        IDs = IDs,
+        algorithm = algorithm
       )
     ),
     class = "fgcmr_simulation"
@@ -734,8 +735,38 @@ c.grey_number <- function(...) {
 }
 
 
-# print.fgcmr_simulation(x, ...) {
-#   cat(
-#
-#   )
-# }
+#' print.fgcmr_simulation
+#'
+#' @description
+#' This improves the readability of the simulate_fgcmr output
+#'
+#' @details
+#' Show the first two iterations of the simulation, followed by a gap, and then
+#' the final state vector in an organized data frame. Additionally, show the
+#' activation, squashing, lambda, and algorithm inputs as well as the total
+#' number of iterations and goal minimum error.
+#'
+#' Use vignette("fgcmr-class") for more information.
+#'
+#' @param x an fgcmr_simulation object
+#' @param ... additional inputs
+#'
+#' @export
+print.fgcmr_simulation <- function(x, ...) {
+  first_iter <- lapply(x$state_vectors[1, ], function(x) grey_number(round(x[[1]]$lower, 4), round(x[[1]]$upper, 4)))
+  second_iter <- lapply(x$state_vectors[2, ], function(x) grey_number(round(x[[1]]$lower, 4), round(x[[1]]$upper, 4)))
+  skipped_iters_text <- rep("...", ncol(x$state_vectors))
+  final_iter <- lapply(x$state_vectors[nrow(x$state_vectors), ], function(x) grey_number(round(x[[1]]$lower, 4), round(x[[1]]$upper, 4)))
+
+  pretty_states <- data.frame(rbind(first_iter, second_iter, skipped_iters_text, final_iter))
+  rownames(pretty_states) <- c("1", "2", "...", as.character(nrow(x$state_vectors)))
+
+  cat("State Vectors:\n")
+  print(pretty_states)
+  cat("\n    Also: $errors $ranges\n")
+  cat("  Params: ", "activation = ", x$params$activation, ", squashing = ",
+      x$params$squashing, ", lambda = ", x$params$lambda,
+      ", algorithm = ", x$params$algorithm,
+      "\nRun Info: iters = ", nrow(x$state_vectors), ", min error = ", x$params$min_error,
+      sep = "")
+}
