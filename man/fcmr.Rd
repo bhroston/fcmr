@@ -21,9 +21,6 @@ fcmr stores fcm data in forms useful to data manipulation, particular
 regarding pairing with popular network analysis libraries like igraph
 or visNetwork.
 
-fcmr are constructed using vctrs::new_vctr instead of the typical call to
-structure() because ...
-
 Use vignette("fcmr-class") for more information.
 }
 \examples{
