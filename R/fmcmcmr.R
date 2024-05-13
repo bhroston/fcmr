@@ -8,6 +8,38 @@ test <- data.frame(
   sd = c(0.1, 0.3)
 )
 
+#' simulate_fmcmcmr_models
+#'
+#' @description
+#' This calculates a sequence of iterations of a simulation over every item in
+#' a list of fmcmcmr objects given an initial state vector along with the
+#' activation, squashing, and lambda parameters.
+#' Additional variables may be defined to control simulation length,
+#' column names, and lambda optimization.
+#'
+#' @details
+#' [ADD DETAILS HERE!!!]
+#'
+#' Use vignette("fmcmcmr-class") for more information.
+#'
+#' @param simulated_adj_matrices A list of adjecency matrices generated from simulation using build_fmcmcmr_models.
+#' @param initial_state_vector A list state values at the start of an fcm simulation
+#' @param activation The activation function to be applied. Must be one of the following:
+#' 'kosko', 'modified-kosko', or 'papageorgiou'.
+#' @param squashing A squashing function to apply. Must be one of the following:
+#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' @param lambda A numeric value that defines the steepness of the slope of the
+#' squashing function when tanh or sigmoid are applied
+#' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
+#' @param min_error The lowest error (sum of the absolute value of the current state
+#' vector minus the previous state vector) at which no more iterations are necessary
+#' and the simulation will stop
+#' @param lambda_optimization A lambda optimization procedure to apply. Must be one
+#' of the following: 'none' or 'koutsellis'
+#' @param IDs A list of names for each node (must have n items). If empty, will use
+#' column names of adjacancy matrix (if given).
+#'
+#' @export
 simulate_fmcmcmr_models <- function(simulated_adj_matrices = list(matrix()),
                                     initial_state_vector = c(),
                                     activation = "modified-kosko",
@@ -19,6 +51,7 @@ simulate_fmcmcmr_models <- function(simulated_adj_matrices = list(matrix()),
                                     IDs = c(),
                                     parallel = TRUE) {
   if (parallel == TRUE) {
+    # Only returns one item for parallel processing?
     `%dofuture%` <- doFuture::`%dofuture%`
     future::plan(future::multisession())
 
@@ -66,11 +99,38 @@ simulate_fmcmcmr_models <- function(simulated_adj_matrices = list(matrix()),
     )
   }
 
+  names(fmcmcmr_simulation_results) <- paste0("sim_", seq_along(fmcmcmr_simulation_results))
   fmcmcmr_simulation_results
 }
 
 
-
+#' build_fmcmcmr_models
+#'
+#' @description
+#' This function generates n fcm models whose edge weights are sampled from the
+#' defined distribution ('uniform', 'gaussian', 'beta', or 'triangular') and stores
+#' them as a list of fmcmcmr objects
+#'
+#' @details
+#' [ADD DETAILS HERE!!!]
+#'
+#' Use vignette("fmcmcmr-class") for more information.
+#'
+#' @param adj_matrix An n x n adjacency matrix that represents the edge weights
+#' of an FCM
+#' @param IDs A list of names for each node (must have n items)
+#' @param n_sims The number of simulated fcm's to generate
+#' @param distribution A statistical distribution to draw random samples from.
+#' Must be one of the following: 'uniform', 'gaussian', 'beta', or 'triangular'
+#' @param ... Additional adj_matrix objects whose weights describe shape parameters
+#' of the chosen distribution.
+#' IF distribution = "uniform", must include: lower_adj_matrix and upper_adj_matrix objects
+#' IF distribution = "gaussian", must include: sd_adj_matrix
+#' IF distribution = "beta", must include: sd_adj_matrix
+#' IF distribution = "triangular", must include: lower_adj_matrix, upper_adj_matrix, and mode_adj_matrix objects
+#'  Note: if no mode_adj_matrix given, will assume its values are the average of the lower and upper adj_matrix objects.
+#'
+#' @export
 build_fmcmcmr_models <- function(adj_matrix = matrix(),
                                  IDs = c(),
                                  n_sims = 100,
@@ -79,14 +139,13 @@ build_fmcmcmr_models <- function(adj_matrix = matrix(),
                                  ...) {
   # Validate parameter adj_matrix inputs
   additional_inputs <- list(...)
-  print(additional_inputs)
   names_of_additional_inputs <- names(additional_inputs)
 
   uniform_inputs_given <- all((c("lower_adj_matrix", "upper_adj_matrix") %in% names_of_additional_inputs))
   gaussian_input_given <- "sd_adj_matrix" %in% names_of_additional_inputs
   beta_input_given <- "sd_adj_matrix" %in% names_of_additional_inputs
   triangular_input_given_w_mode <- all((c("lower_adj_matrix", "upper_adj_matrix", "mode_adj_matrix") %in% names_of_additional_inputs))
-  triangular_input_given_wo_mode <- all((c("lower_adj_matrix", "upper_adj_matrix") %in% names_of_additional_inputs))
+  triangular_input_given_wo_mode <- all((c("lower_adj_matrix", "upper_adj_matrix") %in% names_of_additional_inputs)) & !("mode_adj_matrix" %in% names_of_additional_inputs)
 
   if (distribution == "uniform" & !uniform_inputs_given) {
     stop("Additional inputs missing for 'uniform' distribution.
@@ -116,7 +175,7 @@ build_fmcmcmr_models <- function(adj_matrix = matrix(),
                             "sd_adj_matrix" = additional_inputs$sd_adj_matrix)
   } else if (distribution == "triangular") {
     if (triangular_input_given_wo_mode) {
-      mode_adj_matrix <- (additional_inputs$lower_adj_matrix + additional_inputs$upper_adj_matrix)/2
+      additional_inputs$mode_adj_matrix <- (additional_inputs$lower_adj_matrix + additional_inputs$upper_adj_matrix)/2
     }
     fmcmcmr_data <- fmcmcmr(adj_matrix, IDs, distribution,
                             "lower_adj_matrix" = additional_inputs$lower_adj_matrix,
@@ -142,7 +201,7 @@ build_fmcmcmr_models <- function(adj_matrix = matrix(),
                             mu = edgelist$weight, sd = edgelist$sd,
                             SIMPLIFY = FALSE)
   } else if (distribution == "triangular") {
-    edgelist$dist <- mapply(function(lower, upper, mode) get_triangular_distribution_of_values(lower, upper, mode, n_sims),
+    edgelist$dist <- mapply(function(lower, upper, mode) get_triangular_distribution_of_values(lower = lower, upper = upper, mode = mode, n_sims),
                             lower = edgelist$lower, upper = edgelist$upper, mode = edgelist$mode,
                             SIMPLIFY = FALSE)
   }
@@ -157,67 +216,7 @@ build_fmcmcmr_models <- function(adj_matrix = matrix(),
 
   simulated_adj_matrices <- lapply(simulated_edgelists, get_adj_matrix_from_edgelist)
 
-  simulated_adj_matrices
-}
-
-  # # Cleaner way to validate inputs than re-writing the validation tests here
-  # fmcmcmr_data <- fmcmcmr(adj_matrix, sd_adj_matrix, IDs)
-  # adj_matrix <- fmcmcmr_data$adj_matrix
-  # sd_adj_matrix <- fmcmcmr_data$sd_adj_matrix
-  # edgelist <- fmcmcmr_data$edgelist
-  #
-  # edgelist$beta_dist <- mapply(
-  #   function(mu, sd) get_beta_distribution_of_values(mu, sd, n_sims),
-  #   mu = edgelist$weight, sd = edgelist$sd,
-  #   SIMPLIFY = FALSE
-  # )
-  #
-  # lapply(edgelist$beta_dist, function(dist) sample(dist, 1))
-  #
-  # blank_weight_edgelist <- edgelist[c("source", "target")]
-  # simulated_edgelists <- rep(list(blank_weight_edgelist), n_sims)
-  #
-  # simulated_adj_matrices <- lapply(simulated_edgelists, function(simulated_edgelist) {
-  #   simulated_edgelist$weight <- lapply(edgelist$beta_dist, function(dist) sample(dist, 1))
-  #   get_adj_matrix_from_edgelist(simulated_edgelist)
-  # })
-  #
-  # simulated_adj_matrices
-#}
-
-
-build_possibility_space_fmcmcmr_models <- function(
-                                 adj_matrix = matrix(),
-                                 IDs = c(),
-                                 n_sims = 100,
-                                 parallel = TRUE) {
-
-  # Cleaner way to validate inputs than re-writing the validation tests here
-  fmcmcmr_data <- fmcmcmr(adj_matrix, sd_adj_matrix, IDs)
-  adj_matrix <- fmcmcmr_data$adj_matrix
-  sd_adj_matrix <- fmcmcmr_data$sd_adj_matrix
-  edgelist <- fmcmcmr_data$edgelist
-
-  #edgelist$beta_dist <- mapply(
-  #  function(mu, sd) get_beta_distribution_of_values(mu, sd, n_sims),
-  #  mu = edgelist$weight, sd = edgelist$sd,
-  #  SIMPLIFY = FALSE
-  #)
-
-  edgelist$unif_dist <- rep(list(rep(runif(n_sims, min = -1, max = 1))), nrow(edgelist))
-
-  #lapply(edgelist$beta_dist, function(dist) sample(dist, 1))
-
-  #lapply(edgelist$unif_dist, function(dist) sample(dist, 1))
-
-  blank_weight_edgelist <- edgelist[c("source", "target")]
-  simulated_edgelists <- rep(list(blank_weight_edgelist), n_sims)
-
-  simulated_adj_matrices <- lapply(simulated_edgelists, function(simulated_edgelist) {
-    #simulated_edgelist$weight <- lapply(edgelist$beta_dist, function(dist) sample(dist, 1))
-    simulated_edgelist$weight <- lapply(edgelist$unif_dist, function(dist) sample(dist, 1))
-    get_adj_matrix_from_edgelist(simulated_edgelist)
-  })
+  names(simulated_adj_matrices) <- paste0("sim_", seq_along(simulated_adj_matrices))
 
   simulated_adj_matrices
 }
@@ -285,7 +284,7 @@ fmcmcmr <- function(adj_matrix = matrix(),
   gaussian_input_given <- "sd_adj_matrix" %in% names_of_additional_inputs
   beta_input_given <- "sd_adj_matrix" %in% names_of_additional_inputs
   triangular_input_given_w_mode <- all((c("lower_adj_matrix", "upper_adj_matrix", "mode_adj_matrix") %in% names_of_additional_inputs))
-  triangular_input_given_wo_mode <- all((c("lower_adj_matrix", "upper_adj_matrix") %in% names_of_additional_inputs))
+  triangular_input_given_wo_mode <- all((c("lower_adj_matrix", "upper_adj_matrix") %in% names_of_additional_inputs)) & !("mode_adj_matrix" %in% names_of_additional_inputs)
 
   if (distribution == "uniform" & !uniform_inputs_given) {
    stop("Additional inputs missing for 'uniform' distribution.
@@ -441,6 +440,30 @@ get_triangular_distribution_of_values <- function(lower = double(), upper = doub
 }
 
 
+# # Cleaner way to validate inputs than re-writing the validation tests here
+# fmcmcmr_data <- fmcmcmr(adj_matrix, sd_adj_matrix, IDs)
+# adj_matrix <- fmcmcmr_data$adj_matrix
+# sd_adj_matrix <- fmcmcmr_data$sd_adj_matrix
+# edgelist <- fmcmcmr_data$edgelist
+#
+# edgelist$beta_dist <- mapply(
+#   function(mu, sd) get_beta_distribution_of_values(mu, sd, n_sims),
+#   mu = edgelist$weight, sd = edgelist$sd,
+#   SIMPLIFY = FALSE
+# )
+#
+# lapply(edgelist$beta_dist, function(dist) sample(dist, 1))
+#
+# blank_weight_edgelist <- edgelist[c("source", "target")]
+# simulated_edgelists <- rep(list(blank_weight_edgelist), n_sims)
+#
+# simulated_adj_matrices <- lapply(simulated_edgelists, function(simulated_edgelist) {
+#   simulated_edgelist$weight <- lapply(edgelist$beta_dist, function(dist) sample(dist, 1))
+#   get_adj_matrix_from_edgelist(simulated_edgelist)
+# })
+#
+# simulated_adj_matrices
+#}
 
 
 #
