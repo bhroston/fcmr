@@ -33,7 +33,49 @@ test_that("simulate_fmcmcmr_models works", {
 })
 
 test_that("build_fmcmcmr_models works", {
+  # Accept if additional_inputs is a list
+  expect_no_error(build_fmcmcmr_models(test_adj_matrix, ... = list(lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix)))
 
+  # Throws error when additional inputs do not have matching dims
+  expect_error(build_fmcmcmr_models(test_adj_matrix, upper_adj_matrix = u_adj_matrix, lower_adj_matrix = matrix(data = NA, nrow = 5, ncol = 5)))
+  # Throws error when additional inputs have incorrect edge data
+  expect_error(build_fmcmcmr_models(test_adj_matrix, upper_adj_matrix = u_adj_matrix, lower_adj_matrix = u_adj_matrix + 0.2))
+
+  # IF distribution == "uniform"
+  # Throws error when lower_adj_matrix and upper_adj_matrix inputs not given
+  expect_error(build_fmcmcmr_models(test_adj_matrix, l = l_adj_matrix, u = u_adj_matrix))
+  # Throws error when values in lower_adj_matrix are greater than values in upper_adj_matrix
+  expect_error(build_fmcmcmr_models(test_adj_matrix, lower_adj_matrix = u_adj_matrix, upper_adj_matrix = l_adj_matrix))
+  # Throws error if too many additional inputs present
+  expect_error(build_fmcmcmr_models(test_adj_matrix, lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix, mode_adj_matrix = m_adj_matrix))
+
+  uniform_fmcmcmr_models <- build_fmcmcmr_models(test_adj_matrix, lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix)
+  expect_equal(unique(dim(test_adj_matrix)), unique(unlist(lapply(uniform_fmcmcmr_models, function(model) unique(dim(model))))))
+  expect_equal(length(uniform_fmcmcmr_models), 100)
+  # Visual check
+  hist(unlist(lapply(uniform_fmcmcmr_models, function(model) model[model != 0] [1])))
+  hist(unlist(lapply(uniform_fmcmcmr_models, function(model) model[model != 0] [2])))
+
+  # IF distribution == "triangular"
+  # Throws error when lower_adj_matrix and upper_adj_matrix inputs not given
+  expect_error(build_fmcmcmr_models(test_adj_matrix, distribution = "triangular", lower_adj_matrix = l_adj_matrix, u = u_adj_matrix))
+  # Throws warning when no mode_adj_matrix input given
+  expect_warning(build_fmcmcmr_models(test_adj_matrix, distribution = "triangular", lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix))
+  # Throws error when values in lower_adj_matrix are less than values in mode_adj_matrix
+  expect_error(build_fmcmcmr_models(test_adj_matrix, distribution = "triangular", lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix, mode_adj_matrix = m_adj_matrix*0.01))
+  # Throws error when values in upper_adj_matrix are greater than values in mode_adj_matrix
+  expect_error(build_fmcmcmr_models(test_adj_matrix, distribution = "triangular", lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix, mode_adj_matrix = m_adj_matrix*2))
+
+  triangular_fmcmcmr_models <- build_fmcmcmr_models(test_adj_matrix, distribution = "triangular", lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix, mode_adj_matrix = m_adj_matrix)
+  expect_equal(unique(dim(test_adj_matrix)), unique(unlist(lapply(triangular_fmcmcmr_models, function(model) unique(dim(model))))))
+  expect_equal(length(triangular_fmcmcmr_models), 100)
+  # Visual check
+  hist(unlist(lapply(triangular_fmcmcmr_models, function(model) model[model != 0] [1])))
+  hist(unlist(lapply(triangular_fmcmcmr_models, function(model) model[model != 0] [2])))
+
+  triangular_fmcmcmr_models_upper_skew <- build_fmcmcmr_models(test_adj_matrix, distribution = "triangular", lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix, mode_adj_matrix = u_adj_matrix*0.9)
+  hist(unlist(lapply(triangular_fmcmcmr_models_upper_skew, function(model) model[model != 0] [1])))
+  hist(unlist(lapply(triangular_fmcmcmr_models_upper_skew, function(model) model[model != 0] [2])))
 })
 
 test_that("fmcmcmr works", {
@@ -60,7 +102,7 @@ test_that("fmcmcmr works", {
 
   # IF distribution == "triangular"
   # Throws error when lower_adj_matrix and upper_adj_matrix inputs not given
-  expect_error(fmcmcmr(test_adj_matrix, distribution = "triangular", lower_adj_matrix = l_adj_matrix, u = upper_adj_matrix))
+  expect_error(fmcmcmr(test_adj_matrix, distribution = "triangular", lower_adj_matrix = l_adj_matrix, u = u_adj_matrix))
   # Throws warning when no mode_adj_matrix input given
   expect_warning(fmcmcmr(test_adj_matrix, distribution = "triangular", lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix))
   # Throws error when values in lower_adj_matrix are less than values in mode_adj_matrix

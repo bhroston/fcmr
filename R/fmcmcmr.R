@@ -139,83 +139,108 @@ build_fmcmcmr_models <- function(adj_matrix = matrix(),
                                  ...) {
   # Validate parameter adj_matrix inputs
   additional_inputs <- list(...)
+  if (identical(names(additional_inputs), "...")) additional_inputs <- additional_inputs[[1]] # if ... = list() as input
   names_of_additional_inputs <- names(additional_inputs)
 
-  uniform_inputs_given <- all((c("lower_adj_matrix", "upper_adj_matrix") %in% names_of_additional_inputs))
-  gaussian_input_given <- "sd_adj_matrix" %in% names_of_additional_inputs
-  beta_input_given <- "sd_adj_matrix" %in% names_of_additional_inputs
-  triangular_input_given_w_mode <- all((c("lower_adj_matrix", "upper_adj_matrix", "mode_adj_matrix") %in% names_of_additional_inputs))
-  triangular_input_given_wo_mode <- all((c("lower_adj_matrix", "upper_adj_matrix") %in% names_of_additional_inputs)) & !("mode_adj_matrix" %in% names_of_additional_inputs)
-
-  if (distribution == "uniform" & !uniform_inputs_given) {
-    stop("Additional inputs missing for 'uniform' distribution.
-        Must include: lower_adj_matrix and upper_adj_matrix objects")
-  } else if (distribution == "gaussian" & !gaussian_input_given) {
-    stop("Additional inputs missing for 'gaussian' distribution.
-        Must include: sd_adj_matrix object")
-  } else if (distribution == "beta" & !beta_input_given) {
-    stop("Additional inputs missing for 'beta' distribution.
-        Must include: sd_adj_matrix object")
-  } else if (distribution == "triangular" & !(triangular_input_given_w_mode | triangular_input_given_wo_mode)) {
-    stop("Additional inputs missing for 'uniform' distribution.
-        Must include: lower_adj_matrix and upper_adj_matrix objects.
-        Note: if no mode_adj_matrix given, will assume its values are the average of the lower and upper adj_matrix objects.")
+  additional_inputs_have_correct_dims <- unlist(lapply(additional_inputs, function(input) unique(dim(input)) == unique(dim(adj_matrix))))
+  if (!all(additional_inputs_have_correct_dims)) {
+    stop("all additional input adjacency matrices must have the same dimensions as the input adj_matrix object")
   }
 
-  # Create fmcmcmr objects from inputs
+  additional_inputs_have_correct_edges <- unlist(lapply(additional_inputs, function(input) identical(which(input == 0), which(adj_matrix == 0))))
+  if (!all(additional_inputs_have_correct_edges)) {
+    stop("all additional input adjacency matrices must have the same edges as the input adj_matrix (i.e. values
+         in the same locations in the adjacency matrix")
+  }
+
   if (distribution == "uniform") {
+    # UNIFORM
+    uniform_inputs_given <- all((c("lower_adj_matrix", "upper_adj_matrix") %in% names_of_additional_inputs))
+    if (!uniform_inputs_given) {
+      stop("Additional inputs missing for 'uniform' distribution.
+        Must include: lower_adj_matrix and upper_adj_matrix objects")
+    }
+    if (length(additional_inputs) > 2) {
+      stop("Too many additional inputs given. Only lower_adj_matrix and upper_adj_matrix needed for UNIFORM distribution fmcmcmr")
+    }
+    lower <- additional_inputs$lower_adj_matrix
+    upper <- additional_inputs$upper_adj_matrix
+    if (any(lower[lower != 0] > upper[upper != 0])) {
+      stop("all values in lower_adj_matrix must be less than their counterparts in upper_adj_matrix for a UNIFORM distribution")
+    }
     fmcmcmr_data <- fmcmcmr(adj_matrix, IDs, distribution,
                             "lower_adj_matrix" = additional_inputs$lower_adj_matrix,
                             "upper_adj_matrix" = additional_inputs$upper_adj_matrix)
-  } else if (distribution == "gaussian") {
-    fmcmcmr_data <- fmcmcmr(adj_matrix, IDs, distribution,
-                            "sd_adj_matrix" = additional_inputs$sd_adj_matrix)
+    edgelist <- fmcmcmr_data$edgelist
+    edgelist$dist <- mapply(function(lower, upper) runif(n = n_sims, min = lower, max = upper),
+                            lower = edgelist$lower, upper = edgelist$upper,
+                            SIMPLIFY = FALSE)
   } else if (distribution == "beta") {
+    # BETA
+    beta_input_given <- "sd_adj_matrix" %in% names_of_additional_inputs
+    if (!beta_input_given) {
+      stop("Additional inputs missing for 'beta' distribution.
+        Must include: sd_adj_matrix object")
+    }
+    if (length(additional_inputs) > 1) {
+      stop("Too many additional inputs given. Only sd_adj_matrix needed for BETA distribution fmcmcmr")
+    }
+    sd_values <- additional_inputs$sd_adj_matrix
+    if (any(sd_values[sd_values != 0] < 0 | sd_values[sd_values != 0] > 0.5)) {
+      stop("all values in sd_adj_matrix must be between 0 and +0.5 for a BETA distribution")
+    }
     fmcmcmr_data <- fmcmcmr(adj_matrix, IDs, distribution,
                             "sd_adj_matrix" = additional_inputs$sd_adj_matrix)
+    edgelist <- fmcmcmr_data$edgelist
+    edgelist$dist <- mapply(function(mu, sd) get_beta_distribution_of_values(mu = mu, sd = sd, n = n_sims),
+                            mu = edgelist$weight, sd = edgelist$sd,
+                            SIMPLIFY = FALSE)
   } else if (distribution == "triangular") {
+    # TRIANGULAR
+    triangular_input_given_w_mode <- all((c("lower_adj_matrix", "upper_adj_matrix", "mode_adj_matrix") %in% names_of_additional_inputs))
+    triangular_input_given_wo_mode <- all((c("lower_adj_matrix", "upper_adj_matrix") %in% names_of_additional_inputs)) & !("mode_adj_matrix" %in% names_of_additional_inputs)
+    if (!(triangular_input_given_w_mode | triangular_input_given_wo_mode)) {
+      stop("Additional inputs missing for 'uniform' distribution.
+        Must include: lower_adj_matrix and upper_adj_matrix objects.
+        Note: if no mode_adj_matrix given, will assume its values are the average of the lower and upper adj_matrix objects.")
+    }
     if (triangular_input_given_wo_mode) {
-      additional_inputs$mode_adj_matrix <- (additional_inputs$lower_adj_matrix + additional_inputs$upper_adj_matrix)/2
+      additional_inputs$mode_adj_matrix <- adj_matrix
+      warning("No input mode_adj_matrix given. Using adj_matrix as mode_adj_matrix.")
+    }
+    if (length(additional_inputs) > 3) {
+      stop("Too many additional inputs given. Only lower_adj_matrix, upper_adj_matrix, and mode_adj_matrix needed for TRIANGULAR distribution fmcmcmr")
+    }
+    lower <- additional_inputs$lower_adj_matrix
+    upper <- additional_inputs$upper_adj_matrix
+    mode_values <- additional_inputs$mode_adj_matrix
+    if (any(lower > upper)) {
+      stop("all values in lower_adj_matrix must be less than their counterparts in upper_adj_matrix for a TRIANGULAR distribution")
+    }
+    if (any((any(lower > mode_values) | any(upper < mode_values)))) {
+      stop("all values in mode_adj_matrix must be between their counterparts in lower_adj_matrix and upper_adj_matrix for a TRIANGULAR distribution")
     }
     fmcmcmr_data <- fmcmcmr(adj_matrix, IDs, distribution,
                             "lower_adj_matrix" = additional_inputs$lower_adj_matrix,
                             "upper_adj_matrix" = additional_inputs$upper_adj_matrix,
                             "mode_adj_matrix" = additional_inputs$mode_adj_matrix)
-  } else {
-    stop("Invalid distribution input. Must be one of the following:
-         'uniform', 'gaussian', 'beta', or 'triangular'")
-  }
-
-  edgelist <- fmcmcmr_data$edgelist
-
-  if (distribution == "uniform") {
-    edgelist$dist <- mapply(function(lower, upper) runif(n = n_sims, min = lower, max = upper),
-                            lower = edgelist$lower, upper = edgelist$upper,
-                            SIMPLIFY = FALSE)
-  } else if (distribution == "gaussian") {
-    edgelist$dist <- mapply(function(mu, sd) rnorm(n = n_sims, mean = mu, sd = sd),
-                            mu = edgelist$weight, sd = edgelist$sd,
-                            SIMPLIFY = FALSE)
-  } else if (distribution == "beta") {
-    edgelist$dist <- mapply(function(mu, sd) get_beta_distribution_of_values(mu = mu, sd = sd, n = n_sims),
-                            mu = edgelist$weight, sd = edgelist$sd,
-                            SIMPLIFY = FALSE)
-  } else if (distribution == "triangular") {
+    edgelist <- fmcmcmr_data$edgelist
     edgelist$dist <- mapply(function(lower, upper, mode) get_triangular_distribution_of_values(lower = lower, upper = upper, mode = mode, n_sims),
                             lower = edgelist$lower, upper = edgelist$upper, mode = edgelist$mode,
                             SIMPLIFY = FALSE)
+  } else {
+    # FINAL CHECK STOP
+    stop("Invalid distribution input. Must be one of the following:
+         'uniform', 'beta', or 'triangular'")
   }
 
-
+  # Generate adjacency matrices from sampled distributions
   blank_weight_edgelist <- edgelist[c("source", "target")]
   simulated_edgelists <- rep(list(blank_weight_edgelist), n_sims)
-
   for (i in seq_along(simulated_edgelists)) {
     simulated_edgelists[[i]]$weight <- unlist(lapply(edgelist$dist, function(dist) dist[i]))
   }
-
   simulated_adj_matrices <- lapply(simulated_edgelists, get_adj_matrix_from_edgelist)
-
   names(simulated_adj_matrices) <- paste0("sim_", seq_along(simulated_adj_matrices))
 
   simulated_adj_matrices
@@ -253,7 +278,7 @@ build_fmcmcmr_models <- function(adj_matrix = matrix(),
 #' IF distribution = "gaussian", must include: sd_adj_matrix
 #' IF distribution = "beta", must include: sd_adj_matrix
 #' IF distribution = "triangular", must include: lower_adj_matrix, upper_adj_matrix, and mode_adj_matrix objects
-#'  Note: if no mode_adj_matrix given, will assume its values are the average of the lower and upper adj_matrix objects.
+#'  Note: if no mode_adj_matrix given, will assume its values are the adj_matrix values.
 #'
 #' @export
 fmcmcmr <- function(adj_matrix = matrix(),
@@ -446,99 +471,3 @@ get_triangular_distribution_of_values <- function(lower = double(), upper = doub
 
   values_distribution
 }
-
-
-
-# uniform_inputs_given <- all((c("lower_adj_matrix", "upper_adj_matrix") %in% names_of_additional_inputs))
-# gaussian_input_given <- "sd_adj_matrix" %in% names_of_additional_inputs
-# beta_input_given <- "sd_adj_matrix" %in% names_of_additional_inputs
-# triangular_input_given_w_mode <- all((c("lower_adj_matrix", "upper_adj_matrix", "mode_adj_matrix") %in% names_of_additional_inputs))
-# triangular_input_given_wo_mode <- all((c("lower_adj_matrix", "upper_adj_matrix") %in% names_of_additional_inputs)) & !("mode_adj_matrix" %in% names_of_additional_inputs)
-#
-# if (distribution == "uniform" & !uniform_inputs_given) {
-#   stop("Additional inputs missing for 'uniform' distribution.
-#         Must include: lower_adj_matrix and upper_adj_matrix objects")
-# } else if (distribution == "gaussian" & !gaussian_input_given) {
-#   stop("Additional inputs missing for 'gaussian' distribution.
-#         Must include: sd_adj_matrix object")
-# } else if (distribution == "beta" & !beta_input_given) {
-#   stop("Additional inputs missing for 'beta' distribution.
-#         Must include: sd_adj_matrix object")
-# } else if (distribution == "triangular" & !(triangular_input_given_w_mode | triangular_input_given_wo_mode)) {
-#   stop("Additional inputs missing for 'uniform' distribution.
-#         Must include: lower_adj_matrix and upper_adj_matrix objects.
-#         Note: if no mode_adj_matrix given, will assume its values are the average of the lower and upper adj_matrix objects.")
-# }
-#
-# if (distribution == "uniform") {
-#   distribution_param_adj_matrix_list <- list("lower" = additional_inputs$lower_adj_matrix, "upper" = additional_inputs$upper_adj_matrix)
-# } else if (distribution == "gaussian") {
-#   distribution_param_adj_matrix_list <- list("sd" = additional_inputs$sd_adj_matrix)
-# } else if (distribution == "beta") {
-#   distribution_param_adj_matrix_list <- list("sd" = additional_inputs$sd_adj_matrix)
-# } else if (distribution == "triangular") {
-#   if (triangular_input_given_wo_mode) {
-#     additional_inputs$mode_adj_matrix <- (additional_inputs$lower_adj_matrix + additional_inputs$upper_adj_matrix)/2
-#   }
-#   distribution_param_adj_matrix_list <- list("lower" = additional_inputs$lower_adj_matrix, "upper" = additional_inputs$upper_adj_matrix, "mode" = additional_inputs$mode_adj_matrix)
-# } else {
-#   stop("Invalid distribution input. Must be one of the following:
-#          'uniform', 'gaussian', 'beta', or 'triangular'")
-# }
-
-# # Create fmcmcmr object
-# IDs <- get_node_IDs_from_input(adj_matrix, IDs)
-# adj_matrix_edgelist <- get_edgelist_from_adj_matrix(adj_matrix, IDs)
-#
-# # Combine parameter adj_matrix objects into a single edgelist
-# lapply(distribution_param_adj_matrix_list, confirm_adj_matrix_is_square)
-# lapply(distribution_param_adj_matrix_list, confirm_only_numeric_data_in_adj_matrix)
-# distribution_params_edgelists <- lapply(distribution_param_adj_matrix_list, function(adj_mat) get_edgelist_from_adj_matrix(adj_mat, IDs))
-# distribution_params <- names(distribution_params_edgelists)
-# for (i in seq_along(distribution_params)) {
-#   colnames(distribution_params_edgelists[[i]]) <- c("source", "target", distribution_params[i])
-# }
-#
-# if (length(distribution_params_edgelists) > 1) {
-#   for (i in seq_along(distribution_params_edgelists)) {
-#     if (i == 1) {
-#       additional_params_edgelist <- merge(distribution_params_edgelists[[1]], distribution_params_edgelists[[2]], all = TRUE)
-#     } else if (i == length(distribution_params_edgelists)) {
-#       NULL
-#     } else {
-#       additional_params_edgelist <- merge(additional_params_edgelist, distribution_params_edgelists[[i + 1]], all = TRUE)
-#     }
-#   }
-# } else {
-#   additional_params_edgelist <- distribution_params_edgelists[[1]]
-# }
-#
-# edgelist <- merge(adj_matrix_edgelist, additional_params_edgelist)
-
-# if (any(edgelist$lower > edgelist$upper)) {
-#   stop("all values in lower_adj_matrix must be less than their counterparts in upper_adj_matrix for a UNIFORM distribution")
-# }
-#
-#
-#
-# # Validate edgelist inputs
-# if (distribution == "uniform") {
-#   if (any(edgelist$lower > edgelist$upper)) {
-#     stop("all values in lower_adj_matrix must be less than their counterparts in upper_adj_matrix for a UNIFORM distribution")
-#   }
-# } else if (distribution == "gaussian") {
-#   if (any(edgelist$sd < 0 | edgelist$sd > 1)) {
-#     stop("all values in sd_adj_matrix must be between 0 and +1 for a GAUSSIAN distribution")
-#   }
-# } else if (distribution == "beta") {
-#   if (any(edgelist$sd < 0 | edgelist$sd > 0.5)) {
-#     stop("all values in sd_adj_matrix must be between 0 and +0.5 for a BETA distribution")
-#   }
-# } else if (distribution == "triangular") {
-#   if (any(edgelist$lower > edgelist$upper)) {
-#     stop("all values in lower_adj_matrix must be less than their counterparts in upper_adj_matrix for a TRIANGULAR distribution")
-#   }
-#   if (any(edgelist$mode < edgelist$lower | edgelist$mode > edgelist$upper)) {
-#     stop("all values in mode_adj_matrix must be between their counterparts in lower_adj_matrix and upper_adj_matrix for a TRIANGULAR distribution")
-#   }
-# }
