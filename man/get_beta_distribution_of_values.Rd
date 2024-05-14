@@ -10,6 +10,8 @@ get_beta_distribution_of_values(mu = double(), sd = double(), n = 1000)
 \item{mu}{mean of the population distribution}
 
 \item{sd}{standard deviation of the population distribution}
+
+\item{n}{number of samples to draw from the defined beta distribution}
 }
 \description{
 This pulls n samples from a beta distribution described by shape parameters

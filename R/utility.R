@@ -22,16 +22,12 @@
 #' get_edgelist_from_adj_matrix(matrix(data = c(0, 1, 1, 0), nrow = 2, ncol = 2))
 get_edgelist_from_adj_matrix <- function(adj_matrix = matrix(), IDs = c()) {
   confirm_adj_matrix_is_square(adj_matrix)
+  confirm_only_numeric_data_in_adj_matrix(adj_matrix)
+
   IDs <- get_node_IDs_from_input(adj_matrix, IDs)
 
-  data_types <- unique(vapply(adj_matrix, class, character(1)))
-  only_numeric_data_types <- identical(data_types, "numeric")
-  if (only_numeric_data_types) {
-    edge_locs <- data.table::data.table(which(adj_matrix != 0, arr.ind = TRUE))
-    edge_weights <- mapply(function(row, col) adj_matrix[row, col], row = edge_locs$row, col = edge_locs$col)
-  } else {
-    stop("Unable to interpret input adjacency matrix. Is this for a 'numeric' matrix?")
-  }
+  edge_locs <- data.table::data.table(which(adj_matrix != 0, arr.ind = TRUE))
+  edge_weights <- mapply(function(row, col) adj_matrix[row, col], row = edge_locs$row, col = edge_locs$col)
 
   source_IDs <- IDs[edge_locs$row]
   target_IDs <- IDs[edge_locs$col]
@@ -238,4 +234,31 @@ get_node_IDs_from_input <- function(adj_matrix = matrix(), IDs = c()) {
   }
 
   IDs
+}
+
+
+#' confirm_only_numeric_data_in_adj_matrix
+#'
+#' @description
+#' Confirm all values in an adj_matrix object are of type numeric
+#'
+#' @details
+#' Check that all values in an adjacency matrix are of type numeric (i.e. int,
+#' double, etc.)
+#'
+#' Intended for developer use only to improve package readability.
+#'
+#' @param adj_matrix An n x n adjacency matrix that represents an FCM
+confirm_only_numeric_data_in_adj_matrix <- function(adj_matrix = matrix()) {
+  if (sum(dim(adj_matrix)) == 2) {
+    warning("Input adj_matrix object is an empty 1 x 1 matrix")
+  } else {
+    adj_matrix_data_types <- unique(vapply(adj_matrix, class, character(1)))
+    only_numeric_data_types_in_adj_matrix <- identical(adj_matrix_data_types, "numeric")
+    if (!only_numeric_data_types_in_adj_matrix) {
+      stop("Input adj_matrix must only contain numeric objects, and all
+         objects must be numeric")
+    }
+  }
+  only_numeric_data_types_in_adj_matrix
 }

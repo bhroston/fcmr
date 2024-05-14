@@ -1,13 +1,4 @@
 
-
-
-test <- data.frame(
-  source = c("A", "B"),
-  target = c("B", "C"),
-  weight = c(0.4, 0.7),
-  sd = c(0.1, 0.3)
-)
-
 #' simulate_fmcmcmr_models
 #'
 #' @description
@@ -38,48 +29,56 @@ test <- data.frame(
 #' of the following: 'none' or 'koutsellis'
 #' @param IDs A list of names for each node (must have n items). If empty, will use
 #' column names of adjacancy matrix (if given).
+#' @param parallel TRUE/FALSE Whether to utilize parallel processing
 #'
 #' @export
 simulate_fmcmcmr_models <- function(simulated_adj_matrices = list(matrix()),
                                     initial_state_vector = c(),
-                                    activation = "modified-kosko",
+                                    activation = "modified-kosko", # Something wrong with papageorgiou activation; returning negative numbers... works for sigmoid, but not tanh
                                     squashing = "sigmoid",
                                     lambda = 1,
                                     max_iter = 10,
                                     min_error = 1e-5,
-                                    lambda_optimization = "none",
+                                    lambda_optimization = "none", # Getting error with lambda optimization
                                     IDs = c(),
                                     parallel = TRUE) {
   if (parallel == TRUE) {
-    # Only returns one item for parallel processing?
-    `%dofuture%` <- doFuture::`%dofuture%`
-    future::plan(future::multisession())
+    n_cores <- parallel::detectCores()
+    # n_cores <- 2
+    cl <- parallel::makeCluster(n_cores)
 
-    env <- rlang::child_env("base")
-    env$simulate_fcmr <- rlang::set_env(simulate_fcmr, env)
-    env$confirm_adj_matrix_is_square <- rlang::set_env(confirm_adj_matrix_is_square, env)
-    env$confirm_initial_state_vector_is_compatible_with_adj_matrix <- rlang::set_env(confirm_initial_state_vector_is_compatible_with_adj_matrix, env)
-    env$get_node_IDs_from_input <- rlang::set_env(get_node_IDs_from_input, env)
-    env$optimize_fcmr_lambda <- rlang::set_env(optimize_fcmr_lambda, env)
-    env$calculate_next_fcm_state_vector <- rlang::set_env(calculate_next_fcm_state_vector, env)
-    env$squash <- rlang::set_env(squash, env)
+    # Have to store variables in new env that can be accessed by parLapply. There
+    # is surely a better way to do this, but this way works
+    # start <- Sys.time()
+    vars <- list("simulated_adj_matrices", "initial_state_vector", "activation",
+                 "squashing", "lambda", "max_iter", "min_error",
+                 "lambda_optimization", "IDs",
+                 "simulate_fcmr", "confirm_adj_matrix_is_square",
+                 "confirm_initial_state_vector_is_compatible_with_adj_matrix",
+                 "get_node_IDs_from_input", "optimize_fcmr_lambda",
+                 "calculate_next_fcm_state_vector", "squash")
 
-    fmcmcmr_simulation_results <- foreach::foreach(
-      simulated_adj_matrix = simulated_adj_matrices,
-      options.future = list(env = env)
-    ) %dofuture% {
-      env$simulate_fcmr(
-        adj_matrix = simulated_adj_matrix,
-        initial_state_vector = initial_state_vector,
-        activation = activation,
-        squashing = squashing,
-        lambda = lambda,
-        max_iter = max_iter,
-        min_error = min_error,
-        lambda_optimization = lambda_optimization,
-        IDs = IDs
-      )
-    }
+    parallel::clusterExport(cl, varlist = vars, envir = environment())
+
+    fmcmcmr_simulation_results <- parallel::parLapply(
+      cl,
+      simulated_adj_matrices,
+      function(simulated_adj_matrix) {
+        simulate_fcmr(
+          adj_matrix = simulated_adj_matrix,
+          initial_state_vector = initial_state_vector,
+          activation = activation,
+          squashing = squashing,
+          lambda = lambda,
+          max_iter = max_iter,
+          min_error = min_error,
+          lambda_optimization = lambda_optimization,
+          IDs = IDs
+        )
+      }
+    )
+    #print(Sys.time() - start)
+    parallel::stopCluster(cl)
   } else {
     fmcmcmr_simulation_results <- lapply(
       simulated_adj_matrices,
@@ -104,6 +103,160 @@ simulate_fmcmcmr_models <- function(simulated_adj_matrices = list(matrix()),
 }
 
 
+#' get_simulated_values_across_iters
+#'
+#' @description
+#' This outputs simulation results at a specific or all iters
+#'
+#' @details
+#' This function is designed to streamline the process of getting a distribution
+#' of values at a specific iter to create histograms or perform bootstrap sampling
+#' operations to estimate confidence boundes.
+#'
+#' Use vignette("fmcmcmr-class") for more information.
+#'
+#' @param fmcmcmr_simulation Output from simulate_fmcmcmr_models, represents results across
+#' each simulated fcm
+#' @param iter The iteration at which to return a distribution of values i.e. get
+#' values at iteration 'iter'. If no value is given, returns distributions of values across
+#' each iter in the data set
+#'
+#' @export
+get_simulated_values_across_iters <- function(fmcmcmr_simulation, iter = integer()) {
+  sim_state_vectors <- lapply(fmcmcmr_simulation, function(model) model$state_vectors)
+  for (i in seq_along(sim_state_vectors)) {
+    sim_state_vectors[[i]] <- cbind(
+      iter = 1:nrow(sim_state_vectors[[i]]),
+      sim = i,
+      sim_state_vectors[[i]]
+    )
+  }
+
+  sim_state_vectors_df <- data.frame(do.call(rbind, sim_state_vectors))
+
+  if (identical(iter, integer())) {
+    iter_index <- unique(sim_state_vectors_df$iter)
+    iter_values_across_sims <- vector(mode = "list", length = length(iter_index))
+    names(iter_values_across_sims) <- paste0("iter_", iter_index)
+    for (i in seq_along(iter_index)) {
+      iter_values_across_sims[[i]] <- sim_state_vectors_df[sim_state_vectors_df$iter == i, ]
+    }
+  } else {
+    iter_values_across_sims <- sim_state_vectors_df[sim_state_vectors_df$iter == iter, ]
+  }
+
+  return(iter_values_across_sims)
+}
+
+
+#' get_quantiles_of_simulated_values_across_iters
+#'
+#' @description
+#' This gets the user-input quantiles of the distribution of simulated values
+#' across a given iter
+#'
+#' @details
+#' This function is designed to streamline the process of getting the custom quantiles
+#' of a distribution of simulated values across an individual iteration. Use get_bootstrapped_means
+#' to estimate the confidence intervals for the mean value across simulations.
+#'
+#' Use vignette("fmcmcmr-class") for more information.
+#'
+#' @param simulated_values_across_iters Output of get_simulated_values_across_iters
+#' @param lower_quantile The lower quantile. see ?quantile() for more
+#' @param upper_quantile The upper quantile, see ?quantile() for more
+#' @param get_bootstrapped_means TRUE/FALSE Whether to perform bootstrap sampling to obtain
+#' confidence intervals for the estimation of the mean value across simulations
+#' @param bootstrap_reps Repetitions for bootstrap process, if chosen
+#' @param bootstrap_samples_per_rep Number of samples to draw (with replacement) from
+#' the data per bootstrap_rep
+#'
+#' @export
+get_quantiles_of_simulated_values_across_iters <- function(simulated_values_across_iters = list(),
+                                                          lower_quantile = 0.025,
+                                                          upper_quantile = 0.975,
+                                                          get_bootstrapped_means = FALSE,
+                                                          bootstrap_reps = 1000,
+                                                          bootstrap_samples_per_rep = 1000) {
+  get_quantiles_at_iter <- function(simulated_values_across_iter,
+                                    lower_quantile = 0.025,
+                                    upper_quantile = 0.975,
+                                    get_bootstrapped_means = FALSE,
+                                    bootstrap_reps = 100,
+                                    bootstrap_samples_per_rep = 100) {
+    iter <- NULL
+    sim <- NULL # Added to pass R CMD Check. Does NOT change logic flow or function output.
+    if (all(c("iter", "sim") %in% colnames(simulated_values_across_iter))) {
+      simulated_values_across_iter <- subset(simulated_values_across_iter, select = -c(iter, sim))
+    } else {
+      stop("simulated_values_across_iter must come directly from an output of
+         get_simulated_values_across_iters()")
+    }
+
+    if (!get_bootstrapped_means) {
+      quantile_values_by_node <- vector(mode = "list", length = ncol(simulated_values_across_iter))
+      names(quantile_values_by_node) <- colnames(simulated_values_across_iter)
+      for (i in seq_along(quantile_values_by_node)) {
+        quantile_values_by_node[[i]] <- data.frame(
+          lower = stats::quantile(simulated_values_across_iter[, i], lower_quantile),
+          upper = stats::quantile(simulated_values_across_iter[, i], upper_quantile)
+        )
+        colnames(quantile_values_by_node[[i]]) <- c(paste0("lower_", lower_quantile), paste0("upper_", upper_quantile))
+        rownames(quantile_values_by_node[[i]]) <- NULL
+      }
+    } else {
+      if (!is.numeric(bootstrap_reps)) stop("bootstrap_reps must be a positive integer")
+      if (bootstrap_reps < 1) stop("bootstrap_reps must be a positive integer")
+
+      if (!is.numeric(bootstrap_samples_per_rep)) stop("bootstrap_samples_per_rep must be a positive integer")
+      if (bootstrap_samples_per_rep < 1) stop("bootstrap_samples_per_rep must be a positive integer")
+
+      bootstrapped_means <- data.frame(matrix(data = NA, nrow = bootstrap_reps, ncol = ncol(simulated_values_across_iter)))
+      colnames(bootstrapped_means) <- colnames(simulated_values_across_iter)
+      for (i in 1:bootstrap_reps) {
+        bootstrapped_means[i, ] <- apply(simulated_values_across_iter, 2, function(sim_values) mean(sample(sim_values, bootstrap_samples_per_rep, replace = TRUE)))
+      }
+
+      quantile_values_by_node <- vector(mode = "list", length = ncol(simulated_values_across_iter))
+      names(quantile_values_by_node) <- colnames(simulated_values_across_iter)
+      for (i in seq_along(quantile_values_by_node)) {
+        quantile_values_by_node[[i]] <- data.frame(
+          lower = stats::quantile(bootstrapped_means[, i], lower_quantile),
+          upper = stats::quantile(bootstrapped_means[, i], upper_quantile)
+        )
+        colnames(quantile_values_by_node[[i]]) <- c(paste0("mean_lower_", lower_quantile), paste0("mean_upper_", upper_quantile))
+        rownames(quantile_values_by_node[[i]]) <- NULL
+      }
+    }
+    return(quantile_values_by_node)
+  }
+
+  quantiles_across_iters <- lapply(simulated_values_across_iters,
+                                   function(values_at_iter) {
+                                     get_quantiles_at_iter(values_at_iter,
+                                                           lower_quantile,
+                                                           upper_quantile,
+                                                           get_bootstrapped_means,
+                                                           bootstrap_reps,
+                                                           bootstrap_samples_per_rep)
+                                   })
+  node_names <- unlist(unique(lapply(quantiles_across_iters, names)))
+  quantiles_across_iters_by_node <- vector(mode = "list", length = length(node_names))
+  names(quantiles_across_iters_by_node) <- node_names
+  for (i in seq_along(node_names)) {
+    upper_quantiles_across_iters <- lapply(quantiles_across_iters, function(means_at_iter) means_at_iter[[i]][1])
+    lower_quantiles_across_iters <- lapply(quantiles_across_iters, function(means_at_iter) means_at_iter[[i]][2])
+    quantiles_across_iters_by_node[[i]] <- data.frame(
+      iter = 1:length(upper_quantiles_across_iters),
+      do.call(rbind, lower_quantiles_across_iters),
+      do.call(rbind, upper_quantiles_across_iters)
+    )
+  }
+
+  return(quantiles_across_iters_by_node)
+}
+
+
 #' build_fmcmcmr_models
 #'
 #' @description
@@ -120,6 +273,7 @@ simulate_fmcmcmr_models <- function(simulated_adj_matrices = list(matrix()),
 #' of an FCM
 #' @param IDs A list of names for each node (must have n items)
 #' @param n_sims The number of simulated fcm's to generate
+#' @param parallel TRUE/FALSE Whether to utilize parallel processing
 #' @param distribution A statistical distribution to draw random samples from.
 #' Must be one of the following: 'uniform', 'gaussian', 'beta', or 'triangular'
 #' @param ... Additional adj_matrix objects whose weights describe shape parameters
@@ -172,7 +326,7 @@ build_fmcmcmr_models <- function(adj_matrix = matrix(),
                             "lower_adj_matrix" = additional_inputs$lower_adj_matrix,
                             "upper_adj_matrix" = additional_inputs$upper_adj_matrix)
     edgelist <- fmcmcmr_data$edgelist
-    edgelist$dist <- mapply(function(lower, upper) runif(n = n_sims, min = lower, max = upper),
+    edgelist$dist <- mapply(function(lower, upper) stats::runif(n = n_sims, min = lower, max = upper),
                             lower = edgelist$lower, upper = edgelist$upper,
                             SIMPLIFY = FALSE)
   } else if (distribution == "beta") {
@@ -426,12 +580,13 @@ fmcmcmr <- function(adj_matrix = matrix(),
 #'
 #' @param mu mean of the population distribution
 #' @param sd standard deviation of the population distribution
+#' @param n number of samples to draw from the defined beta distribution
 #'
 #' @export
 get_beta_distribution_of_values <- function(mu = double(), sd = double(), n = 1000) {
   a <- ((mu*(1 - mu))/(sd^2)) - mu
   b <- a/mu - a
-  values_distribution <- rbeta(n, shape1 = a, shape2 = b)
+  values_distribution <- stats::rbeta(n, shape1 = a, shape2 = b)
 
   values_distribution
 }
@@ -450,6 +605,7 @@ get_beta_distribution_of_values <- function(mu = double(), sd = double(), n = 10
 #' @param lower lower limit or minimum of the sample space
 #' @param upper upper limit or maximum of the sample space
 #' @param mode peak of the sample space
+#' @param n number of samples to draw from the triangular distribution
 #'
 #' @export
 get_triangular_distribution_of_values <- function(lower = double(), upper = double(), mode = double(), n = 1000) {
@@ -471,3 +627,43 @@ get_triangular_distribution_of_values <- function(lower = double(), upper = doub
 
   values_distribution
 }
+
+
+# start <- Sys.time()
+# test <- parallel::mclapply(
+#   simulated_adj_matrices,
+#   function(simulated_adj_matrix) {
+#     simulate_fcmr(
+#       adj_matrix = simulated_adj_matrix,
+#       initial_state_vector = initial_state_vector,
+#       activation = activation,
+#       squashing = squashing,
+#       lambda = lambda,
+#       max_iter = max_iter,
+#       min_error = min_error,
+#       lambda_optimization = lambda_optimization,
+#       IDs = IDs
+#     )
+#   },
+#   mc.cores = n_cores
+# )
+# print(Sys.time() - start)
+
+# env <- rlang::child_env("base")
+# env$simulated_adj_matrices = simulated_adj_matrices
+# env$initial_state_vector = initial_state_vector
+# env$activation = activation
+# env$squashing = squashing
+# env$lambda = lambda
+# env$max_iter = max_iter
+# env$min_error = min_error
+# env$lambda_optimization = lambda_optimization
+# env$IDs = IDs
+#
+# env$simulate_fcmr <- rlang::set_env(simulate_fcmr, env)
+# env$confirm_adj_matrix_is_square <- rlang::set_env(confirm_adj_matrix_is_square, env)
+# env$confirm_initial_state_vector_is_compatible_with_adj_matrix <- rlang::set_env(confirm_initial_state_vector_is_compatible_with_adj_matrix, env)
+# env$get_node_IDs_from_input <- rlang::set_env(get_node_IDs_from_input, env)
+# env$optimize_fcmr_lambda <- rlang::set_env(optimize_fcmr_lambda, env)
+# env$calculate_next_fcm_state_vector <- rlang::set_env(calculate_next_fcm_state_vector, env)
+# env$squash <- rlang::set_env(squash, env)

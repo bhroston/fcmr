@@ -29,6 +29,76 @@ m_adj_matrix <- get_adj_matrix_from_edgelist(edgelist_mode)
 
 
 test_that("simulate_fmcmcmr_models works", {
+  init_state_vector <- c(1, 0, 0)
+
+  # Perform visual checks of model outputs
+  uniform_fmcmcmr_models <- build_fmcmcmr_models(test_adj_matrix, lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix)
+  test_uniform_sims_kosko_tanh <-  simulate_fmcmcmr_models(
+    uniform_fmcmcmr_models, init_state_vector,
+    activation = "kosko", squashing = "tanh", lambda = 1,
+    max_iter = 50, parallel = FALSE
+  )
+  test_uniform_sims_kosko_sigmoid <-  simulate_fmcmcmr_models(
+    uniform_fmcmcmr_models, init_state_vector,
+    activation = "kosko", squashing = "sigmoid", lambda = 1,
+    max_iter = 50, parallel = FALSE
+  )
+  test_uniform_sims_modifiedkosko_tanh <-  simulate_fmcmcmr_models(
+    uniform_fmcmcmr_models, init_state_vector,
+    activation = "modified-kosko", squashing = "tanh", lambda = 0.5,
+    max_iter = 50, parallel = FALSE
+  )
+  test_uniform_sims_modifiedkosko_sigmoid <-  simulate_fmcmcmr_models(
+    uniform_fmcmcmr_models, init_state_vector,
+    activation = "modified-kosko", squashing = "sigmoid", lambda = 0.4,
+    max_iter = 50, parallel = FALSE
+  )
+  # Something strange happens with papageourgiou and tanh, getting negative numbers; check later
+  # Performs correctly for sigmoid
+  test_uniform_sims_papageorgiou_tanh <-  simulate_fmcmcmr_models(
+    uniform_fmcmcmr_models, init_state_vector,
+    activation = "papageorgiou", squashing = "tanh", lambda = 0.5,
+    max_iter = 50, parallel = FALSE
+  )
+  test_uniform_sims_papageorgiou_sigmoid <-  simulate_fmcmcmr_models(
+    uniform_fmcmcmr_models, init_state_vector,
+    activation = "papageorgiou", squashing = "sigmoid", lambda = 0.5,
+    max_iter = 50, parallel = FALSE
+  )
+
+  triangular_fmcmcmr_models <- build_fmcmcmr_models(test_adj_matrix, lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix)
+  test_triangular_sims_kosko_tanh <-  simulate_fmcmcmr_models(
+    triangular_fmcmcmr_models, init_state_vector,
+    activation = "kosko", squashing = "tanh", lambda = 1,
+    max_iter = 50, parallel = FALSE
+  )
+  test_triangular_sims_kosko_sigmoid <-  simulate_fmcmcmr_models(
+    triangular_fmcmcmr_models, init_state_vector,
+    activation = "kosko", squashing = "sigmoid", lambda = 1,
+    max_iter = 50, parallel = FALSE
+  )
+  test_triangular_sims_modifiedkosko_tanh <-  simulate_fmcmcmr_models(
+    triangular_fmcmcmr_models, init_state_vector,
+    activation = "modified-kosko", squashing = "tanh", lambda = 0.5,
+    max_iter = 50, parallel = FALSE
+  )
+  test_triangular_sims_modifiedkosko_sigmoid <-  simulate_fmcmcmr_models(
+    triangular_fmcmcmr_models, init_state_vector,
+    activation = "modified-kosko", squashing = "sigmoid", lambda = 0.4,
+    max_iter = 50, parallel = FALSE
+  )
+
+  # Something strange happens with papageourgiou and tanh, getting negative numbers; check later
+  test_triangular_sims_papageorgiou_tanh <-  simulate_fmcmcmr_models(
+    triangular_fmcmcmr_models, init_state_vector,
+    activation = "papageorgiou", squashing = "tanh", lambda = 0.5,
+    max_iter = 50, parallel = FALSE
+  )
+  test_triangular_sims_papageorgiou_sigmoid <-  simulate_fmcmcmr_models(
+    triangular_fmcmcmr_models, init_state_vector,
+    activation = "papageorgiou", squashing = "sigmoid", lambda = 0.5,
+    max_iter = 50, parallel = FALSE
+  )
 
 })
 
@@ -118,6 +188,31 @@ test_that("fmcmcmr works", {
   expect_equal(triangular_fmcmcmr$distribution_params$mode, m_adj_matrix)
 })
 
+test_that("get_quantiles_of_simulated_values_across_iters works", {
+  #uniform_fmcmcmr_models <- build_fmcmcmr_models(test_adj_matrix, n_sims = 1000, lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix)
+  test_fmcmcmr_models <- build_fmcmcmr_models(test_adj_matrix, n_sims = 10, lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix)
+  init_state_vector <- c(1, 0, 0)
+  test_sims <-  simulate_fmcmcmr_models(
+    test_fmcmcmr_models, init_state_vector,
+    activation = "modified-kosko", squashing = "tanh", lambda = 0.5,
+    max_iter = 50, parallel = FALSE
+  )
+  values_across_iters <- get_simulated_values_across_iters(test_sims)
+
+  test_mean_quantiles <- get_quantiles_of_simulated_values_across_iters(
+    values_across_iters, get_bootstrapped_means = TRUE
+  )
+  # Perform visual check
+  # ggplot(test_mean_quantiles$B) + geom_line(aes(x = iter, y = mean_upper_0.975)) + geom_line(aes(x = iter, y = mean_lower_0.025))
+
+  test_quantiles <- get_quantiles_of_simulated_values_across_iters(
+    values_across_iters, lower_quantile = 0.16, upper_quantile = 0.84
+  )
+  # Perform visual check
+  # ggplot(test_quantiles$B) + geom_line(aes(x = iter, y = upper_0.84)) + geom_line(aes(x = iter, y = lower_0.16))
+})
+
+
 test_that("get_triangular_distribution_of_values works", {
 
 })
@@ -127,7 +222,122 @@ test_that("get_beta_distribution_of_values works", {
 })
 
 
+# test_grey_adj_matrix <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(l_adj_matrix, u_adj_matrix)
+# colnames(test_grey_adj_matrix) <- c("A", "B", "C")
+# fgcm_sim <- simulate_fgcmr(test_grey_adj_matrix, initial_state_vector = list(1, 0, 0), squashing = "tanh", lambda = 0.5)
+#
+# lower_bounds <- apply(fgcm_sim$state_vectors, 2, function(grey_num_list) unlist(lapply(grey_num_list, function(grey_num) grey_num$lower)))
+# upper_bounds <- apply(fgcm_sim$state_vectors, 2, function(grey_num_list) unlist(lapply(grey_num_list, function(grey_num) grey_num$upper)))
+#
+# lower_bounds_df <- data.frame(cbind(iter = 1:nrow(lower_bounds), lower_bounds))
+# upper_bounds_df <- data.frame(cbind(iter = 1:nrow(upper_bounds), upper_bounds))
+#
+# lower_bounds_df <- tidyr::pivot_longer(lower_bounds_df, cols = 2:ncol(lower_bounds_df))
+# upper_bounds_df <- tidyr::pivot_longer(upper_bounds_df, cols = 2:ncol(upper_bounds_df))
+#
+# lower_bounds_df$iter_name <- paste0(lower_bounds_df$iter, "_", lower_bounds_df$name)
+# upper_bounds_df$iter_name <- paste0(upper_bounds_df$iter, "_", lower_bounds_df$name)
+#
+# uniform_models <- build_fmcmcmr_models(test_adj_matrix, n_sims = 1000, distribution = "uniform", lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix)
+# sim_models <- simulate_fmcmcmr_models(uniform_models, initial_state_vector = c(1, 0, 0), squashing = "tanh", lambda = 0.5, parallel = FALSE)
+#
+# sim_state_vectors <- lapply(sim_models, function(model) model$state_vectors)
+# for (i in seq_along(sim_state_vectors)) {
+#   sim_state_vectors[[i]] <- cbind(
+#     iter = 1:nrow(sim_state_vectors[[i]]),
+#     sim = i,
+#     sim_state_vectors[[i]]
+#   )
+# }
+#
+# sim_state_vectors_df <- data.frame(do.call(rbind, sim_state_vectors))
+# sim_state_vectors_df_long <- tidyr::pivot_longer(sim_state_vectors_df, cols = 3:ncol(sim_state_vectors_df))
+# sim_state_vectors_df_long$sim_name <- paste0(sim_state_vectors_df$sim, "_", sim_state_vectors_df_long$name)
+#
+# rows_per_sim <- unique(unlist(lapply(sim_state_vectors, function(sim) nrow(sim))))
+# iter_values_across_sims <- vector(mode = "list", length = rows_per_sim)
+# for (i in 1:rows_per_sim) {
+#   iter_values_across_sims[[i]] <- do.call(rbind, lapply(sim_state_vectors, function(sim) sim[i, ]))
+# }
+# names(iter_values_across_sims) <- paste0("iter_", 1:rows_per_sim)
+#
+# get_sim_quantiles_df <- function(state_vectors_node_iters, mean_quantiles = c(0.025, 0.975), sd_quantiles = c(0.16, 0.84)) {
+#   n_draws <- 100
+#   node_means <- lapply(state_vectors_node_iters, function(iter) {
+#     mean_of_means <- vector(mode = "list", length = length(iter))
+#     for (i in 1:length(iter)) {
+#       mean_of_means[[i]] <- mean(sample(iter, n_draws, replace = TRUE))
+#     }
+#     return(do.call(c, mean_of_means))
+#   })
+#   mean_quantile_CIs <- do.call(rbind, lapply(node_means, function(iter) quantile(iter, c(mean_quantiles[1], mean_quantiles[2]))))
+#   colnames(mean_quantile_CIs) <- c("lower_mean_CI", "upper_mean_CI")
+#
+#   sd_quantile_CIs <- do.call(rbind, lapply(state_vectors_node_iters, function(iter) quantile(iter, c(sd_quantiles[1], sd_quantiles[2]))))
+#   colnames(sd_quantile_CIs) <- c("lower_sd_CI", "upper_sd_CI")
+#
+#   quantile_CIs <- data.frame(cbind(iter = 1:length(state_vectors_node_iters), mean_quantile_CIs, sd_quantile_CIs))
+#
+#   return(quantile_CIs)
+# }
+#
+# B_iters <- lapply(iter_values_across_sims, function(iter) iter$B)
+# C_iters <- lapply(iter_values_across_sims, function(iter) iter$C)
+#
+# B_quantile_CIs <- get_sim_quantiles_df(B_iters)
+# C_quantile_CIs <- get_sim_quantiles_df(C_iters)
+#
+# data <- sim_state_vectors_df_long
+#
+# ggplot() +
+#   geom_line(data = data, aes(x = iter, y = value, group = sim_name, color = name), alpha = 0.01) +
+#   geom_line(data = lower_bounds_df, aes(x = iter, y = value, group = name), color = "grey") +
+#   geom_line(data = upper_bounds_df, aes(x = iter, y = value, group = name), color = "grey") +
+#   #geom_ribbon(data = B_quantile_CIs, aes(x = iter, ymin = lower_mean_CI, ymax = upper_mean_CI), fill = "#B0CBE7FF") +
+#   #geom_ribbon(data = B_quantile_CIs, aes(x = iter, ymin = lower_sd_CI, ymax = upper_sd_CI), fill = "#B0CBE7FF", alpha = 0.5) +
+#   #geom_ribbon(data = C_quantile_CIs, aes(x = iter, ymin = lower_mean_CI, ymax = upper_mean_CI), fill = "#FEF7C7FF") +
+#   #geom_ribbon(data = C_quantile_CIs, aes(x = iter, ymin = lower_sd_CI, ymax = upper_sd_CI), fill = "#FEF7C7FF", alpha = 0.5) +
+#   scale_x_continuous(limits = c(0, 30), expand = c(0, 0)) +
+#   scale_y_continuous(limits = c(0, 1), expand = c(0, 0)) +
+#   scale_color_manual(
+#     values = c(
+#       #A = "black", B = "#B0CBE7FF", C = "#FEF7C7FF", D = "#EBA07EFF"
+#       A = "black", B = "#B0CBE7FF", C = "#FEF7C7FF"
+#     )
+#   ) +
+#   theme_classic() +
+#   ggtitle(paste0("Node Values per Iteration across\n", length(sim_state_vectors), " Simulations")) +
+#   theme(
+#     plot.title = element_text(hjust = 0.5),
+#     legend.position = "top"
+#   ) +
+#   guides(color = guide_legend(override.aes = list(alpha = 1))) +
+#   labs(
+#     x = "Iter",
+#     y = "Value",
+#     color = NULL
+#   )
 
+
+
+# mean_quantiles_across_iters <- lapply(values_across_iters, function(values_at_iter) {
+#   get_quantiles_of_simulated_values_across_iter(values_at_iter, get_bootstrapped_means = TRUE)
+# })
+#
+# get_quantiles_across_iters <- function()
+#
+#   node_names <- unlist(unique(lapply(mean_quantiles_across_iters, names)))
+# quantiles_across_iters_by_node <- vector(mode = "list", length = length(node_names))
+# names(quantiles_across_iters_by_node) <- node_names
+# for (i in seq_along(node_names)) {
+#   upper_quantiles_across_iters <- lapply(mean_quantiles_across_iters, function(means_at_iter) means_at_iter[[i]][1])
+#   lower_quantiles_across_iters <- lapply(mean_quantiles_across_iters, function(means_at_iter) means_at_iter[[i]][2])
+#   quantiles_across_iters_by_node[[i]] <- data.frame(
+#     iter = 1:length(upper_quantiles_across_iters),
+#     do.call(rbind, lower_quantiles_across_iters),
+#     do.call(rbind, upper_quantiles_across_iters)
+#   )
+# }
 
 
 

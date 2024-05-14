@@ -36,12 +36,12 @@
 #' @export
 simulate_fcmr <- function(adj_matrix = matrix(),
                           initial_state_vector = c(),
-                          activation = "modified-kosko",
+                          activation = "modified-kosko", # Problems when activation == "papageorgiou"
                           squashing = "sigmoid",
                           lambda = 1,
                           max_iter = 10,
                           min_error = 1e-5,
-                          lambda_optimization = "none",
+                          lambda_optimization = "none", # Verify this function works
                           IDs = c()) {
 
   confirm_adj_matrix_is_square(adj_matrix)
@@ -63,9 +63,6 @@ simulate_fcmr <- function(adj_matrix = matrix(),
     state_vector <- state_vectors[i - 1, ]
     next_state_vector <- calculate_next_fcm_state_vector(adj_matrix, state_vector, activation)
     normalized_state_vector <- squash(next_state_vector, squashing = squashing, lambda = lambda)
-    #if (lambda_optimization != "none") {
-    #  normalized_state_vector <- normalize_state_vector_with_optimized_lambda(next_state_vector, normalized_state_vector, squashing, lambda, lambda_optimization)
-    #}
     state_vectors[i, ] <- normalized_state_vector
     errors[i, ] <- abs(as.matrix(state_vectors[i - 1,]) - as.matrix(state_vectors[i, ]))
     total_error <- sum(errors[i, ])

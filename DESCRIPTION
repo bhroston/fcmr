@@ -18,10 +18,6 @@ RoxygenNote: 7.3.1
 Imports: 
     methods,
     data.table,
-    stats,
-    doFuture,
-    foreach,
-    future,
-    rlang
+    stats
 Depends: 
     R (>= 2.10)
