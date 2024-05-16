@@ -1,4 +1,98 @@
 
+#' get_edgelist_from_adj_matrix
+#'
+#' @description
+#' This "gets" an edgelist representing a graph described by the input adjacency
+#' matrix.
+#'
+#' @details
+#' The input adjacency matrix must be a square n x n matrix. It can be either
+#' a matrix, data.frame, tibble, or data.table type object.
+#'
+#' If the input matrix has named columns, those names will be used as node IDs
+#' in the edgelist. Otherwise, generic node IDs will be used (1, 2, ... n)
+#'
+#' The edgelist returns the following columns: source, target, weight
+#'
+#' @param adj_matrix An n x n adjacency matrix that represents an FCM
+#' @param IDs A list of names for each node (must have n items)
+#'
+#' @export
+#' @examples
+#' get_edgelist_from_adj_matrix(matrix(data = c(0, 1, 1, 0), nrow = 2, ncol = 2))
+get_edgelist_from_adj_matrix <- function(adj_matrix = matrix(), IDs = c()) {
+  confirm_adj_matrix_is_square(adj_matrix)
+  confirm_only_numeric_data_in_adj_matrix(adj_matrix)
+
+  IDs <- get_node_IDs_from_input(adj_matrix, IDs)
+
+  edge_locs <- data.table::data.table(which(adj_matrix != 0, arr.ind = TRUE))
+  edge_weights <- mapply(function(row, col) adj_matrix[row, col], row = edge_locs$row, col = edge_locs$col)
+
+  source_IDs <- IDs[edge_locs$row]
+  target_IDs <- IDs[edge_locs$col]
+
+  edgelist <- data.frame(
+    source = source_IDs,
+    target = target_IDs,
+    weight = edge_weights
+  )
+
+  edgelist
+}
+
+
+#' get_adj_matrix_from_edgelist
+#'
+#' @description
+#' This "gets" an adjacency matrix representing a graph described by the input
+#' edgelist.
+#'
+#' @details
+#' The input edgelist must have the following column names: 'source' or 'from',
+#' 'target' or 'to'. The user must manually note if different names are used
+#' for the edgelist. An additional column may be selected to describe a value
+#' attributed to a given edge.
+#'
+#' The input edgelist can be either a matrix, data.frame, tibble, or
+#' data.table type object.
+#'
+#' @param edgelist An edgelist representing an fcm. Default column names are
+#' "source", "target", and "weight", but these may be defined explicitly.
+#' @param source_colname Column name in the input eddgelist that represents
+#' edge source nodes
+#' @param target_colname Column name in the input edgelist that represents
+#' edge target nodes
+#' @param value_colname Colname in th einput edgelist that represents represents
+#' the values displayed in the adjacency matrix (i.e. weight, standard_deviation)
+#'
+#' @export
+get_adj_matrix_from_edgelist <- function(edgelist = matrix(),
+                                         source_colname = "source",
+                                         target_colname = "target",
+                                         value_colname = "weight") {
+  source_nodes <- edgelist[[source_colname]]
+  target_nodes <- edgelist[[target_colname]]
+  edge_values <- edgelist[[value_colname]]
+
+  nodes <- unique(c(source_nodes, target_nodes))
+
+  adj_matrix <- data.frame(matrix(data = 0, nrow = length(nodes), ncol = length(nodes)))
+  colnames(adj_matrix) <- nodes
+  rownames(adj_matrix) <- nodes
+
+  for (i in seq_along(nodes)) {
+    edge <- edgelist[i, ]
+    edge_row_loc <- which(nodes == edge$source)
+    edge_col_loc <- which(nodes == edge$target)
+    adj_matrix[edge_row_loc, edge_col_loc] <- edge_values[i]
+  }
+
+  adj_matrix
+}
+
+
+
 #' squash
 #'
 #' @description
@@ -140,4 +234,31 @@ get_node_IDs_from_input <- function(adj_matrix = matrix(), IDs = c()) {
   }
 
   IDs
+}
+
+
+#' confirm_only_numeric_data_in_adj_matrix
+#'
+#' @description
+#' Confirm all values in an adj_matrix object are of type numeric
+#'
+#' @details
+#' Check that all values in an adjacency matrix are of type numeric (i.e. int,
+#' double, etc.)
+#'
+#' Intended for developer use only to improve package readability.
+#'
+#' @param adj_matrix An n x n adjacency matrix that represents an FCM
+confirm_only_numeric_data_in_adj_matrix <- function(adj_matrix = matrix()) {
+  if (sum(dim(adj_matrix)) == 2) {
+    warning("Input adj_matrix object is an empty 1 x 1 matrix")
+  } else {
+    adj_matrix_data_types <- unique(vapply(adj_matrix, class, character(1)))
+    only_numeric_data_types_in_adj_matrix <- identical(adj_matrix_data_types, "numeric")
+    if (!only_numeric_data_types_in_adj_matrix) {
+      stop("Input adj_matrix must only contain numeric objects, and all
+         objects must be numeric")
+    }
+  }
+  only_numeric_data_types_in_adj_matrix
 }

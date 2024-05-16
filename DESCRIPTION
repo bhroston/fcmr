@@ -1,4 +1,4 @@
-Package: fcmrv2
+Package: fcmr
 Type: Package
 Title: Fuzzy Cognitive Map Analysis in R
 Version: 0.1.0
