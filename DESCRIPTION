@@ -1,4 +1,4 @@
-Package: fcmrv2
+Package: fcmr
 Type: Package
 Title: Fuzzy Cognitive Map Analysis in R
 Version: 0.1.0
@@ -8,7 +8,7 @@ Authors@R: person(
   role = c("aut", "cre"),
   comment = c(ORCID = "0000-0001-9201-7579"))
 Description: Create and analyse fuzzy cognitive maps.
-License: GPL (>= 3)
+License: GPL (>= 3) + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Suggests: 
@@ -16,4 +16,8 @@ Suggests:
 Config/testthat/edition: 3
 RoxygenNote: 7.3.1
 Imports: 
-    methods
+    methods,
+    data.table,
+    stats
+Depends: 
+    R (>= 2.10)
