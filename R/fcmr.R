@@ -18,6 +18,8 @@
 #'
 #' @param adj_matrix An n x n adjacency matrix that represents an FCM
 #' @param initial_state_vector A list state values at the start of an fcm simulation
+#' @param clamping_vector A list of values to add to each iteration state representing the
+#' continuous 'activation' of a particular node(s)
 #' @param activation The activation function to be applied. Must be one of the following:
 #' 'kosko', 'modified-kosko', or 'papageorgiou'.
 #' @param squashing A squashing function to apply. Must be one of the following:
@@ -36,8 +38,9 @@
 #' @export
 simulate_fcmr <- function(adj_matrix = matrix(),
                           initial_state_vector = c(),
-                          activation = "modified-kosko", # Problems when activation == "papageorgiou"
-                          squashing = "sigmoid",
+                          clamping_vector = c(),
+                          activation = "kosko", # Problems when activation == "papageorgiou",
+                          squashing = "tanh",
                           lambda = 1,
                           max_iter = 10,
                           min_error = 1e-5,
@@ -47,6 +50,10 @@ simulate_fcmr <- function(adj_matrix = matrix(),
   confirm_adj_matrix_is_square(adj_matrix)
   confirm_initial_state_vector_is_compatible_with_adj_matrix(adj_matrix, initial_state_vector)
   IDs <- get_node_IDs_from_input(adj_matrix, IDs)
+
+  if (identical(clamping_vector, c())) {
+    clamping_vector <- rep(0, length(initial_state_vector))
+  }
 
   if (lambda_optimization != "none") {
     lambda <- optimize_fcmr_lambda(adj_matrix, squashing, lambda_optimization)
@@ -63,7 +70,7 @@ simulate_fcmr <- function(adj_matrix = matrix(),
     state_vector <- state_vectors[i - 1, ]
     next_state_vector <- calculate_next_fcm_state_vector(adj_matrix, state_vector, activation)
     normalized_state_vector <- squash(next_state_vector, squashing = squashing, lambda = lambda)
-    state_vectors[i, ] <- normalized_state_vector
+    state_vectors[i, ] <- normalized_state_vector + clamping_vector
     errors[i, ] <- abs(as.matrix(state_vectors[i - 1,]) - as.matrix(state_vectors[i, ]))
     total_error <- sum(errors[i, ])
     if (total_error < min_error) {
