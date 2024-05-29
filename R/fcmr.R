@@ -1,4 +1,5 @@
 
+
 #' simulate_fcmr
 #'
 #' @description
@@ -37,8 +38,10 @@
 #'
 #' @export
 simulate_fcmr <- function(adj_matrix = matrix(),
-                          initial_state_vector = c(),
-                          clamping_vector = c(),
+                          # initial_state_vector = c()
+                          # activation_vector = c(),
+                          initial_state_vector = c(), # Call this the activation vector!!!
+                          clamping_vector = c(), #
                           activation = "kosko", # Problems when activation == "papageorgiou",
                           squashing = "tanh",
                           lambda = 1,

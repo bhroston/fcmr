@@ -40,3 +40,15 @@ test_that("get_node_IDs_from_input works", {
 
   expect_error(get_node_IDs_from_input(test_adj_matrix, IDs = c("C1", "C2", "C3", "C4", "C5", "C6")))
 })
+
+test_that("get_adj_matrix_from_edgelist works", {
+  test_edgelist <- data.frame(
+    from = c("A"),
+    to = c("B"),
+    weight = c(0.55)
+  )
+  test_adj_matrix <- get_adj_matrix_from_edgelist(test_edgelist)
+
+  ### Check this test case for error or function pass with "to" and "from" instead of "source" and "target"
+  expect_equal(test_adj_matrix, rbind(c(0, 1), c(0, 0)))
+})
