@@ -19,7 +19,7 @@ normalize_state_vector_with_optimized_lambda(
 
 \item{squashing}{A squashing function to apply. Must be one of the following: 'tanh', or 'sigmoid'.}
 
-\item{optimized_lambda}{The optimized lambda calculated by optimize_fcmr_lambda}
+\item{optimized_lambda}{The optimized lambda calculated by optimize_fcm_lambda}
 
 \item{method}{An algorithm of which to optimize lambda with. Must be one of the following: "koutsellis" or 'none'
 if the user does not want to optimize lambda and use the user-defined lambda instead.
