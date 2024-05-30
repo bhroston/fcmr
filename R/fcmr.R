@@ -1,26 +1,33 @@
 
-
-#' simulate_fcmr
+#' confer_fcm
 #'
 #' @description
-#' This calculates a sequence of iterations of a simulation over an fcmr object
-#' given an initial state vector along with the activation, squashing, and lambda
-#' parameters. Additional variables may be defined to control simulation length,
-#' column names, and lambda optimization.
+#' This confers with a baseline simulation of an FCM and a scenario (scenario vector)
+#' to estimate how outputs change compared to the structural or expected behavior
+#' of the system.
 #'
 #' @details
-#' This simulates how an fcm reacts to an input initial state vector. There is a
-#' multi-decadal long body of work that has explored numerous activation and squashing
-#' functions as well as algorithms to optimize the lambda value for the
-#' sigmoid and tanh squashing functions.
+#' This function performs two fcm simulations and compares the output between the two.
+#' The first simulation considers the baseline activity where no nodes are "clamped" and the
+#' system behaves without any outside inputs. The second simulation considers a scenario where
+#' one or multiple nodes are "clamped" so that the system is reactive to additional inputs.
+#' The function returns the difference in simulation results between the scenario and baseline
+#' activity to understand how system manipulations compare to structural expectations of the system.
 #'
-#' Use vignette("fcmr-class") for more information about each of these
+#' This function produces the same output as mental modeler for the following inputs:
+#'  - activation_vector = c(1, 1, ..., 1)
+#'  - activation = "kosko"
+#'  - squashing = either "sigmoid" or "tanh"
+#'  - lambda = 1
+#'
+#' Use vignette("fcm-class") for more information about each of these
 #' functions/algorithms alongside their originating sources.
 #'
 #' @param adj_matrix An n x n adjacency matrix that represents an FCM
-#' @param initial_state_vector A list state values at the start of an fcm simulation
-#' @param clamping_vector A list of values to add to each iteration state representing the
-#' continuous 'activation' of a particular node(s)
+#' @param activation_vector A list state values at the start of an fcm simulation
+#' @param scenario_vector A list of values representing specific actions taken to
+#' control the behavior of an FCM. Specifically, non-zero values defined in this vector
+#' will remain constant throughout the entire simulation as if they were "clamped" at those values.
 #' @param activation The activation function to be applied. Must be one of the following:
 #' 'kosko', 'modified-kosko', or 'papageorgiou'.
 #' @param squashing A squashing function to apply. Must be one of the following:
@@ -37,11 +44,136 @@
 #' column names of adjacancy matrix (if given).
 #'
 #' @export
-simulate_fcmr <- function(adj_matrix = matrix(),
-                          # initial_state_vector = c()
-                          # activation_vector = c(),
-                          initial_state_vector = c(), # Call this the activation vector!!!
-                          clamping_vector = c(), #
+confer_fcm <- function(adj_matrix = matrix(),
+                       activation_vector = c(),
+                       scenario_vector = c(),
+                       activation = "kosko", # Problems when activation == "papageorgiou",
+                       squashing = "tanh",
+                       lambda = 1,
+                       max_iter = 10,
+                       min_error = 1e-5,
+                       lambda_optimization = "none", # Verify this function works
+                       IDs = c()) {
+
+  confirm_adj_matrix_is_square(adj_matrix)
+
+  if (identical(activation_vector, c())) {
+    warning("No activation_vector input given. Assuming all nodes have an initial state of 1.")
+    activation_vector <- rep(1, nrow(adj_matrix))
+  }
+
+  if (identical(scenario_vector, c())) {
+    warning("No scenario_vector input given. Assuming no values are clamped.")
+    scenario_vector <- rep(0, length(activation_vector))
+  }
+
+  # Get baseline simulation
+  baseline_activation_vector <- rep(1, length(activation_vector))
+  baseline_scenario_vector <- rep(0, length(scenario_vector))
+  baseline_simulation <- simulate_fcm(adj_matrix,
+                                      baseline_activation_vector, baseline_scenario_vector,
+                                      activation, squashing, lambda,
+                                      max_iter, min_error, lambda_optimization,
+                                      IDs)
+
+  # Get scenario simulation
+  scenario_activation_vector <- activation_vector
+  scenario_scenario_vector <- scenario_vector
+  scenario_simulation <- simulate_fcm(adj_matrix,
+                                      scenario_activation_vector, scenario_scenario_vector,
+                                      activation, squashing, lambda,
+                                      max_iter, min_error, lambda_optimization,
+                                      IDs)
+
+  n_iters_baseline <- nrow(baseline_simulation$state_vectors)
+  n_iters_scenario <- nrow(scenario_simulation$state_vectors)
+
+  if (n_iters_baseline == n_iters_scenario) {
+    baseline_state_vectors <- baseline_simulation$state_vectors
+    scenario_state_vectors <- scenario_simulation$state_vectors
+  } else if (n_iters_baseline < n_iters_scenario) {
+    extended_baseline_simulation_state_vectors <- data.frame(apply(
+      baseline_simulation$state_vectors, 2, function(sim) {
+        c(sim, rep(sim[n_iters_baseline], n_iters_scenario - n_iters_baseline))
+      }
+    ))
+    baseline_state_vectors <- extended_baseline_simulation_state_vectors
+    scenario_state_vectors <- scenario_simulation$state_vectors
+  } else if (n_iters_scenario < n_iters_baseline) {
+    extended_scenario_simulation_state_vectors <- data.frame(apply(
+      scenario_simulation$state_vectors, 2, function(sim) {
+        c(sim, rep(sim[n_iters_scenario], n_iters_baseline - n_iters_scenario))
+      }
+    ))
+    baseline_state_vectors <- baseline_simulation$state_vectors
+    scenario_state_vectors <- extended_scenario_simulation_state_vectors
+  }
+
+  inference_state_vectors <- scenario_state_vectors - baseline_state_vectors
+  rownames(inference_state_vectors) <- 1:nrow(inference_state_vectors)
+
+  inference_values <- inference_state_vectors[nrow(inference_state_vectors),]
+  rownames(inference_values) <- 1
+
+  inference_plot_data <- data.frame(
+    node = colnames(inference_values),
+    value = unlist(inference_values)
+  )
+
+  structure(
+    .Data = list(
+      inference = inference_values,
+      inference_for_plotting = inference_plot_data,
+      inference_state_vectors = inference_state_vectors,
+      scenario_simulation = scenario_simulation,
+      baseline_simulation = baseline_simulation
+    ),
+    class = "fcmconfer"
+  )
+}
+
+
+#' simulate_fcm
+#'
+#' @description
+#' This calculates a sequence of iterations of a simulation over an fcm object
+#' given an initial state vector along with the activation, squashing, and lambda
+#' parameters. Additional variables may be defined to control simulation length,
+#' column names, and lambda optimization.
+#'
+#' @details
+#' This simulates how an fcm reacts to an input initial state vector. There is a
+#' multi-decadal long body of work that has explored numerous activation and squashing
+#' functions as well as algorithms to optimize the lambda value for the
+#' sigmoid and tanh squashing functions.
+#'
+#' Use vignette("fcm-class") for more information about each of these
+#' functions/algorithms alongside their originating sources.
+#'
+#' @param adj_matrix An n x n adjacency matrix that represents an FCM
+#' @param activation_vector A list state values at the start of an fcm simulation
+#' @param scenario_vector A list of values representing specific actions taken to
+#' control the behavior of an FCM. Specifically, non-zero values defined in this vector
+#' will remain constant throughout the entire simulation as if they were "clamped" at those values.
+#' @param activation The activation function to be applied. Must be one of the following:
+#' 'kosko', 'modified-kosko', or 'papageorgiou'.
+#' @param squashing A squashing function to apply. Must be one of the following:
+#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' @param lambda A numeric value that defines the steepness of the slope of the
+#' squashing function when tanh or sigmoid are applied
+#' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
+#' @param min_error The lowest error (sum of the absolute value of the current state
+#' vector minus the previous state vector) at which no more iterations are necessary
+#' and the simulation will stop
+#' @param lambda_optimization A lambda optimization procedure to apply. Must be one
+#' of the following: 'none' or 'koutsellis'
+#' @param IDs A list of names for each node (must have n items). If empty, will use
+#' column names of adjacancy matrix (if given).
+#'
+#' @export
+simulate_fcm <- function(adj_matrix = matrix(),
+                          activation_vector = c(),
+                          scenario_vector = c(),
                           activation = "kosko", # Problems when activation == "papageorgiou",
                           squashing = "tanh",
                           lambda = 1,
@@ -51,29 +183,37 @@ simulate_fcmr <- function(adj_matrix = matrix(),
                           IDs = c()) {
 
   confirm_adj_matrix_is_square(adj_matrix)
-  confirm_initial_state_vector_is_compatible_with_adj_matrix(adj_matrix, initial_state_vector)
-  IDs <- get_node_IDs_from_input(adj_matrix, IDs)
 
-  if (identical(clamping_vector, c())) {
-    clamping_vector <- rep(0, length(initial_state_vector))
+  if (identical(activation_vector, c())) {
+    warning("No activation_vector input given. Assuming all nodes have an initial state of 1.")
+   activation_vector <- rep(1, nrow(adj_matrix))
+  }
+
+  if (identical(scenario_vector, c())) {
+    warning("No scenario_vector input given. Assuming no values are clamped.")
+    scenario_vector <- rep(0, length(activation_vector))
   }
 
   if (lambda_optimization != "none") {
-    lambda <- optimize_fcmr_lambda(adj_matrix, squashing, lambda_optimization)
+    lambda <- optimize_fcm_lambda(adj_matrix, squashing, lambda_optimization)
   }
 
-  state_vectors <- data.frame(matrix(data = numeric(), nrow = max_iter + 1, ncol = length(initial_state_vector)))
+  confirm_activation_vector_is_compatible_with_adj_matrix(adj_matrix, activation_vector)
+  IDs <- get_node_IDs_from_input(adj_matrix, IDs)
 
-  errors <-  data.frame(matrix(data = numeric(), nrow = max_iter, ncol = length(initial_state_vector)))
+  state_vectors <- data.frame(matrix(data = numeric(), nrow = max_iter + 1, ncol = length(activation_vector)))
 
-  state_vectors[1, ] <- initial_state_vector
+  errors <-  data.frame(matrix(data = numeric(), nrow = max_iter, ncol = length(activation_vector)))
+
+  state_vectors[1, ] <- activation_vector
   errors[1, ] <- 0
 
   for (i in 2:(max_iter + 1)) {
     state_vector <- state_vectors[i - 1, ]
     next_state_vector <- calculate_next_fcm_state_vector(adj_matrix, state_vector, activation)
     normalized_state_vector <- squash(next_state_vector, squashing = squashing, lambda = lambda)
-    state_vectors[i, ] <- normalized_state_vector + clamping_vector
+    normalized_state_vector[scenario_vector != 0] <- scenario_vector[scenario_vector != 0]
+    state_vectors[i, ] <- normalized_state_vector
     errors[i, ] <- abs(as.matrix(state_vectors[i - 1,]) - as.matrix(state_vectors[i, ]))
     total_error <- sum(errors[i, ])
     if (total_error < min_error) {
@@ -95,7 +235,7 @@ simulate_fcmr <- function(adj_matrix = matrix(),
       errors = errors,
       params = list(
         adj_matrix = adj_matrix,
-        initial_state_vector = initial_state_vector,
+        activation_vector = activation_vector,
         activation = activation,
         squashing = squashing,
         lambda = lambda,
@@ -105,7 +245,7 @@ simulate_fcmr <- function(adj_matrix = matrix(),
         IDs = IDs
       )
     ),
-    class = "fcmr_simulation"
+    class = "fcm_simulation"
   )
 }
 
@@ -129,7 +269,7 @@ simulate_fcmr <- function(adj_matrix = matrix(),
 #' value of 0.5 to reduce the influence that a lack of initial state information
 #' can have on the simulation output (Papageorgiou, 2011 - https://doi.org/10.1016/j.asoc.2009.12.010)=
 #'
-#' Use vignette("fcmr-class") for more information.
+#' Use vignette("fcm-class") for more information.
 #'
 #' @param adj_matrix An n x n adjacency matrix that represents an FCM
 #' @param state_vector A list state values at a particular iteration in an fcm simulation
@@ -156,7 +296,7 @@ calculate_next_fcm_state_vector <- function(adj_matrix = matrix(), state_vector 
 }
 
 
-#' optimize_fcmr_lambda
+#' optimize_fcm_lambda
 #'
 #' @description
 #' This calculates optimum lambda value for the sigmoid and tanh squashing
@@ -182,7 +322,7 @@ calculate_next_fcm_state_vector <- function(adj_matrix = matrix(), state_vector 
 #' and [-1, 1] respectively).
 #'
 #' @export
-optimize_fcmr_lambda <- function(adj_matrix = matrix(), squashing = "sigmoid", method = "koutsellis") {
+optimize_fcm_lambda <- function(adj_matrix = matrix(), squashing = "sigmoid", method = "koutsellis") {
   if (squashing != "sigmoid" & squashing != "tanh") {
     stop("Invalid squashing function. Input squashing must be one of the following: 'sigmoid' or 'tanh'")
   }
@@ -244,7 +384,7 @@ optimize_fcmr_lambda <- function(adj_matrix = matrix(), squashing = "sigmoid", m
 #' @param raw_state The dot product of the state vector by a column vector of an adjacency matrix
 #' @param squashed_state The output of a squashing function with the input raw state value
 #' @param squashing A squashing function to apply. Must be one of the following: 'tanh', or 'sigmoid'.
-#' @param optimized_lambda The optimized lambda calculated by optimize_fcmr_lambda
+#' @param optimized_lambda The optimized lambda calculated by optimize_fcm_lambda
 #' @param method An algorithm of which to optimize lambda with. Must be one of the following: "koutsellis" or 'none'
 #' if the user does not want to optimize lambda and use the user-defined lambda instead.
 #'
@@ -272,7 +412,7 @@ normalize_state_vector_with_optimized_lambda <- function(raw_state = numeric(),
 }
 
 
-#' confirm_initial_state_vector_is_compatible_with_adj_matrix
+#' confirm_activation_vector_is_compatible_with_adj_matrix
 #'
 #' @description
 #' Confirm that an initial state vector is algorithmically compatible with an adjacency matrix
@@ -286,10 +426,10 @@ normalize_state_vector_with_optimized_lambda <- function(raw_state = numeric(),
 #' Intended for developer use only to improve package readability.
 #'
 #' @param adj_matrix An n x n adjacency matrix that represents an FCM
-#' @param initial_state_vector An n-length list of the initial states of each node in an fcm simulation
-confirm_initial_state_vector_is_compatible_with_adj_matrix <- function(adj_matrix = matrix(), initial_state_vector = c()) {
-  if (length(initial_state_vector) != unique(dim(adj_matrix))) {
-    stop("Length of input initial_state_vector is does not comply with the dimensions of the input adjacency matrix", .call = FALSE)
+#' @param activation_vector An n-length list of the initial states of each node in an fcm simulation
+confirm_activation_vector_is_compatible_with_adj_matrix <- function(adj_matrix = matrix(), activation_vector = c()) {
+  if (length(activation_vector) != unique(dim(adj_matrix))) {
+    stop("Length of input activation_vector is does not comply with the dimensions of the input adjacency matrix", .call = FALSE)
   } else {
     TRUE
   }
@@ -297,7 +437,7 @@ confirm_initial_state_vector_is_compatible_with_adj_matrix <- function(adj_matri
 
 
 
-#' fcmr (fuzzy cognitive map) S3 class
+#' fcm (fuzzy cognitive map) S3 class
 #'
 #' @description
 #' This class is an organization scheme for ordinary fuzzy cognitive maps (See
@@ -305,19 +445,19 @@ confirm_initial_state_vector_is_compatible_with_adj_matrix <- function(adj_matri
 #' corresponding adjacency matrix and edgelist.
 #'
 #' @details
-#' fcmr stores fcm data in forms useful to data manipulation, particular
+#' fcm stores fcm data in forms useful to data manipulation, particular
 #' regarding pairing with popular network analysis libraries like igraph
 #' or visNetwork.
 #'
-#' Use vignette("fcmr-class") for more information.
+#' Use vignette("fcm-class") for more information.
 #'
 #' @param adj_matrix An n x n adjacency matrix that represents an FCM
 #' @param IDs A list of names for each node (must have n items)
 #'
 #' @export
 #' @examples
-#' fcmr(adj_matrix = matrix(data = c(0, 1, 1, 0), nrow = 2, ncol = 2))
-fcmr <- function(adj_matrix = matrix(), IDs = c()) {
+#' fcm(adj_matrix = matrix(data = c(0, 1, 1, 0), nrow = 2, ncol = 2))
+fcm <- function(adj_matrix = matrix(), IDs = c()) {
   # Validate input
   confirm_adj_matrix_is_square(adj_matrix)
   IDs <- get_node_IDs_from_input(adj_matrix, IDs)
@@ -335,7 +475,7 @@ fcmr <- function(adj_matrix = matrix(), IDs = c()) {
       adj_matrix = adj_matrix,
       edgelist = get_edgelist_from_adj_matrix(adj_matrix)
     ),
-    class = "fcmr"
+    class = "fcm"
   )
 }
 
