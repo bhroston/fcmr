@@ -262,3 +262,49 @@ confirm_only_numeric_data_in_adj_matrix <- function(adj_matrix = matrix()) {
   }
   only_numeric_data_types_in_adj_matrix
 }
+
+
+#' match_state_vector_df_shapes
+#'
+#' @description
+#' Given two data frames of state vectors, extend the one with the least number of rows
+#' by repeating its final iteration value until the data frames are the same shape (i.e.
+#' have the same number of rows)
+#'
+#' @details
+#' Ensure that both input data frames are the same shape
+#'
+#' Intended for developer use only to improve package readability.
+#'
+#' @param baseline_state_vectors A state vectors dataframe for the baseline simulation
+#' @param scenario_state_vectors A state vectors dataframe for the scenario simulation
+match_state_vector_df_shapes <- function(baseline_state_vectors, scenario_state_vectors) {
+  n_rows_baseline <- nrow(baseline_state_vectors)
+  n_rows_scenario <- nrow(scenario_state_vectors)
+
+  if (n_rows_baseline == n_rows_scenario) {
+    new_baseline_state_vectors <- baseline_state_vectors
+    new_scenario_state_vectors <- scenario_state_vectors
+  } else if (n_rows_baseline < n_rows_scenario) {
+    extended_baseline_state_vectors <- data.frame(apply(
+      baseline_state_vectors, 2, function(sim) {
+        c(sim, rep(sim[n_rows_baseline], n_rows_scenario - n_rows_baseline))
+      }
+    ))
+    new_baseline_state_vectors <- extended_baseline_state_vectors
+    new_scenario_state_vectors <- scenario_state_vectors
+  } else if (n_rows_scenario < n_rows_baseline) {
+    extended_scenario_state_vectors <- data.frame(apply(
+      scenario_state_vectors, 2, function(sim) {
+        c(sim, rep(sim[n_rows_scenario], n_rows_baseline - n_rows_scenario))
+      }
+    ))
+    new_baseline_state_vectors <- baseline_state_vectors
+    new_scenario_state_vectors <- extended_scenario_state_vectors
+  }
+
+  list(
+    baseline = data.frame(new_baseline_state_vectors),
+    scenario = data.frame(new_scenario_state_vectors)
+  )
+}

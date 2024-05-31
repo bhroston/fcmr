@@ -1,9 +1,9 @@
 
-#' simulate_fmcmcmr_models
+#' confer_fmccm
 #'
 #' @description
 #' This calculates a sequence of iterations of a simulation over every item in
-#' a list of fmcmcmr objects given an initial state vector along with the
+#' a list of fmccm objects given an initial state vector along with the
 #' activation, squashing, and lambda parameters.
 #' Additional variables may be defined to control simulation length,
 #' column names, and lambda optimization.
@@ -11,10 +11,13 @@
 #' @details
 #' [ADD DETAILS HERE!!!]
 #'
-#' Use vignette("fmcmcmr-class") for more information.
+#' Use vignette("fmccm-class") for more information.
 #'
-#' @param simulated_adj_matrices A list of adjecency matrices generated from simulation using build_fmcmcmr_models.
-#' @param initial_state_vector A list state values at the start of an fcm simulation
+#' @param simulated_adj_matrices A list of adjecency matrices generated from simulation using build_fmccm_models.
+#' @param activation_vector A list state values at the start of an fcm simulation
+#' @param scenario_vector A list of values representing specific actions taken to
+#' control the behavior of an FCM. Specifically, non-zero values defined in this vector
+#' will remain constant throughout the entire simulation as if they were "clamped" at those values.
 #' @param activation The activation function to be applied. Must be one of the following:
 #' 'kosko', 'modified-kosko', or 'papageorgiou'.
 #' @param squashing A squashing function to apply. Must be one of the following:
@@ -30,19 +33,169 @@
 #' @param IDs A list of names for each node (must have n items). If empty, will use
 #' column names of adjacancy matrix (if given).
 #' @param parallel TRUE/FALSE Whether to utilize parallel processing
+#' @param show_progress TRUE/FALSE Show progress bar when creating fmccm. Uses pbmapply
+#' from the pbapply package as the underlying function.
+#' @param include_simulations_in_output TRUE/FALSE whether to include simulations of monte-carlo-generated
+#' FCM. Will dramatically increase size of output if TRUE.
 #'
 #' @export
-simulate_fmcmcmr_models <- function(simulated_adj_matrices = list(matrix()),
-                                    initial_state_vector = c(),
-                                    activation = "modified-kosko", # Something wrong with papageorgiou activation; returning negative numbers... works for sigmoid, but not tanh
-                                    squashing = "sigmoid",
-                                    lambda = 1,
-                                    max_iter = 10,
-                                    min_error = 1e-5,
-                                    lambda_optimization = "none", # Getting error with lambda optimization
-                                    IDs = c(),
-                                    parallel = TRUE) {
+confer_fmccm <- function(simulated_adj_matrices = list(matrix()),
+                         activation_vector = c(),
+                         scenario_vector = c(),
+                         activation = "modified-kosko", # Something wrong with papageorgiou activation; returning negative numbers... works for sigmoid, but not tanh
+                         squashing = "sigmoid",
+                         lambda = 1,
+                         max_iter = 10,
+                         min_error = 1e-5,
+                         lambda_optimization = "none", # Getting error with lambda optimization
+                         IDs = c(),
+                         parallel = TRUE,
+                         show_progress = TRUE,
+                         include_simulations_in_output = FALSE) {
+  confirm_adj_matrix_is_square(adj_matrix)
+
+  if (identical(activation_vector, c())) {
+    warning("No activation_vector input given. Assuming all nodes have an initial state of 1.")
+    activation_vector <- rep(1, nrow(adj_matrix))
+  }
+
+  if (identical(scenario_vector, c())) {
+    warning("No scenario_vector input given. Assuming no values are clamped.")
+    scenario_vector <- rep(0, length(activation_vector))
+  }
+
+  # Get baseline simulations
+  print("Performing baseline simulations", quote = FALSE)
+  baseline_scenario_vector <- rep(0, length(scenario_vector))
+  baseline_simulations <- simulate_fmccm_models(simulated_adj_matrices,
+                                                activation_vector, baseline_scenario_vector,
+                                                activation, squashing, lambda,
+                                                max_iter, min_error, lambda_optimization,
+                                                IDs, parallel, show_progress)
+
+  # Get scenario simulations
+  print("Performing scenario simulations", quote = FALSE)
+  scenario_simulations <- simulate_fmccm_models(simulated_adj_matrices,
+                                                activation_vector, scenario_vector,
+                                                activation, squashing, lambda,
+                                                max_iter, min_error, lambda_optimization,
+                                                IDs, parallel, show_progress)
+
+  baseline_state_vectors <- lapply(baseline_simulations, function(sim) sim$state_vectors)
+  scenario_state_vectors <- lapply(scenario_simulations, function(sim) sim$state_vectors)
+  state_vectors_by_sim <- mapply(function(baseline, scenario) match_state_vector_df_shapes(baseline, scenario),
+         baseline = baseline_state_vectors,
+         scenario = scenario_state_vectors,
+         SIMPLIFY = FALSE)
+
+  inference_state_vectors_by_sim <- lapply(
+    state_vectors_by_sim,
+    function(state_vectors) {
+      mapply(function(baseline, scenario) scenario - baseline,
+             baseline = state_vectors$baseline,
+             scenario = state_vectors$scenario,
+             SIMPLIFY = TRUE
+      )
+      }
+    )
+
+  inference_values_by_sim <- lapply(inference_state_vectors_by_sim, function(sim) sim[nrow(sim), ])
+  inference_values <- data.frame(do.call(rbind, inference_values_by_sim))
+
+  inference_plot_data <- data.frame(
+    node = rep(colnames(inference_values), nrow(inference_values)),
+    value = unlist(lapply(t(inference_values), c))
+  )
+
+  if (include_simulations_in_output) {
+    structure(
+      .Data = list(
+        inference = inference_values,
+        inference_for_plotting = inference_plot_data,
+        inference_state_vectors_by_sim = inference_state_vectors_by_sim,
+        scenario_simulations = scenario_simulations,
+        baseline_simulations = baseline_simulations
+      ),
+      class = "fmccmconfer"
+    )
+  } else {
+    structure(
+      .Data = list(
+        inference = inference_values,
+        inference_for_plotting = inference_plot_data,
+        inference_state_vectors_by_sim = inference_state_vectors_by_sim
+      ),
+      class = "fmccmconfer"
+    )
+  }
+}
+
+#' simulate_fmccm_models
+#'
+#' @description
+#' This calculates a sequence of iterations of a simulation over every item in
+#' a list of fmccm objects given an initial state vector along with the
+#' activation, squashing, and lambda parameters.
+#' Additional variables may be defined to control simulation length,
+#' column names, and lambda optimization.
+#'
+#' @details
+#' [ADD DETAILS HERE!!!]
+#'
+#' Use vignette("fmccm-class") for more information.
+#'
+#' @param simulated_adj_matrices A list of adjecency matrices generated from simulation using build_fmccm_models.
+#' @param activation_vector A list state values at the start of an fcm simulation
+#' @param scenario_vector A list of values representing specific actions taken to
+#' control the behavior of an FCM. Specifically, non-zero values defined in this vector
+#' will remain constant throughout the entire simulation as if they were "clamped" at those values.
+#' @param activation The activation function to be applied. Must be one of the following:
+#' 'kosko', 'modified-kosko', or 'papageorgiou'.
+#' @param squashing A squashing function to apply. Must be one of the following:
+#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' @param lambda A numeric value that defines the steepness of the slope of the
+#' squashing function when tanh or sigmoid are applied
+#' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
+#' @param min_error The lowest error (sum of the absolute value of the current state
+#' vector minus the previous state vector) at which no more iterations are necessary
+#' and the simulation will stop
+#' @param lambda_optimization A lambda optimization procedure to apply. Must be one
+#' of the following: 'none' or 'koutsellis'
+#' @param IDs A list of names for each node (must have n items). If empty, will use
+#' column names of adjacancy matrix (if given).
+#' @param parallel TRUE/FALSE Whether to utilize parallel processing
+#' @param show_progress TRUE/FALSE Show progress bar when creating fmccm. Uses pbmapply
+#' from the pbapply package as the underlying function.
+#'
+#' @export
+simulate_fmccm_models <- function(simulated_adj_matrices = list(matrix()),
+                                  activation_vector = c(),
+                                  scenario_vector = c(),
+                                  activation = "modified-kosko", # Something wrong with papageorgiou activation; returning negative numbers... works for sigmoid, but not tanh
+                                  squashing = "sigmoid",
+                                  lambda = 1,
+                                  max_iter = 10,
+                                  min_error = 1e-5,
+                                  lambda_optimization = "none", # Getting error with lambda optimization
+                                  IDs = c(),
+                                  parallel = TRUE,
+                                  show_progress = TRUE,
+                                  ...) {
+
+  confirm_adj_matrix_is_square(adj_matrix)
+
+  if (identical(activation_vector, c())) {
+    warning("No activation_vector input given. Assuming all nodes have an initial state of 1.")
+    activation_vector <- rep(1, nrow(adj_matrix))
+  }
+
+  if (identical(scenario_vector, c())) {
+    warning("No scenario_vector input given. Assuming no values are clamped.")
+    scenario_vector <- rep(0, length(activation_vector))
+  }
+
   if (parallel == TRUE) {
+    print("Initializing cluster", quote = FALSE)
     n_cores <- parallel::detectCores()
     # n_cores <- 2
     cl <- parallel::makeCluster(n_cores)
@@ -50,56 +203,102 @@ simulate_fmcmcmr_models <- function(simulated_adj_matrices = list(matrix()),
     # Have to store variables in new env that can be accessed by parLapply. There
     # is surely a better way to do this, but this way works
     # start <- Sys.time()
-    vars <- list("simulated_adj_matrices", "initial_state_vector", "activation",
+    vars <- list("simulated_adj_matrices", "activation_vector", "scenario_vector", "activation",
                  "squashing", "lambda", "max_iter", "min_error",
                  "lambda_optimization", "IDs",
-                 "simulate_fcmr", "confirm_adj_matrix_is_square",
-                 "confirm_initial_state_vector_is_compatible_with_adj_matrix",
-                 "get_node_IDs_from_input", "optimize_fcmr_lambda",
+                 "simulate_fcm", "confirm_adj_matrix_is_square",
+                 "confirm_activation_vector_is_compatible_with_adj_matrix",
+                 "get_node_IDs_from_input", "optimize_fcm_lambda",
                  "calculate_next_fcm_state_vector", "squash")
 
     parallel::clusterExport(cl, varlist = vars, envir = environment())
 
-    fmcmcmr_simulation_results <- parallel::parLapply(
-      cl,
-      simulated_adj_matrices,
-      function(simulated_adj_matrix) {
-        simulate_fcmr(
-          adj_matrix = simulated_adj_matrix,
-          initial_state_vector = initial_state_vector,
-          activation = activation,
-          squashing = squashing,
-          lambda = lambda,
-          max_iter = max_iter,
-          min_error = min_error,
-          lambda_optimization = lambda_optimization,
-          IDs = IDs
-        )
-      }
-    )
+    if (show_progress) {
+      print("Simulating FCMs", quote = FALSE)
+      doSNOW::registerDoSNOW(cl)
+      pb <- txtProgressBar(min = 0, max = length(simulated_adj_matrices)/n_cores, style = 3)
+      progress <- function(n) setTxtProgressBar(pb, n)
+      opts <- list(progress = progress)
+      fmccm_simulation_results <- foreach::foreach(
+        i = 1:length(simulated_adj_matrices), .options.snow = opts) %dopar% {
+          simulate_fcm(
+            adj_matrix = simulated_adj_matrices[[i]],
+            activation_vector = activation_vector,
+            scenario_vector = scenario_vector,
+            activation = activation,
+            squashing = squashing,
+            lambda = lambda,
+            max_iter = max_iter,
+            min_error = min_error,
+            lambda_optimization = lambda_optimization,
+            IDs = IDs
+          )
+        }
+      close(pb)
+    } else {
+      fmccm_simulation_results <- parallel::parLapply(
+        cl,
+        simulated_adj_matrices,
+        function(simulated_adj_matrix) {
+          simulate_fcm(
+            adj_matrix = simulated_adj_matrix,
+            activation_vector = activation_vector,
+            scenario_vector = scenario_vector,
+            activation = activation,
+            squashing = squashing,
+            lambda = lambda,
+            max_iter = max_iter,
+            min_error = min_error,
+            lambda_optimization = lambda_optimization,
+            IDs = IDs
+          )
+        }
+      )
+    }
     #print(Sys.time() - start)
     parallel::stopCluster(cl)
   } else {
-    fmcmcmr_simulation_results <- lapply(
-      simulated_adj_matrices,
-      function(simulated_adj_matrix) {
-        simulate_fcmr(
-          adj_matrix = simulated_adj_matrix,
-          initial_state_vector = initial_state_vector,
-          activation = activation,
-          squashing = squashing,
-          lambda = lambda,
-          max_iter = max_iter,
-          min_error = min_error,
-          lambda_optimization = lambda_optimization,
-          IDs = IDs
-        )
-      }
-    )
+    if (show_progress) {
+      fmccm_simulation_results <- pbapply::pblapply(
+        simulated_adj_matrices,
+        function(simulated_adj_matrix) {
+          simulate_fcm(
+            adj_matrix = simulated_adj_matrix,
+            activation_vector = activation_vector,
+            scenario_vector = scenario_vector,
+            activation = activation,
+            squashing = squashing,
+            lambda = lambda,
+            max_iter = max_iter,
+            min_error = min_error,
+            lambda_optimization = lambda_optimization,
+            IDs = IDs
+          )
+        }
+      )
+    } else {
+      fmccm_simulation_results <- lapply(
+        simulated_adj_matrices,
+        function(simulated_adj_matrix) {
+          simulate_fcm(
+            adj_matrix = simulated_adj_matrix,
+            activation_vector = activation_vector,
+            scenario_vector = scenario_vector,
+            activation = activation,
+            squashing = squashing,
+            lambda = lambda,
+            max_iter = max_iter,
+            min_error = min_error,
+            lambda_optimization = lambda_optimization,
+            IDs = IDs
+          )
+        }
+      )
+    }
   }
 
-  names(fmcmcmr_simulation_results) <- paste0("sim_", seq_along(fmcmcmr_simulation_results))
-  fmcmcmr_simulation_results
+  names(fmccm_simulation_results) <- paste0("sim_", seq_along(fmccm_simulation_results))
+  fmccm_simulation_results
 }
 
 
@@ -113,17 +312,17 @@ simulate_fmcmcmr_models <- function(simulated_adj_matrices = list(matrix()),
 #' of values at a specific iter to create histograms or perform bootstrap sampling
 #' operations to estimate confidence boundes.
 #'
-#' Use vignette("fmcmcmr-class") for more information.
+#' Use vignette("fmccm-class") for more information.
 #'
-#' @param fmcmcmr_simulation Output from simulate_fmcmcmr_models, represents results across
+#' @param fmccm_simulation Output from simulate_fmccm_models, represents results across
 #' each simulated fcm
 #' @param iter The iteration at which to return a distribution of values i.e. get
 #' values at iteration 'iter'. If no value is given, returns distributions of values across
 #' each iter in the data set
 #'
 #' @export
-get_simulated_values_across_iters <- function(fmcmcmr_simulation, iter = integer()) {
-  sim_state_vectors <- lapply(fmcmcmr_simulation, function(model) model$state_vectors)
+get_simulated_values_across_iters <- function(fmccm_simulation, iter = integer()) {
+  sim_state_vectors <- lapply(fmccm_simulation, function(model) model$state_vectors)
   for (i in seq_along(sim_state_vectors)) {
     sim_state_vectors[[i]] <- cbind(
       iter = 1:nrow(sim_state_vectors[[i]]),
@@ -149,6 +348,7 @@ get_simulated_values_across_iters <- function(fmcmcmr_simulation, iter = integer
 }
 
 
+# Probably redo this function from scratch... it's messy as hell!!!!!
 #' get_quantiles_of_simulated_values_across_iters
 #'
 #' @description
@@ -160,7 +360,7 @@ get_simulated_values_across_iters <- function(fmcmcmr_simulation, iter = integer
 #' of a distribution of simulated values across an individual iteration. Use get_bootstrapped_means
 #' to estimate the confidence intervals for the mean value across simulations.
 #'
-#' Use vignette("fmcmcmr-class") for more information.
+#' Use vignette("fmccm-class") for more information.
 #'
 #' @param simulated_values_across_iters Output of get_simulated_values_across_iters
 #' @param lower_quantile The lower quantile. see ?quantile() for more
@@ -170,6 +370,10 @@ get_simulated_values_across_iters <- function(fmcmcmr_simulation, iter = integer
 #' @param bootstrap_reps Repetitions for bootstrap process, if chosen
 #' @param bootstrap_samples_per_rep Number of samples to draw (with replacement) from
 #' the data per bootstrap_rep
+#' @param include_distributions TRUE/FALSE Whether to include the bootstrapped distrubutions
+#' in the output. Will increase the size of the output and significantly increase runtime.
+#' @param show_progress TRUE/FALSE Show progress bar when creating fmccm. Uses pbmapply
+#' from the pbapply package as the underlying function.
 #'
 #' @export
 get_quantiles_of_simulated_values_across_iters <- function(simulated_values_across_iters = list(),
@@ -177,22 +381,34 @@ get_quantiles_of_simulated_values_across_iters <- function(simulated_values_acro
                                                           upper_quantile = 0.975,
                                                           get_bootstrapped_means = FALSE,
                                                           bootstrap_reps = 1000,
-                                                          bootstrap_samples_per_rep = 1000) {
+                                                          bootstrap_samples_per_rep = 1000,
+                                                          include_distributions = FALSE,
+                                                          show_progress = TRUE) {
+
+  iter <- NULL
+  sim <- NULL # Added to pass R CMD Check. Does NOT change logic flow or function output.
+
+  input_directly_from_get_simulated_values_across_iters <- all(do.call(c, lapply(
+    simulated_values_across_iters,
+    function(sim_values) all(c("iter", "sim") %in% colnames(sim_values))
+  )))
+  input_directly_from_confer_fmccm <- all(do.call(rbind, strsplit(names(simulated_values_across_iters), "_"))[, 1] %in% "sim")
+
+  if (input_directly_from_get_simulated_values_across_iters) {
+    simulated_values_across_iters <- lapply(simulated_values_across_iters, function(values) subset(values, select = -c(iter, sim)))
+  } else if (input_directly_from_confer_fmccm) {
+    simulated_values_across_iters <- simulated_values_across_iters
+  } else {
+    stop("simulated_values_across_iter must come directly from an output of
+        confer_fmccm() or  get_simulated_values_across_iters()")
+  }
+
   get_quantiles_at_iter <- function(simulated_values_across_iter,
                                     lower_quantile = 0.025,
                                     upper_quantile = 0.975,
                                     get_bootstrapped_means = FALSE,
                                     bootstrap_reps = 100,
                                     bootstrap_samples_per_rep = 100) {
-    iter <- NULL
-    sim <- NULL # Added to pass R CMD Check. Does NOT change logic flow or function output.
-    if (all(c("iter", "sim") %in% colnames(simulated_values_across_iter))) {
-      simulated_values_across_iter <- subset(simulated_values_across_iter, select = -c(iter, sim))
-    } else {
-      stop("simulated_values_across_iter must come directly from an output of
-         get_simulated_values_across_iters()")
-    }
-
     if (!get_bootstrapped_means) {
       quantile_values_by_node <- vector(mode = "list", length = ncol(simulated_values_across_iter))
       names(quantile_values_by_node) <- colnames(simulated_values_across_iter)
@@ -204,6 +420,7 @@ get_quantiles_of_simulated_values_across_iters <- function(simulated_values_acro
         colnames(quantile_values_by_node[[i]]) <- c(paste0("lower_", lower_quantile), paste0("upper_", upper_quantile))
         rownames(quantile_values_by_node[[i]]) <- NULL
       }
+      bootstrapped_means <- NA
     } else {
       if (!is.numeric(bootstrap_reps)) stop("bootstrap_reps must be a positive integer")
       if (bootstrap_reps < 1) stop("bootstrap_reps must be a positive integer")
@@ -228,24 +445,54 @@ get_quantiles_of_simulated_values_across_iters <- function(simulated_values_acro
         rownames(quantile_values_by_node[[i]]) <- NULL
       }
     }
-    return(quantile_values_by_node)
+
+    list(
+      quantile_values_by_node = quantile_values_by_node,
+      bootstrapped_means = bootstrapped_means
+    )
   }
 
-  quantiles_across_iters <- lapply(simulated_values_across_iters,
-                                   function(values_at_iter) {
-                                     get_quantiles_at_iter(values_at_iter,
-                                                           lower_quantile,
-                                                           upper_quantile,
-                                                           get_bootstrapped_means,
-                                                           bootstrap_reps,
-                                                           bootstrap_samples_per_rep)
-                                   })
-  node_names <- unlist(unique(lapply(quantiles_across_iters, names)))
+  if (show_progress) {
+    print("Calculating quantiles for each node across all available iterations", quote = FALSE)
+    quantiles_across_iters <- pbapply::pblapply(
+      simulated_values_across_iters,
+      function(values_at_iter) {
+        get_quantiles_at_iter(
+          values_at_iter,
+          lower_quantile,
+          upper_quantile,
+          get_bootstrapped_means,
+          bootstrap_reps,
+          bootstrap_samples_per_rep
+        )
+      }
+    )
+  } else {
+    quantiles_across_iters <- lapply(
+      simulated_values_across_iters,
+      function(values_at_iter) {
+        get_quantiles_at_iter(
+          values_at_iter,
+          lower_quantile,
+          upper_quantile,
+          get_bootstrapped_means,
+          bootstrap_reps,
+          bootstrap_samples_per_rep
+        )
+      }
+    )
+  }
+
+  print(quantiles_across_iters)
+  #quantile_values_across_iters <- lapply(quantiles_across_iters, function(x) x$quantile_values_by_node)
+  #bootstrap_distributions_across_iters <- lapply(quantiles_across_iters, function(x) x$bootstrapped_means)
+
+  node_names <- names(quantile_values_across_iters[[1]])
   quantiles_across_iters_by_node <- vector(mode = "list", length = length(node_names))
   names(quantiles_across_iters_by_node) <- node_names
   for (i in seq_along(node_names)) {
-    upper_quantiles_across_iters <- lapply(quantiles_across_iters, function(means_at_iter) means_at_iter[[i]][1])
-    lower_quantiles_across_iters <- lapply(quantiles_across_iters, function(means_at_iter) means_at_iter[[i]][2])
+    upper_quantiles_across_iters <- lapply(quantile_values_across_iters, function(means_at_iter) means_at_iter[[i]][1])
+    lower_quantiles_across_iters <- lapply(quantile_values_across_iters, function(means_at_iter) means_at_iter[[i]][2])
     quantiles_across_iters_by_node[[i]] <- data.frame(
       iter = 1:length(upper_quantiles_across_iters),
       do.call(rbind, lower_quantiles_across_iters),
@@ -253,21 +500,40 @@ get_quantiles_of_simulated_values_across_iters <- function(simulated_values_acro
     )
   }
 
-  return(quantiles_across_iters_by_node)
+
+  if (input_directly_from_confer_fmccm) {
+    quantiles_across_iters_by_node <- lapply(quantiles_across_iters_by_node, function(quantiles) subset(quantiles, select = -c(iter)))
+  }
+
+  if (include_distributions) {
+    bootstrap_distributions_across_iters_by_node <- vector(mode = "list", length = length(node_names))
+    names(bootstrap_distributions_across_iters_by_node) <- node_names
+    for (i in seq_along(node_names)) {
+      bootstrap_distributions_across_iters_by_node[[i]] <- data.frame(do.call(cbind, lapply(bootstrap_distributions_across_iters, function(x) x[,i])))
+    }
+    return(
+      list(
+        quantiles = quantiles_across_iters_by_node,
+        bootstrap_disrtibutions = bootstrap_distributions_across_iters_by_node
+      )
+    )
+  } else {
+    return(quantiles_across_iters_by_node)
+  }
 }
 
 
-#' build_fmcmcmr_models
+#' build_fmccm_models
 #'
 #' @description
 #' This function generates n fcm models whose edge weights are sampled from the
 #' defined distribution ('uniform', 'gaussian', 'beta', or 'triangular') and stores
-#' them as a list of fmcmcmr objects
+#' them as a list of fmccm objects
 #'
 #' @details
 #' [ADD DETAILS HERE!!!]
 #'
-#' Use vignette("fmcmcmr-class") for more information.
+#' Use vignette("fmccm-class") for more information.
 #'
 #' @param adj_matrix An n x n adjacency matrix that represents the edge weights
 #' of an FCM
@@ -276,6 +542,8 @@ get_quantiles_of_simulated_values_across_iters <- function(simulated_values_acro
 #' @param parallel TRUE/FALSE Whether to utilize parallel processing
 #' @param distribution A statistical distribution to draw random samples from.
 #' Must be one of the following: 'uniform', 'gaussian', 'beta', or 'triangular'
+#' @param show_progress TRUE/FALSE Show progress bar when creating fmccm. Uses pbmapply
+#' from the pbapply package as the underlying function.
 #' @param ... Additional adj_matrix objects whose weights describe shape parameters
 #' of the chosen distribution.
 #' IF distribution = "uniform", must include: lower_adj_matrix and upper_adj_matrix objects
@@ -285,12 +553,13 @@ get_quantiles_of_simulated_values_across_iters <- function(simulated_values_acro
 #'  Note: if no mode_adj_matrix given, will assume its values are the average of the lower and upper adj_matrix objects.
 #'
 #' @export
-build_fmcmcmr_models <- function(adj_matrix = matrix(),
-                                 IDs = c(),
-                                 n_sims = 100,
-                                 parallel = TRUE,
-                                 distribution = "uniform", # Also accepts "gaussian", "beta", and triangular
-                                 ...) {
+build_fmccm_models <- function(adj_matrix = matrix(),
+                               IDs = c(),
+                               n_sims = 100,
+                               parallel = TRUE,
+                               distribution = "uniform", # Also accepts "gaussian", "beta", and triangular
+                               show_progress = TRUE,
+                               ...) {
   # Validate parameter adj_matrix inputs
   additional_inputs <- list(...)
   if (identical(names(additional_inputs), "...")) additional_inputs <- additional_inputs[[1]] # if ... = list() as input
@@ -315,20 +584,27 @@ build_fmcmcmr_models <- function(adj_matrix = matrix(),
         Must include: lower_adj_matrix and upper_adj_matrix objects")
     }
     if (length(additional_inputs) > 2) {
-      stop("Too many additional inputs given. Only lower_adj_matrix and upper_adj_matrix needed for UNIFORM distribution fmcmcmr")
+      stop("Too many additional inputs given. Only lower_adj_matrix and upper_adj_matrix needed for UNIFORM distribution fmccm")
     }
     lower <- additional_inputs$lower_adj_matrix
     upper <- additional_inputs$upper_adj_matrix
     if (any(lower[lower != 0] > upper[upper != 0])) {
       stop("all values in lower_adj_matrix must be less than their counterparts in upper_adj_matrix for a UNIFORM distribution")
     }
-    fmcmcmr_data <- fmcmcmr(adj_matrix, IDs, distribution,
-                            "lower_adj_matrix" = additional_inputs$lower_adj_matrix,
-                            "upper_adj_matrix" = additional_inputs$upper_adj_matrix)
-    edgelist <- fmcmcmr_data$edgelist
-    edgelist$dist <- mapply(function(lower, upper) stats::runif(n = n_sims, min = lower, max = upper),
-                            lower = edgelist$lower, upper = edgelist$upper,
-                            SIMPLIFY = FALSE)
+    fmccm_data <- fmccm(adj_matrix, IDs, distribution,
+                        "lower_adj_matrix" = additional_inputs$lower_adj_matrix,
+                        "upper_adj_matrix" = additional_inputs$upper_adj_matrix)
+    edgelist <- fmccm_data$edgelist
+    if (show_progress) {
+      print("Building models", quote = FALSE)
+      edgelist$dist <- pbapply::pbmapply(function(lower, upper) stats::runif(n = n_sims, min = lower, max = upper),
+                              lower = edgelist$lower, upper = edgelist$upper,
+                              SIMPLIFY = FALSE)
+    } else {
+      edgelist$dist <- mapply(function(lower, upper) stats::runif(n = n_sims, min = lower, max = upper),
+                              lower = edgelist$lower, upper = edgelist$upper,
+                              SIMPLIFY = FALSE)
+    }
   } else if (distribution == "beta") {
     # BETA
     beta_input_given <- "sd_adj_matrix" %in% names_of_additional_inputs
@@ -337,18 +613,25 @@ build_fmcmcmr_models <- function(adj_matrix = matrix(),
         Must include: sd_adj_matrix object")
     }
     if (length(additional_inputs) > 1) {
-      stop("Too many additional inputs given. Only sd_adj_matrix needed for BETA distribution fmcmcmr")
+      stop("Too many additional inputs given. Only sd_adj_matrix needed for BETA distribution fmccm")
     }
     sd_values <- additional_inputs$sd_adj_matrix
     if (any(sd_values[sd_values != 0] < 0 | sd_values[sd_values != 0] > 0.5)) {
       stop("all values in sd_adj_matrix must be between 0 and +0.5 for a BETA distribution")
     }
-    fmcmcmr_data <- fmcmcmr(adj_matrix, IDs, distribution,
+    fmccm_data <- fmccm(adj_matrix, IDs, distribution,
                             "sd_adj_matrix" = additional_inputs$sd_adj_matrix)
-    edgelist <- fmcmcmr_data$edgelist
-    edgelist$dist <- mapply(function(mu, sd) get_beta_distribution_of_values(mu = mu, sd = sd, n = n_sims),
-                            mu = edgelist$weight, sd = edgelist$sd,
-                            SIMPLIFY = FALSE)
+    edgelist <- fmccm_data$edgelist
+    if (show_progress) {
+      print("Building models", quote = FALSE)
+      edgelist$dist <- pbapply::pbmapply(function(mu, sd) get_beta_distribution_of_values(mu = mu, sd = sd, n = n_sims),
+                                         mu = edgelist$weight, sd = edgelist$sd,
+                                         SIMPLIFY = FALSE)
+    } else {
+      edgelist$dist <- mapply(function(mu, sd) get_beta_distribution_of_values(mu = mu, sd = sd, n = n_sims),
+                              mu = edgelist$weight, sd = edgelist$sd,
+                              SIMPLIFY = FALSE)
+    }
   } else if (distribution == "triangular") {
     # TRIANGULAR
     triangular_input_given_w_mode <- all((c("lower_adj_matrix", "upper_adj_matrix", "mode_adj_matrix") %in% names_of_additional_inputs))
@@ -363,7 +646,7 @@ build_fmcmcmr_models <- function(adj_matrix = matrix(),
       warning("No input mode_adj_matrix given. Using adj_matrix as mode_adj_matrix.")
     }
     if (length(additional_inputs) > 3) {
-      stop("Too many additional inputs given. Only lower_adj_matrix, upper_adj_matrix, and mode_adj_matrix needed for TRIANGULAR distribution fmcmcmr")
+      stop("Too many additional inputs given. Only lower_adj_matrix, upper_adj_matrix, and mode_adj_matrix needed for TRIANGULAR distribution fmccm")
     }
     lower <- additional_inputs$lower_adj_matrix
     upper <- additional_inputs$upper_adj_matrix
@@ -374,14 +657,21 @@ build_fmcmcmr_models <- function(adj_matrix = matrix(),
     if (any((any(lower > mode_values) | any(upper < mode_values)))) {
       stop("all values in mode_adj_matrix must be between their counterparts in lower_adj_matrix and upper_adj_matrix for a TRIANGULAR distribution")
     }
-    fmcmcmr_data <- fmcmcmr(adj_matrix, IDs, distribution,
+    fmccm_data <- fmccm(adj_matrix, IDs, distribution,
                             "lower_adj_matrix" = additional_inputs$lower_adj_matrix,
                             "upper_adj_matrix" = additional_inputs$upper_adj_matrix,
                             "mode_adj_matrix" = additional_inputs$mode_adj_matrix)
-    edgelist <- fmcmcmr_data$edgelist
-    edgelist$dist <- mapply(function(lower, upper, mode) get_triangular_distribution_of_values(lower = lower, upper = upper, mode = mode, n_sims),
-                            lower = edgelist$lower, upper = edgelist$upper, mode = edgelist$mode,
-                            SIMPLIFY = FALSE)
+    edgelist <- fmccm_data$edgelist
+    if (show_progress) {
+      print("Building models", quote = FALSE)
+      edgelist$dist <- pbapply::pbmapply(function(lower, upper, mode) get_triangular_distribution_of_values(lower = lower, upper = upper, mode = mode, n_sims),
+                                         lower = edgelist$lower, upper = edgelist$upper, mode = edgelist$mode,
+                                         SIMPLIFY = FALSE)
+    } else {
+      edgelist$dist <- mapply(function(lower, upper, mode) get_triangular_distribution_of_values(lower = lower, upper = upper, mode = mode, n_sims),
+                              lower = edgelist$lower, upper = edgelist$upper, mode = edgelist$mode,
+                              SIMPLIFY = FALSE)
+    }
   } else {
     # FINAL CHECK STOP
     stop("Invalid distribution input. Must be one of the following:
@@ -391,10 +681,23 @@ build_fmcmcmr_models <- function(adj_matrix = matrix(),
   # Generate adjacency matrices from sampled distributions
   blank_weight_edgelist <- edgelist[c("source", "target")]
   simulated_edgelists <- rep(list(blank_weight_edgelist), n_sims)
-  for (i in seq_along(simulated_edgelists)) {
-    simulated_edgelists[[i]]$weight <- unlist(lapply(edgelist$dist, function(dist) dist[i]))
+  if (show_progress) {
+    print("Adding edge weights to models", quote = FALSE)
+    pb = txtProgressBar(min = 0, max = length(simulated_edgelists), initial = 0, width = 50, char = "+", style = 3)
+    for (i in seq_along(simulated_edgelists)) {
+      simulated_edgelists[[i]]$weight <- unlist(lapply(edgelist$dist, function(dist) dist[i]))
+      setTxtProgressBar(pb, i)
+    }
+    close(pb)
+    print("Generating adjacency matrices from models", quote = FALSE)
+    simulated_adj_matrices <- pbapply::pblapply(simulated_edgelists, get_adj_matrix_from_edgelist)
+  } else {
+    for (i in seq_along(simulated_edgelists)) {
+      simulated_edgelists[[i]]$weight <- unlist(lapply(edgelist$dist, function(dist) dist[i]))
+    }
+    simulated_adj_matrices <- lapply(simulated_edgelists, get_adj_matrix_from_edgelist)
   }
-  simulated_adj_matrices <- lapply(simulated_edgelists, get_adj_matrix_from_edgelist)
+
   names(simulated_adj_matrices) <- paste0("sim_", seq_along(simulated_adj_matrices))
 
   simulated_adj_matrices
@@ -402,7 +705,7 @@ build_fmcmcmr_models <- function(adj_matrix = matrix(),
 
 
 
-#' fmcmcmr (fuzzy monte carlo markov chain cognitive map) S3 class
+#' fmccm (fuzzy monte carlo markov chain cognitive map) S3 class
 #'
 #' @description
 #' This class is an organization scheme for fuzzy cognitive maps that model
@@ -415,11 +718,11 @@ build_fmcmcmr_models <- function(adj_matrix = matrix(),
 #' and edgelist.
 #'
 #' @details
-#' fmcmcmr stores fmcmcm data in forms useful to data manipulation, particular
+#' fmccm stores fmcmcm data in forms useful to data manipulation, particular
 #' regarding pairing with popular network analysis libraries like igraph
 #' or visNetwork.
 #'
-#' Use vignette("fmcmcmr-class") for more information.
+#' Use vignette("fmccm-class") for more information.
 #'
 #' @param adj_matrix An n x n adjacency matrix that represents the edge weights
 #' of an FCM
@@ -435,7 +738,7 @@ build_fmcmcmr_models <- function(adj_matrix = matrix(),
 #'  Note: if no mode_adj_matrix given, will assume its values are the adj_matrix values.
 #'
 #' @export
-fmcmcmr <- function(adj_matrix = matrix(),
+fmccm <- function(adj_matrix = matrix(),
                     IDs = c(),
                     distribution = "uniform", # Also accepts "gaussian", "beta", and triangular
                     ...) {
@@ -468,7 +771,7 @@ fmcmcmr <- function(adj_matrix = matrix(),
         Must include: lower_adj_matrix and upper_adj_matrix objects")
     }
     if (length(additional_inputs) > 2) {
-      stop("Too many additional inputs given. Only lower_adj_matrix and upper_adj_matrix needed for UNIFORM distribution fmcmcmr")
+      stop("Too many additional inputs given. Only lower_adj_matrix and upper_adj_matrix needed for UNIFORM distribution fmccm")
     }
     lower <- additional_inputs$lower_adj_matrix
     upper <- additional_inputs$upper_adj_matrix
@@ -484,7 +787,7 @@ fmcmcmr <- function(adj_matrix = matrix(),
         Must include: sd_adj_matrix object")
     }
     if (length(additional_inputs) > 1) {
-      stop("Too many additional inputs given. Only sd_adj_matrix needed for BETA distribution fmcmcmr")
+      stop("Too many additional inputs given. Only sd_adj_matrix needed for BETA distribution fmccm")
     }
     sd_values <- additional_inputs$sd_adj_matrix
     if (any(sd_values[sd_values != 0] < 0 | sd_values[sd_values != 0] > 0.5)) {
@@ -505,7 +808,7 @@ fmcmcmr <- function(adj_matrix = matrix(),
       warning("No input mode_adj_matrix given. Using adj_matrix as mode_adj_matrix.")
     }
     if (length(additional_inputs) > 3) {
-      stop("Too many additional inputs given. Only lower_adj_matrix, upper_adj_matrix, and mode_adj_matrix needed for TRIANGULAR distribution fmcmcmr")
+      stop("Too many additional inputs given. Only lower_adj_matrix, upper_adj_matrix, and mode_adj_matrix needed for TRIANGULAR distribution fmccm")
     }
     lower <- additional_inputs$lower_adj_matrix
     upper <- additional_inputs$upper_adj_matrix
@@ -548,7 +851,7 @@ fmcmcmr <- function(adj_matrix = matrix(),
     additional_params_edgelist <- distribution_params_edgelists[[1]]
   }
 
-  # Create fmcmcmr object
+  # Create fmccm object
   IDs <- get_node_IDs_from_input(adj_matrix, IDs)
   adj_matrix_edgelist <- get_edgelist_from_adj_matrix(adj_matrix, IDs)
 
@@ -563,7 +866,7 @@ fmcmcmr <- function(adj_matrix = matrix(),
       edgelist = edgelist,
       distribution_params = distribution_param_adj_matrix_list
     ),
-    class = "fmcmcmr"
+    class = "fmccm"
   )
 }
 
@@ -627,43 +930,3 @@ get_triangular_distribution_of_values <- function(lower = double(), upper = doub
 
   values_distribution
 }
-
-
-# start <- Sys.time()
-# test <- parallel::mclapply(
-#   simulated_adj_matrices,
-#   function(simulated_adj_matrix) {
-#     simulate_fcmr(
-#       adj_matrix = simulated_adj_matrix,
-#       initial_state_vector = initial_state_vector,
-#       activation = activation,
-#       squashing = squashing,
-#       lambda = lambda,
-#       max_iter = max_iter,
-#       min_error = min_error,
-#       lambda_optimization = lambda_optimization,
-#       IDs = IDs
-#     )
-#   },
-#   mc.cores = n_cores
-# )
-# print(Sys.time() - start)
-
-# env <- rlang::child_env("base")
-# env$simulated_adj_matrices = simulated_adj_matrices
-# env$initial_state_vector = initial_state_vector
-# env$activation = activation
-# env$squashing = squashing
-# env$lambda = lambda
-# env$max_iter = max_iter
-# env$min_error = min_error
-# env$lambda_optimization = lambda_optimization
-# env$IDs = IDs
-#
-# env$simulate_fcmr <- rlang::set_env(simulate_fcmr, env)
-# env$confirm_adj_matrix_is_square <- rlang::set_env(confirm_adj_matrix_is_square, env)
-# env$confirm_initial_state_vector_is_compatible_with_adj_matrix <- rlang::set_env(confirm_initial_state_vector_is_compatible_with_adj_matrix, env)
-# env$get_node_IDs_from_input <- rlang::set_env(get_node_IDs_from_input, env)
-# env$optimize_fcmr_lambda <- rlang::set_env(optimize_fcmr_lambda, env)
-# env$calculate_next_fcm_state_vector <- rlang::set_env(calculate_next_fcm_state_vector, env)
-# env$squash <- rlang::set_env(squash, env)
