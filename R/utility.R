@@ -71,6 +71,17 @@ get_adj_matrix_from_edgelist <- function(edgelist = matrix(),
                                          source_colname = "source",
                                          target_colname = "target",
                                          value_colname = "weight") {
+
+  edgelist_column_inputs <- c(source_colname, target_colname, value_colname)
+  edgelist_columns_match_inputs <- identical(colnames(edgelist), edgelist_column_inputs)
+
+  if (!edgelist_columns_match_inputs) {
+    stop("Edgelist column names do not match inputs source_colname, target_colname
+         or value_colname. The default values for these are 'sourrce', 'target',
+         and 'weight'. Check to make sure that these match the actual column
+         names of the input edgelist.")
+  }
+
   source_nodes <- edgelist[[source_colname]]
   target_nodes <- edgelist[[target_colname]]
   edge_values <- edgelist[[value_colname]]
@@ -81,10 +92,10 @@ get_adj_matrix_from_edgelist <- function(edgelist = matrix(),
   colnames(adj_matrix) <- nodes
   rownames(adj_matrix) <- nodes
 
-  for (i in seq_along(nodes)) {
+  for (i in seq_along(edge_values)) {
     edge <- edgelist[i, ]
-    edge_row_loc <- which(nodes == edge$source)
-    edge_col_loc <- which(nodes == edge$target)
+    edge_row_loc <- which(nodes == edge[[source_colname]])
+    edge_col_loc <- which(nodes == edge[[target_colname]])
     adj_matrix[edge_row_loc, edge_col_loc] <- edge_values[i]
   }
 
@@ -261,4 +272,50 @@ confirm_only_numeric_data_in_adj_matrix <- function(adj_matrix = matrix()) {
     }
   }
   only_numeric_data_types_in_adj_matrix
+}
+
+
+#' match_state_vector_df_shapes
+#'
+#' @description
+#' Given two data frames of state vectors, extend the one with the least number of rows
+#' by repeating its final iteration value until the data frames are the same shape (i.e.
+#' have the same number of rows)
+#'
+#' @details
+#' Ensure that both input data frames are the same shape
+#'
+#' Intended for developer use only to improve package readability.
+#'
+#' @param baseline_state_vectors A state vectors dataframe for the baseline simulation
+#' @param scenario_state_vectors A state vectors dataframe for the scenario simulation
+match_state_vector_df_shapes <- function(baseline_state_vectors, scenario_state_vectors) {
+  n_rows_baseline <- nrow(baseline_state_vectors)
+  n_rows_scenario <- nrow(scenario_state_vectors)
+
+  if (n_rows_baseline == n_rows_scenario) {
+    new_baseline_state_vectors <- baseline_state_vectors
+    new_scenario_state_vectors <- scenario_state_vectors
+  } else if (n_rows_baseline < n_rows_scenario) {
+    extended_baseline_state_vectors <- data.frame(apply(
+      baseline_state_vectors, 2, function(sim) {
+        c(sim, rep(sim[n_rows_baseline], n_rows_scenario - n_rows_baseline))
+      }
+    ))
+    new_baseline_state_vectors <- extended_baseline_state_vectors
+    new_scenario_state_vectors <- scenario_state_vectors
+  } else if (n_rows_scenario < n_rows_baseline) {
+    extended_scenario_state_vectors <- data.frame(apply(
+      scenario_state_vectors, 2, function(sim) {
+        c(sim, rep(sim[n_rows_scenario], n_rows_baseline - n_rows_scenario))
+      }
+    ))
+    new_baseline_state_vectors <- baseline_state_vectors
+    new_scenario_state_vectors <- extended_scenario_state_vectors
+  }
+
+  list(
+    baseline = data.frame(new_baseline_state_vectors),
+    scenario = data.frame(new_scenario_state_vectors)
+  )
 }

@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/reference/test_package.html#special-files
 
 library(testthat)
-library(fcmr)
+library(fcmconfer)
 
-test_check("fcmr")
+test_check("fcmconfer")

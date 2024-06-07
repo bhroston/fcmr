@@ -1,23 +1,27 @@
 
-#' simulate_fcmr
+#' confer_fgcm
 #'
 #' @description
-#' This calculates a sequence of iterations of a simulation over an fgcmr object
-#' given an initial state vector along with the activation, squashing, and lambda
-#' parameters. Additional variables may be defined to control simulation length,
-#' column names, and lambda optimization.
+#' This confers with a baseline simulation of an FGCM and a scenario (scenario vector)
+#' to estimate how outputs change compared to the structural or expected behavior
+#' of the system.
 #'
 #' @details
-#' This simulates how an fgcm reacts to an input initial state vector. There is a
-#' multi-decadal long body of work that has explored numerous activation and squashing
-#' functions as well as algorithms to optimize the lambda value for the
-#' sigmoid and tanh squashing functions.
+#' This function performs two fgcm simulations and compares the output between the two.
+#' The first simulation considers the baseline activity where no nodes are "clamped" and the
+#' system behaves without any outside inputs. The second simulation considers a scenario where
+#' one or multiple nodes are "clamped" so that the system is reactive to additional inputs.
+#' The function returns the difference in simulation results between the scenario and baseline
+#' activity to understand how system manipulations compare to structural expectations of the system.
 #'
-#' Use vignette("fgcmr-class") for more information about each of these
+#' Use vignette("fgcm-class") for more information about each of these
 #' functions/algorithms alongside their originating sources.
 #'
 #' @param grey_adj_matrix An n x n grey_adjacency matrix that represents an FCM
-#' @param initial_state_vector A list state values at the start of an fcm simulation
+#' @param activation_vector A list state values at the start of an fcm simulation
+#' @param scenario_vector A list of values representing specific actions taken to
+#' control the behavior of an FCM. Specifically, non-zero values defined in this vector
+#' will remain constant throughout the entire simulation as if they were "clamped" at those values.
 #' @param activation The activation function to be applied. Must be one of the following:
 #' 'kosko', 'modified-kosko', or 'papageorgiou'.
 #' @param squashing A squashing function to apply. Must be one of the following:
@@ -37,8 +41,139 @@
 #' calculation steps with a minimal reduction in accuracy (https://doi.org/10.1007/978-3-030-52705-1_34)
 #'
 #' @export
-simulate_fgcmr <- function(grey_adj_matrix = matrix(),
-                          initial_state_vector = c(),
+confer_fgcm <- function(grey_adj_matrix = matrix(),
+                           activation_vector = c(),
+                           scenario_vector = c(),
+                           activation = "modified-kosko",
+                           squashing = "sigmoid",
+                           lambda = 1,
+                           max_iter = 50,
+                           min_error = 1e-5,
+                           IDs = c(),
+                           algorithm = "salmeron") {
+
+  confirm_adj_matrix_is_square(grey_adj_matrix)
+
+  if (identical(activation_vector, c())) {
+    warning("No activation_vector input given. Assuming all nodes have an initial state of 1.")
+    activation_vector <- rep(1, nrow(grey_adj_matrix))
+  }
+
+  if (identical(scenario_vector, c())) {
+    warning("No scenario_vector input given. Assuming no values are clamped.")
+    scenario_vector <- rep(0, length(activation_vector))
+  }
+
+  # Get baseline simulation
+  baseline_scenario_vector <- rep(0, length(activation_vector))
+  baseline_simulation <- simulate_fgcm(grey_adj_matrix,
+                                       activation_vector, baseline_scenario_vector,
+                                       activation, squashing, lambda,
+                                       max_iter, min_error,
+                                       IDs, algorithm)
+
+  # Get scenario simulation
+  scenario_simulation <- simulate_fgcm(grey_adj_matrix,
+                                       activation_vector, scenario_vector,
+                                       activation, squashing, lambda,
+                                       max_iter, min_error,
+                                       IDs, algorithm)
+
+  lower_state_vectors <- match_state_vector_df_shapes(baseline_simulation$state_vectors_bounds$lower, scenario_simulation$state_vectors_bounds$lower)
+  upper_state_vectors <- match_state_vector_df_shapes(baseline_simulation$state_vectors_bounds$upper, scenario_simulation$state_vectors_bounds$upper)
+
+  inference_state_vectors_bounds <- list(
+    lower = lower_state_vectors$scenario - lower_state_vectors$baseline,
+    upper = upper_state_vectors$scenario - upper_state_vectors$baseline
+  )
+
+  inference_state_vectors <- vector(mode = "list", length = length(activation_vector))
+
+  for (i in seq_along(activation_vector)) {
+    inference_state_vectors[[i]] <-  mapply(function(lower, upper) grey_number(lower, upper),
+           lower = inference_state_vectors_bounds$lower[, i],
+           upper = inference_state_vectors_bounds$upper[, i],
+           SIMPLIFY = FALSE
+    )
+  }
+
+  inference_state_vectors <- data.frame(do.call(cbind, inference_state_vectors))
+  names(inference_state_vectors) <- names(inference_state_vectors_bounds$lower)
+
+  inference_values <- inference_state_vectors[nrow(inference_state_vectors),]
+  rownames(inference_values) <- 1
+
+  inference_plot_grey_numbers <- do.call(rbind, inference_values)
+  inference_plot_lower <- vapply(inference_plot_grey_numbers, function(value) value$lower, double(1))
+  inference_plot_upper <- vapply(inference_plot_grey_numbers, function(value) value$upper, double(1))
+
+  inference_plot_data <- data.frame(
+    node = colnames(inference_values),
+    lower_value = inference_plot_lower,
+    upper_value = inference_plot_upper
+  )
+
+  structure(
+    .Data = list(
+      inference = inference_values,
+      inference_for_plotting = inference_plot_data,
+      inference_state_vectors = inference_state_vectors,
+      inference_state_vectors_bounds = list(
+        lower = inference_state_vectors_bounds$lower,
+        upper = inference_state_vectors_bounds$upper
+      ),
+      scenario_simulation = scenario_simulation,
+      baseline_simulation = baseline_simulation
+    ),
+    class = "fgcmconfer"
+  )
+}
+
+
+#' simulate_fgcm
+#'
+#' @description
+#' This calculates a sequence of iterations of a simulation over an fgcm object
+#' given an initial state vector along with the activation, squashing, and lambda
+#' parameters. Additional variables may be defined to control simulation length,
+#' column names, and lambda optimization.
+#'
+#' @details
+#' This simulates how an fgcm reacts to an input initial state vector. There is a
+#' multi-decadal long body of work that has explored numerous activation and squashing
+#' functions as well as algorithms to optimize the lambda value for the
+#' sigmoid and tanh squashing functions.
+#'
+#' Use vignette("fgcm-class") for more information about each of these
+#' functions/algorithms alongside their originating sources.
+#'
+#' @param grey_adj_matrix An n x n grey_adjacency matrix that represents an FCM
+#' @param activation_vector A list state values at the start of an fcm simulation
+#' @param scenario_vector A list of values representing specific actions taken to
+#' control the behavior of an FCM. Specifically, non-zero values defined in this vector
+#' will remain constant throughout the entire simulation as if they were "clamped" at those values.
+#' @param activation The activation function to be applied. Must be one of the following:
+#' 'kosko', 'modified-kosko', or 'papageorgiou'.
+#' @param squashing A squashing function to apply. Must be one of the following:
+#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' @param lambda A numeric value that defines the steepness of the slope of the
+#' squashing function when tanh or sigmoid are applied
+#' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
+#' @param min_error The lowest error (sum of the absolute value of the current state
+#' vector minus the previous state vector) at which no more iterations are necessary
+#' and the simulation will stop
+#' @param IDs A list of names for each node (must have n items). If empty, will use
+#' column names of adjacancy matrix (if given).
+#' @param algorithm The algorithm to run calculate the activation vector. Must
+#' be one of the following: 'salmeron' or 'concepcion'. The 'salmeron'
+#' algorithm is the traditional one applied in most papers (https://doi.org/10.1016%2Fj.eswa.2010.04.085),
+#' while the 'concepcion' algorithm is a recent advancement that reduces the
+#' calculation steps with a minimal reduction in accuracy (https://doi.org/10.1007/978-3-030-52705-1_34)
+#'
+#' @export
+simulate_fgcm <- function(grey_adj_matrix = matrix(),
+                          activation_vector = c(),
+                          scenario_vector = c(),
                           activation = "modified-kosko",
                           squashing = "sigmoid",
                           lambda = 1,
@@ -48,40 +183,78 @@ simulate_fgcmr <- function(grey_adj_matrix = matrix(),
                           algorithm = "salmeron") {
 
   confirm_adj_matrix_is_square(grey_adj_matrix)
-  confirm_initial_state_vector_is_compatible_with_grey_adj_matrix(grey_adj_matrix, initial_state_vector)
+
+  if (identical(activation_vector, c())) {
+    warning("No activation_vector input given. Assuming all nodes have an initial state of 1.")
+    activation_vector <- rep(1, nrow(grey_adj_matrix))
+  }
+
+  if (identical(scenario_vector, c())) {
+    warning("No scenario_vector input given. Assuming no values are clamped.")
+    scenario_vector <- rep(0, length(activation_vector))
+  }
+
+  confirm_activation_vector_is_compatible_with_grey_adj_matrix(grey_adj_matrix, activation_vector)
+  confirm_scenario_vector_is_compatible_with_grey_adj_matrix(grey_adj_matrix, scenario_vector)
   IDs <- get_node_IDs_from_input(grey_adj_matrix, IDs)
 
+  if (!typeof(activation_vector) == "list") {
+    activation_vector <- as.list(activation_vector)
+  }
 
-  for (i in seq_along(initial_state_vector)) {
-    if (is.numeric(initial_state_vector[[i]])) {
-      initial_state_vector[[i]] <- grey_number(initial_state_vector[[i]], initial_state_vector[[i]])
+  if (!typeof(scenario_vector) == "list") {
+    scenario_vector <- as.list(scenario_vector)
+  }
+
+  for (i in seq_along(activation_vector)) {
+    if (is.numeric(activation_vector[[i]])) {
+      activation_vector[[i]] <- grey_number(activation_vector[[i]], activation_vector[[i]])
+    }
+    if (is.numeric(scenario_vector[[i]])) {
+      scenario_vector[[i]] <- grey_number(scenario_vector[[i]], scenario_vector[[i]])
     }
   }
 
-  state_vectors <- matrix(data = list(NA), nrow = max_iter + 1, ncol = length(initial_state_vector))
-  ranges <- data.frame(matrix(data = list(NA), nrow = max_iter + 1, ncol = length(initial_state_vector)))
-  errors <-  data.frame(matrix(data = NA, nrow = max_iter, ncol = length(initial_state_vector)))
+  scenario_vector_indexes <- which(unlist(lapply(scenario_vector, function(x) !identical(x, grey_number(0, 0)))))
+  nonzero_values_in_scenario_vector <- length(scenario_vector_indexes) > 0
 
-  state_vectors[1, ] <- initial_state_vector
-  ranges[1, ] <- vapply(initial_state_vector, function(value) value$upper - value$lower, numeric(1))
+  state_vectors <- matrix(data = list(NA), nrow = max_iter + 1, ncol = length(activation_vector))
+  ranges <- data.frame(matrix(data = list(NA), nrow = max_iter + 1, ncol = length(activation_vector)))
+  errors <-  data.frame(matrix(data = NA, nrow = max_iter, ncol = length(activation_vector)))
+
+  colnames(state_vectors) <- IDs
+  colnames(ranges) <- IDs
+  colnames(errors) <- IDs
+
+  state_vectors[1, ] <- activation_vector
+  ranges[1, ] <- vapply(activation_vector, function(value) value$upper - value$lower, numeric(1))
   errors[1, ] <- 0
 
   for (i in 2:(max_iter + 1)) {
     state_vector <- state_vectors[i - 1, ]
     next_state_vector <- calculate_next_fgcm_state_vector(grey_adj_matrix, state_vector, activation, algorithm)
-    normalized_next_state_vector <- state_vectors[i, ]
-    for (j in seq_along(next_state_vector)) {
-      normalized_next_state_vector[[j]] <- grey_number(
-        lower = squash(next_state_vector[[j]]$lower, squashing = squashing, lambda = lambda),
-        upper = squash(next_state_vector[[j]]$upper, squashing = squashing, lambda = lambda)
+    normalized_next_state_vector <- lapply(next_state_vector, function(state_grey_value) {
+      grey_number(
+        lower = squash(state_grey_value$lower, squashing = squashing, lambda = lambda),
+        upper = squash(state_grey_value$upper, squashing = squashing, lambda = lambda)
       )
-      lower_value_error <- abs(state_vector[[j]]$lower - normalized_next_state_vector[[j]]$lower)
-      upper_value_error <- abs(state_vector[[j]]$upper - normalized_next_state_vector[[j]]$upper)
-      errors[i, j] <- lower_value_error + upper_value_error
+    })
+    if (nonzero_values_in_scenario_vector) {
+      normalized_next_state_vector[[scenario_vector_indexes]] <- scenario_vector[[scenario_vector_indexes]]
     }
+    errors_between_states <- mapply(
+      function(previous_state, normalized_next_state) {
+        lower_error <- abs(previous_state$lower - normalized_next_state$lower)
+        upper_error <- abs(previous_state$upper - normalized_next_state$upper)
+        lower_error + upper_error
+      },
+      previous_state = state_vector,
+      normalized_next_state = normalized_next_state_vector
+    )
 
     state_vectors[i, ] <- normalized_next_state_vector
     ranges[i, ] <- vapply(normalized_next_state_vector, function(x) x$upper - x$lower, numeric(1))
+    errors[i, ] <- errors_between_states
 
     total_error <- sum(errors[i, ])
     if (total_error < min_error) {
@@ -90,11 +263,10 @@ simulate_fgcmr <- function(grey_adj_matrix = matrix(),
     }
   }
 
-  colnames(state_vectors) <- IDs
-  colnames(ranges) <- IDs
-  colnames(errors) <- IDs
-
   state_vectors <- data.frame(state_vectors[rowSums(is.na(state_vectors)) == 0,])
+  state_vectors_lower <- data.frame(lapply(state_vectors, function(column) vapply(column, function(x) x$lower, FUN.VALUE = double(1))))
+  state_vectors_upper <- data.frame(lapply(state_vectors, function(column) vapply(column, function(x) x$upper, FUN.VALUE = double(1))))
+
   ranges <- ranges[rowSums(is.na(ranges)) == 0,]
   errors <- errors[rowSums(is.na(errors)) == 0,]
 
@@ -105,11 +277,15 @@ simulate_fgcmr <- function(grey_adj_matrix = matrix(),
   structure(
     .Data = list(
       state_vectors = state_vectors,
+      state_vectors_bounds = list(
+        lower = state_vectors_lower,
+        upper = state_vectors_upper
+      ),
       errors = errors,
       ranges = ranges,
       params = list(
         grey_adj_matrix = grey_adj_matrix,
-        initial_state_vector = initial_state_vector,
+        activation_vector = activation_vector,
         activation = activation,
         squashing = squashing,
         lambda = lambda,
@@ -119,7 +295,7 @@ simulate_fgcmr <- function(grey_adj_matrix = matrix(),
         algorithm = algorithm
       )
     ),
-    class = "fgcmr_simulation"
+    class = "fgcm_simulation"
   )
 }
 
@@ -143,7 +319,7 @@ simulate_fgcmr <- function(grey_adj_matrix = matrix(),
 #' value of 0.5 to reduce the influence that a lack of initial state information
 #' can have on the simulation output (Papageorgiou, 2011 - https://doi.org/10.1016/j.asoc.2009.12.010)=
 #'
-#' Use vignette("fgcmr-class") for more information.
+#' Use vignette("fgcm-class") for more information.
 #'
 #' @param grey_adj_matrix An n x n adjacency matrix that represents an FCM
 #' @param state_vector A list state values at a particular iteration in an fcm simulation
@@ -207,7 +383,7 @@ calculate_next_fgcm_state_vector <- function(grey_adj_matrix = matrix(), state_v
 #' This algorithm from Salmeron 2010 - https://doi.org/10.1016%2Fj.eswa.2010.04.085
 # reduces the steps needed to calculate the next state vector
 #'
-#' Use vignette("fgcmr-class") for more information.
+#' Use vignette("fgcm-class") for more information.
 #'
 #' @param state_vector A list state values at a particular iteration in an fcm simulation
 #' @param grey_adj_matrix_col_vector An column of an adjacency matrix, typically as a list
@@ -283,7 +459,7 @@ calculate_next_fgcm_state_vector_with_salmeron_algorithm <- function(state_vecto
 #' There is a minor reduction in accuracy with this algorithm, so practitioners
 #' should be aware of the cost-benefit of the faster run-time allowed
 #'
-#' Use vignette("fgcmr-class") for more information.
+#' Use vignette("fgcm-class") for more information.
 #'
 #' @param state_vector A list state values at a particular iteration in an fcm simulation
 #' @param grey_adj_matrix_col_vector An column of an adjacency matrix, typically as a list
@@ -326,7 +502,7 @@ calculate_next_fgcm_state_vector_with_concepcion_algorithm <- function(state_vec
 }
 
 
-#' confirm_initial_state_vector_is_compatible_with_grey_adj_matrix
+#' confirm_activation_vector_is_compatible_with_grey_adj_matrix
 #'
 #' @description
 #' Confirm that an initial state vector is algorithmically compatible with a grey adjacency matrix
@@ -340,15 +516,15 @@ calculate_next_fgcm_state_vector_with_concepcion_algorithm <- function(state_vec
 #' Intended for developer use only to improve package readability.
 #'
 #' @param grey_adj_matrix An n x n grey adjacency matrix that represents an FCM
-#' @param initial_state_vector An n-length list of the initial states of each node in an fcm simulation
-confirm_initial_state_vector_is_compatible_with_grey_adj_matrix <- function(grey_adj_matrix = matrix(), initial_state_vector = c()) {
-  if (length(initial_state_vector) != unique(dim(grey_adj_matrix))) {
-    stop("Length of input initial_state_vector is does not comply with the dimensions of the input adjacency matrix", .call = FALSE)
+#' @param activation_vector An n-length list of the initial states of each node in an fcm simulation
+confirm_activation_vector_is_compatible_with_grey_adj_matrix <- function(grey_adj_matrix = matrix(), activation_vector = c()) {
+  if (length(activation_vector) != unique(dim(grey_adj_matrix))) {
+    stop("Length of input activation_vector is does not comply with the dimensions of the input adjacency matrix", .call = FALSE)
   } else {
     TRUE
   }
 
-  data_types <- unique(vapply(initial_state_vector, class, character(1)))
+  data_types <- unique(vapply(activation_vector, class, character(1)))
   both_numeric_or_grey_number_data_types <- identical(data_types, c("numeric", "grey_number")) | identical(data_types, c("grey_number", "numeric"))
   only_numeric_data_types <- identical(data_types, "numeric")
   only_grey_number_data_types <- identical(data_types, "grey_number")
@@ -361,7 +537,40 @@ confirm_initial_state_vector_is_compatible_with_grey_adj_matrix <- function(grey
 }
 
 
-#' fgcmr (fuzzy grey cognitive map) S3 class
+#' confirm_scenario_vector_is_compatible_with_grey_adj_matrix
+#'
+#' @description
+#' Confirm that a scenario_vector is algorithmically compatible with a grey adjacency matrix
+#'
+#' @details
+#' Boolean. TRUE if the number of entries in the initial
+#' state vector match the number of rows/columns in the adjacency matrix and 2. The
+#' datatypes stored within each object are the same (i.e. "numeric" vs "grey_number"),
+#' FALSE if not
+#'
+#' Intended for developer use only to improve package readability.
+#'
+#' @param grey_adj_matrix An n x n grey adjacency matrix that represents an FCM
+#' @param scenario_vector An n-length list of the initial states of each node in an fcm simulation
+confirm_scenario_vector_is_compatible_with_grey_adj_matrix <- function(grey_adj_matrix = matrix(), scenario_vector = c()) {
+  if (length(scenario_vector) != unique(dim(grey_adj_matrix))) {
+    stop("Length of input activation_vector is does not comply with the dimensions of the input adjacency matrix", .call = FALSE)
+  } else {
+    TRUE
+  }
+
+  data_types <- unique(vapply(scenario_vector, class, character(1)))
+  only_numeric_data_types <- identical(data_types, "numeric")
+
+  if (only_numeric_data_types) {
+    TRUE
+  } else {
+    stop("Input scenario_values must contain only numeric values.")
+  }
+}
+
+
+#' fgcm (fuzzy grey cognitive map) S3 class
 #'
 #' @description
 #' This class is an organization scheme for fuzzy grey cognitive maps (See
@@ -369,18 +578,18 @@ confirm_initial_state_vector_is_compatible_with_grey_adj_matrix <- function(grey
 #' corresponding adjacency matrix and edgelist.
 #'
 #' @details
-#' fgcmr stores fgcm data in forms useful to data manipulation, particular
+#' fgcm stores fgcm data in forms useful to data manipulation, particular
 #' regarding pairing with popular network analysis libraries like igraph
 #' or visNetwork.
 #'
-#' fgcmr allow for the depiction of uncertainty in fcm as edge weights are
+#' fgcm allow for the depiction of uncertainty in fcm as edge weights are
 #' represented as Grey Numbers (___, XXXX). Grey Numbers represent a range of
 #' possible values that an edge may be within.
 #'
-#' fgcmr are constructed using vctrs::new_vctr instead of the typical call to
+#' fgcm are constructed using vctrs::new_vctr instead of the typical call to
 #' structure() because ...
 #'
-#' Use vignette("fgcmr-class") for more information.
+#' Use vignette("fgcm-class") for more information.
 #'
 #' @param grey_adj_matrix An n x n adjacency matrix that represents an FCM
 #' @param IDs A list of names for each node (must have n items)
@@ -388,7 +597,7 @@ confirm_initial_state_vector_is_compatible_with_grey_adj_matrix <- function(grey
 #' @export
 #' @examples
 #' NULL
-fgcmr <- function(grey_adj_matrix = matrix(), IDs = c()) {
+fgcm <- function(grey_adj_matrix = matrix(), IDs = c()) {
   # Validate input
   confirm_adj_matrix_is_square(grey_adj_matrix)
   IDs <- get_node_IDs_from_input(grey_adj_matrix, IDs)
@@ -406,7 +615,7 @@ fgcmr <- function(grey_adj_matrix = matrix(), IDs = c()) {
       grey_adj_matrix = grey_adj_matrix,
       edgelist = get_edgelist_from_grey_adj_matrix(grey_adj_matrix)
     ),
-    class = "fgcmr"
+    class = "fgcm"
   )
 }
 
@@ -429,7 +638,7 @@ fgcmr <- function(grey_adj_matrix = matrix(), IDs = c()) {
 #' in the grey adjacency matrix. Otherwise, generic node IDs will be used
 #' (C1, C2, ... Cn).
 #'
-#' #' Use vignette("fgcmr-class") for more information.
+#' #' Use vignette("fgcm-class") for more information.
 #'
 #' @param lower An n x n adjacency matrix that represents the lower limits of
 #'              edges in an FCM
@@ -508,7 +717,7 @@ get_grey_adj_matrix_from_lower_and_upper_adj_matrices <- function(lower = matrix
 #' in the grey adjacency matrix. Otherwise, generic node IDs will be used
 #' (C1, C2, ... Cn).
 #'
-#' #' Use vignette("fgcmr-class") for more information.
+#' #' Use vignette("fgcm-class") for more information.
 #'
 #' @param values A list of grey_number or numeric type objects
 #' @param locs A list of matrix locations/indexes (row-col) to place entries
@@ -654,7 +863,7 @@ get_edgelist_from_grey_adj_matrix <- function(grey_adj_matrix = matrix(), IDs = 
 #' grey_numbers are constructed using vctrs::new_vctr instead of the typical call to
 #' structure() because ...
 #'
-#' Use vignette("fgcmr-class") for more information.
+#' Use vignette("fgcm-class") for more information.
 #'
 #' @param lower lower limit of a Grey Number set (the lower value must be less than or equal to the upper value)
 #' @param upper upper limit of a Grey Number set (the upper value must be greater or equal to the lower value)
@@ -701,7 +910,7 @@ grey_number <- function(lower = double(), upper = double()) {
 #' grey_numbers are constructed using vctrs::new_vctr instead of the typical call to
 #' structure() because ...
 #'
-#' Use vignette("fgcmr-class") for more information.
+#' Use vignette("fgcm-class") for more information.
 #'
 #' @param x a grey_number object
 #' @param ... additional inputs
@@ -735,10 +944,10 @@ c.grey_number <- function(...) {
 }
 
 
-#' print.fgcmr_simulation
+#' print.fgcm_simulation
 #'
 #' @description
-#' This improves the readability of the simulate_fgcmr output
+#' This improves the readability of the simulate_fgcm output
 #'
 #' @details
 #' Show the first two iterations of the simulation, followed by a gap, and then
@@ -746,13 +955,13 @@ c.grey_number <- function(...) {
 #' activation, squashing, lambda, and algorithm inputs as well as the total
 #' number of iterations and goal minimum error.
 #'
-#' Use vignette("fgcmr-class") for more information.
+#' Use vignette("fgcm-class") for more information.
 #'
-#' @param x an fgcmr_simulation object
+#' @param x an fgcm_simulation object
 #' @param ... additional inputs
 #'
 #' @export
-print.fgcmr_simulation <- function(x, ...) {
+print.fgcm_simulation <- function(x, ...) {
   first_iter <- lapply(x$state_vectors[1, ], function(x) grey_number(round(x[[1]]$lower, 4), round(x[[1]]$upper, 4)))
   second_iter <- lapply(x$state_vectors[2, ], function(x) grey_number(round(x[[1]]$lower, 4), round(x[[1]]$upper, 4)))
   skipped_iters_text <- rep("...", ncol(x$state_vectors))
