@@ -29,7 +29,7 @@
 #' control the behavior of an FCM. Specifically, non-zero values defined in this vector
 #' will remain constant throughout the entire simulation as if they were "clamped" at those values.
 #' @param activation The activation function to be applied. Must be one of the following:
-#' 'kosko', 'modified-kosko', or 'papageorgiou'.
+#' 'kosko', 'modified-kosko', or 'rescale'.
 #' @param squashing A squashing function to apply. Must be one of the following:
 #' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
 #' @param lambda A numeric value that defines the steepness of the slope of the
@@ -47,13 +47,16 @@
 confer_fcm <- function(adj_matrix = matrix(),
                        activation_vector = c(),
                        scenario_vector = c(),
-                       activation = "kosko", # Problems when activation == "papageorgiou",
+                       activation = "kosko", # Problems when activation == "rescale",
                        squashing = "tanh",
                        lambda = 1,
                        max_iter = 10,
                        min_error = 1e-5,
                        lambda_optimization = "none", # Verify this function works
                        IDs = c()) {
+
+  # Add for R CMD Check. Does not impact logic.
+  iter <- NULL
 
   confirm_adj_matrix_is_square(adj_matrix)
 
@@ -109,10 +112,12 @@ confer_fcm <- function(adj_matrix = matrix(),
     scenario_state_vectors <- extended_scenario_simulation_state_vectors
   }
 
-  inference_state_vectors <- scenario_state_vectors - baseline_state_vectors
-  rownames(inference_state_vectors) <- 1:nrow(inference_state_vectors)
+  inference_state_vectors <- data.frame(scenario_state_vectors - baseline_state_vectors)
+  inference_state_vectors$iter <- 0:(nrow(inference_state_vectors) - 1)
+  rownames(inference_state_vectors) <- 0:(nrow(inference_state_vectors) - 1)
 
   inference_values <- inference_state_vectors[nrow(inference_state_vectors),]
+  inference_values <- subset(inference_values, select = -c(iter))
   rownames(inference_values) <- 1
 
   inference_plot_data <- data.frame(
@@ -156,7 +161,7 @@ confer_fcm <- function(adj_matrix = matrix(),
 #' control the behavior of an FCM. Specifically, non-zero values defined in this vector
 #' will remain constant throughout the entire simulation as if they were "clamped" at those values.
 #' @param activation The activation function to be applied. Must be one of the following:
-#' 'kosko', 'modified-kosko', or 'papageorgiou'.
+#' 'kosko', 'modified-kosko', or 'rescale'.
 #' @param squashing A squashing function to apply. Must be one of the following:
 #' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
 #' @param lambda A numeric value that defines the steepness of the slope of the
@@ -174,7 +179,7 @@ confer_fcm <- function(adj_matrix = matrix(),
 simulate_fcm <- function(adj_matrix = matrix(),
                           activation_vector = c(),
                           scenario_vector = c(),
-                          activation = "kosko", # Problems when activation == "papageorgiou",
+                          activation = "kosko", # Problems when activation == "rescale",
                           squashing = "tanh",
                           lambda = 1,
                           max_iter = 10,
@@ -210,7 +215,7 @@ simulate_fcm <- function(adj_matrix = matrix(),
 
   for (i in 2:(max_iter + 1)) {
     state_vector <- state_vectors[i - 1, ]
-    next_state_vector <- calculate_next_fcm_state_vector(adj_matrix, state_vector, activation)
+    next_state_vector <- calculate_next_fcm_state_vector(adj_matrix, state_vector, activation, squashing)
     normalized_state_vector <- squash(next_state_vector, squashing = squashing, lambda = lambda)
     normalized_state_vector[scenario_vector != 0] <- scenario_vector[scenario_vector != 0]
     state_vectors[i, ] <- normalized_state_vector
@@ -226,7 +231,7 @@ simulate_fcm <- function(adj_matrix = matrix(),
   colnames(state_vectors) <- IDs
   colnames(errors) <- IDs
 
-  state_vetors <- cbind(iter = 0:(nrow(state_vectors) - 1), state_vectors)
+  state_vectors <- cbind(iter = 0:(nrow(state_vectors) - 1), state_vectors)
   errors <- cbind(iter = 0:(nrow(errors) - 1), errors)
 
   structure(
@@ -254,30 +259,32 @@ simulate_fcm <- function(adj_matrix = matrix(),
 #'
 #' @description
 #' This calculates the next iteration of a state vector in an fcm simulation
-#' based on the kosko, modified-kosko, or papageorgiou activation functions
+#' based on the kosko, modified-kosko, or rescale activation functions
 #'
 #' @details
 #' The state of the art of fcm typically applies one of three activation functions
 #' in calculating iterative state vector values: kosko, modified-kosko, and
-#' papageorgiou (as identified in Gonzales et al. 2018 - https://doi.org/10.1142/S0218213018600102).
+#' rescale (as identified in Gonzales et al. 2018 - https://doi.org/10.1142/S0218213018600102).
 #'
 #' kosko: Only considers the current iteration (Kosko, 1986 - https://doi.org/10.1016/S0020-7373(86)80040-2)
 #'
 #' modified-kosko: The previous value of a node influences its future value (Stylio & Groumpos, 2004 - https://doi.org/10.1109/TSMCA.2003.818878)
 #'
-#' papageorgiou: Like modified-kosko, but assigns nodes with no value with a
+#' rescale: Like modified-kosko, but assigns nodes with no value with a
 #' value of 0.5 to reduce the influence that a lack of initial state information
-#' can have on the simulation output (Papageorgiou, 2011 - https://doi.org/10.1016/j.asoc.2009.12.010)=
+#' can have on the simulation output (rescale, 2011 - https://doi.org/10.1016/j.asoc.2009.12.010)=
 #'
 #' Use vignette("fcm-class") for more information.
 #'
 #' @param adj_matrix An n x n adjacency matrix that represents an FCM
 #' @param state_vector A list state values at a particular iteration in an fcm simulation
 #' @param activation The activation function to be applied. Must be one of the following:
-#' 'kosko', 'modified-kosko', or 'papageorgiou'.
+#' 'kosko', 'modified-kosko', or 'rescale'.
+#' @param squashing A squashing function to apply. Must be one of the following:
+#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
 #'
 #' @export
-calculate_next_fcm_state_vector <- function(adj_matrix = matrix(), state_vector = c(), activation = "modified-kosko") {
+calculate_next_fcm_state_vector <- function(adj_matrix = matrix(), state_vector = c(), activation = "modified-kosko", squashing = "sigmoid") {
   adj_matrix <- as.matrix(adj_matrix)
   state_vector <- as.matrix(state_vector)
 
@@ -289,7 +296,19 @@ calculate_next_fcm_state_vector <- function(adj_matrix = matrix(), state_vector 
     next_state_vector <- state_vector %*% adj_matrix
   } else if (activation == "modified-kosko") {
     next_state_vector <- state_vector %*% adj_matrix + state_vector
-  } else if (activation == "papageorgiou") {
+  } else if (activation == "rescale") {
+    if (squashing != "sigmoid") {
+      stop(
+        paste0(
+          "     !!!Please use the sigmoid squashing function with the rescale activation function!!!
+
+          The rescale activation function is designed to optimize performance
+          with the sigmoid squashing function. Results are unreliable if
+          using a different squashing function.\n",
+
+          "\n          Input squashing function: ", squashing)
+      )
+    }
     next_state_vector <- (2*state_vector - 1) %*% adj_matrix + (2*state_vector - 1)
   }
   next_state_vector
@@ -330,6 +349,13 @@ optimize_fcm_lambda <- function(adj_matrix = matrix(), squashing = "sigmoid", me
   if (method == "none") {
     NULL # do nothing
   } else if (method == "koutsellis") {
+    # The get_adj_matrix_from_edgelist() function mimics the outputs of mentalmodeler
+    # and igraph. However, it is possible for the transpose of an adjacency matrix
+    # to represent the same edgelist if it is understood that the source-target
+    # axes are switched. In their paper, Koutsellis et al. use the transpose
+    # of the matrix that mentalmodeler and igraph implement, so we incorporate that
+    # here.
+    adj_matrix <- t(adj_matrix)
     input_node_locs <- which(colSums(adj_matrix) == 0)
     adj_matrix_has_input_only_nodes <- length(input_node_locs) > 0
     if (adj_matrix_has_input_only_nodes) {
