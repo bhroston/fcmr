@@ -71,6 +71,17 @@ get_adj_matrix_from_edgelist <- function(edgelist = matrix(),
                                          source_colname = "source",
                                          target_colname = "target",
                                          value_colname = "weight") {
+
+  edgelist_column_inputs <- c(source_colname, target_colname, value_colname)
+  edgelist_columns_match_inputs <- identical(colnames(edgelist), edgelist_column_inputs)
+
+  if (!edgelist_columns_match_inputs) {
+    stop("Edgelist column names do not match inputs source_colname, target_colname
+         or value_colname. The default values for these are 'sourrce', 'target',
+         and 'weight'. Check to make sure that these match the actual column
+         names of the input edgelist.")
+  }
+
   source_nodes <- edgelist[[source_colname]]
   target_nodes <- edgelist[[target_colname]]
   edge_values <- edgelist[[value_colname]]
@@ -81,10 +92,10 @@ get_adj_matrix_from_edgelist <- function(edgelist = matrix(),
   colnames(adj_matrix) <- nodes
   rownames(adj_matrix) <- nodes
 
-  for (i in seq_along(nodes)) {
+  for (i in seq_along(edge_values)) {
     edge <- edgelist[i, ]
-    edge_row_loc <- which(nodes == edge$source)
-    edge_col_loc <- which(nodes == edge$target)
+    edge_row_loc <- which(nodes == edge[[source_colname]])
+    edge_col_loc <- which(nodes == edge[[target_colname]])
     adj_matrix[edge_row_loc, edge_col_loc] <- edge_values[i]
   }
 
