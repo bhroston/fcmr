@@ -696,8 +696,6 @@ get_grey_adj_matrix_from_lower_and_upper_adj_matrices <- function(lower = matrix
     )
   }
 
-  colnames(grey_adj_matrix) <- paste0("C", 1:ncol(grey_adj_matrix))
-
   grey_adj_matrix
 }
 

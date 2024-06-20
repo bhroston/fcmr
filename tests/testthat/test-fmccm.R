@@ -2,9 +2,9 @@
 test_that("confer_fmccm works", {
   adj_matrix <- adj_matrix <- data.frame(
     "A" = c(0, 0, 0, 0),
-    "B" = c(1, 0, 0, 1),
-    "C" = c(0, 1, 0, 0),
-    "D" = c(0, 0, 1, 0)
+    "B" = c(0.5, 0, 0, 0.5),
+    "C" = c(0, 0.5, 0, 0),
+    "D" = c(0, 0, 0.5, 0)
   )
   lower_adj_matrix <- data.frame(
     "A" = c(0, 0, 0, 0),
@@ -20,44 +20,61 @@ test_that("confer_fmccm works", {
   )
   activation_vector <- c(1, 1, 1, 1)
   scenario_vector <- c(1, 0, 0, 0)
-  activation = "modified-kosko"
+  activation = "kosko"
   squashing = "tanh"
   lambda = 1
   max_iter = 1000
   min_error = 1e-5
   lambda_optimization = "koutsellis"
   IDs = c()
-  parallel = FALSE
-  show_progress = FALSE
+  parallel = TRUE
+  show_progress = TRUE
 
   uniform_fmccm_models <- build_fmccm_models(adj_matrix, n_sims = 1000, distribution = "uniform", lower_adj_matrix = lower_adj_matrix, upper_adj_matrix = upper_adj_matrix)
   # simulated_adj_matrices = uniform_fmccm_models
 
   test_confer_fmccm <- confer_fmccm(uniform_fmccm_models, activation_vector, scenario_vector, activation = "kosko", squashing = "tanh",
                lambda = 1, max_iter = 1000, parallel = TRUE, n_cores = 2, show_progress = TRUE)
-  test_means <- round(apply(test_confer_fmccm$inference, 2, mean), 1)
+  test_means <- round(apply(test_confer_fmccm$inferences, 2, mean), 1)
   test_means <- test_means[names(test_means) != "iter"]
   expect_equal(test_means, c(A = 1.0, B = 0.5, C = 0.2, D = 0.1))
 
+  #bootstrap_mean_CIs <- get_means_of_fmccm_inferences(test_confer_fmccm$inferences)
+  #bootstrap_mean_CIs <- bootstrap_mean_CIs[bootstrap_mean_CIs$node != "A", ]
+  #bootstrap_mean_CIs_plotting <- tidyr::pivot_longer(bootstrap_mean_CIs, cols = 2:3)
+  #bootstrap_mean_CIs_plotting <- bootstrap_mean_CIs_plotting[bootstrap_mean_CIs_plotting$node != "A", ]
+
+  # Perform visual check
+  # x <- test_confer_fmccm$inferences_for_plotting[test_confer_fmccm$inferences_for_plotting$node != "A", ]
+  # ggplot() +
+  #   geom_jitter(data = x, aes(x = node, y = value), alpha = 0.025) +
+  #   geom_crossbar(data = bootstrap_mean_CIs, aes(x = node, y = lower_0.025, ymin = lower_0.025, ymax = upper_0.975), color = "red", fill = "red") +
+  #   # geom_errorbar(data = bootstrap_mean_CIs_plotting, aes(x = node, ymin = value, ymax = value, group = name)) +
+  #   geom_text(data = bootstrap_mean_CIs, aes(x = node, y = lower_0.025 - 0.05, label = round(lower_0.025, 2))) +
+  #   geom_text(data = bootstrap_mean_CIs, aes(x = node, y = upper_0.975 + 0.05, label = round(upper_0.975, 2))) +
+  #   ylim(0, 1) +
+  #   theme_classic()
+
+
   test_confer_fmccm <- confer_fmccm(uniform_fmccm_models, activation_vector, scenario_vector, activation = "kosko", squashing = "tanh",
                                     lambda = 1, max_iter = 1000, parallel = TRUE, n_cores = 2, show_progress = FALSE)
-  test_means <- round(apply(test_confer_fmccm$inference, 2, mean), 1)
+  test_means <- round(apply(test_confer_fmccm$inferences, 2, mean), 1)
   test_means <- test_means[names(test_means) != "iter"]
   expect_equal(test_means, c(A = 1.0, B = 0.5, C = 0.2, D = 0.1))
 
   test_confer_fmccm <- confer_fmccm(uniform_fmccm_models, activation_vector, scenario_vector, activation = "kosko", squashing = "tanh",
                                     lambda = 1, max_iter = 1000, parallel = FALSE, show_progress = TRUE)
-  test_means <- round(apply(test_confer_fmccm$inference, 2, mean), 1)
+  test_means <- round(apply(test_confer_fmccm$inferences, 2, mean), 1)
   test_means <- test_means[names(test_means) != "iter"]
   expect_equal(test_means, c(A = 1.0, B = 0.5, C = 0.2, D = 0.1))
 
   test_confer_fmccm <- confer_fmccm(uniform_fmccm_models, activation_vector, scenario_vector, activation = "kosko", squashing = "tanh",
                                     lambda = 1, max_iter = 1000, parallel = FALSE, show_progress = FALSE)
-  test_means <- round(apply(test_confer_fmccm$inference, 2, mean), 1)
+  test_means <- round(apply(test_confer_fmccm$inferences, 2, mean), 1)
   test_means <- test_means[names(test_means) != "iter"]
   expect_equal(test_means, c(A = 1.0, B = 0.5, C = 0.2, D = 0.1))
 
-  expect_equal(colnames(test_confer_fmccm$inference_for_plotting), c("node", "value"))
+  expect_equal(colnames(test_confer_fmccm$inferences_for_plotting), c("node", "value"))
   expect_equal(names(test_confer_fmccm$inference_state_vectors_by_iter), paste0("iter_", 0:(length(test_confer_fmccm$inference_state_vectors_by_iter) - 1)))
   expect_equal(names(test_confer_fmccm$inference_state_vectors_by_sim), paste0("sim_", 1:length(test_confer_fmccm$inference_state_vectors_by_sim)))
 })
@@ -310,7 +327,7 @@ test_that("fmccm works", {
 })
 
 
-test_that("get_means_of_fmccm_state_vectors_at_iter works", {
+test_that("get_means_of_fmccm_inferences", {
   adj_matrix <- adj_matrix <- data.frame(
     "A" = c(0, 0, 0, 0),
     "B" = c(1, 0, 0, 1),
@@ -338,14 +355,13 @@ test_that("get_means_of_fmccm_state_vectors_at_iter works", {
   test_sim_fmccm <- simulate_fmccm_models(uniform_fmccm_models, activation_vector, scenario_vector, activation = "kosko", squashing = "tanh",
                                     lambda = 1, max_iter = 1000, parallel = FALSE, show_progress = TRUE)
 
-  state_vectors_by_iter <- test_sim_fmccm$state_vectors_by_iter_across_sims
 
-  test_nobootstrap <- get_means_of_fmccm_state_vectors_at_iter(
-    state_vectors_by_iter,
+  test_nobootstrap <- get_means_of_fmccm_inferences(
+    test_sim_fmccm$final_states_across_sims,
     get_bootstrapped_means = FALSE
   )
-  test_bootstrap_parallel_progress <- get_means_of_fmccm_state_vectors_at_iter(
-    state_vectors_by_iter,
+  test_bootstrap_parallel_progress <- get_means_of_fmccm_inferences(
+    test_sim_fmccm$final_states_across_sims,
     get_bootstrapped_means = TRUE,
     confidence_interval = 0.95,
     bootstrap_reps = 1000,
@@ -354,8 +370,8 @@ test_that("get_means_of_fmccm_state_vectors_at_iter works", {
     n_cores = 2,
     show_progress = TRUE
   )
-  test_bootstrap_parallel_noprogress <- get_means_of_fmccm_state_vectors_at_iter(
-    state_vectors_by_iter,
+  test_bootstrap_parallel_noprogress <- get_means_of_fmccm_inferences(
+    test_sim_fmccm$final_states_across_sims,
     get_bootstrapped_means = TRUE,
     confidence_interval = 0.95,
     bootstrap_reps = 1000,
@@ -364,8 +380,8 @@ test_that("get_means_of_fmccm_state_vectors_at_iter works", {
     n_cores = 2,
     show_progress = FALSE
   )
-  test_bootstrap_noparallel_progress <- get_means_of_fmccm_state_vectors_at_iter(
-    state_vectors_by_iter,
+  test_bootstrap_noparallel_progress <- get_means_of_fmccm_inferences(
+    test_sim_fmccm$final_states_across_sims,
     get_bootstrapped_means = TRUE,
     confidence_interval = 0.95,
     bootstrap_reps = 1000,
@@ -373,8 +389,8 @@ test_that("get_means_of_fmccm_state_vectors_at_iter works", {
     parallel = FALSE,
     show_progress = TRUE
   )
-  test_bootstrap_noparallel_noprogress <- get_means_of_fmccm_state_vectors_at_iter(
-    state_vectors_by_iter,
+  test_bootstrap_noparallel_noprogress <- get_means_of_fmccm_inferences(
+    test_sim_fmccm$final_states_across_sims,
     get_bootstrapped_means = TRUE,
     confidence_interval = 0.95,
     bootstrap_reps = 1000,
@@ -383,24 +399,27 @@ test_that("get_means_of_fmccm_state_vectors_at_iter works", {
     show_progress = FALSE
   )
 
-  B_parallel_progress <- round(test_bootstrap_parallel_progress$B, 2)
-  B_parallel_noprogress <- round(test_bootstrap_parallel_noprogress$B, 2)
-  B_noparallel_progress <- round(test_bootstrap_noparallel_progress$B, 2)
-  B_noparallel_noprogress <- round(test_bootstrap_noparallel_noprogress$B, 2)
+  Lower_CIs_parallel_progress <- round(test_bootstrap_parallel_progress$lower_0.025, 2)
+  Lower_CIs_parallel_noprogress <- round(test_bootstrap_parallel_noprogress$lower_0.025, 2)
+  Lower_CIs_noparallel_progress <- round(test_bootstrap_noparallel_progress$lower_0.025, 2)
+  Lower_CIs_noparallel_noprogress <- round(test_bootstrap_noparallel_noprogress$lower_0.025, 2)
 
   acceptable_random_error <- 0.02
 
-  expect_true(all(abs(B_parallel_progress - B_parallel_progress) < acceptable_random_error))
-  expect_true(all(abs(B_noparallel_progress - B_parallel_progress) < acceptable_random_error))
-  expect_true(all(abs(B_parallel_progress - B_parallel_noprogress) < acceptable_random_error))
-  expect_true(all(abs(B_noparallel_progress - B_parallel_noprogress) < acceptable_random_error))
+  expect_true(all(abs(Lower_CIs_parallel_progress - Lower_CIs_parallel_progress) < acceptable_random_error))
+  expect_true(all(abs(Lower_CIs_noparallel_progress - Lower_CIs_parallel_progress) < acceptable_random_error))
+  expect_true(all(abs(Lower_CIs_parallel_progress - Lower_CIs_parallel_noprogress) < acceptable_random_error))
+  expect_true(all(abs(Lower_CIs_noparallel_progress - Lower_CIs_parallel_noprogress) < acceptable_random_error))
 
   # Perform visual check
-  # B_mean_CIs <- tidyr::pivot_longer(test_bootstrap_parallel_progress$B, cols = 2:3)
-  # C_mean_CIs <- tidyr::pivot_longer(test_bootstrap_parallel_progress$C, cols = 2:3)
+  # x <- test_bootstrap_noparallel_noprogress
+  # x <- x[x$node != "A",]
   # ggplot() +
-  #  geom_line(data = B_mean_CIs, aes(x = iter, y = value, group = name), color = "blue") +
-  #  geom_line(data = C_mean_CIs, aes(x = iter, y = value, group = name), color = "green")
+  #   geom_crossbar(data = x, aes(x = node, y = lower_0.025, ymin = lower_0.025, ymax = upper_0.975), fill = "red", color = "red") +
+  #   geom_text(data = x, aes(x = node, y = lower_0.025 - 0.05, label = round(lower_0.025, 2))) +
+  #   geom_text(data = x, aes(x = node, y = upper_0.975 + 0.05, label = round(upper_0.975, 2))) +
+  #   ylim(0, 1) +
+  #   theme_classic()
 })
 
 

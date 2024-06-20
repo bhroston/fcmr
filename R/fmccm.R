@@ -72,7 +72,7 @@ confer_fmccm <- function(simulated_adj_matrices = list(matrix()),
   }
 
   # Get baseline simulations
-  print("Performing baseline simulations", quote = FALSE)
+  print("Performing BASELINE simulations", quote = FALSE)
   baseline_scenario_vector <- rep(0, length(scenario_vector))
   baseline_simulations <- simulate_fmccm_models(simulated_adj_matrices,
                                                 activation_vector, baseline_scenario_vector,
@@ -81,7 +81,8 @@ confer_fmccm <- function(simulated_adj_matrices = list(matrix()),
                                                 IDs, parallel, n_cores, show_progress)
 
   # Get scenario simulations
-  print("Performing scenario simulations", quote = FALSE)
+  cat("\n")
+  print("Performing SCENARIO simulations", quote = FALSE)
   scenario_simulations <- simulate_fmccm_models(simulated_adj_matrices,
                                                 activation_vector, scenario_vector,
                                                 activation, squashing, lambda,
@@ -109,7 +110,9 @@ confer_fmccm <- function(simulated_adj_matrices = list(matrix()),
     }
   )
 
+  cat("\n")
   print("Organizing Output", quote = FALSE)
+  cat("\n")
   # Because of how the SIMPLIFY parameter works in lapply, need to change iter
   # values in a seperate lapply call. Should only add max a few seconds if any to
   # runtime
@@ -133,30 +136,13 @@ confer_fmccm <- function(simulated_adj_matrices = list(matrix()),
     value = unlist(lapply(t(inference_values_for_plotting), c))
   )
 
-  largest_iter <- max(unlist(lapply(inference_values_by_sim, function(x) x$iter)))
-  inference_state_vectors_by_iter <- vector(mode = "list", length = largest_iter + 1)
-  names(inference_state_vectors_by_iter) <- paste0("iter_", 0:largest_iter)
-  if (show_progress) {
-    pb <- utils::txtProgressBar(min = 0, max = largest_iter + 1, width = 50, style = 3)
-    progress <- function(n) utils::setTxtProgressBar(pb, n)
-    for (i in 1:(largest_iter + 1)) {
-      inference_state_vectors_by_iter[[i]] <- do.call(rbind, lapply(inference_state_vectors_by_sim, function(x) x[i, ]))
-      inference_state_vectors_by_iter[[i]] <- stats::na.omit(inference_state_vectors_by_iter[[i]])
-      utils::setTxtProgressBar(pb, i)
-    }
-    close(pb)
-  } else {
-    for (i in 1:(largest_iter + 1)) {
-      inference_state_vectors_by_iter[[i]] <- do.call(rbind, lapply(inference_state_vectors_by_sim, function(x) x[i, ]))
-      inference_state_vectors_by_iter[[i]] <- stats::na.omit(inference_state_vectors_by_iter[[i]])
-    }
-  }
+  inference_state_vectors_by_iter <- get_state_vectors_by_iter_from_fmccm_sims(inference_state_vectors_by_sim)
 
   if (include_simulations_in_output) {
     structure(
       .Data = list(
-        inference = inference_values,
-        inference_for_plotting = inference_plot_data,
+        inferences = inference_values,
+        inferences_for_plotting = inference_plot_data,
         inference_state_vectors_by_iter = inference_state_vectors_by_iter,
         inference_state_vectors_by_sim = inference_state_vectors_by_sim,
         scenario_simulations = scenario_simulations,
@@ -167,8 +153,8 @@ confer_fmccm <- function(simulated_adj_matrices = list(matrix()),
   } else {
     structure(
       .Data = list(
-        inference = inference_values,
-        inference_for_plotting = inference_plot_data,
+        inferences = inference_values,
+        inferences_for_plotting = inference_plot_data,
         inference_state_vectors_by_iter = inference_state_vectors_by_iter,
         inference_state_vectors_by_sim = inference_state_vectors_by_sim
       ),
@@ -270,7 +256,6 @@ simulate_fmccm_models <- function(simulated_adj_matrices = list(matrix()),
     parallel::clusterExport(cl, varlist = vars, envir = environment())
 
     if (show_progress) {
-      print("Simulating FCMs", quote = FALSE)
       doSNOW::registerDoSNOW(cl)
       pb <- utils::txtProgressBar(min = 0, max = length(simulated_adj_matrices)/n_cores, style = 3)
       progress <- function(n) utils::setTxtProgressBar(pb, n)
@@ -355,12 +340,16 @@ simulate_fmccm_models <- function(simulated_adj_matrices = list(matrix()),
 
   names(fmccm_simulation_results) <- paste0("sim_", seq_along(fmccm_simulation_results))
 
-  print("Organizing output", quote = FALSE)
+  final_state_vector_values_across_sims <- lapply(fmccm_simulation_results, function(results) results$state_vectors[nrow(results$state_vectors), ])
+  final_state_vector_values_across_sims <- data.frame(do.call(rbind, final_state_vector_values_across_sims))
+  # final_state_vector_values_across_sims <- subset(final_state_vector_values_across_sims, select = -(iter))
+
   state_vectors_by_sim <- lapply(fmccm_simulation_results, function(x) x$state_vectors)
   state_vectors_by_iter_across_sims <- get_state_vectors_by_iter_from_fmccm_sims(state_vectors_by_sim)
 
   list(
     sim_results = fmccm_simulation_results,
+    final_states_across_sims = final_state_vector_values_across_sims, # Need a better name for this
     state_vectors_by_sim_across_iters = state_vectors_by_sim,
     state_vectors_by_iter_across_sims = state_vectors_by_iter_across_sims
   )
@@ -452,7 +441,7 @@ get_quantile_of_fmccm_state_vectors_at_iter <- function(fmccm_state_vectors_by_i
 }
 
 
-#' get_means_of_fmccm_state_vectors_at_iter
+#' get_means_of_fmccm_inferences
 #'
 #' @description
 #' This gets the mean of the distribution of simulated values
@@ -466,7 +455,7 @@ get_quantile_of_fmccm_state_vectors_at_iter <- function(fmccm_state_vectors_by_i
 #'
 #' Use vignette("fmccm-class") for more information.
 #'
-#' @param fmccm_state_vectors_by_iter Output of get_simulated_values_across_iters
+#' @param fmccm_final_states_across_sims The final values of a set of fcm simulations; also the inferences of a confer_fmccm object
 #' @param get_bootstrapped_means TRUE/FALSE Whether to perform bootstrap sampling to obtain
 #' confidence intervals for the estimation of the mean value across simulations
 #' @param confidence_interval What are of the distribution should be bounded by the
@@ -481,46 +470,46 @@ get_quantile_of_fmccm_state_vectors_at_iter <- function(fmccm_state_vectors_by_i
 #' from the pbapply package as the underlying function.
 #'
 #' @export
-get_means_of_fmccm_state_vectors_at_iter <- function(fmccm_state_vectors_by_iter = list(),
-                                                     get_bootstrapped_means = TRUE,
-                                                     confidence_interval = 0.95,
-                                                     bootstrap_reps = 1000,
-                                                     bootstrap_samples_per_rep = 1000,
-                                                     parallel = FALSE,
-                                                     n_cores = integer(),
-                                                     show_progress = TRUE) {
-
+get_means_of_fmccm_inferences <- function(fmccm_final_states_across_sims = list(),
+                                          get_bootstrapped_means = TRUE,
+                                          confidence_interval = 0.95,
+                                          bootstrap_reps = 1000,
+                                          bootstrap_samples_per_rep = 1000,
+                                          parallel = FALSE,
+                                          n_cores = integer(),
+                                          show_progress = TRUE) {
   # Adding for R CMD Check. Does not impact logic.
-  state_vectors_by_iter <- NULL
-  sim <- NULL
+  iter <- NULL
 
-  state_vector_list_is_not_by_iter <- unlist(unique((lapply(names(fmccm_state_vectors_by_iter), function(x) strsplit(x, "_")[[1]][1])))) != "iter"
-  state_vector_df_variables <- unlist(unique(lapply(fmccm_state_vectors_by_iter, colnames)))
-  sim_not_in_state_vectors_domain <- !("sim" %in% state_vector_df_variables)
+  # Write checks to confirm fmccm_final_states_across_sims object is correct... Also write a better name
+  # so it is understood that it works for simulate_fmccm objects too
+  if (!identical(class(fmccm_final_states_across_sims), "data.frame")) {
+    stop("Input fmccm_final_states_across_sims must be a data.frame object from the
+         output of simulate_fmccm_models (final_states_across_sims) or confer_fmccm
+         (inferences)")
+  }
 
-  if (state_vector_list_is_not_by_iter | sim_not_in_state_vectors_domain) {
-    stop("Input must come directly get_state_vectors_by_iter_from_fmccm_sims or
-         confer_fmccm. If input from confer_fmccm make sure using state_vectors_by_iter.")
+  if (!identical(colnames(fmccm_final_states_across_sims)[1], "iter")) {
+    stop("Input fmccm_final_states_across_sims must be a data.frame object from the
+         output of simulate_fmccm_models (final_states_across_sims) or confer_fmccm
+         (inferences)")
+  }
+
+  sim_not_in_rownames_of_input <- unlist(unique(lapply(strsplit(rownames(fmccm_final_states_across_sims), "_"), function(x) x[1]))) != "sim"
+  if (sim_not_in_rownames_of_input) {
+    stop("Input fmccm_final_states_across_sims must be a data.frame object from the
+         output of simulate_fmccm_models (final_states_across_sims) or confer_fmccm
+         (inferences)")
   }
 
   if (!get_bootstrapped_means) {
-    mean_by_iter_by_node <- lapply(
-      fmccm_state_vectors_by_iter,
-      function(state_vector) {
-        apply(state_vector, 2, function(state_vector_node) mean(state_vector_node))
-      }
-    )
-    mean_by_iter_by_node <- data.frame(do.call(rbind, mean_by_iter_by_node))
-    mean_by_iter_by_node <- subset(mean_by_iter_by_node, select = -c(sim))
-    rownames(mean_by_iter_by_node) <- NULL
-
-    return(mean_by_iter_by_node)
-
+    means_of_inferences_by_node <- data.frame(apply(fmccm_final_states_across_sims, 2, mean, simplify = FALSE)) # the simplify is purely for data cleaning reasons
+    means_of_inferences_by_node <- subset(means_of_inferences_by_node, select = -c(iter))
+    return(means_of_inferences_by_node)
   } else if (get_bootstrapped_means) {
+    inferences_by_node <- subset(fmccm_final_states_across_sims, select = -c(iter))
     lower_quantile <- (1 - confidence_interval)/2
     upper_quantile <- (1 + confidence_interval)/2
-
-    n_iters <- length(fmccm_state_vectors_by_iter) - 1
 
     print("Performing bootstrap simulations", quote = FALSE)
     if (parallel) {
@@ -529,16 +518,13 @@ get_means_of_fmccm_state_vectors_at_iter <- function(fmccm_state_vectors_by_iter
         n_cores <- parallel::detectCores()
       }
       cl <- parallel::makeCluster(n_cores)
-
       # Have to store variables in new env that can be accessed by parLapply. There
       # is surely a better way to do this, but this way works
       # start <- Sys.time()
-      vars <- list("fmccm_state_vectors_by_iter",
-                   "n_iters",
+      vars <- list("inferences_by_node",
                    "bootstrap_reps",
                    "bootstrap_samples_per_rep"
       )
-
       parallel::clusterExport(cl, varlist = vars, envir = environment())
 
       if (show_progress) {
@@ -547,121 +533,91 @@ get_means_of_fmccm_state_vectors_at_iter <- function(fmccm_state_vectors_by_iter
         pb <- utils::txtProgressBar(min = 0, max = ceiling(bootstrap_reps/n_cores), width = 50, style = 3)
         progress <- function(n) utils::setTxtProgressBar(pb, n)
         opts <- list(progress = progress)
-        bootstrapped_means_by_iter_by_node <- foreach::foreach(
+        bootstrapped_means_of_inferences_by_node <- foreach::foreach(
           i = 1:bootstrap_reps, .options.snow = opts) %dopar% {
-            means_by_iter_by_node <- lapply(
-              fmccm_state_vectors_by_iter,
-              function(state_vector) {
-                apply(
-                  state_vector, 2,
-                  function(state_vector_node) {
-                    random_draws <- sample(state_vector_node, bootstrap_samples_per_rep, replace = TRUE)
-                    mean(random_draws)
-                  }
-                )
-              }
-            )
-            means_by_iter_by_node <- data.frame(do.call(rbind, means_by_iter_by_node))
-            means_by_iter_by_node <- subset(means_by_iter_by_node, select = -c(sim))
-            means_by_iter_by_node$iter <- 0:n_iters
-            means_by_iter_by_node
+           data.frame(apply(
+             inferences_by_node, 2,
+             function(inferences) {
+               random_draws <- sample(inferences, bootstrap_samples_per_rep, replace = TRUE)
+               mean(random_draws)
+             },
+             simplify = FALSE
+           ))
           }
         close(pb)
       } else if (!show_progress) {
-        rep_fmccm_state_vectors_by_iter <- vector(mode = "list", length = bootstrap_reps)
-        rep_fmccm_state_vectors_by_iter <- lapply(rep_fmccm_state_vectors_by_iter, function(x) x <- fmccm_state_vectors_by_iter)
-        bootstrapped_means_by_iter_by_node <- parallel::parLapply(
+        rep_inferences_by_node <- vector(mode = "list", length = bootstrap_reps)
+        rep_inferences_by_node <- lapply(rep_inferences_by_node, function(duplicate) duplicate <- inferences_by_node)
+        bootstrapped_means_of_inferences_by_node <- parallel::parLapply(
           cl,
-          rep_fmccm_state_vectors_by_iter,
-          function(sample_fmccm_state_vectors_by_iter) {
-            means_by_iter_by_node <- lapply(
-              sample_fmccm_state_vectors_by_iter,
-              function(state_vector) {
-                apply(
-                  state_vector, 2,
-                  function(state_vector_node) {
-                    random_draws <- sample(state_vector_node, bootstrap_samples_per_rep, replace = TRUE)
-                    mean(random_draws)
-                  }
-                )
-              }
-            )
-            means_by_iter_by_node <- data.frame(do.call(rbind, means_by_iter_by_node))
-            means_by_iter_by_node <- subset(means_by_iter_by_node, select = -c(sim))
-            means_by_iter_by_node$iter <- 0:n_iters
-            means_by_iter_by_node
+          rep_inferences_by_node,
+          function(inferences_by_node_duplicate) {
+            apply(
+              inferences_by_node_duplicate, 2,
+              function(inferences) {
+                random_draws <- sample(inferences, bootstrap_samples_per_rep, replace = TRUE)
+                mean(random_draws)
+              })
           }
         )
       }
       parallel::stopCluster(cl)
     } else if (!parallel) {
+      bootstrapped_means_of_inferences_by_node <- vector(mode = "list", length = bootstrap_reps)
       if (show_progress) {
-        pb <- utils::txtProgressBar(min = 0, max = bootstrap_reps, initial = 0, width = 50, char = "+", style = 3)
-        bootstrapped_means_by_iter_by_node <- vector(mode = "list", length = bootstrap_reps)
-        for (i in seq_along(bootstrapped_means_by_iter_by_node)) {
-          means_by_iter_by_node <- lapply(
-            fmccm_state_vectors_by_iter,
-            function(state_vector) {
-              apply(
-                state_vector, 2,
-                function(state_vector_node) {
-                  random_draws <- sample(state_vector_node, bootstrap_samples_per_rep, replace = TRUE)
-                  mean(random_draws)
-                }
-              )
-            }
-          )
-          means_by_iter_by_node <- data.frame(do.call(rbind, means_by_iter_by_node))
-          means_by_iter_by_node <- subset(means_by_iter_by_node, select = -c(sim))
-          bootstrapped_means_by_iter_by_node[[i]] <- means_by_iter_by_node
-          utils::setTxtProgressBar(pb, i)
-        }
-        close(pb)
+        rep_inferences_by_node <- vector(mode = "list", length = bootstrap_reps)
+        rep_inferences_by_node <- lapply(rep_inferences_by_node, function(duplicate) duplicate <- inferences_by_node)
+        bootstrapped_means_of_inferences_by_node <- pbapply::pblapply(
+          rep_inferences_by_node,
+          function(inferences_by_node_duplicate) {
+            apply(
+              inferences_by_node_duplicate, 2,
+              function(inferences) {
+                random_draws <- sample(inferences, bootstrap_samples_per_rep, replace = TRUE)
+                mean(random_draws)
+              }
+            )
+          }
+        )
       } else if (!show_progress) {
-        bootstrapped_means_by_iter_by_node <- vector(mode = "list", length = bootstrap_reps)
-        for (i in seq_along(bootstrapped_means_by_iter_by_node)) {
-          means_by_iter_by_node <- lapply(
-            fmccm_state_vectors_by_iter,
-            function(state_vector) {
-              apply(
-                state_vector, 2,
-                function(state_vector_node) {
-                  random_draws <- sample(state_vector_node, bootstrap_samples_per_rep, replace = TRUE)
-                  mean(random_draws)
-                }
-              )
-            }
-          )
-          means_by_iter_by_node <- data.frame(do.call(rbind, means_by_iter_by_node))
-          means_by_iter_by_node <- subset(means_by_iter_by_node, select = -c(sim))
-          bootstrapped_means_by_iter_by_node[[i]] <- means_by_iter_by_node
-        }
+        rep_inferences_by_node <- vector(mode = "list", length = bootstrap_reps)
+        rep_inferences_by_node <- lapply(rep_inferences_by_node, function(duplicate) duplicate <- inferences_by_node)
+        bootstrapped_means_of_inferences_by_node <- lapply(
+          rep_inferences_by_node,
+          function(inferences_by_node_duplicate) {
+            apply(
+              inferences_by_node_duplicate, 2,
+              function(inferences) {
+                random_draws <- sample(inferences, bootstrap_samples_per_rep, replace = TRUE)
+                mean(random_draws)
+              }
+            )
+          }
+        )
       }
     }
+    bootstrapped_means_of_inferences_by_node <- data.frame(do.call(rbind, bootstrapped_means_of_inferences_by_node))
 
     print("Getting upper and lower quantile estimates of mean", quote = FALSE)
-    state_vector_nodes <- state_vector_df_variables[!(state_vector_df_variables %in% c("iter", "sim"))]
-    quantiles_of_means_by_iter_by_node <- vector(mode = "list", length(state_vector_nodes))
-    names(quantiles_of_means_by_iter_by_node) <- state_vector_nodes
 
-    for (i in seq_along(state_vector_nodes)) {
-      bootstrapped_means_by_iter_for_individual_node <- do.call(cbind, lapply(
-        bootstrapped_means_by_iter_by_node,
-        function(state_vectors) {
-          state_vectors[, i + 1]
-        }
-      ))
-      quantiles_of_means_at_iter_by_node <- list(
-        lower_quantile_of_means_by_iter = apply(bootstrapped_means_by_iter_for_individual_node, 1, function(means_at_iter) stats::quantile(means_at_iter, lower_quantile)),
-        upper_quantile_of_means_by_iter = apply(bootstrapped_means_by_iter_for_individual_node, 1, function(means_at_iter) stats::quantile(means_at_iter, upper_quantile))
-      )
-      quantiles_of_means_at_iter_by_node <- data.frame(cbind(iter = 0:n_iters, do.call(cbind, quantiles_of_means_at_iter_by_node)))
-      colnames(quantiles_of_means_at_iter_by_node) <- c("iter", paste0(lower_quantile, "%"), paste0(upper_quantile, "%"))
-      quantiles_of_means_by_iter_by_node[[i]] <- quantiles_of_means_at_iter_by_node
+    lower_quantiles_by_node <- data.frame(apply(bootstrapped_means_of_inferences_by_node, 2, function(bootstrapped_means) stats::quantile(bootstrapped_means, lower_quantile), simplify = FALSE))
+    upper_quantiles_by_node <- data.frame(apply(bootstrapped_means_of_inferences_by_node, 2, function(bootstrapped_means) stats::quantile(bootstrapped_means, upper_quantile), simplify = FALSE))
+
+    nodes <- ifelse(colnames(lower_quantiles_by_node) == colnames(upper_quantiles_by_node), colnames(lower_quantiles_by_node), stop("Error with quantiles calculation"))
+    quantiles_by_node <- vector(mode = "list", length = length(nodes))
+
+    quantiles_by_node <- data.frame(
+      node = nodes,
+      lower_quantile = vector(mode = "numeric", length = length(nodes)),
+      upper_quantile = vector(mode = "numeric", length = length(nodes))
+    )
+    for (i in seq_along(nodes)) {
+      quantiles_by_node$lower_quantile[i] <- lower_quantiles_by_node[i][[1]] # not sure why this [[1]] is necessary but it is
+      quantiles_by_node$upper_quantile[i] <- upper_quantiles_by_node[i][[1]] # not sure why this [[1]] is necessary but it is
     }
-    print("Done", quote = FALSE)
+    colnames(quantiles_by_node) <- c("node", paste0("lower_", lower_quantile), paste0("upper_", upper_quantile))
 
-    return(quantiles_of_means_by_iter_by_node)
+    return(quantiles_by_node)
   }
 }
 

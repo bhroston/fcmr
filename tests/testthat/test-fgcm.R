@@ -25,25 +25,30 @@ test_that("confer_fgcm works", {
   rounded_grey_nums <- apply(test$inference, 2, function(grey_num) grey_number(lower = round(grey_num[[1]]$lower, 2), upper = round(grey_num[[1]]$upper, 2)))
 
   # Confirm match with mentalmodeler
-  expect_equal(rounded_grey_nums$C1$upper, 1)
-  expect_equal(rounded_grey_nums$C1$lower, 1)
+  expect_equal(x$node, c("A", "B", "C", "D"))
 
-  expect_equal(rounded_grey_nums$C2$upper, 0.77)
-  expect_equal(rounded_grey_nums$C2$lower, 0.25)
+  expect_equal(rounded_grey_nums$A$upper, 1)
+  expect_equal(rounded_grey_nums$A$lower, 1)
 
-  expect_equal(rounded_grey_nums$C3$upper, 0.52)
-  expect_equal(rounded_grey_nums$C3$lower, 0.06)
+  expect_equal(rounded_grey_nums$B$upper, 0.77)
+  expect_equal(rounded_grey_nums$B$lower, 0.25)
 
-  expect_equal(rounded_grey_nums$C4$upper, 0.37)
-  expect_equal(rounded_grey_nums$C4$lower, 0.02)
+  expect_equal(rounded_grey_nums$C$upper, 0.52)
+  expect_equal(rounded_grey_nums$C$lower, 0.06)
+
+  expect_equal(rounded_grey_nums$D$upper, 0.37)
+  expect_equal(rounded_grey_nums$D$lower, 0.02)
 
 
   # Perform visual check
+  # x <- x[x$node != "C1", ]
+  # x$node <- c("B", "C", "D")
   # ggplot(x) +
   #   geom_bar(aes(x = node, y = lower_value), stat = "identity", fill = "white") +
   #   geom_crossbar(aes(x = node, y = lower_value, ymin = lower_value, ymax = upper_value), color = "red", fill = "red") +
   #   geom_text(aes(x = node, y = lower_value - 0.05, label = round(lower_value, 2))) +
   #   geom_text(aes(x = node, y = upper_value + 0.05, label = round(upper_value, 2))) +
+  #   ylim(0, 1) +
   #   theme_classic()
   #
   # p <- barplot(height = x$value, names.arg = x$name, col = "red")

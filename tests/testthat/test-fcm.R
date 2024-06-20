@@ -25,7 +25,10 @@ test_that("confer_fcm works", {
   expect_equal(colnames(test_confer$inference_state_vectors), c("iter", "A", "B", "C", "D"))
 
   # x <- tidyr::pivot_longer(test_confer$inference, cols = 1:4)
-  # ggplot(x) + geom_col(aes(x = name, y = value))
+  # x <- test_confer$inference_for_plotting[test_confer$inference_for_plotting$node != "A", ]
+  # ggplot(x) + geom_col(aes(x = node, y = value), fill = "red") +
+  #  ylim(0, 1) +
+  #  theme_classic()
   #
   # p <- barplot(height = x$value, names.arg = x$name, col = "red")
   # text(x = p, y = x$value + 0.05, labels = round(x$value, 1))
