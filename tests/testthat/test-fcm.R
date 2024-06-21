@@ -1,6 +1,6 @@
 
 test_that("confer_fcm works", {
-  adj_matrix <- adj_matrix <- data.frame(
+  adj_matrix <- data.frame(
     "A" = c(0, 0, 0, 0),
     "B" = c(1, 0, 0, 1),
     "C" = c(0, 1, 0, 0),
@@ -29,7 +29,7 @@ test_that("confer_fcm works", {
   # ggplot(x) + geom_col(aes(x = node, y = value), fill = "red") +
   #  ylim(0, 1) +
   #  theme_classic()
-  #
+
   # p <- barplot(height = x$value, names.arg = x$name, col = "red")
   # text(x = p, y = x$value + 0.05, labels = round(x$value, 1))
 })

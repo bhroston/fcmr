@@ -41,15 +41,15 @@ test_that("confer_fgcm works", {
 
 
   # Perform visual check
-  # x <- x[x$node != "C1", ]
-  # x$node <- c("B", "C", "D")
-  # ggplot(x) +
-  #   geom_bar(aes(x = node, y = lower_value), stat = "identity", fill = "white") +
-  #   geom_crossbar(aes(x = node, y = lower_value, ymin = lower_value, ymax = upper_value), color = "red", fill = "red") +
-  #   geom_text(aes(x = node, y = lower_value - 0.05, label = round(lower_value, 2))) +
-  #   geom_text(aes(x = node, y = upper_value + 0.05, label = round(upper_value, 2))) +
-  #   ylim(0, 1) +
-  #   theme_classic()
+  x <- x[x$node != "A", ]
+  x$node <- c("B", "C", "D")
+  ggplot(x) +
+    geom_bar(aes(x = node, y = lower_value), stat = "identity", fill = "white") +
+    geom_crossbar(aes(x = node, y = lower_value, ymin = lower_value, ymax = upper_value), color = "red", fill = "red") +
+    geom_text(aes(x = node, y = lower_value - 0.05, label = round(lower_value, 2))) +
+    geom_text(aes(x = node, y = upper_value + 0.05, label = round(upper_value, 2))) +
+    ylim(0, 1) +
+    theme_classic()
   #
   # p <- barplot(height = x$value, names.arg = x$name, col = "red")
   # text(x = p, y = x$value + 0.05, labels = round(x$value, 1))
