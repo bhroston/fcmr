@@ -11,7 +11,7 @@ confer_fcm(
   activation = "kosko",
   squashing = "tanh",
   lambda = 1,
-  max_iter = 10,
+  max_iter = 100,
   min_error = 1e-05,
   lambda_optimization = "none",
   IDs = c()

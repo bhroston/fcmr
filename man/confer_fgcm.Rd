@@ -8,7 +8,7 @@ confer_fgcm(
   grey_adj_matrix = matrix(),
   activation_vector = c(),
   scenario_vector = c(),
-  activation = "modified-kosko",
+  activation = "kosko",
   squashing = "sigmoid",
   lambda = 1,
   max_iter = 50,
@@ -51,17 +51,16 @@ while the 'concepcion' algorithm is a recent advancement that reduces the
 calculation steps with a minimal reduction in accuracy (https://doi.org/10.1007/978-3-030-52705-1_34)}
 }
 \description{
-This confers with a baseline simulation of an FGCM and a scenario (scenario vector)
-to estimate how outputs change compared to the structural or expected behavior
-of the system.
+This calculates a sequence of iterations of a simulation over an fgcm object
+given an initial state vector along with the activation, squashing, and lambda
+parameters. Additional variables may be defined to control simulation length,
+column names, and lambda optimization.
 }
 \details{
-This function performs two fgcm simulations and compares the output between the two.
-The first simulation considers the baseline activity where no nodes are "clamped" and the
-system behaves without any outside inputs. The second simulation considers a scenario where
-one or multiple nodes are "clamped" so that the system is reactive to additional inputs.
-The function returns the difference in simulation results between the scenario and baseline
-activity to understand how system manipulations compare to structural expectations of the system.
+This confers how an fgcm reacts to an input initial state vector. There is a
+multi-decadal long body of work that has explored numerous activation and squashing
+functions as well as algorithms to optimize the lambda value for the
+sigmoid and tanh squashing functions.
 
 Use vignette("fgcm-class") for more information about each of these
 functions/algorithms alongside their originating sources.

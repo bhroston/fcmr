@@ -50,7 +50,7 @@ confer_fcm <- function(adj_matrix = matrix(),
                        activation = "kosko", # Problems when activation == "rescale",
                        squashing = "tanh",
                        lambda = 1,
-                       max_iter = 10,
+                       max_iter = 100,
                        min_error = 1e-5,
                        lambda_optimization = "none", # Verify this function works
                        IDs = c()) {

@@ -63,14 +63,17 @@ get_edgelist_from_adj_matrix <- function(adj_matrix = matrix(), IDs = c()) {
 #' edge source nodes
 #' @param target_colname Column name in the input edgelist that represents
 #' edge target nodes
-#' @param value_colname Colname in th einput edgelist that represents represents
+#' @param value_colname Column name in the input edgelist that represents represents
 #' the values displayed in the adjacency matrix (i.e. weight, standard_deviation)
+#' @param node_order The order in which concepts should be arranged in the output
+#' adjacency matrix. If no input given, concepts will be arranged alphabetically.
 #'
 #' @export
 get_adj_matrix_from_edgelist <- function(edgelist = matrix(),
                                          source_colname = "source",
                                          target_colname = "target",
-                                         value_colname = "weight") {
+                                         value_colname = "weight",
+                                         node_order = c()) {
 
   edgelist_column_inputs <- c(source_colname, target_colname, value_colname)
   edgelist_columns_match_inputs <- identical(colnames(edgelist), edgelist_column_inputs)
@@ -97,6 +100,18 @@ get_adj_matrix_from_edgelist <- function(edgelist = matrix(),
     edge_row_loc <- which(nodes == edge[[source_colname]])
     edge_col_loc <- which(nodes == edge[[target_colname]])
     adj_matrix[edge_row_loc, edge_col_loc] <- edge_values[i]
+  }
+
+  node_order_given <- !identical(node_order, c())
+  node_order_is_not_correct_length <- length(node_order) != length(nodes)
+  node_order_input_is_not_type_character <- !identical(unique(typeof(node_order)), "character")
+  if (!node_order_given) {
+    adj_matrix <- adj_matrix
+  } else if (node_order_given & (node_order_is_not_correct_length | node_order_input_is_not_type_character)) {
+    stop("Input node_order must only contain character strings and must contain
+         as many values as their are unique nodes depicted in the input edgelist.")
+  } else {
+    adj_matrix <- adj_matrix[node_order, node_order]
   }
 
   adj_matrix

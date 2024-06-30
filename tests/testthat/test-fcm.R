@@ -32,6 +32,28 @@ test_that("confer_fcm works", {
 
   # p <- barplot(height = x$value, names.arg = x$name, col = "red")
   # text(x = p, y = x$value + 0.05, labels = round(x$value, 1))
+
+  # Test with negative edge weights
+  adj_matrix <- data.frame(
+    "A" = c(0, 0, 0, 0),
+    "B" = c(-0.25, 0, 0, -0.25),
+    "C" = c(0, 0.75, 0, 0),
+    "D" = c(0, 0, -0.25, 0)
+  )
+  activation_vector <- c(1, 1, 1, 1)
+  scenario_vector <- c(0, 1, 0, 0)
+  squashing = "tanh"
+  lambda = 1
+  max_iter = 1000
+  min_error = 1e-5
+  lambda_optimization = "koutsellis"
+  IDs = c()
+
+  test_confer <- confer_fcm(adj_matrix, activation_vector, scenario_vector, activation = "kosko",
+                            squashing = "tanh", lambda = 1, max_iter = 1000)
+
+  plot(test_confer$scenario_simulation$state_vectors$C, ylim = c(-1, 1))
+  points(test_confer$baseline_simulation$state_vectors$C)
 })
 
 

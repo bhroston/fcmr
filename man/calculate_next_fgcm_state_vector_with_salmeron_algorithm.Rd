@@ -7,7 +7,7 @@
 calculate_next_fgcm_state_vector_with_salmeron_algorithm(
   state_vector = c(),
   grey_adj_matrix_col_vector = c(),
-  activation = "modified-kosko"
+  activation = "kosko"
 )
 }
 \arguments{
