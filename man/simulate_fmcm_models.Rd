@@ -6,8 +6,8 @@
 \usage{
 simulate_fmcm_models(
   simulated_adj_matrices = list(matrix()),
-  activation_vector = c(),
-  scenario_vector = c(),
+  initial_state_vector = c(),
+  clamping_vector = c(),
   activation = "kosko",
   squashing = "tanh",
   lambda = 1,
@@ -23,9 +23,9 @@ simulate_fmcm_models(
 \arguments{
 \item{simulated_adj_matrices}{A list of adjecency matrices generated from simulation using build_fmcm_models.}
 
-\item{activation_vector}{A list state values at the start of an fcm simulation}
+\item{initial_state_vector}{A list state values at the start of an fcm simulation}
 
-\item{scenario_vector}{A list of values representing specific actions taken to
+\item{clamping_vector}{A list of values representing specific actions taken to
 control the behavior of an FCM. Specifically, non-zero values defined in this vector
 will remain constant throughout the entire simulation as if they were "clamped" at those values.}
 

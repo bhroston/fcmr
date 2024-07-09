@@ -14,8 +14,8 @@
 #' Use vignette("fmcm-class") for more information.
 #'
 #' @param simulated_adj_matrices A list of adjecency matrices generated from simulation using build_fmcm_models.
-#' @param activation_vector A list state values at the start of an fcm simulation
-#' @param scenario_vector A list of values representing specific actions taken to
+#' @param initial_state_vector A list state values at the start of an fcm simulation
+#' @param clamping_vector A list of values representing specific actions taken to
 #' control the behavior of an FCM. Specifically, non-zero values defined in this vector
 #' will remain constant throughout the entire simulation as if they were "clamped" at those values.
 #' @param activation The activation function to be applied. Must be one of the following:
@@ -42,8 +42,8 @@
 #'
 #' @export
 confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
-                        activation_vector = c(),
-                        scenario_vector = c(),
+                        initial_state_vector = c(),
+                        clamping_vector = c(),
                         activation = "kosko", # Something wrong with papageorgiou activation; returning negative numbers... works for sigmoid, but not tanh
                         squashing = "tanh",
                         lambda = 1,
@@ -60,16 +60,46 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
   # iter <- NULL
   i <- NULL
 
-  lapply(simulated_adj_matrices, confirm_adj_matrix_is_square)
-
-  if (identical(activation_vector, c())) {
-    warning("No activation_vector input given. Assuming all nodes have an initial state of 1.")
-    activation_vector <- rep(1, nrow(simulated_adj_matrices[[1]]))
+  # Confirm packages necessary packages are available. If not, change run options
+  if (parallel) {
+    if (!requireNamespace("parallel")) {
+      parallel <- FALSE
+      warning("Parallel processing requires the 'parallel' package which is
+              currently not installed. Running without parallel processing.")
+    }
+    if (show_progress) {
+      if (!requireNamespace("doSNOW")) {
+        show_progress <- FALSE
+        warning("Showing progress with parallel processing requires the 'doSNOW' package which is
+              currently not installed. Running in parallel but without showing progress.")
+      }
+      if (!requireNamespace("foreach")) {
+        show_progress <- FALSE
+        warning("Showing progress with parallel processing requires the 'foreach' package which is
+              currently not installed. Running in parallel but without showing progress.")
+      }
+    }
+  }
+  if (!parallel) {
+    if (show_progress) {
+      if (!requireNamespace("pbapply")) {
+        show_progress <- FALSE
+        warning("Showing progress requires the 'pbapply' package which is
+              currently not installed. Running without showing progress.")
+      }
+    }
   }
 
-  if (identical(scenario_vector, c())) {
-    warning("No scenario_vector input given. Assuming no values are clamped.")
-    scenario_vector <- rep(0, length(activation_vector))
+  lapply(simulated_adj_matrices, confirm_adj_matrix_is_square)
+
+  if (identical(initial_state_vector, c())) {
+    warning("No initial_state_vector input given. Assuming all nodes have an initial state of 1.")
+    initial_state_vector <- rep(1, nrow(simulated_adj_matrices[[1]]))
+  }
+
+  if (identical(clamping_vector, c())) {
+    warning("No clamping_vector input given. Assuming no values are clamped.")
+    clamping_vector <- rep(0, length(initial_state_vector))
   }
 
   if (parallel & show_progress) {
@@ -82,11 +112,11 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
     # Have to store variables in new env that can be accessed by parLapply. There
     # is surely a better way to do this, but this way works
     # start <- Sys.time()
-    vars <- list("simulated_adj_matrices", "activation_vector", "scenario_vector", "activation",
+    vars <- list("simulated_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
                  "squashing", "lambda", "max_iter", "min_error",
                  "lambda_optimization", "IDs",
                  "confer_fcm", "simulate_fcm",  "confirm_adj_matrix_is_square",
-                 "confirm_activation_vector_is_compatible_with_adj_matrix",
+                 "confirm_initial_state_vector_is_compatible_with_adj_matrix",
                  "get_node_IDs_from_input", "optimize_fcm_lambda",
                  "calculate_next_fcm_state_vector", "squash")
 
@@ -102,8 +132,8 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
       i = 1:length(simulated_adj_matrices), .options.snow = opts) %dopar% {
         confer_fcm(
           adj_matrix = simulated_adj_matrices[[i]],
-          activation_vector = activation_vector,
-          scenario_vector = scenario_vector,
+          initial_state_vector = initial_state_vector,
+          clamping_vector = clamping_vector,
           activation = activation,
           squashing = squashing,
           lambda = lambda,
@@ -127,11 +157,11 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
     # Have to store variables in new env that can be accessed by parLapply. There
     # is surely a better way to do this, but this way works
     # start <- Sys.time()
-    vars <- list("simulated_adj_matrices", "activation_vector", "scenario_vector", "activation",
+    vars <- list("simulated_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
                  "squashing", "lambda", "max_iter", "min_error",
                  "lambda_optimization", "IDs",
                  "confer_fcm", "simulate_fcm",  "confirm_adj_matrix_is_square",
-                 "confirm_activation_vector_is_compatible_with_adj_matrix",
+                 "confirm_initial_state_vector_is_compatible_with_adj_matrix",
                  "get_node_IDs_from_input", "optimize_fcm_lambda",
                  "calculate_next_fcm_state_vector", "squash")
 
@@ -145,8 +175,8 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
       function(simulated_adj_matrix) {
         confer_fcm(
           adj_matrix = simulated_adj_matrix,
-          activation_vector = activation_vector,
-          scenario_vector = scenario_vector,
+          initial_state_vector = initial_state_vector,
+          clamping_vector = clamping_vector,
           activation = activation,
           squashing = squashing,
           lambda = lambda,
@@ -167,8 +197,8 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
       function(simulated_adj_matrix) {
         confer_fcm(
           adj_matrix = simulated_adj_matrix,
-          activation_vector = activation_vector,
-          scenario_vector = scenario_vector,
+          initial_state_vector = initial_state_vector,
+          clamping_vector = clamping_vector,
           activation = activation,
           squashing = squashing,
           lambda = lambda,
@@ -188,8 +218,8 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
       function(simulated_adj_matrix) {
         confer_fcm(
           adj_matrix = simulated_adj_matrix,
-          activation_vector = activation_vector,
-          scenario_vector = scenario_vector,
+          initial_state_vector = initial_state_vector,
+          clamping_vector = clamping_vector,
           activation = activation,
           squashing = squashing,
           lambda = lambda,
@@ -249,8 +279,8 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
 #' Use vignette("fmcm-class") for more information.
 #'
 #' @param simulated_adj_matrices A list of adjecency matrices generated from simulation using build_fmcm_models.
-#' @param activation_vector A list state values at the start of an fcm simulation
-#' @param scenario_vector A list of values representing specific actions taken to
+#' @param initial_state_vector A list state values at the start of an fcm simulation
+#' @param clamping_vector A list of values representing specific actions taken to
 #' control the behavior of an FCM. Specifically, non-zero values defined in this vector
 #' will remain constant throughout the entire simulation as if they were "clamped" at those values.
 #' @param activation The activation function to be applied. Must be one of the following:
@@ -275,8 +305,8 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
 #'
 #' @export
 simulate_fmcm_models <- function(simulated_adj_matrices = list(matrix()),
-                                 activation_vector = c(),
-                                 scenario_vector = c(),
+                                 initial_state_vector = c(),
+                                 clamping_vector = c(),
                                  activation = "kosko", # Something wrong with papageorgiou activation; returning negative numbers... works for sigmoid, but not tanh
                                  squashing = "tanh",
                                  lambda = 1,
@@ -294,14 +324,14 @@ simulate_fmcm_models <- function(simulated_adj_matrices = list(matrix()),
 
   lapply(simulated_adj_matrices, confirm_adj_matrix_is_square)
 
-  if (identical(activation_vector, c())) {
-    warning("No activation_vector input given. Assuming all nodes have an initial state of 1.")
-    activation_vector <- rep(1, nrow(simulated_adj_matrices[[1]]))
+  if (identical(initial_state_vector, c())) {
+    warning("No initial_state_vector input given. Assuming all nodes have an initial state of 1.")
+    initial_state_vector <- rep(1, nrow(simulated_adj_matrices[[1]]))
   }
 
-  if (identical(scenario_vector, c())) {
-    warning("No scenario_vector input given. Assuming no values are clamped.")
-    scenario_vector <- rep(0, length(activation_vector))
+  if (identical(clamping_vector, c())) {
+    warning("No clamping_vector input given. Assuming no values are clamped.")
+    clamping_vector <- rep(0, length(initial_state_vector))
   }
 
   if (parallel & show_progress) {
@@ -314,11 +344,11 @@ simulate_fmcm_models <- function(simulated_adj_matrices = list(matrix()),
     # Have to store variables in new env that can be accessed by parLapply. There
     # is surely a better way to do this, but this way works
     # start <- Sys.time()
-    vars <- list("simulated_adj_matrices", "activation_vector", "scenario_vector", "activation",
+    vars <- list("simulated_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
                  "squashing", "lambda", "max_iter", "min_error",
                  "lambda_optimization", "IDs",
                  "simulate_fcm",  "confirm_adj_matrix_is_square",
-                 "confirm_activation_vector_is_compatible_with_adj_matrix",
+                 "confirm_initial_state_vector_is_compatible_with_adj_matrix",
                  "get_node_IDs_from_input", "optimize_fcm_lambda",
                  "calculate_next_fcm_state_vector", "squash")
 
@@ -333,8 +363,8 @@ simulate_fmcm_models <- function(simulated_adj_matrices = list(matrix()),
       i = 1:length(simulated_adj_matrices), .options.snow = opts) %dopar% {
         simulate_fcm(
           adj_matrix = simulated_adj_matrices[[i]],
-          activation_vector = activation_vector,
-          scenario_vector = scenario_vector,
+          initial_state_vector = initial_state_vector,
+          clamping_vector = clamping_vector,
           activation = activation,
           squashing = squashing,
           lambda = lambda,
@@ -358,11 +388,11 @@ simulate_fmcm_models <- function(simulated_adj_matrices = list(matrix()),
     # Have to store variables in new env that can be accessed by parLapply. There
     # is surely a better way to do this, but this way works
     # start <- Sys.time()
-    vars <- list("simulated_adj_matrices", "activation_vector", "scenario_vector", "activation",
+    vars <- list("simulated_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
                  "squashing", "lambda", "max_iter", "min_error",
                  "lambda_optimization", "IDs",
                  "confer_fcm", "simulate_fcm",  "confirm_adj_matrix_is_square",
-                 "confirm_activation_vector_is_compatible_with_adj_matrix",
+                 "confirm_initial_state_vector_is_compatible_with_adj_matrix",
                  "get_node_IDs_from_input", "optimize_fcm_lambda",
                  "calculate_next_fcm_state_vector", "squash")
 
@@ -375,8 +405,8 @@ simulate_fmcm_models <- function(simulated_adj_matrices = list(matrix()),
       function(simulated_adj_matrix) {
         simulate_fcm(
           adj_matrix = simulated_adj_matrix,
-          activation_vector = activation_vector,
-          scenario_vector = scenario_vector,
+          initial_state_vector = initial_state_vector,
+          clamping_vector = clamping_vector,
           activation = activation,
           squashing = squashing,
           lambda = lambda,
@@ -396,8 +426,8 @@ simulate_fmcm_models <- function(simulated_adj_matrices = list(matrix()),
       function(simulated_adj_matrix) {
         simulate_fcm(
           adj_matrix = simulated_adj_matrix,
-          activation_vector = activation_vector,
-          scenario_vector = scenario_vector,
+          initial_state_vector = initial_state_vector,
+          clamping_vector = clamping_vector,
           activation = activation,
           squashing = squashing,
           lambda = lambda,
@@ -416,8 +446,8 @@ simulate_fmcm_models <- function(simulated_adj_matrices = list(matrix()),
       function(simulated_adj_matrix) {
         confer_fcm(
           adj_matrix = simulated_adj_matrix,
-          activation_vector = activation_vector,
-          scenario_vector = scenario_vector,
+          initial_state_vector = initial_state_vector,
+          clamping_vector = clamping_vector,
           activation = activation,
           squashing = squashing,
           lambda = lambda,
@@ -523,6 +553,36 @@ get_means_of_fmcm_inferences <- function(fmcm_inferences = list(),
     stop("Input fmcm_inferences must be a data.frame object from the
          output of simulate_fmcm_models (final_states_across_sims) or confer_fmcm
          (inferences)")
+  }
+
+  # Confirm packages necessary packages are available. If not, change run options
+  if (parallel) {
+    if (!requireNamespace("parallel")) {
+      parallel <- FALSE
+      warning("Parallel processing requires the 'parallel' package which is
+              currently not installed. Running without parallel processing.")
+    }
+    if (show_progress) {
+      if (!requireNamespace("doSNOW")) {
+        show_progress <- FALSE
+        warning("Showing progress with parallel processing requires the 'doSNOW' package which is
+              currently not installed. Running in parallel but without showing progress.")
+      }
+      if (!requireNamespace("foreach")) {
+        show_progress <- FALSE
+        warning("Showing progress with parallel processing requires the 'foreach' package which is
+              currently not installed. Running in parallel but without showing progress.")
+      }
+    }
+  }
+  if (!parallel) {
+    if (show_progress) {
+      if (!requireNamespace("pbapply")) {
+        show_progress <- FALSE
+        warning("Showing progress requires the 'pbapply' package which is
+              currently not installed. Running without showing progress.")
+      }
+    }
   }
 
   if (!get_bootstrapped_means) {
@@ -710,6 +770,36 @@ build_fmcm_models <- function(adj_matrix = matrix(),
   if (!all(additional_inputs_have_correct_edges)) {
     stop("all additional input adjacency matrices must have the same edges as the input adj_matrix (i.e. values
          in the same locations in the adjacency matrix")
+  }
+
+  # Confirm packages necessary packages are available. If not, change run options
+  if (parallel) {
+    if (!requireNamespace("parallel")) {
+      parallel <- FALSE
+      warning("Parallel processing requires the 'parallel' package which is
+              currently not installed. Running without parallel processing.")
+    }
+    if (show_progress) {
+      if (!requireNamespace("doSNOW")) {
+        show_progress <- FALSE
+        warning("Showing progress with parallel processing requires the 'doSNOW' package which is
+              currently not installed. Running in parallel but without showing progress.")
+      }
+      if (!requireNamespace("foreach")) {
+        show_progress <- FALSE
+        warning("Showing progress with parallel processing requires the 'foreach' package which is
+              currently not installed. Running in parallel but without showing progress.")
+      }
+    }
+  }
+  if (!parallel) {
+    if (show_progress) {
+      if (!requireNamespace("pbapply")) {
+        show_progress <- FALSE
+        warning("Showing progress requires the 'pbapply' package which is
+              currently not installed. Running without showing progress.")
+      }
+    }
   }
 
   node_order <- colnames(adj_matrix)
@@ -1169,9 +1259,9 @@ get_triangular_distribution_of_values <- function(lower = double(), upper = doub
 
 # # Get baseline simulations
 # print("Performing BASELINE simulations", quote = FALSE)
-# baseline_scenario_vector <- rep(0, length(scenario_vector))
+# baseline_clamping_vector <- rep(0, length(clamping_vector))
 # baseline_simulations <- simulate_fmcm_models(simulated_adj_matrices,
-#                                               activation_vector, baseline_scenario_vector,
+#                                               initial_state_vector, baseline_clamping_vector,
 #                                               activation, squashing, lambda,
 #                                               max_iter, min_error, lambda_optimization,
 #                                               IDs, parallel, n_cores, show_progress)
@@ -1180,7 +1270,7 @@ get_triangular_distribution_of_values <- function(lower = double(), upper = doub
 # cat("\n")
 # print("Performing SCENARIO simulations", quote = FALSE)
 # scenario_simulations <- simulate_fmcm_models(simulated_adj_matrices,
-#                                               activation_vector, scenario_vector,
+#                                               initial_state_vector, clamping_vector,
 #                                               activation, squashing, lambda,
 #                                               max_iter, min_error, lambda_optimization,
 #                                               IDs, parallel, n_cores, show_progress)
