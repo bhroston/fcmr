@@ -149,6 +149,18 @@ confer_fgcm <- function(grey_adj_matrix = matrix(),
       break
     }
   }
+  if (i >= max_iter) {
+    warning(
+      "\tThe simulation reached the maximum number of iterations before
+        achieving the minimum allowable error. This may signal that
+        the fcm has reached a limit-cycle or is endlessly chaotic.
+
+        It is also possible that the fcm simply requires more iterations
+        to converge within the input minimum error.
+
+        Try increasing the max_iter or min_error inputs."
+    )
+  }
 
   scenario_state_vectors <- data.frame(scenario_state_vectors[1:(i), ])
   baseline_state_vectors <- data.frame(baseline_state_vectors[1:(i), ])

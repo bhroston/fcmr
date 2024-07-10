@@ -123,11 +123,12 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
     parallel::clusterExport(cl, varlist = vars, envir = environment())
 
     doSNOW::registerDoSNOW(cl)
-    print("Running simulations", quote = FALSE)
-    pb <- utils::txtProgressBar(min = 0, max = length(simulated_adj_matrices)/n_cores, style = 3)
+    # pb <- utils::txtProgressBar(min = 0, max = length(simulated_adj_matrices)/n_cores, style = 3)
+    invisible(utils::capture.output(pb <- utils::txtProgressBar(min = 0, max = length(simulated_adj_matrices)/n_cores, style = 3)))
     progress <- function(n) utils::setTxtProgressBar(pb, n)
+    # cat("\n")
+    print("Running simulations. There may be an additional wait for larger sets.", quote = FALSE)
     opts <- list(progress = progress)
-    cat("\n")
     fmcm_confer_results <- foreach::foreach(
       i = 1:length(simulated_adj_matrices), .options.snow = opts) %dopar% {
         confer_fcm(
@@ -232,9 +233,9 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
     )
   }
 
-  cat("\n")
-  print("Organizing Output", quote = FALSE)
-  cat("\n")
+  # cat("\n")
+  # print("Organizing Output", quote = FALSE)
+  # cat("\n")
   inference_values_by_sim <- lapply(fmcm_confer_results, function(sim) sim$inference)
   inference_values_by_sim <- data.frame(do.call(rbind, inference_values_by_sim))
 
@@ -261,222 +262,6 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
       class = "fmcmconfer"
     )
   }
-}
-
-
-#' simulate_fmcm_models
-#'
-#' @description
-#' This calculates a sequence of iterations of a simulation over every item in
-#' a list of fmcm objects given an initial state vector along with the
-#' activation, squashing, and lambda parameters.
-#' Additional variables may be defined to control simulation length,
-#' column names, and lambda optimization.
-#'
-#' @details
-#' [ADD DETAILS HERE!!!]
-#'
-#' Use vignette("fmcm-class") for more information.
-#'
-#' @param simulated_adj_matrices A list of adjecency matrices generated from simulation using build_fmcm_models.
-#' @param initial_state_vector A list state values at the start of an fcm simulation
-#' @param clamping_vector A list of values representing specific actions taken to
-#' control the behavior of an FCM. Specifically, non-zero values defined in this vector
-#' will remain constant throughout the entire simulation as if they were "clamped" at those values.
-#' @param activation The activation function to be applied. Must be one of the following:
-#' 'kosko', 'modified-kosko', or 'papageorgiou'.
-#' @param squashing A squashing function to apply. Must be one of the following:
-#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
-#' @param lambda A numeric value that defines the steepness of the slope of the
-#' squashing function when tanh or sigmoid are applied
-#' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
-#' @param min_error The lowest error (sum of the absolute value of the current state
-#' vector minus the previous state vector) at which no more iterations are necessary
-#' and the simulation will stop
-#' @param lambda_optimization A lambda optimization procedure to apply. Must be one
-#' of the following: 'none' or 'koutsellis'
-#' @param IDs A list of names for each node (must have n items). If empty, will use
-#' column names of adjacancy matrix (if given).
-#' @param parallel TRUE/FALSE Whether to utilize parallel processing
-#' @param n_cores Number of cores to use in parallel processing. If no input given,
-#' will use all available cores in the machine.
-#' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
-#' from the pbapply package as the underlying function.
-#'
-#' @export
-simulate_fmcm_models <- function(simulated_adj_matrices = list(matrix()),
-                                 initial_state_vector = c(),
-                                 clamping_vector = c(),
-                                 activation = "kosko", # Something wrong with papageorgiou activation; returning negative numbers... works for sigmoid, but not tanh
-                                 squashing = "tanh",
-                                 lambda = 1,
-                                 max_iter = 100,
-                                 min_error = 1e-5,
-                                 lambda_optimization = "none", # Getting error with lambda optimization
-                                 IDs = c(),
-                                 parallel = TRUE,
-                                 n_cores = integer(),
-                                 show_progress = TRUE) {
-
-  # Add for R CMD Check. Does not impact logic.
-  iter <- NULL
-  i <- NULL # Have to add for the call to foreach
-
-  lapply(simulated_adj_matrices, confirm_adj_matrix_is_square)
-
-  if (identical(initial_state_vector, c())) {
-    warning("No initial_state_vector input given. Assuming all nodes have an initial state of 1.")
-    initial_state_vector <- rep(1, nrow(simulated_adj_matrices[[1]]))
-  }
-
-  if (identical(clamping_vector, c())) {
-    warning("No clamping_vector input given. Assuming no values are clamped.")
-    clamping_vector <- rep(0, length(initial_state_vector))
-  }
-
-  if (parallel & show_progress) {
-    print("Initializing cluster", quote = FALSE)
-    if (identical(n_cores, integer())) {
-      n_cores <- parallel::detectCores()
-    }
-    cl <- parallel::makeCluster(n_cores)
-
-    # Have to store variables in new env that can be accessed by parLapply. There
-    # is surely a better way to do this, but this way works
-    # start <- Sys.time()
-    vars <- list("simulated_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
-                 "squashing", "lambda", "max_iter", "min_error",
-                 "lambda_optimization", "IDs",
-                 "simulate_fcm",  "confirm_adj_matrix_is_square",
-                 "confirm_initial_state_vector_is_compatible_with_adj_matrix",
-                 "get_node_IDs_from_input", "optimize_fcm_lambda",
-                 "calculate_next_fcm_state_vector", "squash")
-
-    parallel::clusterExport(cl, varlist = vars, envir = environment())
-
-    doSNOW::registerDoSNOW(cl)
-    pb <- utils::txtProgressBar(min = 0, max = length(simulated_adj_matrices)/n_cores, style = 3)
-    progress <- function(n) utils::setTxtProgressBar(pb, n)
-    opts <- list(progress = progress)
-    print("Running simulations", quote = FALSE)
-    fmcm_simulation_results <- foreach::foreach(
-      i = 1:length(simulated_adj_matrices), .options.snow = opts) %dopar% {
-        simulate_fcm(
-          adj_matrix = simulated_adj_matrices[[i]],
-          initial_state_vector = initial_state_vector,
-          clamping_vector = clamping_vector,
-          activation = activation,
-          squashing = squashing,
-          lambda = lambda,
-          max_iter = max_iter,
-          min_error = min_error,
-          lambda_optimization = lambda_optimization,
-          IDs = IDs
-        )
-      }
-    close(pb)
-    names(fmcm_simulation_results) <- paste0("sim_", 1:length(fmcm_simulation_results))
-    parallel::stopCluster(cl)
-
-  } else if (parallel & !show_progress) {
-    print("Initializing cluster", quote = FALSE)
-    if (identical(n_cores, integer())) {
-      n_cores <- parallel::detectCores()
-    }
-    cl <- parallel::makeCluster(n_cores)
-
-    # Have to store variables in new env that can be accessed by parLapply. There
-    # is surely a better way to do this, but this way works
-    # start <- Sys.time()
-    vars <- list("simulated_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
-                 "squashing", "lambda", "max_iter", "min_error",
-                 "lambda_optimization", "IDs",
-                 "confer_fcm", "simulate_fcm",  "confirm_adj_matrix_is_square",
-                 "confirm_initial_state_vector_is_compatible_with_adj_matrix",
-                 "get_node_IDs_from_input", "optimize_fcm_lambda",
-                 "calculate_next_fcm_state_vector", "squash")
-
-    parallel::clusterExport(cl, varlist = vars, envir = environment())
-
-    print("Running simulations", quote = FALSE)
-    fmcm_simulation_results <- parallel::parLapply(
-      cl,
-      simulated_adj_matrices,
-      function(simulated_adj_matrix) {
-        simulate_fcm(
-          adj_matrix = simulated_adj_matrix,
-          initial_state_vector = initial_state_vector,
-          clamping_vector = clamping_vector,
-          activation = activation,
-          squashing = squashing,
-          lambda = lambda,
-          max_iter = max_iter,
-          min_error = min_error,
-          lambda_optimization = lambda_optimization,
-          IDs = IDs
-        )
-      }
-    )
-    parallel::stopCluster(cl)
-
-  } else if (!parallel & show_progress) {
-    print("Running simulations", quote = FALSE)
-    fmcm_simulation_results <- pbapply::pblapply(
-      simulated_adj_matrices,
-      function(simulated_adj_matrix) {
-        simulate_fcm(
-          adj_matrix = simulated_adj_matrix,
-          initial_state_vector = initial_state_vector,
-          clamping_vector = clamping_vector,
-          activation = activation,
-          squashing = squashing,
-          lambda = lambda,
-          max_iter = max_iter,
-          min_error = min_error,
-          lambda_optimization = lambda_optimization,
-          IDs = IDs
-        )
-      }
-    )
-
-  } else if (!parallel & !show_progress) {
-    print("Running simulations", quote = FALSE)
-    fmcm_simulation_results <- lapply(
-      simulated_adj_matrices,
-      function(simulated_adj_matrix) {
-        confer_fcm(
-          adj_matrix = simulated_adj_matrix,
-          initial_state_vector = initial_state_vector,
-          clamping_vector = clamping_vector,
-          activation = activation,
-          squashing = squashing,
-          lambda = lambda,
-          max_iter = max_iter,
-          min_error = min_error,
-          lambda_optimization = lambda_optimization,
-          IDs = IDs
-        )
-      }
-    )
-  }
-
-  names(fmcm_simulation_results) <- paste0("sim_", seq_along(fmcm_simulation_results))
-
-  cat("\n")
-  print("Organizing Output", quote = FALSE)
-  cat("\n")
-  final_state_vector_values_across_sims <- lapply(fmcm_simulation_results, function(results) results$state_vectors[nrow(results$state_vectors), ])
-  final_state_vector_values_across_sims <- data.frame(do.call(rbind, final_state_vector_values_across_sims))
-
-  state_vectors_by_sim <- lapply(fmcm_simulation_results, function(x) x$state_vectors)
-  #state_vectors_by_iter_across_sims <- get_state_vectors_by_iter_from_fmcm_sims(state_vectors_by_sim)
-
-  list(
-    sim_results = fmcm_simulation_results,
-    final_states_across_sims = subset(final_state_vector_values_across_sims, select = -(iter)), # Need a better name for this
-    state_vectors_by_sim_across_iters = state_vectors_by_sim
-    #state_vectors_by_iter_across_sims = state_vectors_by_iter_across_sims
-  )
 }
 
 
@@ -606,7 +391,7 @@ get_means_of_fmcm_inferences <- function(fmcm_inferences = list(),
     parallel::clusterExport(cl, varlist = vars, envir = environment())
     print("Sampling means", quote = FALSE)
     doSNOW::registerDoSNOW(cl)
-    pb <- utils::txtProgressBar(min = 0, max = ceiling(bootstrap_reps/n_cores), width = 50, style = 3)
+    invisible(utils::capture.output(pb <- utils::txtProgressBar(min = 0, max = ceiling(bootstrap_reps/n_cores), width = 50, style = 3)))
     progress <- function(n) utils::setTxtProgressBar(pb, n)
     opts <- list(progress = progress)
     bootstrapped_means_of_inferences_by_node <- foreach::foreach(
@@ -692,7 +477,7 @@ get_means_of_fmcm_inferences <- function(fmcm_inferences = list(),
 
   bootstrapped_means_of_inferences_by_node <- data.frame(do.call(rbind, bootstrapped_means_of_inferences_by_node))
 
-  print("Getting upper and lower quantile estimates of mean", quote = FALSE)
+  # print("Getting upper and lower quantile estimates of mean", quote = FALSE)
   lower_quantile <- (1 - confidence_interval)/2
   upper_quantile <- (1 + confidence_interval)/2
   lower_quantiles_by_node <- data.frame(apply(bootstrapped_means_of_inferences_by_node, 2, function(bootstrapped_means) stats::quantile(bootstrapped_means, lower_quantile), simplify = FALSE))

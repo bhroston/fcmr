@@ -10,13 +10,13 @@ test_that("confer_fcm works", {
   clamping_vector <- c(1, 0, 0, 0)
   squashing = "tanh"
   lambda = 1
-  max_iter = 1000
+  max_iter = 10000
   min_error = 1e-5
   lambda_optimization = "koutsellis"
   IDs = c()
 
   test_confer <- confer_fcm(adj_matrix, initial_state_vector, clamping_vector, activation = "kosko",
-             squashing = "tanh", lambda = 1, max_iter = 1000)
+             squashing = "tanh", lambda = 1, max_iter = 10000)
 
   inference_vals <- round(test_confer$inference, 1)
 
@@ -57,6 +57,22 @@ test_that("confer_fcm works", {
 })
 
 
+test_that("warning pops up if max_iter reached", {
+  test_adj_matrix_1 <- data.frame(
+    "C1" = c(0, 0.36, 0.45, -0.90, 0),
+    "C2" = c(-0.4, 0, 0, 0, 0.6),
+    "C3" = c(-0.25, 0, 0, 0, 0),
+    "C4" = c(0, 0, 0, 0, 0.3),
+    "C5" = c(0.3, 0, 0, 0, 0)
+  )
+
+  test_initial_state_vector_1 <- c(0.400, 0.707, 0.612, 0.717, 0.300)
+
+  expect_warning(simulate_fcm(adj_matrix = test_adj_matrix_1, initial_state_vector = test_initial_state_vector_1, clamping_vector = c(0, 0, 0, 0, 0),
+                             activation = "modified-kosko", squashing = "sigmoid", lambda = 1, max_iter = 10))
+})
+
+
 test_that("simulate_fcm works", {
   # Test from Stylios & Groumpos, 2000 - J. Intell. Fuzzy Syst. Vol. 8 No. 1 pp.83-98
   # Title: Fuzzy Cognitive Maps in modeling supervisory control systems (no doi available)
@@ -72,11 +88,11 @@ test_that("simulate_fcm works", {
   test_initial_state_vector_1 <- c(0.400, 0.707, 0.612, 0.717, 0.300)
 
   test_fcm_1 <- simulate_fcm(adj_matrix = test_adj_matrix_1, initial_state_vector = test_initial_state_vector_1, clamping_vector = c(0, 0, 0, 0, 0),
-                activation = "modified-kosko", squashing = "sigmoid", lambda = 1, max_iter = 10)
+                activation = "modified-kosko", squashing = "sigmoid", lambda = 1, max_iter = 100)
   expect_error(simulate_fcm(adj_matrix = test_adj_matrix_1, initial_state_vector = test_initial_state_vector_1, clamping_vector = c(0, 0, 0, 0, 0),
-                             activation = "rescale", squashing = "tanh", lambda = 1, max_iter = 10))
+                             activation = "rescale", squashing = "tanh", lambda = 1, max_iter = 100))
   expect_no_error(simulate_fcm(adj_matrix = test_adj_matrix_1, initial_state_vector = test_initial_state_vector_1, clamping_vector = c(0, 0, 0, 0, 0),
-                            activation = "rescale", squashing = "sigmoid", lambda = 1, max_iter = 10))
+                            activation = "rescale", squashing = "sigmoid", lambda = 1, max_iter = 100))
 
   test_fcm_1_state_vectors <- test_fcm_1$state_vectors
   final_state_fcm_1 <- round(test_fcm_1_state_vectors[nrow(test_fcm_1_state_vectors), ], digits = 3)

@@ -182,7 +182,7 @@ simulate_fcm <- function(adj_matrix = matrix(),
                           activation = "kosko", # Problems when activation == "rescale",
                           squashing = "tanh",
                           lambda = 1,
-                          max_iter = 10,
+                          max_iter = 100,
                           min_error = 1e-5,
                           lambda_optimization = "none", # Verify this function works
                           IDs = c()) {
@@ -226,6 +226,18 @@ simulate_fcm <- function(adj_matrix = matrix(),
       errors <- stats::na.omit(errors)
       break
     }
+  }
+  if (i >= max_iter) {
+    warning(
+      "\tThe simulation reached the maximum number of iterations before
+        achieving the minimum allowable error. This may signal that
+        the fcm has reached a limit-cycle or is endlessly chaotic.
+
+        It is also possible that the fcm simply requires more iterations
+        to converge within the input minimum error.
+
+        Try increasing the max_iter or min_error inputs."
+    )
   }
 
   colnames(state_vectors) <- IDs
