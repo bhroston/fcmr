@@ -90,52 +90,80 @@ confer_fgcm <- function(grey_adj_matrix = matrix(),
     nonzero_value_indexes_in_clamping_vector <- which(vapply(clamping_vector, function(x) !identical(x, grey_number(0, 0)), logical(1)))
   }
 
-  state_vectors <-  matrix(data = list(NA), nrow = max_iter + 1, ncol = length(clamping_vector))
-  colnames(state_vectors) <- IDs
-  state_vectors[1, ] <- initial_state_vector
+  scenario_state_vectors <-  matrix(data = list(NA), nrow = max_iter + 1, ncol = length(clamping_vector))
+  colnames(scenario_state_vectors) <- IDs
+  scenario_state_vectors[1, ] <- initial_state_vector
+  baseline_state_vectors <- matrix(data = list(NA), nrow = max_iter + 1, ncol = length(clamping_vector))
+  colnames(baseline_state_vectors) <- IDs
+  baseline_state_vectors[1, ] <- initial_state_vector
+  inference_state_vectors <-  matrix(data = list(NA), nrow = max_iter, ncol = length(clamping_vector))
+  colnames(inference_state_vectors) <- IDs
   errors <- data.frame(matrix(data = numeric(1), nrow = max_iter + 1, ncol = length(clamping_vector)))
   colnames(errors) <- IDs
   errors[1, ] <- 0
 
   for (i in 2:(max_iter + 1)) {
-    current_state_vector <- state_vectors[i - 1, ]
-    next_state_vector <- calculate_next_fgcm_state_vector(grey_adj_matrix, current_state_vector, activation, algorithm)
-    squashed_next_state_vector <- lapply(
-      next_state_vector,
-      function(state) {
-        grey_number(
-          lower = squash(state$lower, squashing, lambda),
-          upper = squash(state$upper, squashing, lambda)
-        )
-      }
+    current_scenario_state_vector <- scenario_state_vectors[i - 1, ]
+    current_baseline_state_vector <- baseline_state_vectors[i - 1, ]
+    next_scenario_state_vector <- calculate_next_fgcm_state_vector(grey_adj_matrix, current_scenario_state_vector, activation, algorithm)
+    next_baseline_state_vector <- calculate_next_fgcm_state_vector(grey_adj_matrix, current_baseline_state_vector, activation, algorithm)
+    squashed_next_scenario_state_vector <- vapply(
+      next_scenario_state_vector,
+      function(state) list(grey_number(lower = squash(state$lower, squashing, lambda), upper = squash(state$upper, squashing, lambda))),
+      list(list(1))
+    )
+    squashed_next_baseline_state_vector <- vapply(
+      next_baseline_state_vector,
+      function(state) list(grey_number(lower = squash(state$lower, squashing, lambda), upper = squash(state$upper, squashing, lambda))),
+      list(list(1))
     )
     if (nonzero_values_in_clamping_vector) {
-      squashed_next_state_vector[[nonzero_value_indexes_in_clamping_vector]] <- clamping_vector[[nonzero_value_indexes_in_clamping_vector]]
+      squashed_next_scenario_state_vector[[nonzero_value_indexes_in_clamping_vector]] <- clamping_vector[[nonzero_value_indexes_in_clamping_vector]]
     }
-    state_vectors[i, ] <- squashed_next_state_vector
-    errors[i, ] <- mapply(
-      function(current_state, next_state) {
-        abs(current_state$lower - next_state$lower) + abs(current_state$upper - next_state$upper)
+    scenario_state_vectors[i, ] <- squashed_next_scenario_state_vector
+    baseline_state_vectors[i, ] <- squashed_next_baseline_state_vector
+    inference_state_vectors[i - 1, ] <- mapply(
+      function(scenario, baseline) {
+        upper <- max(abs(scenario$upper - baseline$lower), abs(scenario$upper - baseline$upper))
+        lower <- ifelse(baseline$upper > scenario$lower, 0, min(abs(scenario$lower - baseline$upper), abs(scenario$lower - baseline$lower)))
+        #lower <- min(abs(scenario$lower - baseline$upper), abs(scenario$lower - baseline$lower))
+        #lower <- 0
+        grey_number(lower, upper)
       },
-      current_state = current_state_vector,
-      next_state <- squashed_next_state_vector
+      scenario = squashed_next_scenario_state_vector,
+      baseline = squashed_next_baseline_state_vector,
+      SIMPLIFY = FALSE
     )
-    if (sum(unlist(errors[i, ])) < min_error) {
-      state_vectors <- data.frame(state_vectors[1:i, ])
-      errors <- errors[1:i, ]
+    if (i == 2) {
+      errors[1, ] <- 1
+    } else {
+      errors[i - 1, ] <- mapply(
+        function(current_inference, previous_inference) {
+          abs(current_inference$lower - previous_inference$lower) + abs(current_inference$upper - previous_inference$upper)
+        },
+        current_inference <- inference_state_vectors[i - 1, ],
+        previous_inference <- inference_state_vectors[i - 2, ]
+      )
+    }
+    if (sum(unlist(errors[i - 1, ])) < min_error) {
       break
     }
   }
 
+  scenario_state_vectors <- data.frame(scenario_state_vectors[1:(i), ])
+  baseline_state_vectors <- data.frame(baseline_state_vectors[1:(i), ])
+  inference_state_vectors <- data.frame(inference_state_vectors[1:(i - 1), ])
+  errors <- errors[1:i, ]
+
   state_vector_bounds <- list(
-    lower = data.frame(apply(state_vectors, c(1, 2), function(x) x[[1]]$lower)),
-    upper = data.frame(apply(state_vectors, c(1, 2), function(x) x[[1]]$upper))
+    lower = data.frame(apply(inference_state_vectors, c(1, 2), function(x) x[[1]]$lower)),
+    upper = data.frame(apply(inference_state_vectors, c(1, 2), function(x) x[[1]]$upper))
   )
 
-  greyness <- data.frame(apply(state_vectors, c(1, 2), function(x) calculate_greyness(x[[1]], grey_adj_matrix_domain)))
-  ranges <- data.frame(apply(state_vectors, c(1, 2), function(x) x[[1]]$upper - x[[1]]$lower))
+  greyness <- data.frame(apply(inference_state_vectors, c(1, 2), function(x) calculate_greyness(x[[1]], grey_adj_matrix_domain)))
+  ranges <- data.frame(apply(inference_state_vectors, c(1, 2), function(x) x[[1]]$upper - x[[1]]$lower))
 
-  conferred_bounds <- state_vectors[nrow(state_vectors), ]
+  conferred_bounds <- inference_state_vectors[nrow(inference_state_vectors), ]
   conferred_bounds_df <- data.frame(
     node = colnames(conferred_bounds),
     lower = vapply(conferred_bounds, function(x) x[[1]]$lower, numeric(1)),
@@ -152,7 +180,9 @@ confer_fgcm <- function(grey_adj_matrix = matrix(),
     .Data = list(
       conferred_bounds = conferred_bounds_df,
       conferred_bounds_for_plotting = conferred_bounds_for_plotting_df,
-      state_vectors = state_vectors,
+      inference_state_vectors = inference_state_vectors,
+      scenario_state_vectors = scenario_state_vectors,
+      baseline_state_vectors = baseline_state_vectors,
       state_vectors_bounds = state_vector_bounds,
       greyness = greyness,
       errors = errors,
