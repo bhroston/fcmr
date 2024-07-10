@@ -61,7 +61,7 @@ test_that("confer_fgcm works", {
   expect_equal(rounded_grey_nums$D$lower, 0)
 
   expect_no_error(confer_fgcm(grey_adj_matrix, activation_vector, scenario_vector,
-                              "modified-kosko", "tanh", max_iter = 100, algorithm = "salmeron"))
+                              "modified-kosko", "tanh", max_iter = 10000, algorithm = "salmeron"))
   expect_no_error(confer_fgcm(grey_adj_matrix, activation_vector, scenario_vector,
                               "modified-kosko", "sigmoid", max_iter = 100, algorithm = "salmeron"))
   expect_no_error(confer_fgcm(grey_adj_matrix, activation_vector, scenario_vector,
@@ -108,7 +108,7 @@ test_that("confer_fgcm outputs within fmcm bounds", {
     initial_state_vector <- c(1, 1, 1, 1),
     clamping_vector <- c(1, 0, 0, 0),
     activation = "modified-kosko",
-    squashing = "tanh",
+    squashing = "sigmoid",
     lambda = 1,
     max_iter = 100
   )
@@ -125,7 +125,7 @@ test_that("confer_fgcm outputs within fmcm bounds", {
                               initial_state_vector = c(1, 1, 1, 1),
                               clamping_vector = c(1, 0, 0, 0),
                               activation = "modified-kosko",
-                              squashing = "tanh", n_cores = 2,
+                              squashing = "sigmoid", n_cores = 2,
                               lambda = 1,
                               max_iter = 100,
                               min_error = 1e-5, include_simulations_in_output = TRUE)
@@ -152,6 +152,29 @@ test_that("confer_fgcm outputs within fmcm bounds", {
   #   geom_boxplot(data = x_longer, aes(x = name, y = value)) +
   #   geom_errorbar(data = z_longer, aes(x = node, y = value, ymin = value, ymax = value, group = name), color = "grey") +
   #   theme_classic()
+})
+
+test_that("warning pops up if max_iter reached", {
+  lower_adj_matrix <- data.frame(
+    "A" = c(0, 0, 0, 0),
+    "B" = c(0.25, 0, 0, 0.25),
+    "C" = c(0, 0.25, 0, 0),
+    "D" = c(0, 0, 0.25, 0)
+  )
+
+  upper_adj_matrix <- data.frame(
+    "A" = c(0, 0, 0, 0),
+    "B" = c(0.75, 0, 0, 0.75),
+    "C" = c(0, 0.75, 0, 0),
+    "D" = c(0, 0, 0.75, 0)
+  )
+
+  grey_adj_matrix <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix, upper_adj_matrix)
+  activation_vector <- c(1, 1, 1, 1)
+  scenario_vector <- c(1, 0, 0, 0)
+
+  expect_warning(confer_fgcm(grey_adj_matrix, activation_vector, scenario_vector,
+                      "modified-kosko", "tanh", max_iter = 20))
 })
 
 test_that("fgcm works", {

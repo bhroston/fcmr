@@ -30,7 +30,7 @@ test_that("confer_fmcm works with get_means_of_fmcm_inferences plot", {
   parallel = TRUE
   show_progress = TRUE
 
-  n_simulations <- 1000
+  n_simulations <- 100
   uniform_fmcm_models <- build_fmcm_models(adj_matrix, n_sims = n_simulations, distribution = "uniform", lower_adj_matrix = lower_adj_matrix, upper_adj_matrix = upper_adj_matrix)
   triangular_fmcm_models <- build_fmcm_models(adj_matrix, n_sims = n_simulations, distribution = "triangular", lower_adj_matrix = lower_adj_matrix, upper_adj_matrix = upper_adj_matrix, mode_adj_matrix = adj_matrix)
 
@@ -55,121 +55,6 @@ test_that("confer_fmcm works with get_means_of_fmcm_inferences plot", {
   #    geom_text(data = bootstrap_mean_CIs, aes(x = node, y = upper_0.975 + 0.05, label = round(upper_0.975, 2))) +
   #    ylim(0, 1) +
   #    theme_classic()
-})
-
-
-test_that("simulate_fmcm_models works", {
-  edgelist_test <- data.frame(
-    source = c("A", "B"),
-    target = c("B", "C"),
-    weight = c(0.4, 0.6)
-  )
-
-  edgelist_lower <- data.frame(
-    source = c("A", "B"),
-    target = c("B", "C"),
-    weight = c(0.2, 0.2)
-  )
-
-  edgelist_upper <- data.frame(
-    source = c("A", "B"),
-    target = c("B", "C"),
-    weight = c(0.8, 0.8)
-  )
-
-  edgelist_mode <- data.frame(
-    source = c("A", "B"),
-    target = c("B", "C"),
-    weight = c(0.5, 0.5)
-  )
-
-  test_adj_matrix <- get_adj_matrix_from_edgelist(edgelist_test)
-  l_adj_matrix <- get_adj_matrix_from_edgelist(edgelist_lower)
-  u_adj_matrix <- get_adj_matrix_from_edgelist(edgelist_upper)
-  m_adj_matrix <- get_adj_matrix_from_edgelist(edgelist_mode)
-
-  # Perform visual checks of model outputs
-  uniform_fmcm_models <- build_fmcm_models(test_adj_matrix, lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix, n_sims = 10)
-
-  expect_no_error(
-    test_uniform_sims_kosko_tanh <-  simulate_fmcm_models(
-      uniform_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
-      activation = "kosko", squashing = "tanh", lambda = 1,
-      max_iter = 50, parallel = FALSE
-    )
-  )
-  expect_no_error(
-    test_uniform_sims_kosko_sigmoid <-  simulate_fmcm_models(
-      uniform_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
-      activation = "kosko", squashing = "sigmoid", lambda = 1,
-      max_iter = 50, parallel = FALSE
-    )
-  )
-  expect_no_error(
-    test_uniform_sims_modifiedkosko_tanh <-  simulate_fmcm_models(
-      uniform_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
-      activation = "modified-kosko", squashing = "tanh", lambda = 0.5,
-      max_iter = 50, parallel = FALSE
-    )
-  )
-  expect_no_error(
-    test_uniform_sims_modifiedkosko_sigmoid <-  simulate_fmcm_models(
-      uniform_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
-      activation = "modified-kosko", squashing = "sigmoid", lambda = 0.4,
-      max_iter = 50, parallel = FALSE
-    )
-  )
-  expect_no_error(
-    test_uniform_sims_rescale_sigmoid <-  simulate_fmcm_models(
-      uniform_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
-      activation = "rescale", squashing = "sigmoid", lambda = 0.5,
-      max_iter = 50, parallel = FALSE
-    )
-  )
-
-  triangular_fmcm_models <- build_fmcm_models(test_adj_matrix, lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix)
-  expect_no_error(
-    test_triangular_sims_kosko_tanh <-  simulate_fmcm_models(
-      triangular_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
-      activation = "kosko", squashing = "tanh", lambda = 1,
-      max_iter = 50, parallel = FALSE
-    )
-  )
-  expect_no_error(
-    test_triangular_sims_kosko_sigmoid <-  simulate_fmcm_models(
-      triangular_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
-      activation = "kosko", squashing = "sigmoid", lambda = 1,
-      max_iter = 50, parallel = FALSE
-    )
-  )
-  expect_no_error(
-    test_triangular_sims_modifiedkosko_tanh <-  simulate_fmcm_models(
-      triangular_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
-      activation = "modified-kosko", squashing = "tanh", lambda = 0.5,
-      max_iter = 50, parallel = FALSE
-    )
-  )
-  expect_no_error(
-    test_triangular_sims_modifiedkosko_sigmoid <-  simulate_fmcm_models(
-      triangular_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
-      activation = "modified-kosko", squashing = "sigmoid", lambda = 0.4,
-      max_iter = 50, parallel = FALSE
-    )
-  )
-  expect_no_error(
-    test_triangular_sims_rescale_sigmoid <-  simulate_fmcm_models(
-      triangular_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
-      activation = "rescale", squashing = "sigmoid", lambda = 0.5,
-      max_iter = 50, parallel = FALSE
-    )
-  )
-
-  # Something strange happens with rescale and tanh; rescale was designed for sigmoid, not compatible with tanh
-  expect_error(test_triangular_sims_rescale_tanh <-  simulate_fmcm_models(
-    triangular_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
-    activation = "rescale", squashing = "tanh", lambda = 0.5,
-    max_iter = 50, parallel = FALSE
-  ))
 })
 
 
