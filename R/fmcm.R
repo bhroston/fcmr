@@ -247,7 +247,7 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
   if (include_simulations_in_output) {
     structure(
       .Data = list(
-        inferences = inference_values_by_sim,
+        inference = inference_values_by_sim,
         inferences_for_plotting = inference_plot_data,
         sims = fmcm_confer_results
       ),
@@ -256,7 +256,7 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
   } else {
     structure(
       .Data = list(
-        inferences = inference_values_by_sim,
+        inference = inference_values_by_sim,
         inferences_for_plotting = inference_plot_data
       ),
       class = "fmcmconfer"

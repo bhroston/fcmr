@@ -21,10 +21,10 @@ test_that("confer_fgcm works", {
   test <- confer_fgcm(grey_adj_matrix, activation_vector, scenario_vector,
                       "kosko", "tanh", max_iter = 1000)
 
-  rounded_grey_nums <- apply(test$conferred_bounds, 1, function(entry) grey_number(round(as.numeric(entry[2]), 2), round(as.numeric(entry[3]), 2)))
+  rounded_grey_nums <- apply(test$inference, 1, function(entry) grey_number(round(as.numeric(entry[2]), 2), round(as.numeric(entry[3]), 2)))
   names(rounded_grey_nums) <- c("A", "B", "C", "D")
 
-  expect_equal(test$conferred_bounds$node, c("A", "B", "C", "D"))
+  expect_equal(test$inference$node, c("A", "B", "C", "D"))
 
   # Match output with mentalmodeler ONLY when all edges are positive. This
   # is NOT an accurate comparison when there are negative edges.
@@ -43,7 +43,7 @@ test_that("confer_fgcm works", {
   test <- confer_fgcm(grey_adj_matrix, activation_vector, scenario_vector,
                       "kosko", "sigmoid", max_iter = 1000, algorithm = "salmeron")
 
-  rounded_grey_nums <- apply(test$conferred_bounds, 1, function(entry) grey_number(round(as.numeric(entry[2]), 2), round(as.numeric(entry[3]), 2)))
+  rounded_grey_nums <- apply(test$inference, 1, function(entry) grey_number(round(as.numeric(entry[2]), 2), round(as.numeric(entry[3]), 2)))
   names(rounded_grey_nums) <- c("A", "B", "C", "D")
 
   # Does NOT Match output with mentalmodeler because the sigmoid scenario and baseline
@@ -130,7 +130,7 @@ test_that("confer_fgcm outputs within fmcm bounds", {
                               max_iter = 100,
                               min_error = 1e-5, include_simulations_in_output = TRUE)
 
-  fgcm_bounds <- fgcm_results$conferred_bounds
+  fgcm_bounds <- fgcm_results$inference
   min_fmcm_inferences <- apply(fmcm_results$inferences, 2, min)
   max_fmcm_inferences <- apply(fmcm_results$inferences, 2, max)
 
@@ -145,7 +145,7 @@ test_that("confer_fgcm outputs within fmcm bounds", {
 
   # x <- fmcm_results$inferences
   # x_longer <- tidyr::pivot_longer(x, cols = 1:4)
-  # z <- fgcm_results$conferred_bounds
+  # z <- fgcm_results$inference
   # z_longer <- tidyr::pivot_longer(z, cols = 2:3)
   # ggplot() +
   #   #geom_jitter(data = x_longer, aes(x = name, y = value), alpha = 1, size = 0.25) +
@@ -569,7 +569,7 @@ test_that("c.grey_number works", {
 #
 #   x <- subset(sim_fmccm$final_states_across_sims, select = -c(iter))
 #   x_longer <- tidyr::pivot_longer(x, cols = 1:4)
-#   z_longer <- conferred_fgcm$conferred_bounds_for_plotting
+#   z_longer <- conferred_fgcm$inference_for_plotting
 #   ggplot() +
 #     #geom_jitter(data = x_longer, aes(x = name, y = value), alpha = 1, size = 0.25) +
 #     geom_boxplot(data = x_longer, aes(x = name, y = value)) +
