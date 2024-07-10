@@ -40,6 +40,34 @@ test_that("confer_fgcm works", {
   expect_equal(rounded_grey_nums$D$upper, 0.37)
   expect_equal(rounded_grey_nums$D$lower, 0.02)
 
+  test <- confer_fgcm(grey_adj_matrix, activation_vector, scenario_vector,
+                      "kosko", "sigmoid", max_iter = 1000, algorithm = "salmeron")
+
+  rounded_grey_nums <- apply(test$conferred_bounds, 1, function(entry) grey_number(round(as.numeric(entry[2]), 2), round(as.numeric(entry[3]), 2)))
+  names(rounded_grey_nums) <- c("A", "B", "C", "D")
+
+  # Does NOT Match output with mentalmodeler because the sigmoid scenario and baseline
+  # possibility spaces intersect, so the minimum values have to be 0
+  expect_equal(rounded_grey_nums$A$upper, 0.5)
+  expect_equal(rounded_grey_nums$A$lower, 0.5)
+
+  expect_equal(rounded_grey_nums$B$upper, 0.21)
+  expect_equal(rounded_grey_nums$B$lower, 0)
+
+  expect_equal(rounded_grey_nums$C$upper, 0.11)
+  expect_equal(rounded_grey_nums$C$lower, 0)
+
+  expect_equal(rounded_grey_nums$D$upper, 0.08)
+  expect_equal(rounded_grey_nums$D$lower, 0)
+
+  expect_no_error(confer_fgcm(grey_adj_matrix, activation_vector, scenario_vector,
+                              "modified-kosko", "tanh", max_iter = 100, algorithm = "salmeron"))
+  expect_no_error(confer_fgcm(grey_adj_matrix, activation_vector, scenario_vector,
+                              "modified-kosko", "sigmoid", max_iter = 100, algorithm = "salmeron"))
+  expect_no_error(confer_fgcm(grey_adj_matrix, activation_vector, scenario_vector,
+                              "rescale", "sigmoid", max_iter = 100, algorithm = "salmeron"))
+
+
   # Perform visual check
   # x <- test$inference_for_plotting
   # x <- x[x$node != "A", ]
@@ -54,32 +82,77 @@ test_that("confer_fgcm works", {
   #
   # p <- barplot(height = x$value, names.arg = x$name, col = "red")
   # text(x = p, y = x$value + 0.05, labels = round(x$value, 1))
-
-  # Testing with negative edge weights
-  # upper_adj_matrix <- data.frame(
-  #   "A" = c(0, 0, 0, 0),
-  #   "B" = c(-0.25, 0, 0, -0.25),
-  #   "C" = c(0, 0.75, 0, 0),
-  #   "D" = c(0, 0, -0.25, 0)
-  # )
-  #
-  # lower_adj_matrix <- data.frame(
-  #   "A" = c(0, 0, 0, 0),
-  #   "B" = c(-0.75, 0, 0, -0.75),
-  #   "C" = c(0, 0.25, 0, 0),
-  #   "D" = c(0, 0, -0.75, 0)
-  # )
-  #
-  # grey_adj_matrix <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix, upper_adj_matrix)
-  # activation_vector <- c(1, 1, 1, 1)
-  # scenario_vector <- c(1, 0, 0, 0)
-  #
-  # test <- confer_fgcm(grey_adj_matrix, activation_vector, scenario_vector,
-  #                     "kosko", "tanh", max_iter = 1000)
-  # rounded_grey_nums <- apply(test$conferred_bounds, 1, function(entry) grey_number(round(as.numeric(entry[2]), 2), round(as.numeric(entry[3]), 2)))
-  # names(rounded_grey_nums) <- c("A", "B", "C", "D")
 })
 
+
+test_that("confer_fgcm outputs within fmcm bounds", {
+  lower_adj_matrix <- data.frame(
+    "A" = c(0, 0, 0, 0),
+    "B" = c(0.25, 0, 0, 0.25),
+    "C" = c(0, 0.25, 0, 0),
+    "D" = c(0, 0, 0.25, 0)
+  )
+
+  upper_adj_matrix <- data.frame(
+    "A" = c(0, 0, 0, 0),
+    "B" = c(0.75, 0, 0, 0.75),
+    "C" = c(0, 0.75, 0, 0),
+    "D" = c(0, 0, 0.75, 0)
+  )
+  mode_adj_matrix <- (lower_adj_matrix + upper_adj_matrix)/2
+
+  grey_adj_matrix <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix, upper_adj_matrix)
+
+  fgcm_results <- confer_fgcm(
+    grey_adj_matrix,
+    initial_state_vector <- c(1, 1, 1, 1),
+    clamping_vector <- c(1, 0, 0, 0),
+    activation = "modified-kosko",
+    squashing = "tanh",
+    lambda = 1,
+    max_iter = 100
+  )
+
+  fmcm_sims <- build_fmcm_models(mode_adj_matrix,
+                                 n_sims = 100,
+                                 parallel = FALSE,
+                                 show_progress = TRUE,
+                                 distribution = "uniform",
+                                 lower_adj_matrix = lower_adj_matrix,
+                                 upper_adj_matrix = upper_adj_matrix)
+
+  fmcm_results <- confer_fmcm(fmcm_sims,
+                              initial_state_vector = c(1, 1, 1, 1),
+                              clamping_vector = c(1, 0, 0, 0),
+                              activation = "modified-kosko",
+                              squashing = "tanh",
+                              lambda = 1,
+                              max_iter = 100,
+                              min_error = 1e-5, include_simulations_in_output = TRUE)
+
+  fgcm_bounds <- fgcm_results$conferred_bounds
+  min_fmcm_inferences <- apply(fmcm_results$inferences, 2, min)
+  max_fmcm_inferences <- apply(fmcm_results$inferences, 2, max)
+
+  expect_lte(fgcm_bounds$lower[1], min_fmcm_inferences[1])
+  expect_gte(fgcm_bounds$upper[1], max_fmcm_inferences[1])
+  expect_lte(fgcm_bounds$lower[2], min_fmcm_inferences[2])
+  expect_gte(fgcm_bounds$upper[2], max_fmcm_inferences[2])
+  expect_lte(fgcm_bounds$lower[3], min_fmcm_inferences[3])
+  expect_gte(fgcm_bounds$upper[3], max_fmcm_inferences[3])
+  expect_lte(fgcm_bounds$lower[4], min_fmcm_inferences[4])
+  expect_gte(fgcm_bounds$upper[4], max_fmcm_inferences[4])
+
+  # x <- fmcm_results$inferences
+  # x_longer <- tidyr::pivot_longer(x, cols = 1:4)
+  # z <- fgcm_results$conferred_bounds
+  # z_longer <- tidyr::pivot_longer(z, cols = 2:3)
+  # ggplot() +
+  #   #geom_jitter(data = x_longer, aes(x = name, y = value), alpha = 1, size = 0.25) +
+  #   geom_boxplot(data = x_longer, aes(x = name, y = value)) +
+  #   geom_errorbar(data = z_longer, aes(x = node, y = value, ymin = value, ymax = value, group = name), color = "grey") +
+  #   theme_classic()
+})
 
 test_that("fgcm works", {
   # Test from Salmeron & Papageorgiou, 2014 - https://doi.org/10.1007/s10489-013-0511-z

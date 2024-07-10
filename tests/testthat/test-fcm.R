@@ -6,8 +6,8 @@ test_that("confer_fcm works", {
     "C" = c(0, 1, 0, 0),
     "D" = c(0, 0, 1, 0)
   )
-  activation_vector <- c(1, 1, 1, 1)
-  scenario_vector <- c(1, 0, 0, 0)
+  initial_state_vector <- c(1, 1, 1, 1)
+  clamping_vector <- c(1, 0, 0, 0)
   squashing = "tanh"
   lambda = 1
   max_iter = 1000
@@ -15,7 +15,7 @@ test_that("confer_fcm works", {
   lambda_optimization = "koutsellis"
   IDs = c()
 
-  test_confer <- confer_fcm(adj_matrix, activation_vector, scenario_vector, activation = "kosko",
+  test_confer <- confer_fcm(adj_matrix, initial_state_vector, clamping_vector, activation = "kosko",
              squashing = "tanh", lambda = 1, max_iter = 1000)
 
   inference_vals <- round(test_confer$inference, 1)
@@ -40,8 +40,8 @@ test_that("confer_fcm works", {
     "C" = c(0, 0.75, 0, 0),
     "D" = c(0, 0, -0.25, 0)
   )
-  activation_vector <- c(1, 1, 1, 1)
-  scenario_vector <- c(0, 1, 0, 0)
+  initial_state_vector <- c(1, 1, 1, 1)
+  clamping_vector <- c(0, 1, 0, 0)
   squashing = "tanh"
   lambda = 1
   max_iter = 1000
@@ -49,11 +49,11 @@ test_that("confer_fcm works", {
   lambda_optimization = "koutsellis"
   IDs = c()
 
-  test_confer <- confer_fcm(adj_matrix, activation_vector, scenario_vector, activation = "kosko",
+  test_confer <- confer_fcm(adj_matrix, initial_state_vector, clamping_vector, activation = "kosko",
                             squashing = "tanh", lambda = 1, max_iter = 1000)
 
-  plot(test_confer$scenario_simulation$state_vectors$C, ylim = c(-1, 1))
-  points(test_confer$baseline_simulation$state_vectors$C)
+  # plot(test_confer$scenario_simulation$state_vectors$C, ylim = c(-1, 1))
+  # points(test_confer$baseline_simulation$state_vectors$C)
 })
 
 
@@ -71,11 +71,11 @@ test_that("simulate_fcm works", {
 
   test_initial_state_vector_1 <- c(0.400, 0.707, 0.612, 0.717, 0.300)
 
-  test_fcm_1 <- simulate_fcm(adj_matrix = test_adj_matrix_1, activation_vector = test_initial_state_vector_1, scenario_vector = c(0, 0, 0, 0, 0),
+  test_fcm_1 <- simulate_fcm(adj_matrix = test_adj_matrix_1, initial_state_vector = test_initial_state_vector_1, clamping_vector = c(0, 0, 0, 0, 0),
                 activation = "modified-kosko", squashing = "sigmoid", lambda = 1, max_iter = 10)
-  expect_error(simulate_fcm(adj_matrix = test_adj_matrix_1, activation_vector = test_initial_state_vector_1, scenario_vector = c(0, 0, 0, 0, 0),
+  expect_error(simulate_fcm(adj_matrix = test_adj_matrix_1, initial_state_vector = test_initial_state_vector_1, clamping_vector = c(0, 0, 0, 0, 0),
                              activation = "rescale", squashing = "tanh", lambda = 1, max_iter = 10))
-  expect_no_error(simulate_fcm(adj_matrix = test_adj_matrix_1, activation_vector = test_initial_state_vector_1, scenario_vector = c(0, 0, 0, 0, 0),
+  expect_no_error(simulate_fcm(adj_matrix = test_adj_matrix_1, initial_state_vector = test_initial_state_vector_1, clamping_vector = c(0, 0, 0, 0, 0),
                             activation = "rescale", squashing = "sigmoid", lambda = 1, max_iter = 10))
 
   test_fcm_1_state_vectors <- test_fcm_1$state_vectors
