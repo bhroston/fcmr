@@ -18,8 +18,8 @@ test_that("confer_fmcm works with get_means_of_fmcm_inferences plot", {
     "C" = c(0, 0.75, 0, 0),
     "D" = c(0, 0, 0.75, 0)
   )
-  activation_vector <- c(1, 1, 1, 1)
-  scenario_vector <- c(1, 0, 0, 0)
+  initial_state_vector <- c(1, 1, 1, 1)
+  clamping_vector <- c(1, 0, 0, 0)
   activation = "kosko"
   squashing = "tanh"
   lambda = 1
@@ -34,7 +34,7 @@ test_that("confer_fmcm works with get_means_of_fmcm_inferences plot", {
   uniform_fmcm_models <- build_fmcm_models(adj_matrix, n_sims = n_simulations, distribution = "uniform", lower_adj_matrix = lower_adj_matrix, upper_adj_matrix = upper_adj_matrix)
   triangular_fmcm_models <- build_fmcm_models(adj_matrix, n_sims = n_simulations, distribution = "triangular", lower_adj_matrix = lower_adj_matrix, upper_adj_matrix = upper_adj_matrix, mode_adj_matrix = adj_matrix)
 
-  test_confer_fmcm <- confer_fmcm(uniform_fmcm_models, activation_vector, scenario_vector, activation = "kosko", squashing = "tanh",
+  test_confer_fmcm <- confer_fmcm(uniform_fmcm_models, initial_state_vector, clamping_vector, activation = "kosko", squashing = "tanh",
                lambda = 1, max_iter = 100, parallel = TRUE, n_cores = 2, show_progress = TRUE, include_simulations_in_output = TRUE)
 
   expect_equal(colnames(test_confer_fmcm$inferences), c("A", "B", "C", "D"))
@@ -89,39 +89,39 @@ test_that("simulate_fmcm_models works", {
   m_adj_matrix <- get_adj_matrix_from_edgelist(edgelist_mode)
 
   # Perform visual checks of model outputs
-  uniform_fmcm_models <- build_fmcm_models(test_adj_matrix, lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix)
+  uniform_fmcm_models <- build_fmcm_models(test_adj_matrix, lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix, n_sims = 10)
 
   expect_no_error(
     test_uniform_sims_kosko_tanh <-  simulate_fmcm_models(
-      uniform_fmcm_models, activation_vector = c(1, 1, 1), scenario_vector = c(1, 0, 0),
+      uniform_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
       activation = "kosko", squashing = "tanh", lambda = 1,
       max_iter = 50, parallel = FALSE
     )
   )
   expect_no_error(
     test_uniform_sims_kosko_sigmoid <-  simulate_fmcm_models(
-      uniform_fmcm_models, activation_vector = c(1, 1, 1), scenario_vector = c(1, 0, 0),
+      uniform_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
       activation = "kosko", squashing = "sigmoid", lambda = 1,
       max_iter = 50, parallel = FALSE
     )
   )
   expect_no_error(
     test_uniform_sims_modifiedkosko_tanh <-  simulate_fmcm_models(
-      uniform_fmcm_models, activation_vector = c(1, 1, 1), scenario_vector = c(1, 0, 0),
+      uniform_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
       activation = "modified-kosko", squashing = "tanh", lambda = 0.5,
       max_iter = 50, parallel = FALSE
     )
   )
   expect_no_error(
     test_uniform_sims_modifiedkosko_sigmoid <-  simulate_fmcm_models(
-      uniform_fmcm_models, activation_vector = c(1, 1, 1), scenario_vector = c(1, 0, 0),
+      uniform_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
       activation = "modified-kosko", squashing = "sigmoid", lambda = 0.4,
       max_iter = 50, parallel = FALSE
     )
   )
   expect_no_error(
     test_uniform_sims_rescale_sigmoid <-  simulate_fmcm_models(
-      uniform_fmcm_models, activation_vector = c(1, 1, 1), scenario_vector = c(1, 0, 0),
+      uniform_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
       activation = "rescale", squashing = "sigmoid", lambda = 0.5,
       max_iter = 50, parallel = FALSE
     )
@@ -130,35 +130,35 @@ test_that("simulate_fmcm_models works", {
   triangular_fmcm_models <- build_fmcm_models(test_adj_matrix, lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix)
   expect_no_error(
     test_triangular_sims_kosko_tanh <-  simulate_fmcm_models(
-      triangular_fmcm_models, activation_vector = c(1, 1, 1), scenario_vector = c(1, 0, 0),
+      triangular_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
       activation = "kosko", squashing = "tanh", lambda = 1,
       max_iter = 50, parallel = FALSE
     )
   )
   expect_no_error(
     test_triangular_sims_kosko_sigmoid <-  simulate_fmcm_models(
-      triangular_fmcm_models, activation_vector = c(1, 1, 1), scenario_vector = c(1, 0, 0),
+      triangular_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
       activation = "kosko", squashing = "sigmoid", lambda = 1,
       max_iter = 50, parallel = FALSE
     )
   )
   expect_no_error(
     test_triangular_sims_modifiedkosko_tanh <-  simulate_fmcm_models(
-      triangular_fmcm_models, activation_vector = c(1, 1, 1), scenario_vector = c(1, 0, 0),
+      triangular_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
       activation = "modified-kosko", squashing = "tanh", lambda = 0.5,
       max_iter = 50, parallel = FALSE
     )
   )
   expect_no_error(
     test_triangular_sims_modifiedkosko_sigmoid <-  simulate_fmcm_models(
-      triangular_fmcm_models, activation_vector = c(1, 1, 1), scenario_vector = c(1, 0, 0),
+      triangular_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
       activation = "modified-kosko", squashing = "sigmoid", lambda = 0.4,
       max_iter = 50, parallel = FALSE
     )
   )
   expect_no_error(
     test_triangular_sims_rescale_sigmoid <-  simulate_fmcm_models(
-      triangular_fmcm_models, activation_vector = c(1, 1, 1), scenario_vector = c(1, 0, 0),
+      triangular_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
       activation = "rescale", squashing = "sigmoid", lambda = 0.5,
       max_iter = 50, parallel = FALSE
     )
@@ -166,7 +166,7 @@ test_that("simulate_fmcm_models works", {
 
   # Something strange happens with rescale and tanh; rescale was designed for sigmoid, not compatible with tanh
   expect_error(test_triangular_sims_rescale_tanh <-  simulate_fmcm_models(
-    triangular_fmcm_models, activation_vector = c(1, 1, 1), scenario_vector = c(1, 0, 0),
+    triangular_fmcm_models, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0),
     activation = "rescale", squashing = "tanh", lambda = 0.5,
     max_iter = 50, parallel = FALSE
   ))
@@ -338,13 +338,13 @@ test_that("get_means_of_fmcm_inferences", {
     "C" = c(0, 0.75, 0, 0),
     "D" = c(0, 0, 0.75, 0)
   )
-  activation_vector <- c(1, 1, 1, 1)
-  scenario_vector <- c(1, 0, 0, 0)
+  initial_state_vector <- c(1, 1, 1, 1)
+  clamping_vector <- c(1, 0, 0, 0)
 
   uniform_fmcm_models <- build_fmcm_models(adj_matrix, n_sims = 1000, distribution = "uniform", lower_adj_matrix = lower_adj_matrix, upper_adj_matrix = upper_adj_matrix)
   # simulated_adj_matrices = uniform_fmcm_models
 
-  test_confer_fmcm <- confer_fmcm(uniform_fmcm_models, activation_vector, scenario_vector, activation = "kosko", squashing = "tanh",
+  test_confer_fmcm <- confer_fmcm(uniform_fmcm_models, initial_state_vector, clamping_vector, activation = "kosko", squashing = "tanh",
                                     lambda = 1, max_iter = 100, parallel = FALSE, show_progress = TRUE)
 
   test_means <- round(apply(test_confer_fmcm$inferences, 2, mean), 1)
@@ -441,7 +441,7 @@ test_that("get_quantiles_of_simulated_values_across_iters works", {
 
   test_fmcm_models <- build_fmcm_models(test_adj_matrix, n_sims = 1000, lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix)
   test_confer_fmcm <-  confer_fmcm(
-    test_fmcm_models, activation_vector = c(1, 1, 1, 1), scenario_vector = c(1, 0, 0, 0),
+    test_fmcm_models, initial_state_vector = c(1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0),
     activation = "kosko", squashing = "tanh", lambda = 1,
     max_iter = 1000, parallel = FALSE
   )
@@ -548,7 +548,7 @@ test_that("get_beta_distribution_of_values works", {
 # uniform_fmcm_models <- build_fmcm_models(adj_matrix, n_sims = 100, distribution = "uniform", lower_adj_matrix = lower_adj_matrix, upper_adj_matrix = upper_adj_matrix)
 # simulated_adj_matrices <- uniform_fmcm_models
 # test_uniform_sims_kosko_tanh <- simulate_fmcm_models(
-#   uniform_fmcm_models, activation_vector, scenario_vector,
+#   uniform_fmcm_models, initial_state_vector, clamping_vector,
 #   activation = "kosko", squashing = "tanh", lambda = 1,
 #   max_iter = 1000, parallel = FALSE
 # )
