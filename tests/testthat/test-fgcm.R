@@ -125,7 +125,7 @@ test_that("confer_fgcm outputs within fmcm bounds", {
                               initial_state_vector = c(1, 1, 1, 1),
                               clamping_vector = c(1, 0, 0, 0),
                               activation = "modified-kosko",
-                              squashing = "tanh",
+                              squashing = "tanh", n_cores = 2,
                               lambda = 1,
                               max_iter = 100,
                               min_error = 1e-5, include_simulations_in_output = TRUE)
