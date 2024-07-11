@@ -247,8 +247,8 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
   if (include_simulations_in_output) {
     structure(
       .Data = list(
-        inferences = inference_values_by_sim,
-        inferences_for_plotting = inference_plot_data,
+        inference = inference_values_by_sim,
+        inference_for_plotting = inference_plot_data,
         sims = fmcm_confer_results
       ),
       class = "fmcmconfer"
@@ -256,8 +256,8 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
   } else {
     structure(
       .Data = list(
-        inferences = inference_values_by_sim,
-        inferences_for_plotting = inference_plot_data
+        inference = inference_values_by_sim,
+        inference_for_plotting = inference_plot_data
       ),
       class = "fmcmconfer"
     )
@@ -277,22 +277,22 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
 #'
 #' Use vignette("fmcm-class") for more information.
 #'
-#' @param fmcm_inferences Output of get_simulated_values_across_iters
+#' @param fmcm_inference Output of get_simulated_values_across_iters
 #' @param quantile The quantile to return. see ?quantile() for more
 #'
 #' @export
-get_quantile_of_fmcm_inferences <- function(fmcm_inferences = data.frame(), quantile = 0.5) {
-  sims_in_inferences_rownames <- identical("sim", unique(unlist(lapply(strsplit(rownames(fmcm_inferences), "_"), function(x) x[[1]]))))
-  if (!sims_in_inferences_rownames | !identical(class(fmcm_inferences), "data.frame")) {
+get_quantile_of_fmcm_inference <- function(fmcm_inference = data.frame(), quantile = 0.5) {
+  sims_in_inferences_rownames <- identical("sim", unique(unlist(lapply(strsplit(rownames(fmcm_inference), "_"), function(x) x[[1]]))))
+  if (!sims_in_inferences_rownames | !identical(class(fmcm_inference), "data.frame")) {
     stop("Input must be a data frame of values observed for each node across
     numerous simulations. They are produced by the confer_fmcm and simulate fmcm functions.")
   }
-  node_quantiles <- data.frame(apply(fmcm_inferences, 2, function(node_sims) stats::quantile(node_sims, quantile)))
+  node_quantiles <- data.frame(apply(fmcm_inference, 2, function(node_sims) stats::quantile(node_sims, quantile)))
   node_quantiles
 }
 
 
-#' get_means_of_fmcm_inferences
+#' get_means_of_fmcm_inference
 #'
 #' @description
 #' This gets the mean of the distribution of simulated values
@@ -306,7 +306,7 @@ get_quantile_of_fmcm_inferences <- function(fmcm_inferences = data.frame(), quan
 #'
 #' Use vignette("fmcm-class") for more information.
 #'
-#' @param fmcm_inferences The final values of a set of fcm simulations; also the inferences of a confer_fmcm object
+#' @param fmcm_inference The final values of a set of fcm simulations; also the inference of a confer_fmcm object
 #' @param get_bootstrapped_means TRUE/FALSE Whether to perform bootstrap sampling to obtain
 #' confidence intervals for the estimation of the mean value across simulations
 #' @param confidence_interval What are of the distribution should be bounded by the
@@ -321,7 +321,7 @@ get_quantile_of_fmcm_inferences <- function(fmcm_inferences = data.frame(), quan
 #' from the pbapply package as the underlying function.
 #'
 #' @export
-get_means_of_fmcm_inferences <- function(fmcm_inferences = list(),
+get_means_of_fmcm_inference <- function(fmcm_inference = list(),
                                          get_bootstrapped_means = TRUE,
                                          confidence_interval = 0.95,
                                          bootstrap_reps = 1000,
@@ -332,12 +332,12 @@ get_means_of_fmcm_inferences <- function(fmcm_inferences = list(),
   # Adding for R CMD Check. Does not impact logic.
   iter <- NULL
 
-  # Write checks to confirm fmcm_inferences object is correct... Also write a better name
+  # Write checks to confirm fmcm_inference object is correct... Also write a better name
   # so it is understood that it works for simulate_fmcm objects too
-  if (!identical(class(fmcm_inferences), "data.frame")) {
-    stop("Input fmcm_inferences must be a data.frame object from the
+  if (!identical(class(fmcm_inference), "data.frame")) {
+    stop("Input fmcm_inference must be a data.frame object from the
          output of simulate_fmcm_models (final_states_across_sims) or confer_fmcm
-         (inferences)")
+         (inference)")
   }
 
   # Confirm packages necessary packages are available. If not, change run options
@@ -371,8 +371,8 @@ get_means_of_fmcm_inferences <- function(fmcm_inferences = list(),
   }
 
   if (!get_bootstrapped_means) {
-    means_of_inferences_by_node <- data.frame(apply(fmcm_inferences, 2, mean, simplify = FALSE)) # the simplify is purely for data cleaning reasons
-    return(means_of_inferences_by_node)
+    means_of_inference_by_node <- data.frame(apply(fmcm_inference, 2, mean, simplify = FALSE)) # the simplify is purely for data cleaning reasons
+    return(means_of_inference_by_node)
 
   } else if (get_bootstrapped_means & parallel & show_progress) {
     print("Performing bootstrap simulations", quote = FALSE)
@@ -384,7 +384,7 @@ get_means_of_fmcm_inferences <- function(fmcm_inferences = list(),
     # Have to store variables in new env that can be accessed by parLapply. There
     # is surely a better way to do this, but this way works
     # start <- Sys.time()
-    vars <- list("fmcm_inferences",
+    vars <- list("fmcm_inference",
                  "bootstrap_reps",
                  "bootstrap_samples_per_rep"
     )
@@ -394,12 +394,12 @@ get_means_of_fmcm_inferences <- function(fmcm_inferences = list(),
     invisible(utils::capture.output(pb <- utils::txtProgressBar(min = 0, max = ceiling(bootstrap_reps/n_cores), width = 50, style = 3)))
     progress <- function(n) utils::setTxtProgressBar(pb, n)
     opts <- list(progress = progress)
-    bootstrapped_means_of_inferences_by_node <- foreach::foreach(
+    bootstrapped_means_of_inference_by_node <- foreach::foreach(
       i = 1:bootstrap_reps, .options.snow = opts) %dopar% {
         data.frame(apply(
-         fmcm_inferences, 2,
-          function(inferences) {
-            random_draws <- sample(inferences, bootstrap_samples_per_rep, replace = TRUE)
+         fmcm_inference, 2,
+          function(inference) {
+            random_draws <- sample(inference, bootstrap_samples_per_rep, replace = TRUE)
             mean(random_draws)
           },
           simplify = FALSE
@@ -418,22 +418,22 @@ get_means_of_fmcm_inferences <- function(fmcm_inferences = list(),
     # Have to store variables in new env that can be accessed by parLapply. There
     # is surely a better way to do this, but this way works
     # start <- Sys.time()
-    vars <- list("fmcm_inferences",
+    vars <- list("fmcm_inference",
                  "bootstrap_reps",
                  "bootstrap_samples_per_rep"
     )
     parallel::clusterExport(cl, varlist = vars, envir = environment())
     print("Sampling means", quote = FALSE)
-    rep_inferences_by_node <- vector(mode = "list", length = bootstrap_reps)
-    rep_inferences_by_node <- lapply(rep_inferences_by_node, function(duplicate) duplicate <- fmcm_inferences)
-    bootstrapped_means_of_inferences_by_node <- parallel::parLapply(
+    rep_inference_by_node <- vector(mode = "list", length = bootstrap_reps)
+    rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- fmcm_inference)
+    bootstrapped_means_of_inference_by_node <- parallel::parLapply(
       cl,
-      rep_inferences_by_node,
-      function(inferences_by_node_duplicate) {
+      rep_inference_by_node,
+      function(inference_by_node_duplicate) {
         apply(
-          inferences_by_node_duplicate, 2,
-          function(inferences) {
-            random_draws <- sample(inferences, bootstrap_samples_per_rep, replace = TRUE)
+          inference_by_node_duplicate, 2,
+          function(inference) {
+            random_draws <- sample(inference, bootstrap_samples_per_rep, replace = TRUE)
             mean(random_draws)
           }
         )
@@ -442,16 +442,16 @@ get_means_of_fmcm_inferences <- function(fmcm_inferences = list(),
     parallel::stopCluster(cl)
 
   } else if (get_bootstrapped_means & !parallel & show_progress) {
-    bootstrapped_means_of_inferences_by_node <- vector(mode = "list", length = bootstrap_reps)
-    rep_inferences_by_node <- vector(mode = "list", length = bootstrap_reps)
-    rep_inferences_by_node <- lapply(rep_inferences_by_node, function(duplicate) duplicate <- fmcm_inferences)
-    bootstrapped_means_of_inferences_by_node <- pbapply::pblapply(
-      rep_inferences_by_node,
-      function(inferences_by_node_duplicate) {
+    bootstrapped_means_of_inference_by_node <- vector(mode = "list", length = bootstrap_reps)
+    rep_inference_by_node <- vector(mode = "list", length = bootstrap_reps)
+    rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- fmcm_inference)
+    bootstrapped_means_of_inference_by_node <- pbapply::pblapply(
+      rep_inference_by_node,
+      function(inference_by_node_duplicate) {
         apply(
-          inferences_by_node_duplicate, 2,
-          function(inferences) {
-            random_draws <- sample(inferences, bootstrap_samples_per_rep, replace = TRUE)
+          inference_by_node_duplicate, 2,
+          function(inference) {
+            random_draws <- sample(inference, bootstrap_samples_per_rep, replace = TRUE)
             mean(random_draws)
           }
         )
@@ -459,15 +459,15 @@ get_means_of_fmcm_inferences <- function(fmcm_inferences = list(),
     )
 
   } else if (get_bootstrapped_means & !parallel & !show_progress) {
-    rep_inferences_by_node <- vector(mode = "list", length = bootstrap_reps)
-    rep_inferences_by_node <- lapply(rep_inferences_by_node, function(duplicate) duplicate <- fmcm_inferences)
-    bootstrapped_means_of_inferences_by_node <- lapply(
-      rep_inferences_by_node,
-      function(inferences_by_node_duplicate) {
+    rep_inference_by_node <- vector(mode = "list", length = bootstrap_reps)
+    rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- fmcm_inference)
+    bootstrapped_means_of_inference_by_node <- lapply(
+      rep_inference_by_node,
+      function(inference_by_node_duplicate) {
         apply(
-          inferences_by_node_duplicate, 2,
-          function(inferences) {
-            random_draws <- sample(inferences, bootstrap_samples_per_rep, replace = TRUE)
+          inference_by_node_duplicate, 2,
+          function(inference) {
+            random_draws <- sample(inference, bootstrap_samples_per_rep, replace = TRUE)
             mean(random_draws)
           }
         )
@@ -475,13 +475,13 @@ get_means_of_fmcm_inferences <- function(fmcm_inferences = list(),
     )
   }
 
-  bootstrapped_means_of_inferences_by_node <- data.frame(do.call(rbind, bootstrapped_means_of_inferences_by_node))
+  bootstrapped_means_of_inference_by_node <- data.frame(do.call(rbind, bootstrapped_means_of_inference_by_node))
 
   # print("Getting upper and lower quantile estimates of mean", quote = FALSE)
   lower_quantile <- (1 - confidence_interval)/2
   upper_quantile <- (1 + confidence_interval)/2
-  lower_quantiles_by_node <- data.frame(apply(bootstrapped_means_of_inferences_by_node, 2, function(bootstrapped_means) stats::quantile(bootstrapped_means, lower_quantile), simplify = FALSE))
-  upper_quantiles_by_node <- data.frame(apply(bootstrapped_means_of_inferences_by_node, 2, function(bootstrapped_means) stats::quantile(bootstrapped_means, upper_quantile), simplify = FALSE))
+  lower_quantiles_by_node <- data.frame(apply(bootstrapped_means_of_inference_by_node, 2, function(bootstrapped_means) stats::quantile(bootstrapped_means, lower_quantile), simplify = FALSE))
+  upper_quantiles_by_node <- data.frame(apply(bootstrapped_means_of_inference_by_node, 2, function(bootstrapped_means) stats::quantile(bootstrapped_means, upper_quantile), simplify = FALSE))
 
   nodes <- ifelse(colnames(lower_quantiles_by_node) == colnames(upper_quantiles_by_node), colnames(lower_quantiles_by_node), stop("Error with quantiles calculation"))
   quantiles_by_node <- vector(mode = "list", length = length(nodes))
@@ -1017,7 +1017,7 @@ get_triangular_distribution_of_values <- function(lower = double(), upper = doub
 #' #' @param quantile The quantile to return. see ?quantile() for more
 #' #'
 #' #' @export
-#' get_quantile_of_fmcm_inferences <- function(fmcm_inferences = list(), quantile = 0.5) {
+#' get_quantile_of_fmcm_inference <- function(fmcm_inference = list(), quantile = 0.5) {
 #'
 #'
 #'   state_vector_list_is_not_by_iter <- unlist(unique((lapply(names(fmcm_state_vectors_by_iter), function(x) strsplit(x, "_")[[1]][1])))) != "iter"
