@@ -175,23 +175,23 @@ confer_fgcm <- function(grey_adj_matrix = matrix(),
   greyness <- data.frame(apply(inference_state_vectors, c(1, 2), function(x) calculate_greyness(x[[1]], grey_adj_matrix_domain)))
   ranges <- data.frame(apply(inference_state_vectors, c(1, 2), function(x) x[[1]]$upper - x[[1]]$lower))
 
-  inerence <- inference_state_vectors[nrow(inference_state_vectors), ]
-  inerence_df <- data.frame(
-    node = colnames(inerence),
-    lower = vapply(inerence, function(x) x[[1]]$lower, numeric(1)),
-    upper = vapply(inerence, function(x) x[[1]]$upper, numeric(1))
+  inference <- inference_state_vectors[nrow(inference_state_vectors), ]
+  inference_df <- data.frame(
+    node = colnames(inference),
+    lower = vapply(inference, function(x) x[[1]]$lower, numeric(1)),
+    upper = vapply(inference, function(x) x[[1]]$upper, numeric(1))
   )
-  rownames(inerence_df) <- NULL
-  inerence_for_plotting_df <- data.frame(
-    node = c(inerence_df$node, inerence_df$node),
-    type = c(rep("lower", nrow(inerence_df)), rep("upper", nrow(inerence_df))),
-    value = c(inerence_df$lower, inerence_df$upper)
+  rownames(inference_df) <- NULL
+  inference_for_plotting_df <- data.frame(
+    node = c(inference_df$node, inference_df$node),
+    type = c(rep("lower", nrow(inference_df)), rep("upper", nrow(inference_df))),
+    value = c(inference_df$lower, inference_df$upper)
   )
 
   structure(
     .Data = list(
-      inerence = inerence_df,
-      inerence_for_plotting = inerence_for_plotting_df,
+      inference = inference_df,
+      inference_for_plotting = inference_for_plotting_df,
       inference_state_vectors = inference_state_vectors,
       scenario_state_vectors = scenario_state_vectors,
       baseline_state_vectors = baseline_state_vectors,

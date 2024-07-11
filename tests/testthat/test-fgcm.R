@@ -131,8 +131,8 @@ test_that("confer_fgcm outputs within fmcm bounds", {
                               min_error = 1e-5, include_simulations_in_output = TRUE)
 
   fgcm_bounds <- fgcm_results$inference
-  min_fmcm_inferences <- apply(fmcm_results$inferences, 2, min)
-  max_fmcm_inferences <- apply(fmcm_results$inferences, 2, max)
+  min_fmcm_inferences <- apply(fmcm_results$inference, 2, min)
+  max_fmcm_inferences <- apply(fmcm_results$inference, 2, max)
 
   expect_lte(fgcm_bounds$lower[1], min_fmcm_inferences[1])
   expect_gte(fgcm_bounds$upper[1], max_fmcm_inferences[1])

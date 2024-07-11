@@ -1,5 +1,5 @@
 
-test_that("confer_fmcm works with get_means_of_fmcm_inferences plot", {
+test_that("confer_fmcm works with get_means_of_fmcm_inference plot", {
   adj_matrix <- adj_matrix <- data.frame(
     "A" = c(0, 0, 0, 0),
     "B" = c(0.5, 0, 0, 0.5),
@@ -35,11 +35,11 @@ test_that("confer_fmcm works with get_means_of_fmcm_inferences plot", {
   triangular_fmcm_models <- build_fmcm_models(adj_matrix, n_sims = n_simulations, distribution = "triangular", lower_adj_matrix = lower_adj_matrix, upper_adj_matrix = upper_adj_matrix, mode_adj_matrix = adj_matrix)
 
   test_confer_fmcm <- confer_fmcm(uniform_fmcm_models, initial_state_vector, clamping_vector, activation = "kosko", squashing = "tanh",
-               lambda = 1, max_iter = 100, parallel = TRUE, n_cores = 2, show_progress = TRUE, include_simulations_in_output = TRUE)
+               lambda = 0.5, max_iter = 100, parallel = TRUE, n_cores = 2, show_progress = TRUE, include_simulations_in_output = TRUE)
 
-  expect_equal(colnames(test_confer_fmcm$inferences), c("A", "B", "C", "D"))
-  expect_equal(nrow(test_confer_fmcm$inferences), n_simulations)
-  expect_equal(colnames(test_confer_fmcm$inferences_for_plotting), c("node", "value"))
+  expect_equal(colnames(test_confer_fmcm$inference), c("A", "B", "C", "D"))
+  expect_equal(nrow(test_confer_fmcm$inference), n_simulations)
+  expect_equal(colnames(test_confer_fmcm$inference_for_plotting), c("node", "value"))
 
   # Perform visual check
   # bootstrap_mean_CIs <- get_means_of_fmcm_inferences(test_confer_fmcm$inferences)
@@ -204,7 +204,7 @@ test_that("fmcm works", {
 })
 
 
-test_that("get_means_of_fmcm_inferences", {
+test_that("get_means_of_fmcm_inference", {
   adj_matrix <- adj_matrix <- data.frame(
     "A" = c(0, 0, 0, 0),
     "B" = c(1, 0, 0, 1),
@@ -229,20 +229,20 @@ test_that("get_means_of_fmcm_inferences", {
   uniform_fmcm_models <- build_fmcm_models(adj_matrix, n_sims = 1000, distribution = "uniform", lower_adj_matrix = lower_adj_matrix, upper_adj_matrix = upper_adj_matrix)
   # simulated_adj_matrices = uniform_fmcm_models
 
-  test_confer_fmcm <- confer_fmcm(uniform_fmcm_models, initial_state_vector, clamping_vector, activation = "kosko", squashing = "tanh",
+  test_confer_fmcm <- confer_fmcm(uniform_fmcm_models, initial_state_vector, clamping_vector, activation = "kosko", squashing = "sigmoid",
                                     lambda = 1, max_iter = 100, parallel = FALSE, show_progress = TRUE)
 
-  test_means <- round(apply(test_confer_fmcm$inferences, 2, mean), 1)
-  expect_equal(test_means, c(A = 1.0, B = 0.5, C = 0.2, D = 0.1))
+  test_means <- round(apply(test_confer_fmcm$inference, 2, mean), 1)
+  expect_equal(test_means, c(A = 0.5, B = 0.1, C = 0, D = 0))
 
-  bootstrap_mean_CIs <- get_means_of_fmcm_inferences(test_confer_fmcm$inferences)
+  bootstrap_mean_CIs <- get_means_of_fmcm_inference(test_confer_fmcm$inference)
 
-  test_nobootstrap <- get_means_of_fmcm_inferences(
-    test_confer_fmcm$inferences,
+  test_nobootstrap <- get_means_of_fmcm_inference(
+    test_confer_fmcm$inference,
     get_bootstrapped_means = FALSE
   )
-  test_bootstrap_parallel_progress <- get_means_of_fmcm_inferences(
-    test_confer_fmcm$inferences,
+  test_bootstrap_parallel_progress <- get_means_of_fmcm_inference(
+    test_confer_fmcm$inference,
     get_bootstrapped_means = TRUE,
     confidence_interval = 0.95,
     bootstrap_reps = 1000,
@@ -251,8 +251,8 @@ test_that("get_means_of_fmcm_inferences", {
     n_cores = 2,
     show_progress = TRUE
   )
-  test_bootstrap_parallel_noprogress <- get_means_of_fmcm_inferences(
-    test_confer_fmcm$inferences,
+  test_bootstrap_parallel_noprogress <- get_means_of_fmcm_inference(
+    test_confer_fmcm$inference,
     get_bootstrapped_means = TRUE,
     confidence_interval = 0.95,
     bootstrap_reps = 1000,
@@ -261,8 +261,8 @@ test_that("get_means_of_fmcm_inferences", {
     n_cores = 2,
     show_progress = FALSE
   )
-  test_bootstrap_noparallel_progress <- get_means_of_fmcm_inferences(
-    test_confer_fmcm$inferences,
+  test_bootstrap_noparallel_progress <- get_means_of_fmcm_inference(
+    test_confer_fmcm$inference,
     get_bootstrapped_means = TRUE,
     confidence_interval = 0.95,
     bootstrap_reps = 1000,
@@ -270,8 +270,8 @@ test_that("get_means_of_fmcm_inferences", {
     parallel = FALSE,
     show_progress = TRUE
   )
-  test_bootstrap_noparallel_noprogress <- get_means_of_fmcm_inferences(
-    test_confer_fmcm$inferences,
+  test_bootstrap_noparallel_noprogress <- get_means_of_fmcm_inference(
+    test_confer_fmcm$inference,
     get_bootstrapped_means = TRUE,
     confidence_interval = 0.95,
     bootstrap_reps = 1000,
@@ -331,8 +331,8 @@ test_that("get_quantiles_of_simulated_values_across_iters works", {
     max_iter = 1000, parallel = FALSE
   )
 
-  test_lower_quantile <- get_quantile_of_fmcm_inferences(test_confer_fmcm$inferences, quantile = 0.25)
-  test_upper_quantile <- get_quantile_of_fmcm_inferences(test_confer_fmcm$inferences, quantile = 0.75)
+  test_lower_quantile <- get_quantile_of_fmcm_inference(test_confer_fmcm$inference, quantile = 0.25)
+  test_upper_quantile <- get_quantile_of_fmcm_inference(test_confer_fmcm$inference, quantile = 0.75)
 
   matches_expected_lower_quantile_A <- test_lower_quantile$A == 1
   matches_expected_lower_quantile_B <- test_lower_quantile$B < 0.5 & test_lower_quantile$B > 0.3
