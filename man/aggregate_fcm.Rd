@@ -12,6 +12,9 @@ aggregate_fcm(
 )
 }
 \arguments{
+\item{adj_matrices}{A list type object of fcms. Must have a length greater
+than 1.}
+
 \item{aggregation_fun}{"mean" or "median"}
 
 \item{include_zeroes}{TRUE/FALSE Whether to include zeroes in the mean/median
@@ -19,9 +22,6 @@ calculations. (i.e. if edges not included in a map should count as a zero-weight
 edge or not at all)}
 
 \item{IDs}{A list of names for each node (must have n items)}
-
-\item{fcm_list}{A list type object of fcms. Must have a length greater
-than 1.}
 }
 \value{
 A single fcm calculated as the aggregate of the input adjacency matrices

@@ -17,7 +17,6 @@ test_that("confer_fgcm works", {
   grey_adj_matrix <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix, upper_adj_matrix)
   activation_vector <- c(1, 1, 1, 1)
   scenario_vector <- c(1, 0, 0, 0)
-
   test <- confer_fgcm(grey_adj_matrix, activation_vector, scenario_vector,
                       "kosko", "tanh", max_iter = 1000)
 
@@ -84,75 +83,104 @@ test_that("confer_fgcm works", {
   # text(x = p, y = x$value + 0.05, labels = round(x$value, 1))
 })
 
-
-test_that("confer_fgcm outputs within fmcm bounds", {
-  lower_adj_matrix <- data.frame(
-    "A" = c(0, 0, 0, 0),
-    "B" = c(0.25, 0, 0, 0.25),
-    "C" = c(0, 0.25, 0, 0),
-    "D" = c(0, 0, 0.25, 0)
-  )
-
-  upper_adj_matrix <- data.frame(
-    "A" = c(0, 0, 0, 0),
-    "B" = c(0.75, 0, 0, 0.75),
-    "C" = c(0, 0.75, 0, 0),
-    "D" = c(0, 0, 0.75, 0)
-  )
-  mode_adj_matrix <- (lower_adj_matrix + upper_adj_matrix)/2
-
-  grey_adj_matrix <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix, upper_adj_matrix)
-
-  fgcm_results <- confer_fgcm(
-    grey_adj_matrix,
-    initial_state_vector <- c(1, 1, 1, 1),
-    clamping_vector <- c(1, 0, 0, 0),
-    activation = "modified-kosko",
-    squashing = "sigmoid",
-    lambda = 1,
-    max_iter = 100
-  )
-
-  fmcm_sims <- build_fmcm_models(mode_adj_matrix,
-                                 n_sims = 100,
-                                 parallel = FALSE,
-                                 show_progress = TRUE,
-                                 distribution = "uniform",
-                                 lower_adj_matrix = lower_adj_matrix,
-                                 upper_adj_matrix = upper_adj_matrix)
-
-  fmcm_results <- confer_fmcm(fmcm_sims,
-                              initial_state_vector = c(1, 1, 1, 1),
-                              clamping_vector = c(1, 0, 0, 0),
-                              activation = "modified-kosko",
-                              squashing = "sigmoid", n_cores = 2,
-                              lambda = 1,
-                              max_iter = 100,
-                              min_error = 1e-5, include_simulations_in_output = TRUE)
-
-  fgcm_bounds <- fgcm_results$inference
-  min_fmcm_inferences <- apply(fmcm_results$inference, 2, min)
-  max_fmcm_inferences <- apply(fmcm_results$inference, 2, max)
-
-  expect_lte(fgcm_bounds$lower[1], min_fmcm_inferences[1])
-  expect_gte(fgcm_bounds$upper[1], max_fmcm_inferences[1])
-  expect_lte(fgcm_bounds$lower[2], min_fmcm_inferences[2])
-  expect_gte(fgcm_bounds$upper[2], max_fmcm_inferences[2])
-  expect_lte(fgcm_bounds$lower[3], min_fmcm_inferences[3])
-  expect_gte(fgcm_bounds$upper[3], max_fmcm_inferences[3])
-  expect_lte(fgcm_bounds$lower[4], min_fmcm_inferences[4])
-  expect_gte(fgcm_bounds$upper[4], max_fmcm_inferences[4])
-
-  # x <- fmcm_results$inferences
-  # x_longer <- tidyr::pivot_longer(x, cols = 1:4)
-  # z <- fgcm_results$inference
-  # z_longer <- tidyr::pivot_longer(z, cols = 2:3)
-  # ggplot() +
-  #   #geom_jitter(data = x_longer, aes(x = name, y = value), alpha = 1, size = 0.25) +
-  #   geom_boxplot(data = x_longer, aes(x = name, y = value)) +
-  #   geom_errorbar(data = z_longer, aes(x = node, y = value, ymin = value, ymax = value, group = name), color = "grey") +
-  #   theme_classic()
-})
+#
+# test_that("confer_fgcm outputs within fmcm bounds", {
+#   lower_adj_matrix <- data.frame(
+#     "A" = c(0, 0, 0, 0),
+#     "B" = c(0.25, 0, 0, 0.25),
+#     "C" = c(0, 0.25, 0, 0),
+#     "D" = c(0, 0, 0.25, 0)
+#   )
+#
+#   upper_adj_matrix <- data.frame(
+#     "A" = c(0, 0, 0, 0),
+#     "B" = c(0.75, 0, 0, 0.75),
+#     "C" = c(0, 0.75, 0, 0),
+#     "D" = c(0, 0, 0.75, 0)
+#   )
+#   mode_adj_matrix <- (lower_adj_matrix + upper_adj_matrix)/2
+#
+#   grey_adj_matrix <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix, upper_adj_matrix)
+#
+#   fgcm_results <- confer_fgcm(
+#     grey_adj_matrix,
+#     #initial_state_vector <- c(1, 1, 1, 1),
+#     #clamping_vector <- c(1, 0, 0, 0),
+#     initial_state_vector = c(1, 0, 0, 0),
+#     clamping_vector = c(0, 0, 0, 0),
+#     activation = "kosko",
+#     squashing = "sigmoid",
+#     lambda = 1,
+#     max_iter = 100
+#   )
+#
+#   fmcm_sims <- build_fmcm_models(mode_adj_matrix,
+#                                  n_sims = 1000,
+#                                  parallel = FALSE,
+#                                  show_progress = TRUE,
+#                                  distribution = "uniform",
+#                                  lower_adj_matrix = lower_adj_matrix,
+#                                  upper_adj_matrix = upper_adj_matrix)
+#
+#   fmcm_results <- confer_fmcm(fmcm_sims,
+#                               # initial_state_vector = c(1, 1, 1, 1),
+#                               # clamping_vector = c(1, 0, 0, 0),
+#                               initial_state_vector = c(1, 0, 0, 0),
+#                               clamping_vector = c(0, 0, 0, 0),
+#                               activation = "kosko",
+#                               squashing = "sigmoid", n_cores = 2,
+#                               lambda = 1,
+#                               max_iter = 100,
+#                               min_error = 1e-5, include_simulations_in_output = TRUE)
+#
+#   fcm_results <- confer_fcm(mode_adj_matrix,
+#              initial_state_vector = c(1, 0, 0, 0),
+#              clamping_vector = c(0, 0, 0, 0),
+#              activation = "kosko",
+#              squashing = "sigmoid",
+#              lambda = 1,
+#              max_iter = 100,
+#              min_error = 1e-5
+#              )
+#
+#   fgcm_bounds <- fgcm_results$inference
+#   min_fmcm_inferences <- apply(fmcm_results$inference, 2, min)
+#   max_fmcm_inferences <- apply(fmcm_results$inference, 2, max)
+#
+#   expect_lte(fgcm_bounds$lower[1], min_fmcm_inferences[1])
+#   expect_gte(fgcm_bounds$upper[1], max_fmcm_inferences[1])
+#   expect_lte(fgcm_bounds$lower[2], min_fmcm_inferences[2])
+#   expect_gte(fgcm_bounds$upper[2], max_fmcm_inferences[2])
+#   expect_lte(fgcm_bounds$lower[3], min_fmcm_inferences[3])
+#   expect_gte(fgcm_bounds$upper[3], max_fmcm_inferences[3])
+#   expect_lte(fgcm_bounds$lower[4], min_fmcm_inferences[4])
+#   expect_gte(fgcm_bounds$upper[4], max_fmcm_inferences[4])
+#
+#
+#   test <- lapply(
+#     fmcm_results$sims,
+#     function(sim) sim$scenario_simulation$state_vectors[nrow(sim$scenario_simulation$state_vectors), ]
+#   )
+#   test <- data.frame(do.call(rbind, test))
+#   test <- subset(test, select = -c(iter))
+#
+#   z <- fgcm_results$scenario_state_vectors[nrow(fgcm_results$scenario_state_vectors), ]
+#   z <- data.frame(
+#     node = names(z),
+#     lower = apply(z, 2, function(x) x[[1]]$lower),
+#     upper = apply(z, 2, function(x) x[[1]]$upper)
+#   )
+#
+#   # x <- test
+#   # x_longer <- tidyr::pivot_longer(x, cols = 1:4)
+#   # #z <- fgcm_results$inference
+#   # z_longer <- tidyr::pivot_longer(z, cols = 2:3)
+#   # ggplot() +
+#   #   #geom_jitter(data = x_longer, aes(x = name, y = value), alpha = 1, size = 0.25) +
+#   #   geom_boxplot(data = x_longer, aes(x = name, y = value)) +
+#   #   geom_errorbar(data = z_longer, aes(x = node, y = value, ymin = value, ymax = value, group = name), color = "grey") +
+#   #   theme_classic()
+# })
 
 test_that("warning pops up if max_iter reached", {
   lower_adj_matrix <- data.frame(

@@ -526,7 +526,7 @@ fcm <- function(adj_matrix = matrix(), IDs = c()) {
 #'
 #' @details Add details here
 #'
-#' @param fcm_list A list type object of fcms. Must have a length greater
+#' @param adj_matrices A list type object of fcms. Must have a length greater
 #' than 1.
 #' @param aggregation_fun "mean" or "median"
 #' @param include_zeroes TRUE/FALSE Whether to include zeroes in the mean/median
@@ -556,7 +556,7 @@ aggregate_fcm <- function(adj_matrices = list(), aggregation_fun = "mean", inclu
   # function ----
   node_names <- unlist(unique(concepts_in_fcms))
   n_nodes <- length(node_names)
-  n_maps <- length(fcm_list)
+  n_maps <- length(adj_matrices)
 
   if (!include_zeroes) {
     adj_matrices <- lapply(adj_matrices, function(x) replace(x, x == 0, NA))
