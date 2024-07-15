@@ -239,4 +239,7 @@ test_that("aggregate_fcm works", {
   adj_matrix_list <- list(test_adj_matrix, test_adj_matrix*0.5, test_adj_matrix*0.2)
   expect_no_error(aggregate_fcm(adj_matrix_list, "mean"))
   expect_no_error(aggregate_fcm(adj_matrix_list, "median"))
+
+  adj_matrix_list[[1]]$C1[[2]] <- 0
+  expect_no_error(aggregate_fcm(adj_matrix_list, "mean", FALSE))
 })

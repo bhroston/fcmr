@@ -4,10 +4,19 @@
 \alias{aggregate_fcm}
 \title{Construct an aggregate fcm from a group (list) of fcms}
 \usage{
-aggregate_fcm(adj_matrices = list(), aggregation_fun = "mean", IDs = c())
+aggregate_fcm(
+  adj_matrices = list(),
+  aggregation_fun = "mean",
+  include_zeroes = TRUE,
+  IDs = c()
+)
 }
 \arguments{
 \item{aggregation_fun}{"mean" or "median"}
+
+\item{include_zeroes}{TRUE/FALSE Whether to include zeroes in the mean/median
+calculations. (i.e. if edges not included in a map should count as a zero-weighted
+edge or not at all)}
 
 \item{IDs}{A list of names for each node (must have n items)}
 

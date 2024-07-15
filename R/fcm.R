@@ -529,11 +529,14 @@ fcm <- function(adj_matrix = matrix(), IDs = c()) {
 #' @param fcm_list A list type object of fcms. Must have a length greater
 #' than 1.
 #' @param aggregation_fun "mean" or "median"
+#' @param include_zeroes TRUE/FALSE Whether to include zeroes in the mean/median
+#' calculations. (i.e. if edges not included in a map should count as a zero-weighted
+#' edge or not at all)
 #' @param IDs A list of names for each node (must have n items)
 #'
 #' @return A single fcm calculated as the aggregate of the input adjacency matrices
 #' @export
-aggregate_fcm <- function(adj_matrices = list(), aggregation_fun = "mean", IDs = c()) {
+aggregate_fcm <- function(adj_matrices = list(), aggregation_fun = "mean", include_zeroes = TRUE, IDs = c()) {
   # error checks ----
   concepts_in_fcms <- lapply(adj_matrices, function(x) get_node_IDs_from_input(x, IDs))
   all_fcms_have_same_concepts <- length(unique(concepts_in_fcms)) == 1
@@ -555,6 +558,10 @@ aggregate_fcm <- function(adj_matrices = list(), aggregation_fun = "mean", IDs =
   n_nodes <- length(node_names)
   n_maps <- length(fcm_list)
 
+  if (!include_zeroes) {
+    adj_matrices <- lapply(adj_matrices, function(x) replace(x, x == 0, NA))
+  }
+
   if (aggregation_fun == "mean") {
     aggregate_adj_matrix <- apply(
       array(unlist(adj_matrices), c(n_nodes, n_nodes, n_maps)), 1:2,
@@ -566,6 +573,8 @@ aggregate_fcm <- function(adj_matrices = list(), aggregation_fun = "mean", IDs =
       function(x) stats::median(x, na.rm = TRUE)
     )
   }
+
+  aggregate_adj_matrix[is.na(aggregate_adj_matrix)] <- 0
 
   colnames(aggregate_adj_matrix) <- node_names
   rownames(aggregate_adj_matrix) <- node_names
