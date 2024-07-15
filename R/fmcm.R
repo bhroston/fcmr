@@ -44,7 +44,7 @@
 confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
                         initial_state_vector = c(),
                         clamping_vector = c(),
-                        activation = "kosko", # Something wrong with papageorgiou activation; returning negative numbers... works for sigmoid, but not tanh
+                        activation = "kosko",
                         squashing = "tanh",
                         lambda = 1,
                         max_iter = 100,
