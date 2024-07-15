@@ -1,6 +1,6 @@
 
 
-#' confer_fgcm
+#' simulate_fgcm
 #'
 #' @description
 #' This calculates a sequence of iterations of a simulation over an fgcm object
@@ -9,7 +9,7 @@
 #' column names, and lambda optimization.
 #'
 #' @details
-#' This confers how an fgcm reacts to an input initial state vector. There is a
+#' This simulates how an fgcm reacts to an input initial state vector. There is a
 #' multi-decadal long body of work that has explored numerous activation and squashing
 #' functions as well as algorithms to optimize the lambda value for the
 #' sigmoid and tanh squashing functions.
@@ -41,7 +41,7 @@
 #' calculation steps with a minimal reduction in accuracy (https://doi.org/10.1007/978-3-030-52705-1_34)
 #'
 #' @export
-confer_fgcm <- function(grey_adj_matrix = matrix(),
+simulate_fgcm <- function(grey_adj_matrix = matrix(),
                         initial_state_vector = c(),
                         clamping_vector = c(),
                         activation = "kosko",
@@ -93,27 +93,15 @@ confer_fgcm <- function(grey_adj_matrix = matrix(),
   scenario_state_vectors <-  matrix(data = list(NA), nrow = max_iter + 1, ncol = length(clamping_vector))
   colnames(scenario_state_vectors) <- IDs
   scenario_state_vectors[1, ] <- initial_state_vector
-  baseline_state_vectors <- matrix(data = list(NA), nrow = max_iter + 1, ncol = length(clamping_vector))
-  colnames(baseline_state_vectors) <- IDs
-  baseline_state_vectors[1, ] <- initial_state_vector
-  inference_state_vectors <-  matrix(data = list(NA), nrow = max_iter, ncol = length(clamping_vector))
-  colnames(inference_state_vectors) <- IDs
   errors <- data.frame(matrix(data = numeric(1), nrow = max_iter + 1, ncol = length(clamping_vector)))
   colnames(errors) <- IDs
   errors[1, ] <- 0
 
   for (i in 2:(max_iter + 1)) {
     current_scenario_state_vector <- scenario_state_vectors[i - 1, ]
-    current_baseline_state_vector <- baseline_state_vectors[i - 1, ]
     next_scenario_state_vector <- calculate_next_fgcm_state_vector(grey_adj_matrix, current_scenario_state_vector, activation, algorithm)
-    next_baseline_state_vector <- calculate_next_fgcm_state_vector(grey_adj_matrix, current_baseline_state_vector, activation, algorithm)
     squashed_next_scenario_state_vector <- vapply(
       next_scenario_state_vector,
-      function(state) list(grey_number(lower = squash(state$lower, squashing, lambda), upper = squash(state$upper, squashing, lambda))),
-      list(list(1))
-    )
-    squashed_next_baseline_state_vector <- vapply(
-      next_baseline_state_vector,
       function(state) list(grey_number(lower = squash(state$lower, squashing, lambda), upper = squash(state$upper, squashing, lambda))),
       list(list(1))
     )
@@ -121,28 +109,16 @@ confer_fgcm <- function(grey_adj_matrix = matrix(),
       squashed_next_scenario_state_vector[[nonzero_value_indexes_in_clamping_vector]] <- clamping_vector[[nonzero_value_indexes_in_clamping_vector]]
     }
     scenario_state_vectors[i, ] <- squashed_next_scenario_state_vector
-    baseline_state_vectors[i, ] <- squashed_next_baseline_state_vector
-    inference_state_vectors[i - 1, ] <- mapply(
-      function(scenario, baseline) {
-        upper <- max(abs(scenario$upper - baseline$lower), abs(scenario$upper - baseline$upper))
-        lower <- ifelse(baseline$upper > scenario$lower, 0, min(abs(scenario$lower - baseline$upper), abs(scenario$lower - baseline$lower)))
-        #lower <- min(abs(scenario$lower - baseline$upper), abs(scenario$lower - baseline$lower))
-        #lower <- 0
-        grey_number(lower, upper)
-      },
-      scenario = squashed_next_scenario_state_vector,
-      baseline = squashed_next_baseline_state_vector,
-      SIMPLIFY = FALSE
-    )
+
     if (i == 2) {
       errors[1, ] <- 1
     } else {
       errors[i - 1, ] <- mapply(
-        function(current_inference, previous_inference) {
-          abs(current_inference$lower - previous_inference$lower) + abs(current_inference$upper - previous_inference$upper)
+        function(current, previous) {
+          abs(current$lower - previous$lower) + abs(current$upper - previous$upper)
         },
-        current_inference <- inference_state_vectors[i - 1, ],
-        previous_inference <- inference_state_vectors[i - 2, ]
+        current <- scenario_state_vectors[i - 1, ],
+        previous <- scenario_state_vectors[i - 2, ]
       )
     }
     if (sum(unlist(errors[i - 1, ])) < min_error) {
@@ -163,38 +139,19 @@ confer_fgcm <- function(grey_adj_matrix = matrix(),
   }
 
   scenario_state_vectors <- data.frame(scenario_state_vectors[1:(i), ])
-  baseline_state_vectors <- data.frame(baseline_state_vectors[1:(i), ])
-  inference_state_vectors <- data.frame(inference_state_vectors[1:(i - 1), ])
   errors <- errors[1:i, ]
 
   state_vector_bounds <- list(
-    lower = data.frame(apply(inference_state_vectors, c(1, 2), function(x) x[[1]]$lower)),
-    upper = data.frame(apply(inference_state_vectors, c(1, 2), function(x) x[[1]]$upper))
+    lower = data.frame(apply(scenario_state_vectors, c(1, 2), function(x) x[[1]]$lower)),
+    upper = data.frame(apply(scenario_state_vectors, c(1, 2), function(x) x[[1]]$upper))
   )
 
   greyness <- data.frame(apply(inference_state_vectors, c(1, 2), function(x) calculate_greyness(x[[1]], grey_adj_matrix_domain)))
   ranges <- data.frame(apply(inference_state_vectors, c(1, 2), function(x) x[[1]]$upper - x[[1]]$lower))
 
-  inference <- inference_state_vectors[nrow(inference_state_vectors), ]
-  inference_df <- data.frame(
-    node = colnames(inference),
-    lower = vapply(inference, function(x) x[[1]]$lower, numeric(1)),
-    upper = vapply(inference, function(x) x[[1]]$upper, numeric(1))
-  )
-  rownames(inference_df) <- NULL
-  inference_for_plotting_df <- data.frame(
-    node = c(inference_df$node, inference_df$node),
-    type = c(rep("lower", nrow(inference_df)), rep("upper", nrow(inference_df))),
-    value = c(inference_df$lower, inference_df$upper)
-  )
-
   structure(
     .Data = list(
-      inference = inference_df,
-      inference_for_plotting = inference_for_plotting_df,
-      inference_state_vectors = inference_state_vectors,
-      scenario_state_vectors = scenario_state_vectors,
-      baseline_state_vectors = baseline_state_vectors,
+      state_vectors = scenario_state_vectors,
       state_vectors_bounds = state_vector_bounds,
       greyness = greyness,
       errors = errors,
@@ -211,7 +168,7 @@ confer_fgcm <- function(grey_adj_matrix = matrix(),
         algorithm = algorithm
       )
     ),
-    class = "conferfgcm"
+    class = "fgcm_simulation"
   )
 }
 

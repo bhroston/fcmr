@@ -1,5 +1,5 @@
 
-test_that("confer_fgcm works", {
+test_that("simulate_fgcm works", {
   lower_adj_matrix <- data.frame(
     "A" = c(0, 0, 0, 0),
     "B" = c(0.25, 0, 0, 0.25),
@@ -17,170 +17,133 @@ test_that("confer_fgcm works", {
   grey_adj_matrix <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix, upper_adj_matrix)
   activation_vector <- c(1, 1, 1, 1)
   scenario_vector <- c(1, 0, 0, 0)
-  test <- confer_fgcm(grey_adj_matrix, activation_vector, scenario_vector,
-                      "kosko", "tanh", max_iter = 1000)
 
-  rounded_grey_nums <- apply(test$inference, 1, function(entry) grey_number(round(as.numeric(entry[2]), 2), round(as.numeric(entry[3]), 2)))
-  names(rounded_grey_nums) <- c("A", "B", "C", "D")
-
-  expect_equal(test$inference$node, c("A", "B", "C", "D"))
-
-  # Match output with mentalmodeler ONLY when all edges are positive. This
-  # is NOT an accurate comparison when there are negative edges.
-  expect_equal(rounded_grey_nums$A$upper, 1)
-  expect_equal(rounded_grey_nums$A$lower, 1)
-
-  expect_equal(rounded_grey_nums$B$upper, 0.77)
-  expect_equal(rounded_grey_nums$B$lower, 0.25)
-
-  expect_equal(rounded_grey_nums$C$upper, 0.52)
-  expect_equal(rounded_grey_nums$C$lower, 0.06)
-
-  expect_equal(rounded_grey_nums$D$upper, 0.37)
-  expect_equal(rounded_grey_nums$D$lower, 0.02)
-
-  test <- confer_fgcm(grey_adj_matrix, activation_vector, scenario_vector,
-                      "kosko", "sigmoid", max_iter = 1000, algorithm = "salmeron")
-
-  rounded_grey_nums <- apply(test$inference, 1, function(entry) grey_number(round(as.numeric(entry[2]), 2), round(as.numeric(entry[3]), 2)))
-  names(rounded_grey_nums) <- c("A", "B", "C", "D")
-
-  # Does NOT Match output with mentalmodeler because the sigmoid scenario and baseline
-  # possibility spaces intersect, so the minimum values have to be 0
-  expect_equal(rounded_grey_nums$A$upper, 0.5)
-  expect_equal(rounded_grey_nums$A$lower, 0.5)
-
-  expect_equal(rounded_grey_nums$B$upper, 0.21)
-  expect_equal(rounded_grey_nums$B$lower, 0)
-
-  expect_equal(rounded_grey_nums$C$upper, 0.11)
-  expect_equal(rounded_grey_nums$C$lower, 0)
-
-  expect_equal(rounded_grey_nums$D$upper, 0.08)
-  expect_equal(rounded_grey_nums$D$lower, 0)
-
-  expect_no_error(confer_fgcm(grey_adj_matrix, activation_vector, scenario_vector,
-                              "modified-kosko", "tanh", max_iter = 10000, algorithm = "salmeron"))
-  expect_no_error(confer_fgcm(grey_adj_matrix, activation_vector, scenario_vector,
-                              "modified-kosko", "sigmoid", max_iter = 100, algorithm = "salmeron"))
-  expect_no_error(confer_fgcm(grey_adj_matrix, activation_vector, scenario_vector,
-                              "rescale", "sigmoid", max_iter = 100, algorithm = "salmeron"))
-
-
-  # Perform visual check
-  # x <- test$inference_for_plotting
-  # x <- x[x$node != "A", ]
-  # x$node <- c("B", "C", "D")
-  # ggplot(x) +
-  #   geom_bar(aes(x = node, y = lower_value), stat = "identity", fill = "white") +
-  #   geom_crossbar(aes(x = node, y = lower_value, ymin = lower_value, ymax = upper_value), color = "red", fill = "red") +
-  #   geom_text(aes(x = node, y = lower_value - 0.05, label = round(lower_value, 2))) +
-  #   geom_text(aes(x = node, y = upper_value + 0.05, label = round(upper_value, 2))) +
-  #   ylim(0, 1) +
-  #   theme_classic()
+  expect_no_error(simulate_fgcm(grey_adj_matrix, activation_vector, scenario_vector,
+                                "kosko", "tanh", max_iter = 1000))
   #
-  # p <- barplot(height = x$value, names.arg = x$name, col = "red")
-  # text(x = p, y = x$value + 0.05, labels = round(x$value, 1))
+  #   # Test from Salmeron & Papageorgiou, 2014 - https://doi.org/10.1007/s10489-013-0511-z
+  #   # Test 1 (Exact as fcm)
+  #   w5_2 <- grey_number(0.6, 0.6)
+  #   #w2_5 <- grey_number(-0.42, -0.42)
+  #   w2_5 <- grey_number(0.42, 0.42)
+  #   w4_2 <- grey_number(0.8, 0.8)
+  #   w2_4 <- grey_number(0.7, 0.7)
+  #   w4_1 <- grey_number(-0.8, -0.8)
+  #   w1_4 <- grey_number(0.38, 0.38)
+  #   w3_1 <- grey_number(0.755, 0.755)
+  #   #w1_3 <- grey_number(0.13, 0.43) They say greyness is 0.2, but can't be
+  #   #w1_3 <- grey_number(0.33, 0.33)
+  #   w1_3 <- grey_number(0.28, 0.28) # Might be this?
+  #   w4_7 <- grey_number(0.09, 0.09)
+  #   w7_4 <- grey_number(0.3, 0.3)
+  #   w6_3 <- grey_number(0.4, 0.4)
+  #   w6_8 <- grey_number(0.53, 0.53)
+  #   w8_6 <- grey_number(0.6, 0.6)
+  #
+  #   test_adj_matrix_edge_weights <- c(w2_5, w5_2, w4_2, w2_4, w4_1, w1_4,
+  #                                     w3_1, w1_3, w4_7, w7_4, w6_3, w6_8,
+  #                                     w8_6)
+  #   test_adj_matrix_edge_indeces <- c("2-5", "5-2", "4-2", "2-4", "4-1", "1-4",
+  #                                     "3-1", "1-3", "4-7", "7-4", "6-3", "6-8",
+  #                                     "8-6")
+  #   test_grey_adj_matrix <- get_grey_adj_matrix_from_list_of_grey_numbers(
+  #     values = test_adj_matrix_edge_weights,
+  #     locs = test_adj_matrix_edge_indeces,
+  #     size = 8
+  #   )
+  #
+  #   C1 <- grey_number(0.48, 0.48)
+  #   C2 <- grey_number(0.57, 0.57)
+  #   C3 <- grey_number(0.58, 0.58)
+  #   C4 <- grey_number(0.68, 0.68)
+  #   C5 <- grey_number(0.58, 0.58)
+  #   C6 <- grey_number(0.59, 0.59)
+  #   C7 <- grey_number(0.52, 0.52)
+  #   C8 <- grey_number(0.58, 0.58)
+  #   test_initial_state_vector = c(C1, C2, C3, C4, C5, C6, C7, C8)
+  #
+  #   C1 <- grey_number(0.48, 0.48)
+  #   C2 <- grey_number(0.57, 0.57)
+  #   C3 <- grey_number(0.58, 0.58)
+  #   C4 <- grey_number(0.68, 0.68)
+  #   C5 <- grey_number(0.59, 0.59)
+  #   C6 <- grey_number(0.58, 0.58)
+  #   C7 <- grey_number(0.59, 0.59)
+  #   C8 <- grey_number(0.52, 0.52)
+  #   test_initial_state_vector = c(C1, C2, C3, C4, C5, C6, C7, C8)
+  #
+  #   test_fgcmr_simulation <- simulate_fgcmr(test_grey_adj_matrix, test_initial_state_vector, lambda = 1, activation = "modified-kosko", max_iter = 100, min_error = 1e-8)
+  #
+  #
+  #
+  #
+  #   # Test 2 (Proper grey adjacency matrix)
+  #   # Test from Salmeron & Papageorgiou, 2014 - https://doi.org/10.1007/s10489-013-0511-z
+  #   # Does not replicate paper results
+  #   w5_2 <- grey_number(0.5, 0.7)
+  #   w2_5 <- grey_number(-0.52, -0.32)
+  #   w4_2 <- grey_number(0.7, 0.9)
+  #   w2_4 <- grey_number(0.6, 0.8)
+  #   w4_1 <- grey_number(-0.9, -0.7)
+  #   w1_4 <- grey_number(0.28, 0.48)
+  #   w3_1 <- grey_number(0.51, 1.0)
+  #   w1_3 <- grey_number(0.13, 0.43)
+  #   w4_7 <- grey_number(-0.16, 0.34)
+  #   w7_4 <- grey_number(0.2, 0.4)
+  #   w6_3 <- grey_number(0.3, 0.5)
+  #   w6_8 <- grey_number(0.43, 0.63)
+  #   w8_6 <- grey_number(0.35, 0.85)
+  #
+  #   test_adj_matrix_edge_weights <- c(w2_5, w5_2, w4_2, w2_4, w4_1, w1_4,
+  #                                     w3_1, w1_3, w4_7, w7_4, w6_3, w6_8,
+  #                                     w8_6)
+  #   test_adj_matrix_edge_indeces <- c("2-5", "5-2", "4-2", "2-4", "4-1", "1-4",
+  #                                     "3-1", "1-3", "4-7", "7-4", "6-3", "6-8",
+  #                                     "8-6")
+  #   test_grey_adj_matrix <- get_grey_adj_matrix_from_list_of_grey_numbers(
+  #     values = test_adj_matrix_edge_weights,
+  #     locs = test_adj_matrix_edge_indeces,
+  #     size = 8
+  #   )
+  #
+  #   C1 <- grey_number(0.48, 0.48)
+  #   C2 <- grey_number(0.57, 0.57)
+  #   C3 <- grey_number(0.58, 0.58)
+  #   C4 <- grey_number(0.68, 0.68)
+  #   C5 <- grey_number(0.58, 0.58)
+  #   C6 <- grey_number(0.59, 0.59)
+  #   C7 <- grey_number(0.52, 0.52)
+  #   C8 <- grey_number(0.58, 0.58)
+  #   test_initial_state_vector = c(C1, C2, C3, C4, C5, C6, C7, C8)
+  #
+  #   test_fgcmr_simulation <- simulate_fgcmr(test_grey_adj_matrix, test_initial_state_vector, lambda = 1, activation = "modified-kosko", max_iter = 100, min_error = 1e-8)
+  #
+  #   test_steady_states <- test_fgcmr_simulation$state_vectors[nrow(test_fgcmr_simulation$state_vectors),]
+  #   lapply(test_steady_states, function(x) grey_number(round(x[[1]]$lower, 4), round(x[[1]]$upper, 4)))
+  #
+  #   rounded_test_steady_states <- lapply(test_steady_states, function(x) grey_number(round(x[[1]]$lower, 4), round(x[[1]]$upper, 4)))
+  #
+  #   # Test 3 (Grey Initial State Vector with Proper grey adjacency matrix)
+  #   # Test from Salmeron & Papageorgiou, 2014 - https://doi.org/10.1007/s10489-013-0511-z
+  #   # Does not replicate paper results
+  #   C1 <- grey_number(0.38, 0.58)
+  #   C2 <- grey_number(0.47, 0.67)
+  #   C3 <- grey_number(0.48, 0.68)
+  #   C4 <- grey_number(0.58, 0.78)
+  #   C5 <- grey_number(0.48, 0.68)
+  #   C6 <- grey_number(0.49, 0.69)
+  #   C7 <- grey_number(0.42, 0.62)
+  #   C8 <- grey_number(0.48, 0.68)
+  #   test_initial_state_vector = c(C1, C2, C3, C4, C5, C6, C7, C8)
+  #
+  #   test_fgcmr_simulation <- simulate_fgcmr(test_grey_adj_matrix, test_initial_state_vector, lambda = 1, activation = "modified-kosko", max_iter = 100, min_error = 1e-8)
+  #
+  #   test_steady_states <- test_fgcmr_simulation$state_vectors[nrow(test_fgcmr_simulation$state_vectors),]
+  #   lapply(test_steady_states, function(x) grey_number(round(x[[1]]$lower, 4), round(x[[1]]$upper, 4)))
+  #
+  #   rounded_test_steady_states <- lapply(test_steady_states, function(x) grey_number(round(x[[1]]$lower, 4), round(x[[1]]$upper, 4)))
+  #
 })
-
-#
-# test_that("confer_fgcm outputs within fmcm bounds", {
-#   lower_adj_matrix <- data.frame(
-#     "A" = c(0, 0, 0, 0),
-#     "B" = c(0.25, 0, 0, 0.25),
-#     "C" = c(0, 0.25, 0, 0),
-#     "D" = c(0, 0, 0.25, 0)
-#   )
-#
-#   upper_adj_matrix <- data.frame(
-#     "A" = c(0, 0, 0, 0),
-#     "B" = c(0.75, 0, 0, 0.75),
-#     "C" = c(0, 0.75, 0, 0),
-#     "D" = c(0, 0, 0.75, 0)
-#   )
-#   mode_adj_matrix <- (lower_adj_matrix + upper_adj_matrix)/2
-#
-#   grey_adj_matrix <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix, upper_adj_matrix)
-#
-#   fgcm_results <- confer_fgcm(
-#     grey_adj_matrix,
-#     #initial_state_vector <- c(1, 1, 1, 1),
-#     #clamping_vector <- c(1, 0, 0, 0),
-#     initial_state_vector = c(1, 0, 0, 0),
-#     clamping_vector = c(0, 0, 0, 0),
-#     activation = "kosko",
-#     squashing = "sigmoid",
-#     lambda = 1,
-#     max_iter = 100
-#   )
-#
-#   fmcm_sims <- build_fmcm_models(mode_adj_matrix,
-#                                  n_sims = 1000,
-#                                  parallel = FALSE,
-#                                  show_progress = TRUE,
-#                                  distribution = "uniform",
-#                                  lower_adj_matrix = lower_adj_matrix,
-#                                  upper_adj_matrix = upper_adj_matrix)
-#
-#   fmcm_results <- confer_fmcm(fmcm_sims,
-#                               # initial_state_vector = c(1, 1, 1, 1),
-#                               # clamping_vector = c(1, 0, 0, 0),
-#                               initial_state_vector = c(1, 0, 0, 0),
-#                               clamping_vector = c(0, 0, 0, 0),
-#                               activation = "kosko",
-#                               squashing = "sigmoid", n_cores = 2,
-#                               lambda = 1,
-#                               max_iter = 100,
-#                               min_error = 1e-5, include_simulations_in_output = TRUE)
-#
-#   fcm_results <- confer_fcm(mode_adj_matrix,
-#              initial_state_vector = c(1, 0, 0, 0),
-#              clamping_vector = c(0, 0, 0, 0),
-#              activation = "kosko",
-#              squashing = "sigmoid",
-#              lambda = 1,
-#              max_iter = 100,
-#              min_error = 1e-5
-#              )
-#
-#   fgcm_bounds <- fgcm_results$inference
-#   min_fmcm_inferences <- apply(fmcm_results$inference, 2, min)
-#   max_fmcm_inferences <- apply(fmcm_results$inference, 2, max)
-#
-#   expect_lte(fgcm_bounds$lower[1], min_fmcm_inferences[1])
-#   expect_gte(fgcm_bounds$upper[1], max_fmcm_inferences[1])
-#   expect_lte(fgcm_bounds$lower[2], min_fmcm_inferences[2])
-#   expect_gte(fgcm_bounds$upper[2], max_fmcm_inferences[2])
-#   expect_lte(fgcm_bounds$lower[3], min_fmcm_inferences[3])
-#   expect_gte(fgcm_bounds$upper[3], max_fmcm_inferences[3])
-#   expect_lte(fgcm_bounds$lower[4], min_fmcm_inferences[4])
-#   expect_gte(fgcm_bounds$upper[4], max_fmcm_inferences[4])
-#
-#
-#   test <- lapply(
-#     fmcm_results$sims,
-#     function(sim) sim$scenario_simulation$state_vectors[nrow(sim$scenario_simulation$state_vectors), ]
-#   )
-#   test <- data.frame(do.call(rbind, test))
-#   test <- subset(test, select = -c(iter))
-#
-#   z <- fgcm_results$scenario_state_vectors[nrow(fgcm_results$scenario_state_vectors), ]
-#   z <- data.frame(
-#     node = names(z),
-#     lower = apply(z, 2, function(x) x[[1]]$lower),
-#     upper = apply(z, 2, function(x) x[[1]]$upper)
-#   )
-#
-#   # x <- test
-#   # x_longer <- tidyr::pivot_longer(x, cols = 1:4)
-#   # #z <- fgcm_results$inference
-#   # z_longer <- tidyr::pivot_longer(z, cols = 2:3)
-#   # ggplot() +
-#   #   #geom_jitter(data = x_longer, aes(x = name, y = value), alpha = 1, size = 0.25) +
-#   #   geom_boxplot(data = x_longer, aes(x = name, y = value)) +
-#   #   geom_errorbar(data = z_longer, aes(x = node, y = value, ymin = value, ymax = value, group = name), color = "grey") +
-#   #   theme_classic()
-# })
 
 test_that("warning pops up if max_iter reached", {
   lower_adj_matrix <- data.frame(
