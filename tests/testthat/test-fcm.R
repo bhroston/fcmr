@@ -242,4 +242,27 @@ test_that("aggregate_fcm works", {
 
   adj_matrix_list[[1]]$C1[[2]] <- 0
   expect_no_error(aggregate_fcm(adj_matrix_list, "mean", FALSE))
+
+
+  # # fcmconfr is a package developed by Ben Roston (author)
+  # # install via remotes::install_git("https://github.com/bhroston/fcmr.git", ref = "18-add-fcm-aggregation-functions")
+  #
+  # indFCMFilepath <- "/Users/benro/Library/CloudStorage/OneDrive-VirginiaTech/Academics/Research/Projects/GCR/Papers/Dissertation Papers/FCM Structural Analysis/raw_data/raw_stakeholder_data/T1_individual_adj_data.xlsx"
+  #
+  # fileSheets <- readxl::excel_sheets(indFCMFilepath)
+  # adj_matrices <- lapply(fileSheets, function(sheet) readxl::read_excel(indFCMFilepath, sheet = sheet))
+  # names(adj_matrices) <- fileSheets
+  # complete_agg <- fcmconfr::aggregate_fcm(adj_matrices, aggregation_fun = "mean")
+  # complete_agg_mat <- complete_agg$adj_matrix
+  #
+  # known_complete_agg_filepath <- "/Users/benro/Desktop/FCM_Cycle_Analysis_Projects/cycle-partition-analyisis/agg_complete_adj_matrix.csv"
+  # known_complete_agg <- read.csv(known_complete_agg_filepath)
+  # colnames(known_complete_agg) <- known_complete_agg[1, ]
+  # known_complete_agg <- known_complete_agg[,-1]
+  #
+  # which(complete_agg_mat == 0.668, arr.ind = TRUE)
+  # which(known_complete_agg == 0.668, arr.ind = TRUE)
+  #
+  # aggregate_consensus_filepath <- "/Users/benro/Library/CloudStorage/OneDrive-VirginiaTech/Academics/Research/Projects/GCR/Papers/Dissertation Papers/FCM Structural Analysis/raw_data/raw_group_and_agg_data/T1_group_and_agg_adj_data.xlsx"
+  #
 })
