@@ -164,8 +164,8 @@ test_that("warning pops up if max_iter reached", {
   activation_vector <- c(1, 1, 1, 1)
   scenario_vector <- c(1, 0, 0, 0)
 
-  expect_warning(confer_fgcm(grey_adj_matrix, activation_vector, scenario_vector,
-                      "modified-kosko", "tanh", max_iter = 20))
+  expect_warning(simulate_fgcm(grey_adj_matrix, activation_vector, scenario_vector,
+                      "modified-kosko", "tanh", max_iter = 5))
 })
 
 test_that("fgcm works", {

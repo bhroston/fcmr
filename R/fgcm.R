@@ -146,8 +146,8 @@ simulate_fgcm <- function(grey_adj_matrix = matrix(),
     upper = data.frame(apply(scenario_state_vectors, c(1, 2), function(x) x[[1]]$upper))
   )
 
-  greyness <- data.frame(apply(inference_state_vectors, c(1, 2), function(x) calculate_greyness(x[[1]], grey_adj_matrix_domain)))
-  ranges <- data.frame(apply(inference_state_vectors, c(1, 2), function(x) x[[1]]$upper - x[[1]]$lower))
+  greyness <- data.frame(apply(scenario_state_vectors, c(1, 2), function(x) calculate_greyness(x[[1]], grey_adj_matrix_domain)))
+  ranges <- data.frame(apply(scenario_state_vectors, c(1, 2), function(x) x[[1]]$upper - x[[1]]$lower))
 
   structure(
     .Data = list(
