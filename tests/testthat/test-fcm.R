@@ -226,3 +226,43 @@ test_that("get_edgelist_from_adj_matrix works", {
 
   expect_identical(get_edgelist_from_adj_matrix(test_adj_matrix), goal_edgelist)
 })
+
+
+test_that("aggregate_fcm works", {
+  test_adj_matrix <- data.frame(
+    "C1" = c(0, 0.36, 0.45, -0.90, 0),
+    "C2" = c(-0.4, 0, 0, 0, 0.6),
+    "C3" = c(-0.25, 0, 0, 0, 0),
+    "C4" = c(0, 0, 0, 0, 0.3),
+    "C5" = c(0.3, 0, 0, 0, 0)
+  )
+  adj_matrix_list <- list(test_adj_matrix, test_adj_matrix*0.5, test_adj_matrix*0.2)
+  expect_no_error(aggregate_fcm(adj_matrix_list, "mean"))
+  expect_no_error(aggregate_fcm(adj_matrix_list, "median"))
+
+  adj_matrix_list[[1]]$C1[[2]] <- 0
+  expect_no_error(aggregate_fcm(adj_matrix_list, "mean", FALSE))
+
+
+  # # fcmconfr is a package developed by Ben Roston (author)
+  # # install via remotes::install_git("https://github.com/bhroston/fcmr.git", ref = "18-add-fcm-aggregation-functions")
+  #
+  # indFCMFilepath <- "/Users/benro/Library/CloudStorage/OneDrive-VirginiaTech/Academics/Research/Projects/GCR/Papers/Dissertation Papers/FCM Structural Analysis/raw_data/raw_stakeholder_data/T1_individual_adj_data.xlsx"
+  #
+  # fileSheets <- readxl::excel_sheets(indFCMFilepath)
+  # adj_matrices <- lapply(fileSheets, function(sheet) readxl::read_excel(indFCMFilepath, sheet = sheet))
+  # names(adj_matrices) <- fileSheets
+  # complete_agg <- fcmconfr::aggregate_fcm(adj_matrices, aggregation_fun = "mean")
+  # complete_agg_mat <- complete_agg$adj_matrix
+  #
+  # known_complete_agg_filepath <- "/Users/benro/Desktop/FCM_Cycle_Analysis_Projects/cycle-partition-analyisis/agg_complete_adj_matrix.csv"
+  # known_complete_agg <- read.csv(known_complete_agg_filepath)
+  # colnames(known_complete_agg) <- known_complete_agg[1, ]
+  # known_complete_agg <- known_complete_agg[,-1]
+  #
+  # which(complete_agg_mat == 0.668, arr.ind = TRUE)
+  # which(known_complete_agg == 0.668, arr.ind = TRUE)
+  #
+  # aggregate_consensus_filepath <- "/Users/benro/Library/CloudStorage/OneDrive-VirginiaTech/Academics/Research/Projects/GCR/Papers/Dissertation Papers/FCM Structural Analysis/raw_data/raw_group_and_agg_data/T1_group_and_agg_adj_data.xlsx"
+  #
+})
