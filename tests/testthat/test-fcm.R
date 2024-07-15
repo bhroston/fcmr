@@ -226,3 +226,17 @@ test_that("get_edgelist_from_adj_matrix works", {
 
   expect_identical(get_edgelist_from_adj_matrix(test_adj_matrix), goal_edgelist)
 })
+
+
+test_that("aggregate_fcm works", {
+  test_adj_matrix <- data.frame(
+    "C1" = c(0, 0.36, 0.45, -0.90, 0),
+    "C2" = c(-0.4, 0, 0, 0, 0.6),
+    "C3" = c(-0.25, 0, 0, 0, 0),
+    "C4" = c(0, 0, 0, 0, 0.3),
+    "C5" = c(0.3, 0, 0, 0, 0)
+  )
+  adj_matrix_list <- list(test_adj_matrix, test_adj_matrix*0.5, test_adj_matrix*0.2)
+  expect_no_error(aggregate_fcm(adj_matrix_list, "mean"))
+  expect_no_error(aggregate_fcm(adj_matrix_list, "median"))
+})

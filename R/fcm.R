@@ -517,3 +517,69 @@ fcm <- function(adj_matrix = matrix(), IDs = c()) {
   )
 }
 
+
+
+#' Construct an aggregate fcm from a group (list) of fcms
+#'
+#' @description Construct the aggregate fcm from a group (list)
+#' of fcms. Via mean or median.
+#'
+#' @details Add details here
+#'
+#' @param fcm_list A list type object of fcms. Must have a length greater
+#' than 1.
+#' @param aggregation_fun "mean" or "median"
+#' @param IDs A list of names for each node (must have n items)
+#'
+#' @return A single fcm calculated as the aggregate of the input adjacency matrices
+#' @export
+aggregate_fcm <- function(adj_matrices = list(), aggregation_fun = "mean", IDs = c()) {
+  # error checks ----
+  concepts_in_fcms <- lapply(adj_matrices, function(x) get_node_IDs_from_input(x, IDs))
+  all_fcms_have_same_concepts <- length(unique(concepts_in_fcms)) == 1
+  if (!all_fcms_have_same_concepts) {
+    stop("All adjacency matrices must have the same concepts.")
+  }
+
+  dimensions_of_input_adj_matrices <- lapply(adj_matrices, dim)
+  all_fcms_have_same_dimensions <- length(unique(dimensions_of_input_adj_matrices)) == 1
+  if (!all_fcms_have_same_dimensions) {
+    stop("All adjacency matrices must have the same dimensions (n x n) throughout the entire list")
+  }
+
+  # Check that adj_matrices are correct format
+  lapply(adj_matrices, function(x) fcm(x, IDs))
+
+  # function ----
+  node_names <- unlist(unique(concepts_in_fcms))
+  n_nodes <- length(node_names)
+  n_maps <- length(fcm_list)
+
+  if (aggregation_fun == "mean") {
+    aggregate_adj_matrix <- apply(
+      array(unlist(adj_matrices), c(n_nodes, n_nodes, n_maps)), 1:2,
+      function(x) mean(x, na.rm = TRUE)
+    )
+  } else if (aggregation_fun == "median") {
+    aggregate_adj_matrix <- apply(
+      array(unlist(adj_matrices), c(n_nodes, n_nodes, n_maps)), 1:2,
+      function(x) stats::median(x, na.rm = TRUE)
+    )
+  }
+
+  colnames(aggregate_adj_matrix) <- node_names
+  rownames(aggregate_adj_matrix) <- node_names
+
+  structure(
+    .Data = list(
+      adj_matrix = as.data.frame(aggregate_adj_matrix),
+      params = list(
+        input_adj_matrices = adj_matrices,
+        aggregation_fun = aggregation_fun,
+        IDs = IDs
+      )
+    ),
+    class = "aggregate"
+  )
+}
+
