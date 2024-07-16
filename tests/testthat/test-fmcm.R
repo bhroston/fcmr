@@ -1,6 +1,6 @@
 
 test_that("confer_fmcm works with get_means_of_fmcm_inference plot", {
-  adj_matrix <- adj_matrix <- data.frame(
+  mode_adj_matrix <- adj_matrix <- data.frame(
     "A" = c(0, 0, 0, 0),
     "B" = c(0.5, 0, 0, 0.5),
     "C" = c(0, 0.5, 0, 0),
@@ -31,8 +31,10 @@ test_that("confer_fmcm works with get_means_of_fmcm_inference plot", {
   show_progress = TRUE
 
   n_simulations <- 100
-  uniform_fmcm_models <- build_fmcm_models(adj_matrix, n_sims = n_simulations, distribution = "uniform", lower_adj_matrix = lower_adj_matrix, upper_adj_matrix = upper_adj_matrix)
-  triangular_fmcm_models <- build_fmcm_models(adj_matrix, n_sims = n_simulations, distribution = "triangular", lower_adj_matrix = lower_adj_matrix, upper_adj_matrix = upper_adj_matrix, mode_adj_matrix = adj_matrix)
+
+  test_grey_adj_matrix <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix, upper_adj_matrix)
+  uniform_fmcm_models <- build_fmcm_models_from_grey_adj_matrix(test_grey_adj_matrix, distribution = "uniform", n_sims = n_simulations)
+  triangular_fmcm_models <- build_fmcm_models_from_grey_adj_matrix(test_grey_adj_matrix, mode_adj_matrix, distribution = "triangular", n_sims = n_simulations)
 
   test_confer_fmcm <- confer_fmcm(uniform_fmcm_models, initial_state_vector, clamping_vector, activation = "kosko", squashing = "tanh",
                lambda = 0.5, max_iter = 100, parallel = TRUE, n_cores = 2, show_progress = TRUE, include_simulations_in_output = TRUE)
@@ -58,13 +60,7 @@ test_that("confer_fmcm works with get_means_of_fmcm_inference plot", {
 })
 
 
-test_that("build_fmcm_models works", {
-  edgelist_test <- data.frame(
-    source = c("A", "B"),
-    target = c("B", "C"),
-    weight = c(0.4, 0.6)
-  )
-
+test_that("build_fmcm_models_from_grey_adj_matrix works", {
   edgelist_lower <- data.frame(
     source = c("A", "B"),
     target = c("B", "C"),
@@ -83,52 +79,45 @@ test_that("build_fmcm_models works", {
     weight = c(0.5, 0.5)
   )
 
-  test_adj_matrix <- get_adj_matrix_from_edgelist(edgelist_test)
   l_adj_matrix <- get_adj_matrix_from_edgelist(edgelist_lower)
   u_adj_matrix <- get_adj_matrix_from_edgelist(edgelist_upper)
   m_adj_matrix <- get_adj_matrix_from_edgelist(edgelist_mode)
 
-  # Accept if additional_inputs is a list
-  expect_no_error(build_fmcm_models(test_adj_matrix, ... = list(lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix)))
+  test_grey_adj_matrix <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(l_adj_matrix, u_adj_matrix)
 
-  # Throws error when additional inputs do not have matching dims
-  expect_error(build_fmcm_models(test_adj_matrix, upper_adj_matrix = u_adj_matrix, lower_adj_matrix = matrix(data = NA, nrow = 5, ncol = 5)))
+  # Throws error when grey_adj_matrix and mode_adj_matrix do not have matching dims
+  expect_error(build_fmcm_models_from_grey_adj_matrix(test_grey_adj_matrix, matrix(data = 1, nrow = 5, ncol = 5)))
   # Throws error when additional inputs have incorrect edge data
-  expect_error(build_fmcm_models(test_adj_matrix, upper_adj_matrix = u_adj_matrix, lower_adj_matrix = u_adj_matrix + 0.2))
+  expect_error(build_fmcm_models_from_grey_adj_matrix(test_grey_adj_matrix, m_adj_matrix + 0.2))
+  # Throws error when mode_adj_matrix values are outside the bounds of grey_adj_matrix values
+  incorrect_mode_adj_matrix <- m_adj_matrix
+  incorrect_mode_adj_matrix[1, 2] <- 1
+  expect_error(build_fmcm_models_from_grey_adj_matrix(test_grey_adj_matrix, incorrect_mode_adj_matrix, distribution = "triangular"))
 
   # IF distribution == "uniform"
-  # Throws error when lower_adj_matrix and upper_adj_matrix inputs not given
-  expect_error(build_fmcm_models(test_adj_matrix, l = l_adj_matrix, u = u_adj_matrix))
-  # Throws error when values in lower_adj_matrix are greater than values in upper_adj_matrix
-  expect_error(build_fmcm_models(test_adj_matrix, lower_adj_matrix = u_adj_matrix, upper_adj_matrix = l_adj_matrix))
-  # Throws error if too many additional inputs present
-  expect_error(build_fmcm_models(test_adj_matrix, lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix, mode_adj_matrix = m_adj_matrix))
+  # Throws error when grey_adj_matrix input not given
+  expect_error(build_fmcm_models_from_grey_adj_matrix())
+  expect_warning(build_fmcm_models_from_grey_adj_matrix(test_grey_adj_matrix, m_adj_matrix, distribution = "uniform"))
 
-  uniform_fmcm_models <- build_fmcm_models(test_adj_matrix, lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix)
-  expect_equal(unique(dim(test_adj_matrix)), unique(unlist(lapply(uniform_fmcm_models, function(model) unique(dim(model))))))
+  uniform_fmcm_models <- build_fmcm_models_from_grey_adj_matrix(test_grey_adj_matrix)
+  expect_equal(unique(dim(test_grey_adj_matrix)), unique(unlist(lapply(uniform_fmcm_models, function(model) unique(dim(model))))))
   expect_equal(length(uniform_fmcm_models), 100)
   # Visual check
   # hist(unlist(lapply(uniform_fmcm_models, function(model) model[model != 0] [1])))
   # hist(unlist(lapply(uniform_fmcm_models, function(model) model[model != 0] [2])))
 
   # IF distribution == "triangular"
-  # Throws error when lower_adj_matrix and upper_adj_matrix inputs not given
-  expect_error(build_fmcm_models(test_adj_matrix, distribution = "triangular", lower_adj_matrix = l_adj_matrix, u = u_adj_matrix))
   # Throws warning when no mode_adj_matrix input given
-  expect_warning(build_fmcm_models(test_adj_matrix, distribution = "triangular", lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix))
-  # Throws error when values in lower_adj_matrix are less than values in mode_adj_matrix
-  expect_error(build_fmcm_models(test_adj_matrix, distribution = "triangular", lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix, mode_adj_matrix = m_adj_matrix*0.01))
-  # Throws error when values in upper_adj_matrix are greater than values in mode_adj_matrix
-  expect_error(build_fmcm_models(test_adj_matrix, distribution = "triangular", lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix, mode_adj_matrix = m_adj_matrix*2))
+  expect_warning(build_fmcm_models_from_grey_adj_matrix(test_grey_adj_matrix, distribution = "triangular"))
 
-  triangular_fmcm_models <- build_fmcm_models(test_adj_matrix, distribution = "triangular", lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix, mode_adj_matrix = m_adj_matrix)
-  expect_equal(unique(dim(test_adj_matrix)), unique(unlist(lapply(triangular_fmcm_models, function(model) unique(dim(model))))))
+  triangular_fmcm_models <- build_fmcm_models_from_grey_adj_matrix(test_grey_adj_matrix, m_adj_matrix, distribution = "triangular")
+  expect_equal(unique(dim(test_grey_adj_matrix)), unique(unlist(lapply(triangular_fmcm_models, function(model) unique(dim(model))))))
   expect_equal(length(triangular_fmcm_models), 100)
   # Visual check
   # hist(unlist(lapply(triangular_fmcm_models, function(model) model[model != 0] [1])))
   # hist(unlist(lapply(triangular_fmcm_models, function(model) model[model != 0] [2])))
 
-  triangular_fmcm_models_upper_skew <- build_fmcm_models(test_adj_matrix, distribution = "triangular", lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix, mode_adj_matrix = u_adj_matrix*0.9)
+  triangular_fmcm_models_upper_skew <- build_fmcm_models_from_grey_adj_matrix(test_grey_adj_matrix, m_adj_matrix*1.5, distribution = "triangular")
   # hist(unlist(lapply(triangular_fmcm_models_upper_skew, function(model) model[model != 0] [1])))
   # hist(unlist(lapply(triangular_fmcm_models_upper_skew, function(model) model[model != 0] [2])))
 })
@@ -226,7 +215,9 @@ test_that("get_means_of_fmcm_inference", {
   initial_state_vector <- c(1, 1, 1, 1)
   clamping_vector <- c(1, 0, 0, 0)
 
-  uniform_fmcm_models <- build_fmcm_models(adj_matrix, n_sims = 1000, distribution = "uniform", lower_adj_matrix = lower_adj_matrix, upper_adj_matrix = upper_adj_matrix)
+  test_grey_adj_matrix <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix, upper_adj_matrix)
+  uniform_fmcm_models <- build_fmcm_models_from_grey_adj_matrix(test_grey_adj_matrix, distribution = "uniform", n_sims = 1000)
+
   # simulated_adj_matrices = uniform_fmcm_models
 
   test_confer_fmcm <- confer_fmcm(uniform_fmcm_models, initial_state_vector, clamping_vector, activation = "kosko", squashing = "sigmoid",
@@ -324,7 +315,9 @@ test_that("get_quantiles_of_simulated_values_across_iters works", {
     "D" = c(0, 0, 0.75, 0)
   )
 
-  test_fmcm_models <- build_fmcm_models(test_adj_matrix, n_sims = 1000, lower_adj_matrix = l_adj_matrix, upper_adj_matrix = u_adj_matrix)
+  test_grey_adj_matrix <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(l_adj_matrix, u_adj_matrix)
+  test_fmcm_models <- build_fmcm_models_from_grey_adj_matrix(test_grey_adj_matrix, distribution = "uniform", n_sims = 1000)
+
   test_confer_fmcm <-  confer_fmcm(
     test_fmcm_models, initial_state_vector = c(1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0),
     activation = "kosko", squashing = "tanh", lambda = 1,
@@ -363,77 +356,3 @@ test_that("get_triangular_distribution_of_values works", {
   # Perform visual check
   # hist(test_tri_dist)
 })
-
-
-test_that("get_beta_distribution_of_values works", {
-  expect_no_error(get_beta_distribution_of_values(mu = 0.5, sd = 0.1, n = 100))
-  expect_error(get_beta_distribution_of_values(mu = 2, sd = 0.1))
-  expect_error(get_beta_distribution_of_values(mu = 0.5, sd = 6))
-
-  # Perform visual check
-  # test_beta_dist <- get_beta_distribution_of_values(mu = 0.5, sd = 0.1, n = 10000)
-  # hist(test_beta_dist)
-})
-
-
-
-
-#
-# test_quantiles <- get_quantiles_of_simulated_values_across_iters(test$inference_state_vectors_by_sim, get_bootstrapped_means = TRUE, bootstrap_reps = 100, bootstrap_samples_per_rep = 100)
-#
-# apply(min, 2, test$inference)
-#
-# tidyr::pivot_longer(apply(test$inference, 2, min), 1:4)
-#
-# nodes <- colnames(test$inference)
-# plotting_data <- list(
-#   min_values = data.frame(
-#     node = nodes,
-#     value = apply(test$inference, 2, min, simplify = TRUE)
-#   ),
-#   max_values = data.frame(
-#     node = nodes,
-#     value = apply(test$inference, 2, max, simplify = TRUE)
-#   ),
-#   quantiles = data.frame(
-#     node = nodes,
-#     upper_quantile = unlist(lapply(test_quantiles, function(x) x[1])),
-#     lower_quantile = unlist(lapply(test_quantiles, function(x) x[2]))
-#   )
-# )
-#
-# plotting_data$min_values <- plotting_data$min_values[plotting_data$min_values$value != 1, ]
-# plotting_data$max_values <- plotting_data$max_values[plotting_data$max_values$value != 1, ]
-# plotting_data$quantiles <- plotting_data$quantiles[plotting_data$quantiles$upper_quantile != 1, ]
-#
-# ggplot() +
-#   geom_bar(data = plotting_data$max_values, aes(x = node, y = value), stat = "identity", fill = "grey") +
-#   geom_bar(data = plotting_data$min_values, aes(x = node, y = value), stat = "identity", fill = "white") +
-#   geom_errorbar(data = plotting_data$quantiles,
-#                 aes(x = node, ymin = lower_quantile, ymax = lower_quantile), color = "red", linetype = 2) +
-#   geom_errorbar(data = plotting_data$quantiles,
-#                 aes(x = node, ymin = upper_quantile, ymax = upper_quantile), color = "red", linetype = 2) +
-#   geom_text(data = plotting_data$quantiles, aes(x = node, y = lower_quantile - 0.025, label = round(lower_quantile, 2))) +
-#   geom_text(data = plotting_data$quantiles, aes(x = node, y = upper_quantile + 0.025, label = round(upper_quantile, 2))) +
-#   theme_classic()
-#
-#
-# geom_bar(aes(x = node, y = min()), stat = "identity", fill = "white")
-#
-# geom_boxplot(aes(x = node, y = value), color = "white")
-#
-#
-# geom_bar(aes(x = node, y = lower_value), stat = "identity", fill = "white") +
-#   geom_crossbar(aes(x = node, y = lower_value, ymin = lower_value, ymax = upper_value), color = "red", fill = "red") +
-#   geom_text(aes(x = node, y = lower_value - 0.05, label = round(lower_value, 2))) +
-#   geom_text(aes(x = node, y = upper_value + 0.05, label = round(upper_value, 2))) +
-#   theme_classic()
-#
-#
-# uniform_fmcm_models <- build_fmcm_models(adj_matrix, n_sims = 100, distribution = "uniform", lower_adj_matrix = lower_adj_matrix, upper_adj_matrix = upper_adj_matrix)
-# simulated_adj_matrices <- uniform_fmcm_models
-# test_uniform_sims_kosko_tanh <- simulate_fmcm_models(
-#   uniform_fmcm_models, initial_state_vector, clamping_vector,
-#   activation = "kosko", squashing = "tanh", lambda = 1,
-#   max_iter = 1000, parallel = FALSE
-# )

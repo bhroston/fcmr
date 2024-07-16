@@ -504,7 +504,7 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
 
 
 
-#' build_fmcm_models
+#' build_fmcm_models_from_grey_adj_matrix
 #'
 #' @description
 #' This function generates n fcm models whose edge weights are sampled from the
@@ -516,189 +516,142 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
 #'
 #' Use vignette("fmcm-class") for more information.
 #'
-#' @param adj_matrix An n x n adjacency matrix that represents the edge weights
+#' @param grey_adj_matrix An n x n grey adjacency matrix that represents the edge weights
 #' of an FCM
-#' @param IDs A list of names for each node (must have n items)
+#' @param mode_adj_matrix An n x n adjacency matrix that represents the mode of the
+#' distribution of edge weights for each edge represented in the grey_adj_matrix
 #' @param n_sims The number of simulated fcm's to generate
 #' @param parallel TRUE/FALSE Whether to utilize parallel processing
 #' @param distribution A statistical distribution to draw random samples from.
 #' Must be one of the following: 'uniform', 'gaussian', 'beta', or 'triangular'
 #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 #' from the pbapply package as the underlying function.
-#' @param ... Additional adj_matrix objects whose weights describe shape parameters
-#' of the chosen distribution.
-#' IF distribution = "uniform", must include: lower_adj_matrix and upper_adj_matrix objects
-#' IF distribution = "gaussian", must include: sd_adj_matrix
-#' IF distribution = "beta", must include: sd_adj_matrix
-#' IF distribution = "triangular", must include: lower_adj_matrix, upper_adj_matrix, and mode_adj_matrix objects
-#'  Note: if no mode_adj_matrix given, will assume its values are the average of the lower and upper adj_matrix objects.
+#' @param IDs A list of names for each node (must have n items)
 #'
 #' @export
-build_fmcm_models <- function(adj_matrix = matrix(),
-                              IDs = c(),
-                              n_sims = 100,
-                              parallel = TRUE,
-                              distribution = "uniform", # Also accepts "gaussian", "beta", and triangular
-                              show_progress = TRUE,
-                              ...) {
-  # Validate parameter adj_matrix inputs
-  additional_inputs <- list(...)
-  if (identical(names(additional_inputs), "...")) additional_inputs <- additional_inputs[[1]] # if ... = list() as input
-  names_of_additional_inputs <- names(additional_inputs)
+build_fmcm_models_from_grey_adj_matrix <- function(grey_adj_matrix = matrix(),
+                                                   mode_adj_matrix = matrix(),
+                                                   n_sims = 100,
+                                                   parallel = TRUE,
+                                                   distribution = "uniform", # Also accepts "gaussian", and triangular
+                                                   show_progress = TRUE,
+                                                   IDs = c()) {
 
-  additional_inputs_have_correct_dims <- unlist(lapply(additional_inputs, function(input) unique(dim(input)) == unique(dim(adj_matrix))))
-  if (!all(additional_inputs_have_correct_dims)) {
-    stop("all additional input adjacency matrices must have the same dimensions as the input adj_matrix object")
+  grey_adj_matrix_given <- !identical(grey_adj_matrix, matrix())
+  mode_adj_matrix_given <- !identical(mode_adj_matrix, matrix())
+
+  grey_adj_matrix_lower_values <- apply(grey_adj_matrix, c(1, 2), function(x) ifelse(class(x[[1]]) == "grey_number", x[[1]]$lower, x[[1]]))
+  grey_adj_matrix_upper_values <- apply(grey_adj_matrix, c(1, 2), function(x) ifelse(class(x[[1]]) == "grey_number", x[[1]]$upper, x[[1]]))
+
+  if (!grey_adj_matrix_given) {
+    stop("Input grey_adj_matrix is required.")
   }
 
-  additional_inputs_have_correct_edges <- unlist(lapply(additional_inputs, function(input) identical(which(input == 0), which(adj_matrix == 0))))
-  if (!all(additional_inputs_have_correct_edges)) {
-    stop("all additional input adjacency matrices must have the same edges as the input adj_matrix (i.e. values
-         in the same locations in the adjacency matrix")
+  data_classes_in_grey_adj_matrix_input <- unique(array(apply(grey_adj_matrix, c(1, 2), function(x) class(x[[1]]))))
+  if (!("grey_number" %in% data_classes_in_grey_adj_matrix_input)) {
+    stop("Input grey_adj_matrix must contain grey_number (and/or numeric for 0's) type objects")
+  }
+  if (!all(data_classes_in_grey_adj_matrix_input %in% c("grey_number", "numeric"))) {
+    stop("Input grey_adj_matrix must contain only grey_number (and/or numeric for 0's) type objects")
   }
 
-  # Confirm packages necessary packages are available. If not, change run options
-  if (parallel) {
-    if (!requireNamespace("parallel")) {
-      parallel <- FALSE
-      warning("Parallel processing requires the 'parallel' package which is
-              currently not installed. Running without parallel processing.")
-    }
-    if (show_progress) {
-      if (!requireNamespace("doSNOW")) {
-        show_progress <- FALSE
-        warning("Showing progress with parallel processing requires the 'doSNOW' package which is
-              currently not installed. Running in parallel but without showing progress.")
-      }
-      if (!requireNamespace("foreach")) {
-        show_progress <- FALSE
-        warning("Showing progress with parallel processing requires the 'foreach' package which is
-              currently not installed. Running in parallel but without showing progress.")
-      }
-    }
-  }
-  if (!parallel) {
-    if (show_progress) {
-      if (!requireNamespace("pbapply")) {
-        show_progress <- FALSE
-        warning("Showing progress requires the 'pbapply' package which is
-              currently not installed. Running without showing progress.")
-      }
-    }
+  data_classes_in_mode_adj_matrix_input <- unique(array(apply(mode_adj_matrix, c(1, 2), function(x) class(x[[1]]))))
+  if (mode_adj_matrix_given & !all(data_classes_in_mode_adj_matrix_input == "numeric")) {
+    stop("Input mode_adj_matrix can only contain numeric data types (i.e. no grey numbers)")
   }
 
-  node_order <- colnames(adj_matrix)
+  grey_adj_matrix_dims <- dim(grey_adj_matrix)
+  mode_adj_matrix_dims <- dim(mode_adj_matrix)
+  if (mode_adj_matrix_given & !identical(grey_adj_matrix_dims, mode_adj_matrix_dims)) {
+    stop("Inputs grey_adj_matrix and mode_adj_matrix must have the same dimensions (n x n)")
+  }
+
+  grey_adj_matrix_edge_indexes <- which(apply(grey_adj_matrix, c(1, 2), function(x) !identical(x[[1]], 0)), arr.ind = TRUE, useNames = FALSE)
+  mode_adj_matrix_edge_indexes <- which(mode_adj_matrix != 0, arr.ind = TRUE, useNames = FALSE)
+  if (mode_adj_matrix_given & !identical(grey_adj_matrix_edge_indexes, mode_adj_matrix_edge_indexes)) {
+    stop(
+      "\t    Inputs grey_adj_matrix and mode_adj_matrix must have values in the same positions (i.e. they must
+      represent fuzzy cognitive maps with the same connections (but potentially different weights) between concepts"
+    )
+  }
+
+  if (mode_adj_matrix_given & distribution == "uniform") {
+    warning("\t    Sampling from a uniform distribution does not require the input
+            mode_adj_matrix. Ignoring input mode_adj_matrix.")
+  }
+  if (!mode_adj_matrix_given & distribution == "triangular") {
+    warning("\t    Sampling from a triangular distribution requires the input
+            mode_adj_matrix, but no mode_adj_matrix given.
+            Assuming average values of grey_adj_matrix for mode_adj_matrix.")
+    mode_adj_matrix <- (grey_adj_matrix_lower_values + grey_adj_matrix_upper_values)/2
+  }
+
+  if (mode_adj_matrix_given & distribution == "triangular") {
+    mapply(
+      function(mode_value, lower_value, upper_value) {
+        if (mode_value < lower_value | mode_value > upper_value) {
+          stop("\t     All values in input mode_adj_matrix must be within the range
+             specified by the corresponding grey number values in input
+             grey_adj_matrix.")
+        } else {
+          TRUE
+        }
+      },
+      mode_value <- unlist(mode_adj_matrix),
+      lower_value <- unlist(grey_adj_matrix_lower_values),
+      upper_value <- unlist(grey_adj_matrix_upper_values)
+    )
+  }
+
+  parallel_and_progress_bar_packages_availability <- check_if_local_machine_has_parallel_processing_packages(parallel, show_progress)
+  parallel <- parallel_and_progress_bar_packages_availability$parallel_check
+  show_progress <- parallel_and_progress_bar_packages_availability$show_progress_check
+
+  node_order <- colnames(grey_adj_matrix)
 
   if (distribution == "uniform") {
     # UNIFORM
-    uniform_inputs_given <- all((c("lower_adj_matrix", "upper_adj_matrix") %in% names_of_additional_inputs))
-    if (!uniform_inputs_given) {
-      stop("Additional inputs missing for 'uniform' distribution.
-        Must include: lower_adj_matrix and upper_adj_matrix objects")
-    }
-    if (length(additional_inputs) > 2) {
-      stop("Too many additional inputs given. Only lower_adj_matrix and upper_adj_matrix needed for UNIFORM distribution fmcm")
-    }
-    lower <- additional_inputs$lower_adj_matrix
-    upper <- additional_inputs$upper_adj_matrix
-    if (any(lower[lower != 0] > upper[upper != 0])) {
-      stop("all values in lower_adj_matrix must be less than their counterparts in upper_adj_matrix for a UNIFORM distribution")
-    }
-    fmcm_data <- fmcm(adj_matrix, IDs, distribution,
-                      "lower_adj_matrix" = lower,
-                      "upper_adj_matrix" = upper)
-    edgelist <- fmcm_data$edgelist
+    grey_edgelist <- get_edgelist_from_grey_adj_matrix(grey_adj_matrix)
     if (show_progress) {
       print("Building models", quote = FALSE)
-      edgelist$dist <- pbapply::pbmapply(function(lower, upper) stats::runif(n = n_sims, min = lower, max = upper),
-                                         lower = edgelist$lower, upper = edgelist$upper,
+      grey_edgelist$dist <- pbapply::pbmapply(function(lower, upper) stats::runif(n = n_sims, min = lower, max = upper),
+                                         lower = grey_edgelist$weight_lower, upper = grey_edgelist$weight_upper,
                                          SIMPLIFY = FALSE)
     } else {
-      edgelist$dist <- mapply(function(lower, upper) stats::runif(n = n_sims, min = lower, max = upper),
-                              lower = edgelist$lower, upper = edgelist$upper,
-                              SIMPLIFY = FALSE)
-    }
-  } else if (distribution == "beta") {
-    # BETA
-    beta_input_given <- "sd_adj_matrix" %in% names_of_additional_inputs
-    if (!beta_input_given) {
-      stop("Additional inputs missing for 'beta' distribution.
-        Must include: sd_adj_matrix object")
-    }
-    if (length(additional_inputs) > 1) {
-      stop("Too many additional inputs given. Only sd_adj_matrix needed for BETA distribution fmcm")
-    }
-    sd_values <- additional_inputs$sd_adj_matrix
-    if (any(sd_values[sd_values != 0] < 0 | sd_values[sd_values != 0] > 0.5)) {
-      stop("all values in sd_adj_matrix must be between 0 and +0.5 for a BETA distribution")
-    }
-    fmcm_data <- fmcm(adj_matrix, IDs, distribution,
-                      "sd_adj_matrix" = additional_inputs$sd_adj_matrix)
-    edgelist <- fmcm_data$edgelist
-    if (show_progress) {
-      print("Building models", quote = FALSE)
-      edgelist$dist <- pbapply::pbmapply(function(mu, sd) get_beta_distribution_of_values(mu = mu, sd = sd, n = n_sims),
-                                         mu = edgelist$weight, sd = edgelist$sd,
-                                         SIMPLIFY = FALSE)
-    } else {
-      edgelist$dist <- mapply(function(mu, sd) get_beta_distribution_of_values(mu = mu, sd = sd, n = n_sims),
-                              mu = edgelist$weight, sd = edgelist$sd,
+      grey_edgelist$dist <- mapply(function(lower, upper) stats::runif(n = n_sims, min = lower, max = upper),
+                              lower = grey_edgelist$weight_lower, upper = grey_edgelist$weight_upper,
                               SIMPLIFY = FALSE)
     }
   } else if (distribution == "triangular") {
     # TRIANGULAR
-    triangular_input_given_w_mode <- all((c("lower_adj_matrix", "upper_adj_matrix", "mode_adj_matrix") %in% names_of_additional_inputs))
-    triangular_input_given_wo_mode <- all((c("lower_adj_matrix", "upper_adj_matrix") %in% names_of_additional_inputs)) & !("mode_adj_matrix" %in% names_of_additional_inputs)
-    if (!(triangular_input_given_w_mode | triangular_input_given_wo_mode)) {
-      stop("Additional inputs missing for 'uniform' distribution.
-        Must include: lower_adj_matrix and upper_adj_matrix objects.
-        Note: if no mode_adj_matrix given, will assume its values are the average of the lower and upper adj_matrix objects.")
-    }
-    if (triangular_input_given_wo_mode) {
-      additional_inputs$mode_adj_matrix <- adj_matrix
-      warning("No input mode_adj_matrix given. Using adj_matrix as mode_adj_matrix.")
-    }
-    if (length(additional_inputs) > 3) {
-      stop("Too many additional inputs given. Only lower_adj_matrix, upper_adj_matrix, and mode_adj_matrix needed for TRIANGULAR distribution fmcm")
-    }
-    lower <- additional_inputs$lower_adj_matrix
-    upper <- additional_inputs$upper_adj_matrix
-    mode_values <- additional_inputs$mode_adj_matrix
-    if (any(lower > upper)) {
-      stop("all values in lower_adj_matrix must be less than their counterparts in upper_adj_matrix for a TRIANGULAR distribution")
-    }
-    if (any((any(lower > mode_values) | any(upper < mode_values)))) {
-      stop("all values in mode_adj_matrix must be between their counterparts in lower_adj_matrix and upper_adj_matrix for a TRIANGULAR distribution")
-    }
-    fmcm_data <- fmcm(adj_matrix, IDs, distribution,
-                      "lower_adj_matrix" = additional_inputs$lower_adj_matrix,
-                      "upper_adj_matrix" = additional_inputs$upper_adj_matrix,
-                      "mode_adj_matrix" = additional_inputs$mode_adj_matrix)
-    edgelist <- fmcm_data$edgelist
+    grey_edgelist <- get_edgelist_from_grey_adj_matrix(grey_adj_matrix)
+    mode_edgelist <- get_edgelist_from_adj_matrix(mode_adj_matrix)
+    colnames(mode_edgelist) <- c("source", "target", "weight_mode")
+    grey_edgelist <- merge(grey_edgelist, mode_edgelist, by = c("source", "target"))
     if (show_progress) {
       print("Building models", quote = FALSE)
-      edgelist$dist <- pbapply::pbmapply(function(lower, upper, mode) get_triangular_distribution_of_values(lower = lower, upper = upper, mode = mode, n_sims),
-                                         lower = edgelist$lower, upper = edgelist$upper, mode = edgelist$mode,
+      grey_edgelist$dist <- pbapply::pbmapply(function(lower, upper, mode) get_triangular_distribution_of_values(lower = lower, upper = upper, mode = mode, n_sims),
+                                         lower = grey_edgelist$weight_lower, upper = grey_edgelist$weight_upper, mode = grey_edgelist$weight_mode,
                                          SIMPLIFY = FALSE)
     } else {
-      edgelist$dist <- mapply(function(lower, upper, mode) get_triangular_distribution_of_values(lower = lower, upper = upper, mode = mode, n_sims),
-                              lower = edgelist$lower, upper = edgelist$upper, mode = edgelist$mode,
+      grey_edgelist$dist <- mapply(function(lower, upper, mode) get_triangular_distribution_of_values(lower = lower, upper = upper, mode = mode, n_sims),
+                              lower = grey_edgelist$weight_lower, upper = grey_edgelist$weight_upper, mode = grey_edgelist$weight_mode,
                               SIMPLIFY = FALSE)
     }
   } else {
     # FINAL CHECK STOP
     stop("Invalid distribution input. Must be one of the following:
-         'uniform', 'beta', or 'triangular'")
+         'uniform', or 'triangular'")
   }
 
   # Generate adjacency matrices from sampled distributions
-  blank_weight_edgelist <- edgelist[c("source", "target")]
+  blank_weight_edgelist <- grey_edgelist[c("source", "target")]
   simulated_edgelists <- rep(list(blank_weight_edgelist), n_sims)
   if (show_progress) {
     print("Adding edge weights to models", quote = FALSE)
     pb <- utils::txtProgressBar(min = 0, max = length(simulated_edgelists), initial = 0, width = 50, char = "+", style = 3)
     for (i in seq_along(simulated_edgelists)) {
-      simulated_edgelists[[i]]$weight <- unlist(lapply(edgelist$dist, function(dist) dist[i]))
+      simulated_edgelists[[i]]$weight <- unlist(lapply(grey_edgelist$dist, function(dist) dist[i]))
       utils::setTxtProgressBar(pb, i)
     }
     close(pb)
@@ -706,7 +659,7 @@ build_fmcm_models <- function(adj_matrix = matrix(),
     simulated_adj_matrices <- pbapply::pblapply(simulated_edgelists, function(edgelist) get_adj_matrix_from_edgelist(edgelist, node_order = node_order))
   } else {
     for (i in seq_along(simulated_edgelists)) {
-      simulated_edgelists[[i]]$weight <- unlist(lapply(edgelist$dist, function(dist) dist[i]))
+      simulated_edgelists[[i]]$weight <- unlist(lapply(grey_edgelist$dist, function(dist) dist[i]))
     }
     # Given an edgelist, get_adj_matrix_from_edgelist returns an adjacency matrix
     # whose column and rows are organized alphabetically rather than in accordance
@@ -958,122 +911,3 @@ get_triangular_distribution_of_values <- function(lower = double(), upper = doub
   values_distribution
 }
 
-
-#' #' get_state_vectors_by_iter_from_fmcm_sims
-#' #'
-#' #' @description
-#' #' This outputs simulation results at a specific or all iters
-#' #'
-#' #' @details
-#' #' This function is designed to streamline the process of getting a distribution
-#' #' of values at a specific iter to create histograms or perform bootstrap sampling
-#' #' operations to estimate confidence boundes.
-#' #'
-#' #' Use vignette("fmcm-class") for more information.
-#' #'
-#' #' @param state_vectors_by_sim Output from simulate_fmcm_models, represents results across
-#' #' each simulated fcm
-#' #' @param iter The iteration at which to return a distribution of values i.e. get
-#' #' values at iteration 'iter'. If no value is given, returns distributions of values across
-#' #' each iter in the data set
-#' #'
-#' #' @export
-#' get_state_vectors_by_iter_from_fmcm_sims <- function(state_vectors_by_sim, iter = integer()) {
-#'   #state_vectors_by_sim <- lapply(fmcm_simulation, function(model) model$state_vectors)
-#'   for (i in seq_along(state_vectors_by_sim)) {
-#'     state_vectors_by_sim[[i]] <- cbind(sim = i, state_vectors_by_sim[[i]])
-#'   }
-#'
-#'   state_vectors_by_sim_df <- data.frame(do.call(rbind, state_vectors_by_sim))
-#'
-#'   if (identical(iter, integer())) {
-#'     iter_index <- unique(state_vectors_by_sim_df$iter)
-#'     state_vectors_by_iter <- vector(mode = "list", length = length(iter_index))
-#'     names(state_vectors_by_iter) <- paste0("iter_", iter_index)
-#'     for (i in seq_along(iter_index)) {
-#'       state_vectors_by_iter[[i]] <- state_vectors_by_sim_df[state_vectors_by_sim_df$iter == i - 1, ]
-#'     }
-#'   } else {
-#'     state_vectors_by_iter <- state_vectors_by_sim_df[state_vectors_by_sim_df$iter == iter, ]
-#'   }
-#'
-#'   return(state_vectors_by_iter)
-#' }
-#'
-#'
-#' #' #' get_quantile_of_fmcm_state_vectors_at_iter
-#' #'
-#' #' @description
-#' #' This gets the user-input quantile of the distribution of simulated values
-#' #' across a given iter, or all iters
-#' #'
-#' #' @details
-#' #' This function is designed to streamline the process of getting the custom quantiles
-#' #' of a distribution of simulated values across an individual iteration.
-#' #'
-#' #' Use vignette("fmcm-class") for more information.
-#' #'
-#' #' @param fmcm_state_vectors_by_iter Output of get_simulated_values_across_iters
-#' #' @param quantile The quantile to return. see ?quantile() for more
-#' #'
-#' #' @export
-#' get_quantile_of_fmcm_inference <- function(fmcm_inference = list(), quantile = 0.5) {
-#'
-#'
-#'   state_vector_list_is_not_by_iter <- unlist(unique((lapply(names(fmcm_state_vectors_by_iter), function(x) strsplit(x, "_")[[1]][1])))) != "iter"
-#'   state_vector_df_variables <- unlist(unique(lapply(fmcm_state_vectors_by_iter, colnames)))
-#'   sim_not_in_state_vectors_domain <- !("sim" %in% state_vector_df_variables)
-#'
-#'   if (state_vector_list_is_not_by_iter | sim_not_in_state_vectors_domain) {
-#'     stop("Input must come directly get_state_vectors_by_iter_from_fmcm_sims or
-#'         confer_fmcm. If input from confer_fmcm make sure using state_vectors_by_iter.")
-#'   }
-#'
-#'   quantile_by_iter_by_node <- lapply(
-#'     fmcm_state_vectors_by_iter,
-#'     function(state_vector) {
-#'       apply(state_vector, 2, function(state_vector_node) stats::quantile(state_vector_node, quantile))
-#'     }
-#'   )
-#'   quantile_by_iter_by_node <- data.frame(do.call(rbind, quantile_by_iter_by_node))
-#'   quantile_by_iter_by_node <- subset(quantile_by_iter_by_node, select = -c(sim))
-#'   rownames(quantile_by_iter_by_node) <- NULL
-#'
-#'   return(quantile_by_iter_by_node)
-#' }
-
-# # Get baseline simulations
-# print("Performing BASELINE simulations", quote = FALSE)
-# baseline_clamping_vector <- rep(0, length(clamping_vector))
-# baseline_simulations <- simulate_fmcm_models(simulated_adj_matrices,
-#                                               initial_state_vector, baseline_clamping_vector,
-#                                               activation, squashing, lambda,
-#                                               max_iter, min_error, lambda_optimization,
-#                                               IDs, parallel, n_cores, show_progress)
-#
-# # Get scenario simulations
-# cat("\n")
-# print("Performing SCENARIO simulations", quote = FALSE)
-# scenario_simulations <- simulate_fmcm_models(simulated_adj_matrices,
-#                                               initial_state_vector, clamping_vector,
-#                                               activation, squashing, lambda,
-#                                               max_iter, min_error, lambda_optimization,
-#                                               IDs, parallel, n_cores, show_progress)
-#
-# baseline_state_vectors <- baseline_simulations$state_vectors_by_sim_across_iters
-# scenario_state_vectors <- scenario_simulations$state_vectors_by_sim_across_iters
-#
-# plot(baseline_state_vectors$sim_8$Salinization.of.the.Occoquan.Reservoir)
-# points(scenario_state_vectors$sim_8$Salinization.of.the.Occoquan.Reservoir)
-
-
-# test <- mapply(
-#   function(baseline_states, scenario_states) {
-#     final_baseline_state <- baseline_states[nrow(baseline_states), ]
-#     final_scenario_state <- scenario_states[nrow(scenario_states), ]
-#     final_scenario_state - final_baseline_state
-#   },
-#   baseline_states = baseline_state_vectors,
-#   scenario_states = scenario_state_vectors
-# )
-# df <- data.frame(t(test))

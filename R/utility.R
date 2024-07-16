@@ -334,3 +334,59 @@ match_state_vector_df_shapes <- function(baseline_state_vectors, scenario_state_
     scenario = data.frame(new_scenario_state_vectors)
   )
 }
+
+
+#' check_if_local_machine_has_parallel_processing_packages
+#'
+#' @description
+#' Check whether the local machine has access to the necessary packages to
+#' run code in parallel and/or using a progress bar. Specifically, checks for
+#' the parallel, doSNOW, foreach, and pbapply packages.
+#'
+#' @details
+#' Confirms that a local machine can access the required packages for parallel
+#' processing and/or displaying progress bars at runtime. Will revise inputs
+#' if particular packages are unavailable and warn the user of such changes, but will
+#' not halt a run.
+#'
+#' @param use_parallel TRUE/FALSE The user intends to use parallel processing
+#' @param use_show_progress TRUE/FALSE The user intends to display progress bars
+check_if_local_machine_has_parallel_processing_packages <- function(use_parallel, use_show_progress) {
+  # Confirm packages necessary packages are available. If not, change run options
+  parallel_check <- use_parallel
+  show_progress_check <- use_show_progress
+
+  if (use_parallel) {
+    if (!requireNamespace("parallel")) {
+      parallel_check <- FALSE
+      warning("Parallel processing requires the 'parallel' package which is
+              currently not installed. Running without parallel processing.")
+    }
+    if (use_show_progress) {
+      if (!requireNamespace("doSNOW")) {
+        show_progress_check <- FALSE
+        warning("Showing progress with parallel processing requires the 'doSNOW' package which is
+              currently not installed. Running in parallel but without showing progress.")
+      }
+      if (!requireNamespace("foreach")) {
+        show_progress_check <- FALSE
+        warning("Showing progress with parallel processing requires the 'foreach' package which is
+              currently not installed. Running in parallel but without showing progress.")
+      }
+    }
+  }
+  if (!use_parallel) {
+    if (use_show_progress) {
+      if (!requireNamespace("pbapply")) {
+        show_progress_check <- FALSE
+        warning("Showing progress requires the 'pbapply' package which is
+              currently not installed. Running without showing progress.")
+      }
+    }
+  }
+
+  list(
+    parallel_check = parallel_check,
+    show_progress_check = show_progress_check
+  )
+}
