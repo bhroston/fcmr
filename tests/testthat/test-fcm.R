@@ -1,5 +1,43 @@
 
-test_that("confer_fcm works", {
+test_that("fcmconfr works", {
+  test_adj_matrix_1 <- adj_matrix <- data.frame(
+    "A" = c(0, 0, 0, 0),
+    "B" = c(1, 0, 0, 1),
+    "C" = c(0, 1, 0, 0),
+    "D" = c(0, 0, 1, 0)
+  )
+  test_adj_matrix_2 <- data.frame(
+    "A" = c(0, 0, 0, 0),
+    "B" = c(0.25, 0, 0, 0.25),
+    "C" = c(0, 0.25, 0, 0),
+    "D" = c(0, 0, 0.25, 0)
+  )
+  test_adj_matrix_3 <- data.frame(
+    "A" = c(0, 0, 0, 0),
+    "B" = c(0.75, 0, 0, 0.75),
+    "C" = c(0, 0.75, 0, 0),
+    "D" = c(0, 0, 0.75, 0)
+  )
+  test_fcms <- list(test_adj_matrix_1, test_adj_matrix_2, test_adj_matrix_3)
+
+  test_fcmconfr <- fcmconfr(
+    test_fcms, "nonparametric", samples = 1000,
+    initial_state_vector <- c(1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0),
+    activation = "kosko", squashing = "sigmoid", lambda = 1, max_iter = 100, min_error = 1e-5
+  )
+  test_fcmconfr <- fcmconfr(
+    test_fcms, "uniform", samples = 1000,
+    initial_state_vector <- c(1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0),
+    activation = "kosko", squashing = "sigmoid", lambda = 1, max_iter = 100, min_error = 1e-5
+  )
+  test_fcmconfr <- fcmconfr(
+    test_fcms, "triangular", samples = 1000,
+    initial_state_vector <- c(1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0),
+    activation = "kosko", squashing = "sigmoid", lambda = 1, max_iter = 100, min_error = 1e-5
+  )
+})
+
+test_that("infer_fcm works", {
   adj_matrix <- data.frame(
     "A" = c(0, 0, 0, 0),
     "B" = c(1, 0, 0, 1),
@@ -15,7 +53,7 @@ test_that("confer_fcm works", {
   lambda_optimization = "koutsellis"
   IDs = c()
 
-  test_confer <- confer_fcm(adj_matrix, initial_state_vector, clamping_vector, activation = "kosko",
+  test_confer <- infer_fcm(adj_matrix, initial_state_vector, clamping_vector, activation = "kosko",
              squashing = "tanh", lambda = 1, max_iter = 10000)
 
   inference_vals <- round(test_confer$inference, 1)
@@ -49,7 +87,7 @@ test_that("confer_fcm works", {
   lambda_optimization = "koutsellis"
   IDs = c()
 
-  test_confer <- confer_fcm(adj_matrix, initial_state_vector, clamping_vector, activation = "kosko",
+  test_confer <- infer_fcm(adj_matrix, initial_state_vector, clamping_vector, activation = "kosko",
                             squashing = "tanh", lambda = 1, max_iter = 1000)
 
   # plot(test_confer$scenario_simulation$state_vectors$C, ylim = c(-1, 1))

@@ -16,7 +16,7 @@ get_means_of_fmcm_inference(
 )
 }
 \arguments{
-\item{fmcm_inference}{The final values of a set of fcm simulations; also the inference of a confer_fmcm object}
+\item{fmcm_inference}{The final values of a set of fcm simulations; also the inference of a infer_fmcm object}
 
 \item{get_bootstrapped_means}{TRUE/FALSE Whether to perform bootstrap sampling to obtain
 confidence intervals for the estimation of the mean value across simulations}

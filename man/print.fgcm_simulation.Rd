@@ -12,7 +12,7 @@
 \item{...}{additional inputs}
 }
 \description{
-This improves the readability of the simulate_fgcm output
+This improves the readability of the infer_fgcm output
 }
 \details{
 Show the first two iterations of the simulation, followed by a gap, and then

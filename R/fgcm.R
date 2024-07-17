@@ -1,6 +1,6 @@
 
 
-#' simulate_fgcm
+#' infer_fgcm
 #'
 #' @description
 #' This calculates a sequence of iterations of a simulation over an fgcm object
@@ -41,7 +41,7 @@
 #' calculation steps with a minimal reduction in accuracy (https://doi.org/10.1007/978-3-030-52705-1_34)
 #'
 #' @export
-simulate_fgcm <- function(grey_adj_matrix = matrix(),
+infer_fgcm <- function(grey_adj_matrix = matrix(),
                         initial_state_vector = c(),
                         clamping_vector = c(),
                         activation = "kosko",
@@ -902,7 +902,7 @@ c.grey_number <- function(...) {
 #' print.fgcm_simulation
 #'
 #' @description
-#' This improves the readability of the simulate_fgcm output
+#' This improves the readability of the infer_fgcm output
 #'
 #' @details
 #' Show the first two iterations of the simulation, followed by a gap, and then
@@ -935,7 +935,7 @@ print.fgcm_simulation <- function(x, ...) {
       sep = "")
 }
 
-# confer_fgcm <- function(grey_adj_matrix = matrix(),
+# infer_fgcm <- function(grey_adj_matrix = matrix(),
 #                         initial_state_vector = c(),
 #                         clamping_vector = c(),
 #                         activation = "kosko",
@@ -972,14 +972,14 @@ print.fgcm_simulation <- function(x, ...) {
 #
 #   # Get baseline simulation
 #   baseline_clamping_vector <- rep(0, length(initial_state_vector))
-#   baseline_simulation <- simulate_fgcm(grey_adj_matrix,
+#   baseline_simulation <- infer_fgcm(grey_adj_matrix,
 #                                        initial_state_vector, baseline_clamping_vector,
 #                                        activation, squashing, lambda,
 #                                        max_iter, min_error,
 #                                        IDs, algorithm)
 #
 #   # Get scenario simulation
-#   scenario_simulation <- simulate_fgcm(grey_adj_matrix,
+#   scenario_simulation <- infer_fgcm(grey_adj_matrix,
 #                                        initial_state_vector, clamping_vector,
 #                                        activation, squashing, lambda,
 #                                        max_iter, min_error,
@@ -1108,7 +1108,7 @@ print.fgcm_simulation <- function(x, ...) {
 # )
 
 
-#' #' confer_fgcm
+#' #' infer_fgcm
 #' #'
 #' #' @description
 #' #' This confers with a baseline simulation of an FGCM and a scenario (scenario vector)
@@ -1150,7 +1150,7 @@ print.fgcm_simulation <- function(x, ...) {
 #' #' calculation steps with a minimal reduction in accuracy (https://doi.org/10.1007/978-3-030-52705-1_34)
 #' #'
 #' #' @export
-#' confer_fgcm <- function(grey_adj_matrix = matrix(),
+#' infer_fgcm <- function(grey_adj_matrix = matrix(),
 #'                         initial_state_vector = c(),
 #'                         clamping_vector = c(),
 #'                         activation = "kosko",
@@ -1186,7 +1186,7 @@ print.fgcm_simulation <- function(x, ...) {
 #'   }
 #'
 #'   # Get scenario simulation
-#'   scenario_simulation <- simulate_fgcm(grey_adj_matrix,
+#'   scenario_simulation <- infer_fgcm(grey_adj_matrix,
 #'                                        initial_state_vector, clamping_vector,
 #'                                        activation, squashing, lambda,
 #'                                        max_iter, min_error,

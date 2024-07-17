@@ -1,5 +1,5 @@
 
-#' confer_fmcm
+#' infer_fmcm
 #'
 #' @description
 #' This calculates a sequence of iterations of a simulation over every item in
@@ -41,7 +41,7 @@
 #' FCM. Will dramatically increase size of output if TRUE.
 #'
 #' @export
-confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
+infer_fmcm <- function(simulated_adj_matrices = list(matrix()),
                         initial_state_vector = c(),
                         clamping_vector = c(),
                         activation = "kosko",
@@ -115,7 +115,7 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
     vars <- list("simulated_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
                  "squashing", "lambda", "max_iter", "min_error",
                  "lambda_optimization", "IDs",
-                 "confer_fcm", "simulate_fcm",  "confirm_adj_matrix_is_square",
+                 "infer_fcm", "simulate_fcm",  "confirm_adj_matrix_is_square",
                  "confirm_initial_state_vector_is_compatible_with_adj_matrix",
                  "get_node_IDs_from_input", "optimize_fcm_lambda",
                  "calculate_next_fcm_state_vector", "squash")
@@ -131,7 +131,7 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
     opts <- list(progress = progress)
     fmcm_confer_results <- foreach::foreach(
       i = 1:length(simulated_adj_matrices), .options.snow = opts) %dopar% {
-        confer_fcm(
+        infer_fcm(
           adj_matrix = simulated_adj_matrices[[i]],
           initial_state_vector = initial_state_vector,
           clamping_vector = clamping_vector,
@@ -161,7 +161,7 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
     vars <- list("simulated_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
                  "squashing", "lambda", "max_iter", "min_error",
                  "lambda_optimization", "IDs",
-                 "confer_fcm", "simulate_fcm",  "confirm_adj_matrix_is_square",
+                 "infer_fcm", "simulate_fcm",  "confirm_adj_matrix_is_square",
                  "confirm_initial_state_vector_is_compatible_with_adj_matrix",
                  "get_node_IDs_from_input", "optimize_fcm_lambda",
                  "calculate_next_fcm_state_vector", "squash")
@@ -174,7 +174,7 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
       cl,
       simulated_adj_matrices,
       function(simulated_adj_matrix) {
-        confer_fcm(
+        infer_fcm(
           adj_matrix = simulated_adj_matrix,
           initial_state_vector = initial_state_vector,
           clamping_vector = clamping_vector,
@@ -196,7 +196,7 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
     fmcm_confer_results <- pbapply::pblapply(
       simulated_adj_matrices,
       function(simulated_adj_matrix) {
-        confer_fcm(
+        infer_fcm(
           adj_matrix = simulated_adj_matrix,
           initial_state_vector = initial_state_vector,
           clamping_vector = clamping_vector,
@@ -217,7 +217,7 @@ confer_fmcm <- function(simulated_adj_matrices = list(matrix()),
     fmcm_confer_results <- lapply(
       simulated_adj_matrices,
       function(simulated_adj_matrix) {
-        confer_fcm(
+        infer_fcm(
           adj_matrix = simulated_adj_matrix,
           initial_state_vector = initial_state_vector,
           clamping_vector = clamping_vector,
@@ -285,7 +285,7 @@ get_quantile_of_fmcm_inference <- function(fmcm_inference = data.frame(), quanti
   sims_in_inferences_rownames <- identical("sim", unique(unlist(lapply(strsplit(rownames(fmcm_inference), "_"), function(x) x[[1]]))))
   if (!sims_in_inferences_rownames | !identical(class(fmcm_inference), "data.frame")) {
     stop("Input must be a data frame of values observed for each node across
-    numerous simulations. They are produced by the confer_fmcm and simulate fmcm functions.")
+    numerous simulations. They are produced by the infer_fmcm and simulate fmcm functions.")
   }
   node_quantiles <- data.frame(apply(fmcm_inference, 2, function(node_sims) stats::quantile(node_sims, quantile)))
   node_quantiles
@@ -306,7 +306,7 @@ get_quantile_of_fmcm_inference <- function(fmcm_inference = data.frame(), quanti
 #'
 #' Use vignette("fmcm-class") for more information.
 #'
-#' @param fmcm_inference The final values of a set of fcm simulations; also the inference of a confer_fmcm object
+#' @param fmcm_inference The final values of a set of fcm simulations; also the inference of a infer_fmcm object
 #' @param get_bootstrapped_means TRUE/FALSE Whether to perform bootstrap sampling to obtain
 #' confidence intervals for the estimation of the mean value across simulations
 #' @param confidence_interval What are of the distribution should be bounded by the
@@ -336,7 +336,7 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
   # so it is understood that it works for simulate_fmcm objects too
   if (!identical(class(fmcm_inference), "data.frame")) {
     stop("Input fmcm_inference must be a data.frame object from the
-         output of simulate_fmcm_models (final_states_across_sims) or confer_fmcm
+         output of simulate_fmcm_models (final_states_across_sims) or infer_fmcm
          (inference)")
   }
 
