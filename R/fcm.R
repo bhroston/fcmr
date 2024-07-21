@@ -28,6 +28,10 @@
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
 #' and the simulation will stop
+#' @param bootstrap_inference_means TRUE/FALSE Whether to estimate the CIs about the mean inferences
+#' of each node via bootstrapping
+#' @param bootstrap_CI Bootstrap confidence interval
+#' @param bootstrap_reps Number of reps and draws during bootstrapping
 #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 #' from the pbapply package as the underlying function.
 #' @param parallel TRUE/FALSE Whether to utilize parallel processing
@@ -49,6 +53,9 @@ fcmconfr <- function(fcm_adj_matrices = list(matrix()),
                      lambda = 1,
                      max_iter = 100,
                      min_error = 1e-5,
+                     bootstrap_inference_means = TRUE,
+                     bootstrap_CI = 0.95,
+                     bootstrap_reps = 5000,
                      show_progress = TRUE,
                      parallel = TRUE,
                      n_cores = integer(),
@@ -71,7 +78,7 @@ fcmconfr <- function(fcm_adj_matrices = list(matrix()),
   lapply(fcm_adj_matrices, function(x) fcm(x, IDs))
 
   nodes <- unlist(unique(concepts_in_fcms))
-  sampled_adj_matrices <- build_fcmconfr_models(fcm_adj_matrices, sampling, samples, nodes, parallel, show_progress)
+  sampled_adj_matrices <- build_fcmconfr_models(fcm_adj_matrices, sampling, samples, nodes, parallel, n_cores, show_progress)
 
   fmcm_results <- infer_fmcm(
     simulated_adj_matrices = sampled_adj_matrices,
@@ -81,10 +88,42 @@ fcmconfr <- function(fcm_adj_matrices = list(matrix()),
     squashing = squashing,
     lambda = lambda,
     max_iter = max_iter,
-    min_error = min_error
+    min_error = min_error,
+    parallel = parallel,
+    show_progress = show_progress,
+    n_cores = n_cores,
+    include_simulations_in_output = include_simulations_in_output
   )
 
-  fmcm_results
+  if (bootstrap_inference_means) {
+    means_of_fmcm_inferences <- get_means_of_fmcm_inference(
+      fmcm_inference = fmcm_results$inference,
+      get_bootstrapped_means = bootstrap_inference_means,
+      confidence_interval = bootstrap_CI,
+      bootstrap_reps = bootstrap_reps,
+      bootstrap_samples_per_rep = bootstrap_reps,
+      parallel = parallel,
+      n_cores = n_cores
+    )
+
+    fcmconfr_output <- structure(
+      .Data = list(
+        inference = fmcm_results$inference,
+        bootstrap = list(
+          mean_CI_by_node = means_of_fmcm_inferences$mean_CI_by_node,
+          raw_bootstrap_means = means_of_fmcm_inferences$bootstrap_means
+        )
+      )
+    )
+  } else {
+    fcmconfr_output <- structure(
+      .Data = list(
+        inference = fmcm_results$inference
+      )
+    )
+  }
+
+  fcmconfr_output
 }
 
 
@@ -111,10 +150,25 @@ fcmconfr <- function(fcm_adj_matrices = list(matrix()),
 #' from the pbapply package as the underlying function.
 #'
 #' @export
-build_fcmconfr_models <- function(adj_matrices, sampling, samples, nodes, parallel, show_progress) {
+build_fcmconfr_models <- function(adj_matrices = list(matrix()),
+                                  sampling = "nonparametric", # 'nonparametric', 'uniform', or 'triangular'
+                                  samples = integer(),
+                                  nodes = c(),
+                                  parallel = TRUE,
+                                  n_cores = integer(),
+                                  show_progress = TRUE) {
   n_nodes <- length(nodes)
   n_maps <- length(adj_matrices)
   adj_matrices_as_arrays <- array(unlist(adj_matrices), c(n_nodes, n_nodes, n_maps))
+
+  combined_adj_matrix <- apply(adj_matrices_as_arrays, c(1, 2), function(x) x, simplify = FALSE)
+  widened_combined_adj_matrix <- array(combined_adj_matrix, c(1, n_nodes^2))
+  widened_combined_adj_matrix <- apply(widened_combined_adj_matrix, 2, unlist)
+  non_zero_value_indexes <- unlist(lapply(apply(widened_combined_adj_matrix, 2, unique), function(x) !identical(x, 0)))
+  nonzero_widened_combined_adj_matrix <- widened_combined_adj_matrix[, non_zero_value_indexes]
+
+  widened_combined_adj_matrix_as_lists <- lapply(seq_len(ncol(nonzero_widened_combined_adj_matrix)), function(x) nonzero_widened_combined_adj_matrix[, x])
+
   if (sampling == "nonparametric") {
     adj_matrix_of_samples_per_edge <- apply(adj_matrices_as_arrays, c(1, 2), function(x) sample(x, samples, replace = TRUE), simplify = FALSE)
     wider_adj_matrix_of_samples_per_edge <- apply(array(adj_matrix_of_samples_per_edge, c(1, n_nodes^2)), 2, unlist)
@@ -133,6 +187,7 @@ build_fcmconfr_models <- function(adj_matrices, sampling, samples, nodes, parall
       empirical_grey_adj_matrix,
       n_sims = samples,
       parallel = parallel,
+      n_cores = n_cores,
       distribution = "uniform",
       show_progress = show_progress,
       IDs = IDs
@@ -147,6 +202,7 @@ build_fcmconfr_models <- function(adj_matrices, sampling, samples, nodes, parall
       mode_adj_matrix,
       n_sims = samples,
       parallel = parallel,
+      n_cores = n_cores,
       distribution = "triangular",
       show_progress = show_progress,
       IDs = IDs
