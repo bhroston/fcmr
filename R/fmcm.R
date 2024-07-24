@@ -62,32 +62,12 @@ infer_fmcm <- function(simulated_adj_matrices = list(matrix()),
 
   # Confirm packages necessary packages are available. If not, change run options
   if (parallel) {
-    if (!requireNamespace("parallel")) {
-      parallel <- FALSE
-      warning("Parallel processing requires the 'parallel' package which is
-              currently not installed. Running without parallel processing.")
-    }
-    if (show_progress) {
-      if (!requireNamespace("doSNOW")) {
-        show_progress <- FALSE
-        warning("Showing progress with parallel processing requires the 'doSNOW' package which is
-              currently not installed. Running in parallel but without showing progress.")
-      }
-      if (!requireNamespace("foreach")) {
-        show_progress <- FALSE
-        warning("Showing progress with parallel processing requires the 'foreach' package which is
-              currently not installed. Running in parallel but without showing progress.")
-      }
-    }
+    package_checks <- check_if_local_machine_has_parallel_processing_packages(parallel, show_progress)
+    parallel <- package_checks$parallel_check
   }
-  if (!parallel) {
-    if (show_progress) {
-      if (!requireNamespace("pbapply")) {
-        show_progress <- FALSE
-        warning("Showing progress requires the 'pbapply' package which is
-              currently not installed. Running without showing progress.")
-      }
-    }
+  if (show_progress) {
+    package_checks <- check_if_local_machine_has_parallel_processing_packages(parallel, show_progress)
+    show_progress <- package_checks$show_progress_check
   }
 
   lapply(simulated_adj_matrices, confirm_adj_matrix_is_square)
@@ -104,8 +84,12 @@ infer_fmcm <- function(simulated_adj_matrices = list(matrix()),
 
   if (parallel & show_progress) {
     print("Initializing cluster", quote = FALSE)
+    max_possible_cores <- parallel::detectCores()
     if (identical(n_cores, integer())) {
-      n_cores <- parallel::detectCores()
+      n_cores <- max_possible_cores
+    }
+    if (n_cores > max_possible_cores) {
+      warning(paste0(" Input n_cores is greater than the available cores on this machine.\n Reducing to ", n_cores))
     }
     cl <- parallel::makeCluster(n_cores)
 
@@ -150,8 +134,12 @@ infer_fmcm <- function(simulated_adj_matrices = list(matrix()),
 
   } else if (parallel & !show_progress) {
     print("Initializing cluster", quote = FALSE)
+    max_possible_cores <- parallel::detectCores()
     if (identical(n_cores, integer())) {
-      n_cores <- parallel::detectCores()
+      n_cores <- max_possible_cores
+    }
+    if (n_cores > max_possible_cores) {
+      warning(paste0(" Input n_cores is greater than the available cores on this machine.\n Reducing to ", n_cores))
     }
     cl <- parallel::makeCluster(n_cores)
 
@@ -322,13 +310,13 @@ get_quantile_of_fmcm_inference <- function(fmcm_inference = data.frame(), quanti
 #'
 #' @export
 get_means_of_fmcm_inference <- function(fmcm_inference = list(),
-                                         get_bootstrapped_means = TRUE,
-                                         confidence_interval = 0.95,
-                                         bootstrap_reps = 1000,
-                                         bootstrap_samples_per_rep = 1000,
-                                         parallel = FALSE,
-                                         n_cores = integer(),
-                                         show_progress = TRUE) {
+                                        get_bootstrapped_means = TRUE,
+                                        confidence_interval = 0.95,
+                                        bootstrap_reps = 1000,
+                                        bootstrap_samples_per_rep = 1000,
+                                        parallel = FALSE,
+                                        n_cores = integer(),
+                                        show_progress = TRUE) {
   # Adding for R CMD Check. Does not impact logic.
   iter <- NULL
 
@@ -342,32 +330,12 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
 
   # Confirm packages necessary packages are available. If not, change run options
   if (parallel) {
-    if (!requireNamespace("parallel")) {
-      parallel <- FALSE
-      warning("Parallel processing requires the 'parallel' package which is
-              currently not installed. Running without parallel processing.")
-    }
-    if (show_progress) {
-      if (!requireNamespace("doSNOW")) {
-        show_progress <- FALSE
-        warning("Showing progress with parallel processing requires the 'doSNOW' package which is
-              currently not installed. Running in parallel but without showing progress.")
-      }
-      if (!requireNamespace("foreach")) {
-        show_progress <- FALSE
-        warning("Showing progress with parallel processing requires the 'foreach' package which is
-              currently not installed. Running in parallel but without showing progress.")
-      }
-    }
+    parallel_checks <- check_if_local_machine_has_parallel_processing_packages(use_parallel = parallel, use_show_progress = show_progress)
+    parallel <- parallel_checks$parallel_check
   }
-  if (!parallel) {
-    if (show_progress) {
-      if (!requireNamespace("pbapply")) {
-        show_progress <- FALSE
-        warning("Showing progress requires the 'pbapply' package which is
-              currently not installed. Running without showing progress.")
-      }
-    }
+  if (show_progress) {
+    parallel_checks <- check_if_local_machine_has_parallel_processing_packages(use_parallel = parallel, use_show_progress = show_progress)
+    show_progress <- parallel_checks$show_progress_check
   }
 
   if (!get_bootstrapped_means) {
@@ -498,7 +466,12 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
   colnames(quantiles_by_node) <- c("node", paste0("lower_", lower_quantile), paste0("upper_", upper_quantile))
   print("Done", quote = FALSE)
 
-  return(quantiles_by_node)
+  structure(
+    .Data = list(
+      mean_CI_by_node = quantiles_by_node,
+      bootstrap_means = bootstrapped_means_of_inference_by_node
+    )
+  )
 }
 
 
@@ -521,7 +494,6 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
 #' @param mode_adj_matrix An n x n adjacency matrix that represents the mode of the
 #' distribution of edge weights for each edge represented in the grey_adj_matrix
 #' @param n_sims The number of simulated fcm's to generate
-#' @param parallel TRUE/FALSE Whether to utilize parallel processing
 #' @param distribution A statistical distribution to draw random samples from.
 #' Must be one of the following: 'uniform', 'gaussian', 'beta', or 'triangular'
 #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
@@ -532,7 +504,6 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
 build_fmcm_models_from_grey_adj_matrix <- function(grey_adj_matrix = matrix(),
                                                    mode_adj_matrix = matrix(),
                                                    n_sims = 100,
-                                                   parallel = TRUE,
                                                    distribution = "uniform", # Also accepts "gaussian", and triangular
                                                    show_progress = TRUE,
                                                    IDs = c()) {
@@ -604,7 +575,6 @@ build_fmcm_models_from_grey_adj_matrix <- function(grey_adj_matrix = matrix(),
   }
 
   parallel_and_progress_bar_packages_availability <- check_if_local_machine_has_parallel_processing_packages(parallel, show_progress)
-  parallel <- parallel_and_progress_bar_packages_availability$parallel_check
   show_progress <- parallel_and_progress_bar_packages_availability$show_progress_check
 
   node_order <- colnames(grey_adj_matrix)
@@ -613,7 +583,7 @@ build_fmcm_models_from_grey_adj_matrix <- function(grey_adj_matrix = matrix(),
     # UNIFORM
     grey_edgelist <- get_edgelist_from_grey_adj_matrix(grey_adj_matrix)
     if (show_progress) {
-      print("Building models", quote = FALSE)
+      print(paste0("Building ", n_sims, " models"), quote = FALSE)
       grey_edgelist$dist <- pbapply::pbmapply(function(lower, upper) stats::runif(n = n_sims, min = lower, max = upper),
                                          lower = grey_edgelist$weight_lower, upper = grey_edgelist$weight_upper,
                                          SIMPLIFY = FALSE)
@@ -629,7 +599,7 @@ build_fmcm_models_from_grey_adj_matrix <- function(grey_adj_matrix = matrix(),
     colnames(mode_edgelist) <- c("source", "target", "weight_mode")
     grey_edgelist <- merge(grey_edgelist, mode_edgelist, by = c("source", "target"))
     if (show_progress) {
-      print("Building models", quote = FALSE)
+      print(paste0("Building ", n_sims, " models"), quote = FALSE)
       grey_edgelist$dist <- pbapply::pbmapply(function(lower, upper, mode) get_triangular_distribution_of_values(lower = lower, upper = upper, mode = mode, n_sims),
                                          lower = grey_edgelist$weight_lower, upper = grey_edgelist$weight_upper, mode = grey_edgelist$weight_mode,
                                          SIMPLIFY = FALSE)
@@ -645,7 +615,7 @@ build_fmcm_models_from_grey_adj_matrix <- function(grey_adj_matrix = matrix(),
   }
 
   # Generate adjacency matrices from sampled distributions
-  blank_weight_edgelist <- grey_edgelist[c("source", "target")]
+  blank_weight_edgelist <- grey_edgelist[, c("source", "target")]
   simulated_edgelists <- rep(list(blank_weight_edgelist), n_sims)
   if (show_progress) {
     print("Adding edge weights to models", quote = FALSE)

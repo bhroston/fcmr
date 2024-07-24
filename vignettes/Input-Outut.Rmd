@@ -1,0 +1,29 @@
+---
+title: "Input-Outut"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Input-Outut}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Input
+
+Inputs: Users can upload their collection of adjacency matrices into R in 3 ways
+
+1.  Upload a single .xlsx file with each sheet storing a different adjacency matrix
+
+2.  Select a folder that contains multiple .xlsx files that each have a single sheet storing an adjacency matrix
+
+3.  Select a folder that contains multiple .csv files, one for each adjacency matrix
+
+```{r setup}
+library(fcmconfr)
+```

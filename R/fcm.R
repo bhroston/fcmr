@@ -1,5 +1,4 @@
 
-
 #' fcmconfr
 #'
 #' @description
@@ -44,23 +43,25 @@
 #'
 #' @export
 fcmconfr <- function(fcm_adj_matrices = list(matrix()),
-                     sampling = "nonparametric", # Options: 'nonparametric', 'uniform', 'triangular'
+                     sampling = c("nonparametric", "uniform", "triangular"), # Options: 'nonparametric', 'uniform', 'triangular'
                      samples = 1000,
                      initial_state_vector = c(),
                      clamping_vector = c(),
-                     activation = "kosko",
-                     squashing = "sigmoid",
+                     activation = c("kosko", "modified-kosko", "rescale"),
+                     squashing = c("sigmoid", "tanh"),
                      lambda = 1,
                      max_iter = 100,
                      min_error = 1e-5,
                      bootstrap_inference_means = TRUE,
                      bootstrap_CI = 0.95,
                      bootstrap_reps = 5000,
+                     bootstrap_draws_per_rep = 5000,
                      show_progress = TRUE,
                      parallel = TRUE,
                      n_cores = integer(),
                      IDs = c(),
-                     include_simulations_in_output = FALSE) {
+                     include_simulations_in_output = FALSE,
+                     ...) {
 
   concepts_in_fcms <- lapply(fcm_adj_matrices, function(x) get_node_IDs_from_input(x, IDs))
   all_fcms_have_same_concepts <- length(unique(concepts_in_fcms)) == 1
@@ -78,7 +79,17 @@ fcmconfr <- function(fcm_adj_matrices = list(matrix()),
   lapply(fcm_adj_matrices, function(x) fcm(x, IDs))
 
   nodes <- unlist(unique(concepts_in_fcms))
-  sampled_adj_matrices <- build_fcmconfr_models(fcm_adj_matrices, sampling, samples, nodes, parallel, n_cores, show_progress)
+  sampled_adj_matrices <- build_fcmconfr_models(fcm_adj_matrices, sampling, samples, nodes, show_progress)
+
+  sampled_adj_matrices_are_representative_of_population <- check_simulated_fcmconfr_models(fcm_adj_matrices, sampled_adj_matrices, sampling, samples, nodes, parallel, n_cores, show_progress)
+  new_samples <- samples + 1000
+  while (!sampled_adj_matrices_are_representative_of_population) {
+    cat(" Random draws are likely not representative of the population.\n Adding 1000 to the number of draws (i.e. samples)\n",
+        paste0("New samples = ", new_samples, "\n"))
+    sampled_adj_matrices <- build_fcmconfr_models(fcm_adj_matrices, sampling, new_samples, nodes, parallel, n_cores, show_progress)
+    sampled_adj_matrices_are_representative_of_population <- check_simulated_fcmconfr_models(fcm_adj_matrices, sampled_adj_matrices, sampling, new_samples, nodes, parallel, n_cores, show_progress)
+    new_samples <- new_samples + 1000
+  }
 
   fmcm_results <- infer_fmcm(
     simulated_adj_matrices = sampled_adj_matrices,
@@ -95,6 +106,24 @@ fcmconfr <- function(fcm_adj_matrices = list(matrix()),
     include_simulations_in_output = include_simulations_in_output
   )
 
+  params <- list(
+    fcms = fcm_adj_matrices,
+    inference_opts = list(initial_state_vector = initial_state_vector,
+                          clamping_vector = clamping_vector,
+                          activation = activation,
+                          squashing = squashing,
+                          lambda = lambda,
+                          max_iter = max_iter,
+                          min_error = min_error,
+                          IDs = IDs),
+    sampling_opts = list(sampling = sampling,
+                         samples = samples),
+    runtim_opts = list(parallel = parallel,
+                       n_cores = n_cores,
+                       show_progress = show_progress,
+                       include_simulations_in_output = include_simulations_in_output)
+  )
+
   if (bootstrap_inference_means) {
     means_of_fmcm_inferences <- get_means_of_fmcm_inference(
       fmcm_inference = fmcm_results$inference,
@@ -106,20 +135,29 @@ fcmconfr <- function(fcm_adj_matrices = list(matrix()),
       n_cores = n_cores
     )
 
+    params$bootstrap_opts = list(bootstrap_inference_means =  bootstrap_inference_means,
+                                 bootstrap_CI = bootstrap_CI,
+                                 bootstrap_reps = bootstrap_reps,
+                                 bootstrap_draws_per_rep = bootstrap_draws_per_rep)
+
     fcmconfr_output <- structure(
       .Data = list(
         inference = fmcm_results$inference,
+        params = params,
         bootstrap = list(
           mean_CI_by_node = means_of_fmcm_inferences$mean_CI_by_node,
           raw_bootstrap_means = means_of_fmcm_inferences$bootstrap_means
         )
-      )
+      ),
+      class = "fcmconfr"
     )
   } else {
     fcmconfr_output <- structure(
       .Data = list(
-        inference = fmcm_results$inference
-      )
+        inference = fmcm_results$inference,
+        params = params
+      ),
+      class = "fcmconfr"
     )
   }
 
@@ -186,8 +224,6 @@ build_fcmconfr_models <- function(adj_matrices = list(matrix()),
     sampled_adj_matrices <- build_fmcm_models_from_grey_adj_matrix(
       empirical_grey_adj_matrix,
       n_sims = samples,
-      parallel = parallel,
-      n_cores = n_cores,
       distribution = "uniform",
       show_progress = show_progress,
       IDs = IDs
@@ -201,8 +237,6 @@ build_fcmconfr_models <- function(adj_matrices = list(matrix()),
       empirical_grey_adj_matrix,
       mode_adj_matrix,
       n_sims = samples,
-      parallel = parallel,
-      n_cores = n_cores,
       distribution = "triangular",
       show_progress = show_progress,
       IDs = IDs
@@ -211,6 +245,106 @@ build_fcmconfr_models <- function(adj_matrices = list(matrix()),
 
   sampled_adj_matrices
 }
+
+
+#' check_simulated_fcmconfr_models
+#'
+#' @description
+#' This functions checks whether a set of sampled adj matrices are representative
+#' of the selected distribution.
+#'
+#' @details
+#' [ADD DETAILS HERE!!!]
+#'
+#' Use vignette("fcm-class") for more information.
+#'
+#' @param input_adj_matrices A list of n x n adjacency matrices used as inputs to fcmconfr
+#' @param sampled_Adj_matrices A list of n x n adjacency matrices constructed with build_fcmconfr_models
+#' @param sampling The sampling method to be applied. Must be one of the following: "nonparametric", "uniform", or "triangular"
+#' @param samples The number of samples to draw with the selected sampling method. Also,
+#' the number of sampled models to generate
+#' @param nodes A vector of node names (IDs) present in every adjacency matrix
+#' @param parallel TRUE/FALSE Whether to utilize parallel processing
+#' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
+#' from the pbapply package as the underlying function.
+#'
+#' @export
+check_simulated_fcmconfr_models <- function(input_adj_matrices = list(matrix()),
+                                            sampled_adj_matrices = list(matrix()),
+                                            sampling = c("nonparametric", "uniform", "triangular"),
+                                            samples = integer(),
+                                            nodes = c(),
+                                            parallel = TRUE,
+                                            n_cores = integer(),
+                                            show_progress = TRUE) {
+
+  input_adj_matrices_values_by_index <- data.frame(do.call(rbind, lapply(input_adj_matrices, unlist)))
+  input_adj_matrices_nonzero_values_by_index <- input_adj_matrices_values_by_index[, colSums(input_adj_matrices_values_by_index) != 0]
+
+  sampled_adj_matrices_values_by_index <- data.frame(do.call(rbind, lapply(sampled_adj_matrices, unlist)))
+  sampled_adj_matrices_nonzero_values_by_index <- sampled_adj_matrices_values_by_index[, colSums(sampled_adj_matrices_values_by_index) != 0]
+
+  if (sampling == "nonparametric") {
+    input_value_occurrences_by_index <- apply(input_adj_matrices_nonzero_values_by_index, 2, table)
+    input_value_fractional_occurrences_by_index <- data.frame(apply(input_value_occurrences_by_index, 2, function(col) col/sum(col)))
+
+    sampled_adj_matrices_nonzero_value_occurrence_by_index <- apply(sampled_adj_matrices_nonzero_values_by_index, 2, table)
+    sampled_adj_matrices_nonzero_value_fractional_occurrence_by_index <- data.frame(apply(sampled_adj_matrices_nonzero_value_occurrence_by_index, 2, function(col) col/sum(col)))
+
+    diff_in_fractional_occurrences <- abs(sampled_adj_matrices_nonzero_value_fractional_occurrence_by_index - input_value_fractional_occurrences_by_index)
+    error_in_fractional_occurrences <- colSums(diff_in_fractional_occurrences)
+
+    if (any(error_in_fractional_occurrences > 0.05)) {
+      rebuild_fcmconfr_models <- TRUE
+    } else {
+      rebuild_fcmconfr_models <- FALSE
+    }
+  } else if (sampling == "uniform") {
+    sampled_means <- apply(sampled_adj_matrices_nonzero_values_by_index, 2, mean)
+    expected_means <- apply(input_adj_matrices_nonzero_values_by_index, 2, function(col) (min(col) + max(col))/2)
+    percent_diff_in_means <- abs(sampled_means - expected_means)/expected_means
+
+    sampled_variances <- apply(sampled_adj_matrices_nonzero_values_by_index, 2, var)
+    expected_variances <- apply(input_adj_matrices_nonzero_values_by_index, 2, function(col) (max(col) - min(col))/12)
+    percent_diff_in_variances <- abs(sampled_variances - expected_variances)/expected_variances
+    print(percent_diff_in_variances)
+
+    if (any(percent_diff_in_means > 0.05) | any(percent_diff_in_variances > 0.3)) {
+      fcmconfr_models_are_representative_of_population <- FALSE
+    } else {
+      fcmconfr_models_are_representative_of_population <- TRUE
+    }
+  } else if (sampling == "triangular") {
+    expected_means <- apply(input_adj_matrices_nonzero_values_by_index, 2, function(col) (min(col) + max(col))/2)
+    sampled_means <- apply(sampled_adj_matrices_nonzero_values_by_index, 2, mean)
+    percent_diff_in_means <- abs((expected_means - sampled_means)/expected_means)
+
+    expected_variances <- apply(input_adj_matrices_nonzero_values_by_index, 2,
+                                function(col) {
+                                  a <- min(col)
+                                  b <- max(col)
+                                  c <- mean(col)
+                                  (a^2 + b^2 + c^2 - a*b - a*c - b*c)/18
+                                })
+    sampled_variances <- apply(sampled_adj_matrices_nonzero_values_by_index, 2,
+                               function(col) {
+                                 a <- min(col)
+                                 b <- max(col)
+                                 c <- mean(col)
+                                 (a^2 + b^2 + c^2 - a*b - a*c - b*c)/18
+                               })
+    percent_diff_in_variances <- abs((expected_variances - sampled_variances)/expected_variances)
+
+    if (any(percent_diff_in_means > 0.05) | any(percent_diff_in_variances > 0.5)) {
+      fcmconfr_models_are_representative_of_population <- FALSE
+    } else {
+      fcmconfr_models_are_representative_of_population <- TRUE
+    }
+  }
+
+  fcmconfr_models_are_representative_of_population
+}
+
 
 #' infer_fcm
 #'
@@ -803,5 +937,58 @@ aggregate_fcm <- function(adj_matrices = list(), aggregation_fun = "mean", inclu
     ),
     class = "aggregate"
   )
+}
+
+
+#' print.fcmconfr
+#'
+#' @description
+#' This improves the readability of the fcmconfr
+#'
+#' @details
+#' Show the objects listed in the fcmconfr output $inference and $params, as well
+#' as $bootstrap if present in output. Additionally, this prints descriptions/summaries
+#' of objects within each sub-list like inference_opts, sampling_opts, etc.
+#'
+#' Use vignette("fcm-class") for more information.
+#'
+#' @param x an fgcm_simulation object
+#' @param ... additional inputs
+#'
+#' @export
+print.fcmconfr <- function(x, ...) {
+  n_sims <- x$params$sampling_opts$samples
+  n_input_fcm <- length(x$params$fcms)
+
+  if ("bootstrap" %in% names(x)) {
+    cat("$inference",
+        paste0("Inferences of ", n_sims, " fcm constructed from the ", n_input_fcm, " input fcm adj. matrices."),
+        "\n$bootstrap\n",
+        paste0(" -     mean_CI_by_node: ", x$params$bootstrap_opts$bootstrap_CI, "% CI of means of inference\n"),
+        paste0(" - raw_bootstrap_means: ", x$params$bootstrap_opts$bootstrap_reps, " actualizations of the avg inference of ", x$params$bootstrap_opts$bootstrap_draws_per_rep, " draws with replacement"),
+        "\n$params\n",
+        " -      inference_opts:",
+        paste0("act = ", x$params$inference_opts$activation, "; squash = ", x$params$inference_opts$squashing, "; lambda = ", x$params$inference_opts$lambda),
+        "\n  -       sampling_opts:",
+        paste0("sampling = ", x$params$sampling_opts$sampling, "; n_samples = ", x$params$sampling_opts$samples)
+    )
+  } else {
+    cat("$inference",
+        paste0("Inferences of ", n_sims, " fcm constructed from the ", n_input_fcm, " input fcm adj. matrices."),
+        "\n$params\n",
+        " -   inference_opts:",
+        paste0("act = ", x$params$inference_opts$activation, "; squash = ", x$params$inference_opts$squashing, "; lambda = ", x$params$inference_opts$lambda),
+        "\n  -    sampling_opts:",
+        paste0("sampling = ", x$params$sampling_opts$sampling, "; n_samples = ", x$params$sampling_opts$samples)
+    )
+  }
+
+  # average_inference <- data.frame(value = round(apply(x$inference, 2, mean), 3))
+  # average_inference$node <- rownames(average_inference)
+  # largest_three_average_inferences <- sort(average_inference$value, decreasing = TRUE)[1:3]
+  # average_inference$node[vapply(largest_three_average_inferences, function(rank_value) which(average_inference$value == rank_value), numeric(1))]
+  #
+  # rounded_inferences <- apply(x$inference, c(1, 2), function(value) round(value, 2))
+
 }
 

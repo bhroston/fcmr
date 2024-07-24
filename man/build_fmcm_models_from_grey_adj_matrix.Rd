@@ -8,7 +8,6 @@ build_fmcm_models_from_grey_adj_matrix(
   grey_adj_matrix = matrix(),
   mode_adj_matrix = matrix(),
   n_sims = 100,
-  parallel = TRUE,
   distribution = "uniform",
   show_progress = TRUE,
   IDs = c()
@@ -22,8 +21,6 @@ of an FCM}
 distribution of edge weights for each edge represented in the grey_adj_matrix}
 
 \item{n_sims}{The number of simulated fcm's to generate}
-
-\item{parallel}{TRUE/FALSE Whether to utilize parallel processing}
 
 \item{distribution}{A statistical distribution to draw random samples from.
 Must be one of the following: 'uniform', 'gaussian', 'beta', or 'triangular'}
