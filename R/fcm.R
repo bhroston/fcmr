@@ -75,6 +75,16 @@ fcmconfr <- function(fcm_adj_matrices = list(matrix()),
     stop("All adjacency matrices must have the same dimensions (n x n) throughout the entire list")
   }
 
+  # Confirm packages necessary packages are available. If not, change run options
+  if (parallel) {
+    package_checks <- check_if_local_machine_has_parallel_processing_packages(parallel, show_progress)
+    parallel <- package_checks$parallel_check
+  }
+  if (show_progress) {
+    package_checks <- check_if_local_machine_has_parallel_processing_packages(parallel, show_progress)
+    show_progress <- package_checks$show_progress_check
+  }
+
   # Check that adj_matrices are correct format
   lapply(fcm_adj_matrices, function(x) fcm(x, IDs))
 
@@ -116,9 +126,9 @@ fcmconfr <- function(fcm_adj_matrices = list(matrix()),
                           max_iter = max_iter,
                           min_error = min_error,
                           IDs = IDs),
-    sampling_opts = list(sampling = sampling,
+    bootstrap_input_opts = list(sampling = sampling,
                          samples = samples),
-    runtim_opts = list(parallel = parallel,
+    runtime_opts = list(parallel = parallel,
                        n_cores = n_cores,
                        show_progress = show_progress,
                        include_simulations_in_output = include_simulations_in_output)
@@ -135,7 +145,7 @@ fcmconfr <- function(fcm_adj_matrices = list(matrix()),
       n_cores = n_cores
     )
 
-    params$bootstrap_opts = list(bootstrap_inference_means =  bootstrap_inference_means,
+    params$bootstrap_output_opts = list(bootstrap_inference_means =  bootstrap_inference_means,
                                  bootstrap_CI = bootstrap_CI,
                                  bootstrap_reps = bootstrap_reps,
                                  bootstrap_draws_per_rep = bootstrap_draws_per_rep)
@@ -199,13 +209,12 @@ build_fcmconfr_models <- function(adj_matrices = list(matrix()),
   n_maps <- length(adj_matrices)
   adj_matrices_as_arrays <- array(unlist(adj_matrices), c(n_nodes, n_nodes, n_maps))
 
-  combined_adj_matrix <- apply(adj_matrices_as_arrays, c(1, 2), function(x) x, simplify = FALSE)
-  widened_combined_adj_matrix <- array(combined_adj_matrix, c(1, n_nodes^2))
-  widened_combined_adj_matrix <- apply(widened_combined_adj_matrix, 2, unlist)
-  non_zero_value_indexes <- unlist(lapply(apply(widened_combined_adj_matrix, 2, unique), function(x) !identical(x, 0)))
-  nonzero_widened_combined_adj_matrix <- widened_combined_adj_matrix[, non_zero_value_indexes]
-
-  widened_combined_adj_matrix_as_lists <- lapply(seq_len(ncol(nonzero_widened_combined_adj_matrix)), function(x) nonzero_widened_combined_adj_matrix[, x])
+  #combined_adj_matrix <- apply(adj_matrices_as_arrays, c(1, 2), function(x) x, simplify = FALSE)
+  #widened_combined_adj_matrix <- array(combined_adj_matrix, c(1, n_nodes^2))
+  #widened_combined_adj_matrix <- apply(widened_combined_adj_matrix, 2, unlist)
+  #non_zero_value_indexes <- unlist(lapply(apply(widened_combined_adj_matrix, 2, unique), function(x) !identical(x, 0)))
+  #nonzero_widened_combined_adj_matrix <- widened_combined_adj_matrix[, non_zero_value_indexes]
+  #widened_combined_adj_matrix_as_lists <- lapply(seq_len(ncol(nonzero_widened_combined_adj_matrix)), function(x) nonzero_widened_combined_adj_matrix[, x])
 
   if (sampling == "nonparametric") {
     adj_matrix_of_samples_per_edge <- apply(adj_matrices_as_arrays, c(1, 2), function(x) sample(x, samples, replace = TRUE), simplify = FALSE)
@@ -305,9 +314,8 @@ check_simulated_fcmconfr_models <- function(input_adj_matrices = list(matrix()),
     percent_diff_in_means <- abs(sampled_means - expected_means)/expected_means
 
     sampled_variances <- apply(sampled_adj_matrices_nonzero_values_by_index, 2, var)
-    expected_variances <- apply(input_adj_matrices_nonzero_values_by_index, 2, function(col) (max(col) - min(col))/12)
+    expected_variances <- apply(input_adj_matrices_nonzero_values_by_index, 2, function(col) ((max(col) - min(col))^2)/12)
     percent_diff_in_variances <- abs(sampled_variances - expected_variances)/expected_variances
-    print(percent_diff_in_variances)
 
     if (any(percent_diff_in_means > 0.05) | any(percent_diff_in_variances > 0.3)) {
       fcmconfr_models_are_representative_of_population <- FALSE
@@ -948,7 +956,7 @@ aggregate_fcm <- function(adj_matrices = list(), aggregation_fun = "mean", inclu
 #' @details
 #' Show the objects listed in the fcmconfr output $inference and $params, as well
 #' as $bootstrap if present in output. Additionally, this prints descriptions/summaries
-#' of objects within each sub-list like inference_opts, sampling_opts, etc.
+#' of objects within each sub-list like inference_opts, bootstrap_input_opts, etc.
 #'
 #' Use vignette("fcm-class") for more information.
 #'
@@ -957,20 +965,20 @@ aggregate_fcm <- function(adj_matrices = list(), aggregation_fun = "mean", inclu
 #'
 #' @export
 print.fcmconfr <- function(x, ...) {
-  n_sims <- x$params$sampling_opts$samples
+  n_sims <- x$params$bootstrap_input_opts$samples
   n_input_fcm <- length(x$params$fcms)
 
   if ("bootstrap" %in% names(x)) {
     cat("$inference",
         paste0("Inferences of ", n_sims, " fcm constructed from the ", n_input_fcm, " input fcm adj. matrices."),
         "\n$bootstrap\n",
-        paste0(" -     mean_CI_by_node: ", x$params$bootstrap_opts$bootstrap_CI, "% CI of means of inference\n"),
-        paste0(" - raw_bootstrap_means: ", x$params$bootstrap_opts$bootstrap_reps, " actualizations of the avg inference of ", x$params$bootstrap_opts$bootstrap_draws_per_rep, " draws with replacement"),
+        paste0(" -     mean_CI_by_node: ", x$params$bootstrap_output_opts$bootstrap_CI, "% CI of means of inference\n"),
+        paste0(" - raw_bootstrap_means: ", x$params$bootstrap_output_opts$bootstrap_reps, " actualizations of the avg inference of ", x$params$bootstrap_output_opts$bootstrap_draws_per_rep, " draws with replacement"),
         "\n$params\n",
         " -      inference_opts:",
         paste0("act = ", x$params$inference_opts$activation, "; squash = ", x$params$inference_opts$squashing, "; lambda = ", x$params$inference_opts$lambda),
-        "\n  -       sampling_opts:",
-        paste0("sampling = ", x$params$sampling_opts$sampling, "; n_samples = ", x$params$sampling_opts$samples)
+        "\n  -       bootstrap_input_opts:",
+        paste0("sampling = ", x$params$bootstrap_input_opts$sampling, "; n_samples = ", x$params$bootstrap_input_opts$samples)
     )
   } else {
     cat("$inference",
@@ -978,8 +986,8 @@ print.fcmconfr <- function(x, ...) {
         "\n$params\n",
         " -   inference_opts:",
         paste0("act = ", x$params$inference_opts$activation, "; squash = ", x$params$inference_opts$squashing, "; lambda = ", x$params$inference_opts$lambda),
-        "\n  -    sampling_opts:",
-        paste0("sampling = ", x$params$sampling_opts$sampling, "; n_samples = ", x$params$sampling_opts$samples)
+        "\n  -    bootstrap_input_opts:",
+        paste0("sampling = ", x$params$bootstrap_input_opts$sampling, "; n_samples = ", x$params$bootstrap_input_opts$samples)
     )
   }
 

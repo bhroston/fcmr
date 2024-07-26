@@ -129,7 +129,7 @@ infer_fmcm <- function(simulated_adj_matrices = list(matrix()),
         )
       }
     close(pb)
-    names(fmcm_confer_results) <- paste0("sim_", 1:length(fmcm_confer_results))
+    names(fmcm_confer_results) <- paste0("btstrp_", 1:length(fmcm_confer_results))
     parallel::stopCluster(cl)
 
   } else if (parallel & !show_progress) {
@@ -583,7 +583,7 @@ build_fmcm_models_from_grey_adj_matrix <- function(grey_adj_matrix = matrix(),
     # UNIFORM
     grey_edgelist <- get_edgelist_from_grey_adj_matrix(grey_adj_matrix)
     if (show_progress) {
-      print(paste0("Building ", n_sims, " models"), quote = FALSE)
+      print(paste0("Performing ", n_sims, " bootstrap draws"), quote = FALSE)
       grey_edgelist$dist <- pbapply::pbmapply(function(lower, upper) stats::runif(n = n_sims, min = lower, max = upper),
                                          lower = grey_edgelist$weight_lower, upper = grey_edgelist$weight_upper,
                                          SIMPLIFY = FALSE)
@@ -599,7 +599,7 @@ build_fmcm_models_from_grey_adj_matrix <- function(grey_adj_matrix = matrix(),
     colnames(mode_edgelist) <- c("source", "target", "weight_mode")
     grey_edgelist <- merge(grey_edgelist, mode_edgelist, by = c("source", "target"))
     if (show_progress) {
-      print(paste0("Building ", n_sims, " models"), quote = FALSE)
+      print(paste0("Performing ", n_sims, " bootstrap draws"), quote = FALSE)
       grey_edgelist$dist <- pbapply::pbmapply(function(lower, upper, mode) get_triangular_distribution_of_values(lower = lower, upper = upper, mode = mode, n_sims),
                                          lower = grey_edgelist$weight_lower, upper = grey_edgelist$weight_upper, mode = grey_edgelist$weight_mode,
                                          SIMPLIFY = FALSE)
@@ -637,7 +637,7 @@ build_fmcm_models_from_grey_adj_matrix <- function(grey_adj_matrix = matrix(),
     simulated_adj_matrices <- lapply(simulated_edgelists, function(edgelist) get_adj_matrix_from_edgelist(edgelist, node_order = node_order))
   }
 
-  names(simulated_adj_matrices) <- paste0("sim_", seq_along(simulated_adj_matrices))
+  names(simulated_adj_matrices) <- paste0("btstrp_", seq_along(simulated_adj_matrices))
 
   simulated_adj_matrices
 }
