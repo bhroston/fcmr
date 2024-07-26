@@ -7,7 +7,6 @@
 infer_fgcm(
   grey_adj_matrix = matrix(),
   initial_state_vector = c(),
-  clamping_vector = c(),
   activation = "kosko",
   squashing = "sigmoid",
   lambda = 1,
@@ -21,10 +20,6 @@ infer_fgcm(
 \item{grey_adj_matrix}{An n x n grey_adjacency matrix that represents an FCM}
 
 \item{initial_state_vector}{A list state values at the start of an fcm simulation}
-
-\item{clamping_vector}{A list of values representing specific actions taken to
-control the behavior of an FCM. Specifically, non-zero values defined in this vector
-will remain constant throughout the entire simulation as if they were "clamped" at those values.}
 
 \item{activation}{The activation function to be applied. Must be one of the following:
 'kosko', 'modified-kosko', or 'papageorgiou'.}

@@ -17,7 +17,7 @@ This improves the readability of the fcmconfr
 \details{
 Show the objects listed in the fcmconfr output $inference and $params, as well
 as $bootstrap if present in output. Additionally, this prints descriptions/summaries
-of objects within each sub-list like inference_opts, sampling_opts, etc.
+of objects within each sub-list like inference_opts, bootstrap_input_opts, etc.
 
 Use vignette("fcm-class") for more information.
 }
