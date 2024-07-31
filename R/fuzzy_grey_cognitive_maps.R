@@ -1,260 +1,6 @@
 
-#' fgcmconfr
-#'
-#' @description
-#' [ADD DETAILS HERE!!!!]
-#'
-#' @details
-#' [ADD DETAILS HERE!!!]
-#'
-#' Use vignette("fmcm-class") for more information.
-#'
-#' @param fgcm_adj_matrices A list of n x n adjacencey matrices representing fcms
-#' @param samples The number of samples to draw with the selected sampling method. Also,
-#' the number of sampled models to generate
-#' @param initial_state_vector A list state values at the start of an fcm simulation
-#' @param clamping_vector A list of values representing specific actions taken to
-#' control the behavior of an FCM. Specifically, non-zero values defined in this vector
-#' will remain constant throughout the entire simulation as if they were "clamped" at those values.
-#' @param activation The activation function to be applied. Must be one of the following:
-#' 'kosko', 'modified-kosko', or 'papageorgiou'.
-#' @param squashing A squashing function to apply. Must be one of the following:
-#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
-#' @param lambda A numeric value that defines the steepness of the slope of the
-#' squashing function when tanh or sigmoid are applied
-#' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
-#' @param min_error The lowest error (sum of the absolute value of the current state
-#' vector minus the previous state vector) at which no more iterations are necessary
-#' and the simulation will stop
-#' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
-#' from the pbapply package as the underlying function.
-#' @param parallel TRUE/FALSE Whether to utilize parallel processing
-#' @param n_cores Number of cores to use in parallel processing. If no input given,
-#' will use all available cores in the machine.
-#' @param IDs A list of names for each node (must have n items). If empty, will use
-#' column names of adjacancy matrix (if given).
-#' @param include_simulations_in_output TRUE/FALSE whether to include simulations of monte-carlo-generated
-#' FCM. Will dramatically increase size of output if TRUE.
-#'
-#' @export
-fgcmconfr <- function(fgcm_adj_matrices = list(matrix()),
-                      samples = 1000,
-                      initial_state_vector = c(),
-                      clamping_vector = c(),
-                      activation = c("kosko", "modified-kosko", "rescale"),
-                      squashing = c("sigmoid", "tanh"),
-                      lambda = 1,
-                      max_iter = 100,
-                      min_error = 1e-5,
-                      show_progress = TRUE,
-                      parallel = TRUE,
-                      n_cores = integer(),
-                      IDs = c(),
-                      include_simulations_in_output = FALSE) {
 
-  concepts_in_fgcms <- lapply(fgcm_adj_matrices, function(x) get_node_IDs_from_input(x, IDs))
-  all_fgcms_have_same_concepts <- length(unique(concepts_in_fgcms)) == 1
-  if (!all_fgcms_have_same_concepts) {
-    stop("All grey adjacency matrices must have the same concepts.")
-  }
-
-  dimensions_of_input_grey_adj_matrices <- lapply(fgcm_adj_matrices, dim)
-  all_fgcms_have_same_dimensions <- length(unique(dimensions_of_input_grey_adj_matrices)) == 1
-  if (!all_fgcms_have_same_dimensions) {
-    stop("All grey adjacency matrices must have the same dimensions (n x n) throughout the entire list")
-  }
-
-  # Confirm packages necessary packages are available. If not, change run options
-  if (parallel) {
-    package_checks <- check_if_local_machine_has_parallel_processing_packages(parallel, show_progress)
-    parallel <- package_checks$parallel_check
-  }
-  if (show_progress) {
-    package_checks <- check_if_local_machine_has_parallel_processing_packages(parallel, show_progress)
-    show_progress <- package_checks$show_progress_check
-  }
-
-  # Check that adj_matrices are correct format
-  lapply(fgcm_adj_matrices, function(x) fgcm(x, IDs))
-
-  nodes <- unlist(unique(concepts_in_fgcms))
-  sampled_grey_adj_matrices <- build_fgcmconfr_models(fgcm_adj_matrices, samples, aggregation_fun, include_zeroes, nodes, show_progress)
-
-  fmcm_results <- infer_fmcm(
-    simulated_adj_matrices = sampled_grey_adj_matrices,
-    initial_state_vector = initial_state_vector,
-    clamping_vector = clamping_vector,
-    activation = activation,
-    squashing = squashing,
-    lambda = lambda,
-    max_iter = max_iter,
-    min_error = min_error
-  )
-
-  params <- list(
-    fgcms = fgcm_adj_matrices,
-    inference_opts = list(initial_state_vector = initial_state_vector,
-                          clamping_vector = clamping_vector,
-                          activation = activation,
-                          squashing = squashing,
-                          lambda = lambda,
-                          max_iter = max_iter,
-                          min_error = min_error,
-                          IDs = IDs),
-    bootstrap_input_opts = list(aggregation_fun = aggregation_fun,
-                                samples = samples,
-                                include_zeroes = include_zeroes),
-    runtime_opts = list(parallel = parallel,
-                        n_cores = n_cores,
-                        show_progress = show_progress,
-                        include_simulations_in_output = include_simulations_in_output)
-  )
-
-  if (bootstrap_inference_means) {
-    means_of_fmcm_inferences <- get_means_of_fmcm_inference(
-      fmcm_inference = fmcm_results$inference,
-      get_bootstrapped_means = bootstrap_inference_means,
-      confidence_interval = bootstrap_CI,
-      bootstrap_reps = bootstrap_reps,
-      bootstrap_samples_per_rep = bootstrap_reps,
-      parallel = parallel,
-      n_cores = n_cores
-    )
-
-    params$bootstrap_output_opts = list(bootstrap_inference_means =  bootstrap_inference_means,
-                                        bootstrap_CI = bootstrap_CI,
-                                        bootstrap_reps = bootstrap_reps,
-                                        bootstrap_draws_per_rep = bootstrap_draws_per_rep)
-
-    fgcmconfr_output <- structure(
-      .Data = list(
-        inference = fmcm_results$inference,
-        params = params,
-        bootstrap = list(
-          mean_CI_by_node = means_of_fmcm_inferences$mean_CI_by_node,
-          raw_bootstrap_means = means_of_fmcm_inferences$bootstrap_means
-        )
-      ),
-      class = "fgcmconfr"
-    )
-  } else {
-    fgcmconfr_output <- structure(
-      .Data = list(
-        inference = fmcm_results$inference,
-        params = params
-      ),
-      class = "fgcmconfr"
-    )
-  }
-
-  fgcmconfr_output
-}
-
-
-#' build_fgcmconfr_models
-#'
-#' @description
-#' This function generates n fgcm models whose edge weights are sampled from either
-#' the defined edge values in a set of adjacency matrices or continuous (uniform or triangular)
-#' parametric distributions derived from the sets of edge values, and stores them
-#' as a list of adjacency matrices.
-#'
-#' @details
-#' [ADD DETAILS HERE!!!]
-#'
-#' Use vignette("fgcm-class") for more information.
-#'
-#' @param grey_adj_matrices A list of n x n adjacencey matrices representing fcms
-#' @param sampling The sampling method to be applied. Must be one of the following: "nonparametric", "uniform", or "triangular"
-#' @param samples The number of samples to draw with the selected sampling method. Also,
-#' the number of sampled models to generate
-#' @param nodes A vector of node names (IDs) present in every adjacency matrix
-#' @param parallel TRUE/FALSE Whether to utilize parallel processing
-#' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
-#' from the pbapply package as the underlying function.
-#'
-#' @export
-build_fgcmconfr_models <- function(grey_adj_matrices, samples, aggregation_fun = c("mean", "median"), include_zeroes = FALSE,  nodes, show_progress) {
-  n_nodes <- length(nodes)
-  n_maps <- length(grey_adj_matrices)
-
-  lower_adj_matrices <- lapply(grey_adj_matrices, function(grey_adj_matrix) apply(grey_adj_matrix, c(1, 2), function(x) ifelse(class(x[[1]]) == "grey_number", x[[1]]$lower, x[[1]])))
-  upper_adj_matrices <- lapply(grey_adj_matrices, function(grey_adj_matrix) apply(grey_adj_matrix, c(1, 2), function(x) ifelse(class(x[[1]]) == "grey_number", x[[1]]$upper, x[[1]])))
-
-  lower_adj_matrices_as_arrays <- array(unlist(lower_adj_matrices), c(n_nodes, n_nodes, n_maps))
-  upper_adj_matrices_as_arrays <- array(unlist(upper_adj_matrices), c(n_nodes, n_nodes, n_maps))
-
-  if (!include_zeroes) {
-    grey_adj_matrices_with_distributions <- lapply(
-      grey_adj_matrices,
-      function(grey_adj_matrix) {
-        apply(grey_adj_matrix, c(1, 2),
-              function(x) {
-                ifelse(class(x[[1]]) == "grey_number",
-                       yes = list(runif(samples, x[[1]]$lower, x[[1]]$upper)),
-                       no = NA)
-              })})
-  } else {
-    grey_adj_matrices_with_distributions <- lapply(
-      grey_adj_matrices,
-      function(grey_adj_matrix) {
-        apply(grey_adj_matrix, c(1, 2),
-              function(x) {
-                ifelse(class(x[[1]]) == "grey_number",
-                       yes = list(runif(samples, x[[1]]$lower, x[[1]]$upper)),
-                       no = list(rep(0, samples)))
-              })})
-  }
-  grey_adj_matrices_distributions_by_index <- do.call(cbind, lapply(grey_adj_matrices_with_distributions, function(grey_adj_matrix_with_distributions) do.call(list, grey_adj_matrix_with_distributions)))
-
-  if (aggregation_fun == "mean") {
-    combined_grey_adj_matrices_distributions_by_index <- apply(
-      grey_adj_matrices_distributions_by_index, 1,
-      function(distributions) {
-        sum_of_distributions <- rep(0, samples)
-        n_nonzero_distributions <- 0
-        if (all(lapply(distributions, typeof) == "list")) {
-          distributions <- lapply(distributions, unlist)
-        }
-        for (i in 1:n_maps) {
-          if (!identical(unique(distributions[[i]]), NA)) {
-            n_nonzero_distributions <- n_nonzero_distributions + 1
-            sum_of_distributions <- sum_of_distributions + distributions[[i]]
-          }
-        }
-        sum_of_distributions/n_nonzero_distributions
-      }
-    )
-    combined_grey_adj_matrices_distributions_by_index <- apply(combined_grey_adj_matrices_distributions_by_index, c(1, 2), function(x) ifelse(is.na(x), 0, x))
-  } else if (aggregation_fun == "median") {
-    combined_grey_adj_matrices_distributions_by_index <- do.call(cbind, apply(
-      grey_adj_matrices_distributions_by_index, 1,
-      function(distributions) {
-        if (all(lapply(distributions, typeof) == "list")) {
-          distributions <- lapply(distributions, unlist)
-        }
-        combined_distributions <- do.call(cbind, lapply(distributions, unlist))
-        apply(combined_distributions, 1, stats::median, na.rm = TRUE)
-      }, simplify = FALSE
-    ))
-    combined_grey_adj_matrices_distributions_by_index <- apply(combined_grey_adj_matrices_distributions_by_index, c(1, 2), function(x) ifelse(is.na(x), 0, x))
-  }
-
-  sampled_adj_matrices <- apply(combined_grey_adj_matrices_distributions_by_index, 1, function(row) data.frame(array(row, c(n_nodes, n_nodes))), simplify = FALSE)
-  sampled_adj_matrices <- lapply(sampled_adj_matrices,
-                                 function(sampled_adj_matrix) {
-                                   colnames(sampled_adj_matrix) <- nodes
-                                   rownames(sampled_adj_matrix) <- nodes
-                                   sampled_adj_matrix
-                                 })
-
-  sampled_adj_matrices
-
-  # test <- data.frame(do.call(rbind, lapply(sampled_adj_matrices, unlist)))
-  # test <- test[, colSums(test) != 0]
-}
-
-#' infer_fgcm
+#' infer_fgcm_with_pulse
 #'
 #' @description
 #' This calculates a sequence of iterations of a simulation over an fgcm object
@@ -292,7 +38,7 @@ build_fgcmconfr_models <- function(grey_adj_matrices, samples, aggregation_fun =
 #' calculation steps with a minimal reduction in accuracy (https://doi.org/10.1007/978-3-030-52705-1_34)
 #'
 #' @export
-infer_fgcm <- function(grey_adj_matrix = matrix(),
+infer_fgcm_with_pulse <- function(grey_adj_matrix = matrix(),
                         initial_state_vector = c(),
                         activation = "kosko",
                         squashing = "sigmoid",
@@ -315,7 +61,7 @@ infer_fgcm <- function(grey_adj_matrix = matrix(),
   if (!typeof(initial_state_vector) == "list") {
     initial_state_vector <- as.list(initial_state_vector)
   }
-  confirm_initial_state_vector_is_compatible_with_grey_adj_matrix(grey_adj_matrix, initial_state_vector)
+  confirm_input_vector_is_compatible_with_grey_adj_matrix(grey_adj_matrix, initial_state_vector)
 
   IDs <- get_node_IDs_from_input(grey_adj_matrix, IDs)
   grey_adj_matrix_domain <- get_domain_of_grey_adj_matrix(grey_adj_matrix)
@@ -612,7 +358,7 @@ calculate_next_fgcm_state_vector_with_concepcion_algorithm <- function(state_vec
 }
 
 
-#' confirm_initial_state_vector_is_compatible_with_grey_adj_matrix
+#' confirm_input_vector_is_compatible_with_grey_adj_matrix
 #'
 #' @description
 #' Confirm that an initial state vector is algorithmically compatible with a grey adjacency matrix
@@ -627,7 +373,7 @@ calculate_next_fgcm_state_vector_with_concepcion_algorithm <- function(state_vec
 #'
 #' @param grey_adj_matrix An n x n grey adjacency matrix that represents an FCM
 #' @param initial_state_vector An n-length list of the initial states of each node in an fcm simulation
-confirm_initial_state_vector_is_compatible_with_grey_adj_matrix <- function(grey_adj_matrix = matrix(), initial_state_vector = c()) {
+confirm_input_vector_is_compatible_with_grey_adj_matrix <- function(grey_adj_matrix = matrix(), initial_state_vector = c()) {
   if (length(initial_state_vector) != unique(dim(grey_adj_matrix))) {
     stop("Length of input initial_state_vector is does not comply with the dimensions of the input adjacency matrix", .call = FALSE)
   } else {
@@ -1008,7 +754,7 @@ calculate_greyness <- function(grey_num = grey_number(), domain = 2) {
 }
 
 
-#' calculate_greyness
+#' get_domain_of_grey_adj_matrix
 #'
 #' @description
 #' This calculates the domain of a grey adjacency matrix. The domain is the
@@ -1100,7 +846,7 @@ c.grey_number <- function(...) {
 #' print.fgcm_simulation
 #'
 #' @description
-#' This improves the readability of the infer_fgcm output
+#' This improves the readability of the infer_fgcm_with_pulse output
 #'
 #' @details
 #' Show the first two iterations of the simulation, followed by a gap, and then
@@ -1132,3 +878,260 @@ print.fgcm_simulation <- function(x, ...) {
       "\nRun Info: iters = ", nrow(x$state_vectors), ", min error = ", x$params$min_error,
       sep = "")
 }
+
+
+
+#' #' fgcmconfr
+#' #'
+#' #' @description
+#' #' [ADD DETAILS HERE!!!!]
+#' #'
+#' #' @details
+#' #' [ADD DETAILS HERE!!!]
+#' #'
+#' #' Use vignette("fmcm-class") for more information.
+#' #'
+#' #' @param fgcm_adj_matrices A list of n x n adjacencey matrices representing fcms
+#' #' @param samples The number of samples to draw with the selected sampling method. Also,
+#' #' the number of sampled models to generate
+#' #' @param initial_state_vector A list state values at the start of an fcm simulation
+#' #' @param clamping_vector A list of values representing specific actions taken to
+#' #' control the behavior of an FCM. Specifically, non-zero values defined in this vector
+#' #' will remain constant throughout the entire simulation as if they were "clamped" at those values.
+#' #' @param activation The activation function to be applied. Must be one of the following:
+#' #' 'kosko', 'modified-kosko', or 'papageorgiou'.
+#' #' @param squashing A squashing function to apply. Must be one of the following:
+#' #' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' #' @param lambda A numeric value that defines the steepness of the slope of the
+#' #' squashing function when tanh or sigmoid are applied
+#' #' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
+#' #' @param min_error The lowest error (sum of the absolute value of the current state
+#' #' vector minus the previous state vector) at which no more iterations are necessary
+#' #' and the simulation will stop
+#' #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
+#' #' from the pbapply package as the underlying function.
+#' #' @param parallel TRUE/FALSE Whether to utilize parallel processing
+#' #' @param n_cores Number of cores to use in parallel processing. If no input given,
+#' #' will use all available cores in the machine.
+#' #' @param IDs A list of names for each node (must have n items). If empty, will use
+#' #' column names of adjacancy matrix (if given).
+#' #' @param include_simulations_in_output TRUE/FALSE whether to include simulations of monte-carlo-generated
+#' #' FCM. Will dramatically increase size of output if TRUE.
+#' #'
+#' #' @export
+#' fgcmconfr <- function(fgcm_adj_matrices = list(matrix()),
+#'                       samples = 1000,
+#'                       initial_state_vector = c(),
+#'                       clamping_vector = c(),
+#'                       activation = c("kosko", "modified-kosko", "rescale"),
+#'                       squashing = c("sigmoid", "tanh"),
+#'                       lambda = 1,
+#'                       max_iter = 100,
+#'                       min_error = 1e-5,
+#'                       show_progress = TRUE,
+#'                       parallel = TRUE,
+#'                       n_cores = integer(),
+#'                       IDs = c(),
+#'                       include_simulations_in_output = FALSE) {
+#'
+#'   concepts_in_fgcms <- lapply(fgcm_adj_matrices, function(x) get_node_IDs_from_input(x, IDs))
+#'   all_fgcms_have_same_concepts <- length(unique(concepts_in_fgcms)) == 1
+#'   if (!all_fgcms_have_same_concepts) {
+#'     stop("All grey adjacency matrices must have the same concepts.")
+#'   }
+#'
+#'   dimensions_of_input_grey_adj_matrices <- lapply(fgcm_adj_matrices, dim)
+#'   all_fgcms_have_same_dimensions <- length(unique(dimensions_of_input_grey_adj_matrices)) == 1
+#'   if (!all_fgcms_have_same_dimensions) {
+#'     stop("All grey adjacency matrices must have the same dimensions (n x n) throughout the entire list")
+#'   }
+#'
+#'   # Confirm packages necessary packages are available. If not, change run options
+#'   if (parallel) {
+#'     package_checks <- check_if_local_machine_has_parallel_processing_packages(parallel, show_progress)
+#'     parallel <- package_checks$parallel_check
+#'   }
+#'   if (show_progress) {
+#'     package_checks <- check_if_local_machine_has_parallel_processing_packages(parallel, show_progress)
+#'     show_progress <- package_checks$show_progress_check
+#'   }
+#'
+#'   # Check that adj_matrices are correct format
+#'   lapply(fgcm_adj_matrices, function(x) fgcm(x, IDs))
+#'
+#'   nodes <- unlist(unique(concepts_in_fgcms))
+#'   sampled_grey_adj_matrices <- build_fgcmconfr_models(fgcm_adj_matrices, samples, aggregation_fun, include_zeroes, nodes, show_progress)
+#'
+#'   fmcm_results <- infer_fmcm(
+#'     simulated_adj_matrices = sampled_grey_adj_matrices,
+#'     initial_state_vector = initial_state_vector,
+#'     clamping_vector = clamping_vector,
+#'     activation = activation,
+#'     squashing = squashing,
+#'     lambda = lambda,
+#'     max_iter = max_iter,
+#'     min_error = min_error
+#'   )
+#'
+#'   params <- list(
+#'     fgcms = fgcm_adj_matrices,
+#'     inference_opts = list(initial_state_vector = initial_state_vector,
+#'                           clamping_vector = clamping_vector,
+#'                           activation = activation,
+#'                           squashing = squashing,
+#'                           lambda = lambda,
+#'                           max_iter = max_iter,
+#'                           min_error = min_error,
+#'                           IDs = IDs),
+#'     bootstrap_input_opts = list(aggregation_fun = aggregation_fun,
+#'                                 samples = samples,
+#'                                 include_zeroes = include_zeroes),
+#'     runtime_opts = list(parallel = parallel,
+#'                         n_cores = n_cores,
+#'                         show_progress = show_progress,
+#'                         include_simulations_in_output = include_simulations_in_output)
+#'   )
+#'
+#'   if (bootstrap_inference_means) {
+#'     means_of_fmcm_inferences <- get_means_of_fmcm_inference(
+#'       fmcm_inference = fmcm_results$inference,
+#'       get_bootstrapped_means = bootstrap_inference_means,
+#'       confidence_interval = bootstrap_CI,
+#'       bootstrap_reps = bootstrap_reps,
+#'       bootstrap_samples_per_rep = bootstrap_reps,
+#'       parallel = parallel,
+#'       n_cores = n_cores
+#'     )
+#'
+#'     params$bootstrap_output_opts = list(bootstrap_inference_means =  bootstrap_inference_means,
+#'                                         bootstrap_CI = bootstrap_CI,
+#'                                         bootstrap_reps = bootstrap_reps,
+#'                                         bootstrap_draws_per_rep = bootstrap_draws_per_rep)
+#'
+#'     fgcmconfr_output <- structure(
+#'       .Data = list(
+#'         inference = fmcm_results$inference,
+#'         params = params,
+#'         bootstrap = list(
+#'           mean_CI_by_node = means_of_fmcm_inferences$mean_CI_by_node,
+#'           raw_bootstrap_means = means_of_fmcm_inferences$bootstrap_means
+#'         )
+#'       ),
+#'       class = "fgcmconfr"
+#'     )
+#'   } else {
+#'     fgcmconfr_output <- structure(
+#'       .Data = list(
+#'         inference = fmcm_results$inference,
+#'         params = params
+#'       ),
+#'       class = "fgcmconfr"
+#'     )
+#'   }
+#'
+#'   fgcmconfr_output
+#' }
+#'
+#'
+#' #' build_fgcmconfr_models
+#' #'
+#' #' @description
+#' #' This function generates n fgcm models whose edge weights are sampled from either
+#' #' the defined edge values in a set of adjacency matrices or continuous (uniform or triangular)
+#' #' parametric distributions derived from the sets of edge values, and stores them
+#' #' as a list of adjacency matrices.
+#' #'
+#' #' @details
+#' #' [ADD DETAILS HERE!!!]
+#' #'
+#' #' Use vignette("fgcm-class") for more information.
+#' #'
+#' #' @param grey_adj_matrices A list of n x n adjacencey matrices representing fcms
+#' #' @param sampling The sampling method to be applied. Must be one of the following: "nonparametric", "uniform", or "triangular"
+#' #' @param samples The number of samples to draw with the selected sampling method. Also,
+#' #' the number of sampled models to generate
+#' #' @param nodes A vector of node names (IDs) present in every adjacency matrix
+#' #' @param parallel TRUE/FALSE Whether to utilize parallel processing
+#' #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
+#' #' from the pbapply package as the underlying function.
+#' #'
+#' #' @export
+#' build_fgcmconfr_models <- function(grey_adj_matrices, samples, aggregation_fun = c("mean", "median"), include_zeroes = FALSE,  nodes, show_progress) {
+#'   n_nodes <- length(nodes)
+#'   n_maps <- length(grey_adj_matrices)
+#'
+#'   lower_adj_matrices <- lapply(grey_adj_matrices, function(grey_adj_matrix) apply(grey_adj_matrix, c(1, 2), function(x) ifelse(class(x[[1]]) == "grey_number", x[[1]]$lower, x[[1]])))
+#'   upper_adj_matrices <- lapply(grey_adj_matrices, function(grey_adj_matrix) apply(grey_adj_matrix, c(1, 2), function(x) ifelse(class(x[[1]]) == "grey_number", x[[1]]$upper, x[[1]])))
+#'
+#'   lower_adj_matrices_as_arrays <- array(unlist(lower_adj_matrices), c(n_nodes, n_nodes, n_maps))
+#'   upper_adj_matrices_as_arrays <- array(unlist(upper_adj_matrices), c(n_nodes, n_nodes, n_maps))
+#'
+#'   if (!include_zeroes) {
+#'     grey_adj_matrices_with_distributions <- lapply(
+#'       grey_adj_matrices,
+#'       function(grey_adj_matrix) {
+#'         apply(grey_adj_matrix, c(1, 2),
+#'               function(x) {
+#'                 ifelse(class(x[[1]]) == "grey_number",
+#'                        yes = list(runif(samples, x[[1]]$lower, x[[1]]$upper)),
+#'                        no = NA)
+#'               })})
+#'   } else {
+#'     grey_adj_matrices_with_distributions <- lapply(
+#'       grey_adj_matrices,
+#'       function(grey_adj_matrix) {
+#'         apply(grey_adj_matrix, c(1, 2),
+#'               function(x) {
+#'                 ifelse(class(x[[1]]) == "grey_number",
+#'                        yes = list(runif(samples, x[[1]]$lower, x[[1]]$upper)),
+#'                        no = list(rep(0, samples)))
+#'               })})
+#'   }
+#'   grey_adj_matrices_distributions_by_index <- do.call(cbind, lapply(grey_adj_matrices_with_distributions, function(grey_adj_matrix_with_distributions) do.call(list, grey_adj_matrix_with_distributions)))
+#'
+#'   if (aggregation_fun == "mean") {
+#'     combined_grey_adj_matrices_distributions_by_index <- apply(
+#'       grey_adj_matrices_distributions_by_index, 1,
+#'       function(distributions) {
+#'         sum_of_distributions <- rep(0, samples)
+#'         n_nonzero_distributions <- 0
+#'         if (all(lapply(distributions, typeof) == "list")) {
+#'           distributions <- lapply(distributions, unlist)
+#'         }
+#'         for (i in 1:n_maps) {
+#'           if (!identical(unique(distributions[[i]]), NA)) {
+#'             n_nonzero_distributions <- n_nonzero_distributions + 1
+#'             sum_of_distributions <- sum_of_distributions + distributions[[i]]
+#'           }
+#'         }
+#'         sum_of_distributions/n_nonzero_distributions
+#'       }
+#'     )
+#'     combined_grey_adj_matrices_distributions_by_index <- apply(combined_grey_adj_matrices_distributions_by_index, c(1, 2), function(x) ifelse(is.na(x), 0, x))
+#'   } else if (aggregation_fun == "median") {
+#'     combined_grey_adj_matrices_distributions_by_index <- do.call(cbind, apply(
+#'       grey_adj_matrices_distributions_by_index, 1,
+#'       function(distributions) {
+#'         if (all(lapply(distributions, typeof) == "list")) {
+#'           distributions <- lapply(distributions, unlist)
+#'         }
+#'         combined_distributions <- do.call(cbind, lapply(distributions, unlist))
+#'         apply(combined_distributions, 1, stats::median, na.rm = TRUE)
+#'       }, simplify = FALSE
+#'     ))
+#'     combined_grey_adj_matrices_distributions_by_index <- apply(combined_grey_adj_matrices_distributions_by_index, c(1, 2), function(x) ifelse(is.na(x), 0, x))
+#'   }
+#'
+#'   sampled_adj_matrices <- apply(combined_grey_adj_matrices_distributions_by_index, 1, function(row) data.frame(array(row, c(n_nodes, n_nodes))), simplify = FALSE)
+#'   sampled_adj_matrices <- lapply(sampled_adj_matrices,
+#'                                  function(sampled_adj_matrix) {
+#'                                    colnames(sampled_adj_matrix) <- nodes
+#'                                    rownames(sampled_adj_matrix) <- nodes
+#'                                    sampled_adj_matrix
+#'                                  })
+#'
+#'   sampled_adj_matrices
+#'
+#'   # test <- data.frame(do.call(rbind, lapply(sampled_adj_matrices, unlist)))
+#'   # test <- test[, colSums(test) != 0]
+#' }

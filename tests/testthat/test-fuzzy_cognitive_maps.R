@@ -1,43 +1,5 @@
 
-test_that("fcmconfr works", {
-  test_adj_matrix_1 <- adj_matrix <- data.frame(
-    "A" = c(0, 0, 0, 0),
-    "B" = c(1, 0, 0, 1),
-    "C" = c(0, 1, 0, 0),
-    "D" = c(0, 0, 1, 0)
-  )
-  test_adj_matrix_2 <- data.frame(
-    "A" = c(0, 0, 0, 0),
-    "B" = c(0.25, 0, 0, 0.25),
-    "C" = c(0, 0.25, 0, 0),
-    "D" = c(0, 0, 0.25, 0)
-  )
-  test_adj_matrix_3 <- data.frame(
-    "A" = c(0, 0, 0, 0),
-    "B" = c(0.75, 0, 0, 0.75),
-    "C" = c(0, 0.75, 0, 0),
-    "D" = c(0, 0, 0.75, 0)
-  )
-  test_fcms <- list(test_adj_matrix_1, test_adj_matrix_2, test_adj_matrix_3)
-
-  test_fcmconfr <- fcmconfr(
-    test_fcms, "nonparametric", samples = 1000,
-    initial_state_vector <- c(1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0),
-    activation = "kosko", squashing = "sigmoid", lambda = 1, max_iter = 100, min_error = 1e-5
-  )
-  test_fcmconfr <- fcmconfr(
-    test_fcms, "uniform", samples = 1000,
-    initial_state_vector <- c(1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0),
-    activation = "kosko", squashing = "sigmoid", lambda = 1, max_iter = 100, min_error = 1e-5
-  )
-  test_fcmconfr <- fcmconfr(
-    test_fcms, "triangular", samples = 1000,
-    initial_state_vector <- c(1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0),
-    activation = "kosko", squashing = "sigmoid", lambda = 1, max_iter = 100, min_error = 1e-5
-  )
-})
-
-test_that("infer_fcm works", {
+test_that("infer_fcm_with_clamping works", {
   adj_matrix <- data.frame(
     "A" = c(0, 0, 0, 0),
     "B" = c(1, 0, 0, 1),
@@ -53,7 +15,7 @@ test_that("infer_fcm works", {
   lambda_optimization = "koutsellis"
   IDs = c()
 
-  test_confer <- infer_fcm(adj_matrix, initial_state_vector, clamping_vector, activation = "kosko",
+  test_confer <- infer_fcm_with_clamping(adj_matrix, initial_state_vector, clamping_vector, activation = "kosko",
              squashing = "tanh", lambda = 1, max_iter = 10000)
 
   inference_vals <- round(test_confer$inference, 1)
@@ -87,15 +49,16 @@ test_that("infer_fcm works", {
   lambda_optimization = "koutsellis"
   IDs = c()
 
-  test_confer <- infer_fcm(adj_matrix, initial_state_vector, clamping_vector, activation = "kosko",
-                            squashing = "tanh", lambda = 1, max_iter = 1000)
-
+  expect_no_error(
+    test_confer <- infer_fcm_with_clamping(adj_matrix, initial_state_vector, clamping_vector, activation = "kosko",
+                                           squashing = "tanh", lambda_optimization = "koutsellis", max_iter = 1000)
+  )
   # plot(test_confer$scenario_simulation$state_vectors$C, ylim = c(-1, 1))
   # points(test_confer$baseline_simulation$state_vectors$C)
 })
 
 
-test_that("warning pops up if max_iter reached", {
+test_that("warning pops up if max_iter reached in infer_fcm_with_clamping", {
   test_adj_matrix_1 <- data.frame(
     "C1" = c(0, 0.36, 0.45, -0.90, 0),
     "C2" = c(-0.4, 0, 0, 0, 0.6),
@@ -106,12 +69,12 @@ test_that("warning pops up if max_iter reached", {
 
   test_initial_state_vector_1 <- c(0.400, 0.707, 0.612, 0.717, 0.300)
 
-  expect_warning(simulate_fcm(adj_matrix = test_adj_matrix_1, initial_state_vector = test_initial_state_vector_1, clamping_vector = c(0, 0, 0, 0, 0),
+  expect_warning(simulate_fcm_with_pulse(adj_matrix = test_adj_matrix_1, initial_state_vector = test_initial_state_vector_1, clamping_vector = c(0, 0, 0, 0, 0),
                              activation = "modified-kosko", squashing = "sigmoid", lambda = 1, max_iter = 10))
 })
 
 
-test_that("simulate_fcm works", {
+test_that("simulate_fcm_with_pulse works", {
   # Test from Stylios & Groumpos, 2000 - J. Intell. Fuzzy Syst. Vol. 8 No. 1 pp.83-98
   # Title: Fuzzy Cognitive Maps in modeling supervisory control systems (no doi available)
   # Confirmed to reproduce results
@@ -125,11 +88,11 @@ test_that("simulate_fcm works", {
 
   test_initial_state_vector_1 <- c(0.400, 0.707, 0.612, 0.717, 0.300)
 
-  test_fcm_1 <- simulate_fcm(adj_matrix = test_adj_matrix_1, initial_state_vector = test_initial_state_vector_1, clamping_vector = c(0, 0, 0, 0, 0),
+  test_fcm_1 <- simulate_fcm_with_pulse(adj_matrix = test_adj_matrix_1, initial_state_vector = test_initial_state_vector_1, clamping_vector = c(0, 0, 0, 0, 0),
                 activation = "modified-kosko", squashing = "sigmoid", lambda = 1, max_iter = 100)
-  expect_error(simulate_fcm(adj_matrix = test_adj_matrix_1, initial_state_vector = test_initial_state_vector_1, clamping_vector = c(0, 0, 0, 0, 0),
+  expect_error(simulate_fcm_with_pulse(adj_matrix = test_adj_matrix_1, initial_state_vector = test_initial_state_vector_1, clamping_vector = c(0, 0, 0, 0, 0),
                              activation = "rescale", squashing = "tanh", lambda = 1, max_iter = 100))
-  expect_no_error(simulate_fcm(adj_matrix = test_adj_matrix_1, initial_state_vector = test_initial_state_vector_1, clamping_vector = c(0, 0, 0, 0, 0),
+  expect_no_error(simulate_fcm_with_pulse(adj_matrix = test_adj_matrix_1, initial_state_vector = test_initial_state_vector_1, clamping_vector = c(0, 0, 0, 0, 0),
                             activation = "rescale", squashing = "sigmoid", lambda = 1, max_iter = 100))
 
   test_fcm_1_state_vectors <- test_fcm_1$state_vectors
@@ -150,7 +113,7 @@ test_that("simulate_fcm works", {
   #   "C8" = c(0, 0, 0, 0, 0, 0.53, 0, 0)
   # )
   # test_initial_state_vector_2 <- c(0.48, 0.57, 0.58, 0.68, 0.59, 0.58, 0.59, 0.52)
-  # test_fcm_2 <- simulate_fcm(adj_matrix = test_adj_matrix_2, initial_state_vector = test_initial_state_vector_2,
+  # test_fcm_2 <- simulate_fcm_with_pulse(adj_matrix = test_adj_matrix_2, initial_state_vector = test_initial_state_vector_2,
   #                              activation = "modified-kosko", squashing = "sigmoid", lambda = 1, max_iter = 10)
   # test_fcm_2$state_vectors
 
@@ -167,10 +130,11 @@ test_that("simulate_fcm works", {
   #   "C8" = c(0, 0, 0, 0, 0, 0.43, 0, 0)
   # )
   # test_initial_state_vector_3 <- c(0.48, 0.57, 0.58, 0.68, 0.59, 0.58, 0.59, 0.52)
-  # test_fcm_3 <- simulate_fcm(adj_matrix = test_adj_matrix_3, initial_state_vector = test_initial_state_vector_3,
+  # test_fcm_3 <- simulate_fcm_with_pulse(adj_matrix = test_adj_matrix_3, initial_state_vector = test_initial_state_vector_3,
   #                              activation = "modified-kosko", squashing = "sigmoid", lambda = 1, max_iter = 10)
   # test_fcm_3$state_vectors
 })
+
 
 #' @importFrom igraph graph_from_data_frame
 #' @importFrom igraph as_adjacency_matrix
@@ -215,26 +179,6 @@ test_that("optimize_fcm_lambda works", {
 })
 
 
-test_that("fcm works", {
-  # Test from Stylios & Groumpos, 2000 - J. Intell. Fuzzy Syst. Vol. 8 No. 1 pp.83-98
-  # Title: Fuzzy Cognitive Maps in modeling supervisory control systems (no doi available)
-  # Confirmed to reproduce results
-  test_adj_matrix <- data.frame(
-    "C1" = c(0, 0.36, 0.45, -0.90, 0),
-    "C2" = c(-0.4, 0, 0, 0, 0.6),
-    "C3" = c(-0.25, 0, 0, 0, 0),
-    "C4" = c(0, 0, 0, 0, 0.3),
-    "C5" = c(0.3, 0, 0, 0, 0)
-  )
-
-  test_fcm <- fcm(test_adj_matrix)
-
-  expect_identical(test_fcm$adj_matrix, test_adj_matrix)
-  expect_identical(test_fcm$edgelist, get_edgelist_from_adj_matrix(test_adj_matrix))
-  expect_identical(test_fcm$concepts, colnames(test_adj_matrix))
-  expect_identical(class(test_fcm), "fcm")
-})
-
 test_that("fcm catches datatype errors", {
   test_adj_matrix <- data.frame(
     "C1" = c("a", 0.36, 0.45, -0.90, 0),
@@ -244,25 +188,6 @@ test_that("fcm catches datatype errors", {
     "C5" = c(0.3, 0, 0, 0, 0)
   )
   expect_error(fcm(test_adj_matrix))
-})
-
-
-test_that("get_edgelist_from_adj_matrix works", {
-  test_adj_matrix <- data.frame(
-    "C1" = c(0, 0.36, 0.45, -0.90, 0),
-    "C2" = c(-0.4, 0, 0, 0, 0.6),
-    "C3" = c(-0.25, 0, 0, 0, 0),
-    "C4" = c(0, 0, 0, 0, 0.3),
-    "C5" = c(0.3, 0, 0, 0, 0)
-  )
-
-  goal_edgelist <- data.frame(
-    "source" = c("C2", "C3", "C4", "C1", "C5", "C1", "C5", "C1"),
-    "target" = c("C1", "C1", "C1", "C2", "C2", "C3", "C4", "C5"),
-    "weight" = c(0.36, 0.45, -0.90, -0.40, 0.60, -0.25, 0.30, 0.30)
-  )
-
-  expect_identical(get_edgelist_from_adj_matrix(test_adj_matrix), goal_edgelist)
 })
 
 
@@ -304,3 +229,25 @@ test_that("aggregate_fcm works", {
   # aggregate_consensus_filepath <- "/Users/benro/Library/CloudStorage/OneDrive-VirginiaTech/Academics/Research/Projects/GCR/Papers/Dissertation Papers/FCM Structural Analysis/raw_data/raw_group_and_agg_data/T1_group_and_agg_adj_data.xlsx"
   #
 })
+
+
+#
+# test_that("fcm works", {
+#   # Test from Stylios & Groumpos, 2000 - J. Intell. Fuzzy Syst. Vol. 8 No. 1 pp.83-98
+#   # Title: Fuzzy Cognitive Maps in modeling supervisory control systems (no doi available)
+#   # Confirmed to reproduce results
+#   test_adj_matrix <- data.frame(
+#     "C1" = c(0, 0.36, 0.45, -0.90, 0),
+#     "C2" = c(-0.4, 0, 0, 0, 0.6),
+#     "C3" = c(-0.25, 0, 0, 0, 0),
+#     "C4" = c(0, 0, 0, 0, 0.3),
+#     "C5" = c(0.3, 0, 0, 0, 0)
+#   )
+#
+#   test_fcm <- fcm(test_adj_matrix)
+#
+#   expect_identical(test_fcm$adj_matrix, test_adj_matrix)
+#   expect_identical(test_fcm$edgelist, get_edgelist_from_adj_matrix(test_adj_matrix))
+#   expect_identical(test_fcm$concepts, colnames(test_adj_matrix))
+#   expect_identical(class(test_fcm), "fcm")
+# })
