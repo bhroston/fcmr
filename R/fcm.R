@@ -15,7 +15,7 @@
 #' activity to understand how system manipulations compare to structural expectations of the system.
 #'
 #' This function produces the same output as mental modeler for the following inputs:
-#'  - activation_vector = c(1, 1, ..., 1)
+#'  - initial_state_vector = c(1, 1, ..., 1)
 #'  - activation = "kosko"
 #'  - squashing = either "sigmoid" or "tanh"
 #'  - lambda = 1
@@ -24,8 +24,8 @@
 #' functions/algorithms alongside their originating sources.
 #'
 #' @param adj_matrix An n x n adjacency matrix that represents an FCM
-#' @param activation_vector A list state values at the start of an fcm simulation
-#' @param scenario_vector A list of values representing specific actions taken to
+#' @param initial_state_vector A list state values at the start of an fcm simulation
+#' @param clamping_vector A list of values representing specific actions taken to
 #' control the behavior of an FCM. Specifically, non-zero values defined in this vector
 #' will remain constant throughout the entire simulation as if they were "clamped" at those values.
 #' @param activation The activation function to be applied. Must be one of the following:
@@ -45,12 +45,12 @@
 #'
 #' @export
 confer_fcm <- function(adj_matrix = matrix(),
-                       activation_vector = c(),
-                       scenario_vector = c(),
+                       initial_state_vector = c(),
+                       clamping_vector = c(),
                        activation = "kosko", # Problems when activation == "rescale",
                        squashing = "tanh",
                        lambda = 1,
-                       max_iter = 10,
+                       max_iter = 100,
                        min_error = 1e-5,
                        lambda_optimization = "none", # Verify this function works
                        IDs = c()) {
@@ -60,30 +60,30 @@ confer_fcm <- function(adj_matrix = matrix(),
 
   confirm_adj_matrix_is_square(adj_matrix)
 
-  if (identical(activation_vector, c())) {
-    warning("No activation_vector input given. Assuming all nodes have an initial state of 1.")
-    activation_vector <- rep(1, nrow(adj_matrix))
+  if (identical(initial_state_vector, c())) {
+    warning("No initial_state_vector input given. Assuming all nodes have an initial state of 1.")
+    initial_state_vector <- rep(1, nrow(adj_matrix))
   }
 
-  if (identical(scenario_vector, c())) {
-    warning("No scenario_vector input given. Assuming no values are clamped.")
-    scenario_vector <- rep(0, length(activation_vector))
+  if (identical(clamping_vector, c())) {
+    warning("No clamping_vector input given. Assuming no values are clamped.")
+    clamping_vector <- rep(0, length(initial_state_vector))
   }
 
   # Get baseline simulation
-  baseline_activation_vector <- rep(1, length(activation_vector))
-  baseline_scenario_vector <- rep(0, length(scenario_vector))
+  baseline_initial_state_vector <- rep(1, length(initial_state_vector))
+  baseline_clamping_vector <- rep(0, length(clamping_vector))
   baseline_simulation <- simulate_fcm(adj_matrix,
-                                      baseline_activation_vector, baseline_scenario_vector,
+                                      baseline_initial_state_vector, baseline_clamping_vector,
                                       activation, squashing, lambda,
                                       max_iter, min_error, lambda_optimization,
                                       IDs)
 
   # Get scenario simulation
-  scenario_activation_vector <- activation_vector
-  scenario_scenario_vector <- scenario_vector
+  scenario_initial_state_vector <- initial_state_vector
+  scenario_clamping_vector <- clamping_vector
   scenario_simulation <- simulate_fcm(adj_matrix,
-                                      scenario_activation_vector, scenario_scenario_vector,
+                                      scenario_initial_state_vector, scenario_clamping_vector,
                                       activation, squashing, lambda,
                                       max_iter, min_error, lambda_optimization,
                                       IDs)
@@ -156,8 +156,8 @@ confer_fcm <- function(adj_matrix = matrix(),
 #' functions/algorithms alongside their originating sources.
 #'
 #' @param adj_matrix An n x n adjacency matrix that represents an FCM
-#' @param activation_vector A list state values at the start of an fcm simulation
-#' @param scenario_vector A list of values representing specific actions taken to
+#' @param initial_state_vector A list state values at the start of an fcm simulation
+#' @param clamping_vector A list of values representing specific actions taken to
 #' control the behavior of an FCM. Specifically, non-zero values defined in this vector
 #' will remain constant throughout the entire simulation as if they were "clamped" at those values.
 #' @param activation The activation function to be applied. Must be one of the following:
@@ -177,47 +177,47 @@ confer_fcm <- function(adj_matrix = matrix(),
 #'
 #' @export
 simulate_fcm <- function(adj_matrix = matrix(),
-                          activation_vector = c(),
-                          scenario_vector = c(),
+                          initial_state_vector = c(),
+                          clamping_vector = c(),
                           activation = "kosko", # Problems when activation == "rescale",
                           squashing = "tanh",
                           lambda = 1,
-                          max_iter = 10,
+                          max_iter = 100,
                           min_error = 1e-5,
                           lambda_optimization = "none", # Verify this function works
                           IDs = c()) {
 
   confirm_adj_matrix_is_square(adj_matrix)
 
-  if (identical(activation_vector, c())) {
-    warning("No activation_vector input given. Assuming all nodes have an initial state of 1.")
-   activation_vector <- rep(1, nrow(adj_matrix))
+  if (identical(initial_state_vector, c())) {
+    warning("No initial_state_vector input given. Assuming all nodes have an initial state of 1.")
+   initial_state_vector <- rep(1, nrow(adj_matrix))
   }
 
-  if (identical(scenario_vector, c())) {
-    warning("No scenario_vector input given. Assuming no values are clamped.")
-    scenario_vector <- rep(0, length(activation_vector))
+  if (identical(clamping_vector, c())) {
+    warning("No clamping_vector input given. Assuming no values are clamped.")
+    clamping_vector <- rep(0, length(initial_state_vector))
   }
 
   if (lambda_optimization != "none") {
     lambda <- optimize_fcm_lambda(adj_matrix, squashing, lambda_optimization)
   }
 
-  confirm_activation_vector_is_compatible_with_adj_matrix(adj_matrix, activation_vector)
+  confirm_initial_state_vector_is_compatible_with_adj_matrix(adj_matrix, initial_state_vector)
   IDs <- get_node_IDs_from_input(adj_matrix, IDs)
 
-  state_vectors <- data.frame(matrix(data = numeric(), nrow = max_iter + 1, ncol = length(activation_vector)))
+  state_vectors <- data.frame(matrix(data = numeric(), nrow = max_iter + 1, ncol = length(initial_state_vector)))
 
-  errors <-  data.frame(matrix(data = numeric(), nrow = max_iter, ncol = length(activation_vector)))
+  errors <-  data.frame(matrix(data = numeric(), nrow = max_iter, ncol = length(initial_state_vector)))
 
-  state_vectors[1, ] <- activation_vector
+  state_vectors[1, ] <- initial_state_vector
   errors[1, ] <- 0
 
   for (i in 2:(max_iter + 1)) {
     state_vector <- state_vectors[i - 1, ]
     next_state_vector <- calculate_next_fcm_state_vector(adj_matrix, state_vector, activation, squashing)
     normalized_state_vector <- squash(next_state_vector, squashing = squashing, lambda = lambda)
-    normalized_state_vector[scenario_vector != 0] <- scenario_vector[scenario_vector != 0]
+    normalized_state_vector[clamping_vector != 0] <- clamping_vector[clamping_vector != 0]
     state_vectors[i, ] <- normalized_state_vector
     errors[i, ] <- abs(as.matrix(state_vectors[i - 1,]) - as.matrix(state_vectors[i, ]))
     total_error <- sum(errors[i, ])
@@ -226,6 +226,18 @@ simulate_fcm <- function(adj_matrix = matrix(),
       errors <- stats::na.omit(errors)
       break
     }
+  }
+  if (i >= max_iter) {
+    warning(
+      "\tThe simulation reached the maximum number of iterations before
+        achieving the minimum allowable error. This may signal that
+        the fcm has reached a limit-cycle or is endlessly chaotic.
+
+        It is also possible that the fcm simply requires more iterations
+        to converge within the input minimum error.
+
+        Try increasing the max_iter or min_error inputs."
+    )
   }
 
   colnames(state_vectors) <- IDs
@@ -240,7 +252,7 @@ simulate_fcm <- function(adj_matrix = matrix(),
       errors = errors,
       params = list(
         adj_matrix = adj_matrix,
-        activation_vector = activation_vector,
+        initial_state_vector = initial_state_vector,
         activation = activation,
         squashing = squashing,
         lambda = lambda,
@@ -438,7 +450,7 @@ normalize_state_vector_with_optimized_lambda <- function(raw_state = numeric(),
 }
 
 
-#' confirm_activation_vector_is_compatible_with_adj_matrix
+#' confirm_initial_state_vector_is_compatible_with_adj_matrix
 #'
 #' @description
 #' Confirm that an initial state vector is algorithmically compatible with an adjacency matrix
@@ -452,10 +464,10 @@ normalize_state_vector_with_optimized_lambda <- function(raw_state = numeric(),
 #' Intended for developer use only to improve package readability.
 #'
 #' @param adj_matrix An n x n adjacency matrix that represents an FCM
-#' @param activation_vector An n-length list of the initial states of each node in an fcm simulation
-confirm_activation_vector_is_compatible_with_adj_matrix <- function(adj_matrix = matrix(), activation_vector = c()) {
-  if (length(activation_vector) != unique(dim(adj_matrix))) {
-    stop("Length of input activation_vector is does not comply with the dimensions of the input adjacency matrix", .call = FALSE)
+#' @param initial_state_vector An n-length list of the initial states of each node in an fcm simulation
+confirm_initial_state_vector_is_compatible_with_adj_matrix <- function(adj_matrix = matrix(), initial_state_vector = c()) {
+  if (length(initial_state_vector) != unique(dim(adj_matrix))) {
+    stop("Length of input initial_state_vector is does not comply with the dimensions of the input adjacency matrix", .call = FALSE)
   } else {
     TRUE
   }
@@ -502,6 +514,81 @@ fcm <- function(adj_matrix = matrix(), IDs = c()) {
       edgelist = get_edgelist_from_adj_matrix(adj_matrix)
     ),
     class = "fcm"
+  )
+}
+
+
+
+#' Construct an aggregate fcm from a group (list) of fcms
+#'
+#' @description Construct the aggregate fcm from a group (list)
+#' of fcms. Via mean or median.
+#'
+#' @details Add details here
+#'
+#' @param adj_matrices A list type object of fcms. Must have a length greater
+#' than 1.
+#' @param aggregation_fun "mean" or "median"
+#' @param include_zeroes TRUE/FALSE Whether to include zeroes in the mean/median
+#' calculations. (i.e. if edges not included in a map should count as a zero-weighted
+#' edge or not at all)
+#' @param IDs A list of names for each node (must have n items)
+#'
+#' @return A single fcm calculated as the aggregate of the input adjacency matrices
+#' @export
+aggregate_fcm <- function(adj_matrices = list(), aggregation_fun = "mean", include_zeroes = TRUE, IDs = c()) {
+  # error checks ----
+  concepts_in_fcms <- lapply(adj_matrices, function(x) get_node_IDs_from_input(x, IDs))
+  all_fcms_have_same_concepts <- length(unique(concepts_in_fcms)) == 1
+  if (!all_fcms_have_same_concepts) {
+    stop("All adjacency matrices must have the same concepts.")
+  }
+
+  dimensions_of_input_adj_matrices <- lapply(adj_matrices, dim)
+  all_fcms_have_same_dimensions <- length(unique(dimensions_of_input_adj_matrices)) == 1
+  if (!all_fcms_have_same_dimensions) {
+    stop("All adjacency matrices must have the same dimensions (n x n) throughout the entire list")
+  }
+
+  # Check that adj_matrices are correct format
+  lapply(adj_matrices, function(x) fcm(x, IDs))
+
+  # function ----
+  node_names <- unlist(unique(concepts_in_fcms))
+  n_nodes <- length(node_names)
+  n_maps <- length(adj_matrices)
+
+  if (!include_zeroes) {
+    adj_matrices <- lapply(adj_matrices, function(x) replace(x, x == 0, NA))
+  }
+
+  if (aggregation_fun == "mean") {
+    aggregate_adj_matrix <- apply(
+      array(unlist(adj_matrices), c(n_nodes, n_nodes, n_maps)), 1:2,
+      function(x) mean(x, na.rm = TRUE)
+    )
+  } else if (aggregation_fun == "median") {
+    aggregate_adj_matrix <- apply(
+      array(unlist(adj_matrices), c(n_nodes, n_nodes, n_maps)), 1:2,
+      function(x) stats::median(x, na.rm = TRUE)
+    )
+  }
+
+  aggregate_adj_matrix[is.na(aggregate_adj_matrix)] <- 0
+
+  colnames(aggregate_adj_matrix) <- node_names
+  rownames(aggregate_adj_matrix) <- node_names
+
+  structure(
+    .Data = list(
+      adj_matrix = as.data.frame(aggregate_adj_matrix),
+      params = list(
+        input_adj_matrices = adj_matrices,
+        aggregation_fun = aggregation_fun,
+        IDs = IDs
+      )
+    ),
+    class = "aggregate"
   )
 }
 

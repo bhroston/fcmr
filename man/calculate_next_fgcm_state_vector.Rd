@@ -2,12 +2,12 @@
 % Please edit documentation in R/fgcm.R
 \name{calculate_next_fgcm_state_vector}
 \alias{calculate_next_fgcm_state_vector}
-\title{calculate_next_fcm_state_vector}
+\title{calculate_next_fgcm_state_vector}
 \usage{
 calculate_next_fgcm_state_vector(
   grey_adj_matrix = matrix(),
   state_vector = c(),
-  activation = "modified-kosko",
+  activation = "kosko",
   algorithm = "salmeron"
 )
 }

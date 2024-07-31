@@ -8,7 +8,8 @@ get_adj_matrix_from_edgelist(
   edgelist = matrix(),
   source_colname = "source",
   target_colname = "target",
-  value_colname = "weight"
+  value_colname = "weight",
+  node_order = c()
 )
 }
 \arguments{
@@ -21,8 +22,11 @@ edge source nodes}
 \item{target_colname}{Column name in the input edgelist that represents
 edge target nodes}
 
-\item{value_colname}{Colname in th einput edgelist that represents represents
+\item{value_colname}{Column name in the input edgelist that represents represents
 the values displayed in the adjacency matrix (i.e. weight, standard_deviation)}
+
+\item{node_order}{The order in which concepts should be arranged in the output
+adjacency matrix. If no input given, concepts will be arranged alphabetically.}
 }
 \description{
 This "gets" an adjacency matrix representing a graph described by the input

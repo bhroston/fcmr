@@ -6,12 +6,12 @@
 \usage{
 simulate_fcm(
   adj_matrix = matrix(),
-  activation_vector = c(),
-  scenario_vector = c(),
+  initial_state_vector = c(),
+  clamping_vector = c(),
   activation = "kosko",
   squashing = "tanh",
   lambda = 1,
-  max_iter = 10,
+  max_iter = 100,
   min_error = 1e-05,
   lambda_optimization = "none",
   IDs = c()
@@ -20,9 +20,9 @@ simulate_fcm(
 \arguments{
 \item{adj_matrix}{An n x n adjacency matrix that represents an FCM}
 
-\item{activation_vector}{A list state values at the start of an fcm simulation}
+\item{initial_state_vector}{A list state values at the start of an fcm simulation}
 
-\item{scenario_vector}{A list of values representing specific actions taken to
+\item{clamping_vector}{A list of values representing specific actions taken to
 control the behavior of an FCM. Specifically, non-zero values defined in this vector
 will remain constant throughout the entire simulation as if they were "clamped" at those values.}
 
