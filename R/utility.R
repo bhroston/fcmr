@@ -1,4 +1,14 @@
 
+#' dopar operator
+#'
+#' See https://cran.r-project.org/web/packages/doParallel/vignettes/gettingstartedParallel.pdf for details.
+#'
+#' @name %dopar%
+#' @keywords internal
+#' @export
+#' @importFrom foreach %dopar%
+NULL
+
 #' get_edgelist_from_adj_matrix
 #'
 #' @description
@@ -198,6 +208,53 @@ confirm_adj_matrix_is_square <- function(adj_matrix = matrix()) {
 }
 
 
+
+#' confirm_adj_matrices_have_same_concepts
+#'
+#' @description
+#' This checks a list of lists of column names of adjacency matrices and
+#' confirms that each list is identical.
+#'
+#' @details
+#' Note: This function does NOT take the raw adjacency matrices as an input. Rather,
+#' it takes a list of lists of column names of adjacency matrices.
+#'
+#'
+#' @param list_of_concepts_by_adj_matrix A list of lists of column names of adjacency matrices
+#'
+#' @export
+confirm_adj_matrices_have_same_concepts <- function(list_of_concepts_by_adj_matrix = list()) {
+  all_adj_matrices_have_same_concepts <- length(unique(list_of_concepts_by_adj_matrix)) == 1
+  if (!all_adj_matrices_have_same_concepts) {
+    stop("All input adjacency matrices must have the same concepts.")
+  }
+}
+
+
+
+#' confirm_adj_matrices_have_same_dimensions
+#'
+#' @description
+#' This checks that all adjacency matrices in a list have the same dimensions
+#' (i.e. all are n x n)
+#'
+#' @details
+#' Note: This function DOES take the raw adjacency matrices as an input.
+#'
+#' @param adj_matrices A list of n x n adjacency matrices
+#'
+#' @export
+confirm_adj_matrices_have_same_dimensions <- function(adj_matrices = list(matrix())) {
+  dimensions_of_input_adj_matrices <- lapply(adj_matrices, dim)
+  all_adj_matrices_have_same_dimensions <- length(unique(dimensions_of_input_adj_matrices)) == 1
+  if (!all_adj_matrices_have_same_dimensions) {
+    stop("All input adjacency matrices must have the same dimensions (n x n) throughout the entire list")
+  }
+}
+
+
+
+
 #' confirm_unique_datatype_in_object
 #'
 #' @description
@@ -222,6 +279,8 @@ confirm_unique_datatype_in_object <- function(object, datatype = "numeric") {
     TRUE
   }
 }
+
+
 
 #' get_node_IDs_from_input
 #'
@@ -290,6 +349,79 @@ confirm_only_numeric_data_in_adj_matrix <- function(adj_matrix = matrix()) {
 }
 
 
+#' get_fcm_class_from_adj_matrices
+#'
+#' @description
+#' Get the class of fcm from the input adj matrices
+#'
+#' @details
+#' This returns the class of fcm represented by the input adjacency matrices i.e.
+#' fcm, fgcm, ftcm, etc.
+#'
+#' Intended for developer use only to improve package readability.
+#'
+#' @param adj_matrices A list of n x n adjacency matrix that represents an FCM
+get_fcm_class_from_adj_matrices <- function(adj_matrices = list(matrix())) {
+  data_types_in_adj_matrices_by_adj_matrix <- lapply(
+    adj_matrices,
+    function(adj_matrix) {
+      unique(unlist(apply(adj_matrix, c(1, 2), function(element) class(element[[1]]), simplify = FALSE)))  # ifelse(class(element[[1]]) != "numeric", class(element[[1]]), class(element[[1]])))
+    }
+  )
+
+  all_adj_matrices_are_of_same_class <- length(unique(data_types_in_adj_matrices_by_adj_matrix)) == 1
+  if (!all_adj_matrices_are_of_same_class) {
+    stop("All input adj_matrices must have the same data types, i.e. they must all be
+         either conventional fcm, fuzzy grey cognitive maps, or fuzzy triangular cognitive maps.")
+  }
+
+  data_types_in_adj_matrices <- unlist(unique(data_types_in_adj_matrices_by_adj_matrix))
+  if (all(data_types_in_adj_matrices %in% "numeric")) {
+    fcm_class <- "fcm"
+  } else if (all(data_types_in_adj_matrices %in% c("numeric", "grey_number"))) {
+    fcm_class <- "fgcm"
+  } else if (all(data_types_in_adj_matrices %in% c("numeric", "triangular_number"))) {
+    fcm_class <- "ftcm"
+  } else {
+    stop(paste0("Incompatible collection of data types found in input adj_matrices: '", paste0(data_types_in_adj_matrices, collapse = '', "'")))
+  }
+
+  fcm_class
+}
+
+
+
+#' confirm_input_vector_is_compatible_with_adj_matrices
+#'
+#' @description
+#' Check whether an input vector (initial_state_vector or clamping_vector) is
+#' compatible with the data types present in the representative_adj_matrix.
+#'
+#' @details
+#' [ADD DETAILS HERE!!!]
+#'
+#' Intended for developer use only to improve package readability.
+#'
+#' @param representative_adj_matrix An adjacency matrix whose format (i.e. dims and data.types)
+#' are representative of a larger list of adjacency matrices
+#' @param input_vector An input vector, either the initial_state_vector input or
+#' the clamping_vector input
+#' @param fcm_class The class of fcm represented by the representative_adj_matrix
+confirm_input_vector_is_compatible_with_adj_matrices <- function(representative_adj_matrix = matrix(),
+                                                                 input_vector = c(),
+                                                                 fcm_class = c("fcm", "fgcm", "ftcm")) {
+
+  if (fcm_class == "fcm") {
+    confirm_input_vector_is_compatible_with_adj_matrix(representative_adj_matrix, input_vector)
+  } else if (fcm_class == "fgcm") {
+    confirm_input_vector_is_compatible_with_grey_adj_matrix(representative_adj_matrix, input_vector)
+  } else if (fcm_class == "ftcm") {
+    confirm_input_vector_is_compatible_with_triangular_adj_matrix(representative_adj_matrix, input_vector)
+  }
+}
+
+
+
 #' match_state_vector_df_shapes
 #'
 #' @description
@@ -334,3 +466,138 @@ match_state_vector_df_shapes <- function(baseline_state_vectors, scenario_state_
     scenario = data.frame(new_scenario_state_vectors)
   )
 }
+
+
+
+#' check_if_local_machine_has_access_to_show_progress_functionalities
+#'
+#' @description
+#' Check whether the local machine has access to the necessary packages to
+#' run code in parallel and/or using a progress bar. Specifically, checks for
+#' the doSNOW, foreach, and pbapply packages.
+#'
+#' @details
+#' Confirms that a local machine can access the required packages for
+#' displaying progress bars at runtime. Will revise inputs
+#' if particular packages are unavailable and warn the user of such changes, but will
+#' not halt a run.
+#'
+#' @param use_parallel TRUE/FALSE The user intends to use parallel processing
+#' @param use_show_progress TRUE/FALSE The user intends to display progress bars
+check_if_local_machine_has_access_to_show_progress_functionalities <- function(use_parallel, use_show_progress) {
+  # Confirm packages necessary packages are available. If not, change run options
+  parallel_check <- use_parallel
+  show_progress_check <- use_show_progress
+
+  if (use_show_progress) {
+    if (use_parallel) {
+      local_machine_has_access_to_doSNOW <- requireNamespace("doSNOW")
+      local_machine_has_access_to_foreach <- requireNamespace("foreach")
+      if (!local_machine_has_access_to_doSNOW | !local_machine_has_access_to_foreach) {
+        show_progress_check <- FALSE
+        warning("\tShowing progress with parallel processing requires the 'doSNOW' and 'foreach' packages which are
+        currently not installed. Running in parallel but without showing progress.")
+      }
+    } else {
+      local_machine_has_access_to_pbapply <- requireNamespace("pbapply")
+      if (!local_machine_has_access_to_pbapply) {
+        show_progress_check <- FALSE
+        warning("\tShowing progress requires the 'pbapply' package which is
+        currently not installed. Running without showing progress.")
+      }
+    }
+  }
+
+  show_progress_check
+}
+
+
+#' check_if_local_machine_has_access_to_parallel_processing_functionalities
+#'
+#' @description
+#' Check whether the local machine has access to the necessary packages to
+#' run code in parallel and/or using a progress bar. Specifically, checks for
+#' the parallel, doSNOW, foreach, and pbapply packages.
+#'
+#' @details
+#' Confirms that a local machine can access the required packages for parallel
+#' processing and/or displaying progress bars at runtime. Will revise inputs
+#' if particular packages are unavailable and warn the user of such changes, but will
+#' not halt a run.
+#'
+#' @param use_parallel TRUE/FALSE The user intends to use parallel processing
+#' @param use_show_progress TRUE/FALSE The user intends to display progress bars
+check_if_local_machine_has_access_to_parallel_processing_functionalities <- function(use_parallel, use_show_progress) {
+  # Confirm packages necessary packages are available. If not, change run options
+  parallel_check <- use_parallel
+  show_progress_check <- use_show_progress
+
+  if (use_parallel) {
+    if (use_show_progress) {
+      local_machine_has_access_to_doSNOW <- requireNamespace("doSNOW")
+      local_machine_has_access_to_foreach <- requireNamespace("foreach")
+      if (!local_machine_has_access_to_doSNOW | !local_machine_has_access_to_foreach) {
+        parallel_check <- FALSE
+        warning("\tShowing progress with parallel processing requires the 'doSNOW' and 'foreach' packages which are
+        currently not installed. Running in parallel but without showing progress.")
+      }
+    } else {
+      local_machine_has_access_to_parallel <- requireNamespace("parallel")
+      if (!local_machine_has_access_to_parallel) {
+        parallel_check <- FALSE
+        warning("\tParallel processing requires the 'parallel' package which is
+        currently not installed. Running without parallel processing.")
+      }
+    }
+  }
+  parallel_check
+}
+
+
+# get_number_of_fcm_combinations <- function(adj_matrices = list(matrix())) {
+#   non_zero_edge_indexes_by_adj_matrix <- lapply(adj_matrices, function(adj_matrix) which(adj_matrix != 0, arr.ind = TRUE))
+#   non_zero_edge_indexes_across_adj_matrices <- unique(do.call(rbind, non_zero_edge_indexes_by_adj_matrix))
+#
+#
+#
+#   included_edge_weights_across_adj_matrices <- lapply(adj_matrices, function(adj_matrix) adj_matrix[non_zero_edge_indexes_across_adj_matrices])
+#   unique_included_edge_weights_across_adj_matrices <- lapply(included_edge_weights_across_adj_matrices, unique)
+#   unique(expand.grid(unique_included_edge_weights_across_adj_matrices))
+#
+#   if (!include_zeroes) {
+#     included_edge_weights_across_adj_matrices <- lapply(included_edge_weights_across_adj_matrices, function(x) x[x != 0])
+#   }
+#   num_included_edge_weights_across_adj_matrices <- lapply(included_edge_weights_across_adj_matrices, length)
+#   estimated_number_of_fcm_combinations <- prod(unlist(num_included_edge_weights_across_adj_matrices))
+#
+#   estimated_number_of_fcm_combinations
+# }
+#
+#.  adj_matrices_dims <- unlist(unique(lapply(adj_matrices, function(adj_matrix) dim(adj_matrix))))
+#   edge_weights_by_adj_matrix <- lapply(adj_matrices, function(adj_matrix) unlist(array(adj_matrix, c(1, n_nodes))))
+#   edge_weights_by_adj_matrix <- do.call(rbind, edge_weights_by_adj_matrix)
+#   non_zero_edge_indexes <- apply(edge_weights_by_adj_matrix, 2, function(col_values) !identical(unique(col_values), 0))
+#   valued_edge_weights_by_adj_matrix <- edge_weights_by_adj_matrix[, non_zero_edge_indexes]
+#
+#   number_of_fcm_combinations <- apply(nrow(valued_edge_weights_by_adj_matrix), 2, function(x) length(x))
+#
+#   widened_combined_adj_matrix_as_lists <- lapply(seq_len(ncol(nonzero_widened_combined_adj_matrix)), function(x) nonzero_widened_combined_adj_matrix[, x])
+#
+#   seq_len()
+#
+#
+#   non_zero_edge_indexes <- apply(edge_weights_by_adj_matrix, 2, function(col_values) !identical(unique(col_values), 0))
+#
+#
+#
+#
+#   combined_adj_matrix <- apply(adj_matrices, c(1, 2), function(x) x, simplify = FALSE)
+#   widened_combined_adj_matrix <- array(combined_adj_matrix, c(1, n_nodes^2))
+#   widened_combined_adj_matrix <- apply(widened_combined_adj_matrix, 2, unlist)
+#   non_zero_value_indexes <- unlist(lapply(apply(widened_combined_adj_matrix, 2, unique), function(x) !identical(x, 0)))
+#   nonzero_widened_combined_adj_matrix <- widened_combined_adj_matrix[, non_zero_value_indexes]
+#
+#   widened_combined_adj_matrix_as_lists <- lapply(seq_len(ncol(nonzero_widened_combined_adj_matrix)), function(x) nonzero_widened_combined_adj_matrix[, x])
+#
+# }
+

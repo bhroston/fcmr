@@ -1,5 +1,6 @@
 
-#' confer_fcm
+
+#' infer_fcm_with_clamping
 #'
 #' @description
 #' This confers with a baseline simulation of an FCM and a scenario (scenario vector)
@@ -44,16 +45,16 @@
 #' column names of adjacancy matrix (if given).
 #'
 #' @export
-confer_fcm <- function(adj_matrix = matrix(),
-                       initial_state_vector = c(),
-                       clamping_vector = c(),
-                       activation = "kosko", # Problems when activation == "rescale",
-                       squashing = "tanh",
-                       lambda = 1,
-                       max_iter = 100,
-                       min_error = 1e-5,
-                       lambda_optimization = "none", # Verify this function works
-                       IDs = c()) {
+infer_fcm_with_clamping <- function(adj_matrix = matrix(),
+                      initial_state_vector = c(),
+                      clamping_vector = c(),
+                      activation = "kosko", # Problems when activation == "rescale",
+                      squashing = "tanh",
+                      lambda = 1,
+                      max_iter = 100,
+                      min_error = 1e-5,
+                      lambda_optimization = "none", # Verify this function works
+                      IDs = c()) {
 
   # Add for R CMD Check. Does not impact logic.
   iter <- NULL
@@ -73,7 +74,7 @@ confer_fcm <- function(adj_matrix = matrix(),
   # Get baseline simulation
   baseline_initial_state_vector <- rep(1, length(initial_state_vector))
   baseline_clamping_vector <- rep(0, length(clamping_vector))
-  baseline_simulation <- simulate_fcm(adj_matrix,
+  baseline_simulation <- simulate_fcm_with_pulse(adj_matrix,
                                       baseline_initial_state_vector, baseline_clamping_vector,
                                       activation, squashing, lambda,
                                       max_iter, min_error, lambda_optimization,
@@ -82,7 +83,7 @@ confer_fcm <- function(adj_matrix = matrix(),
   # Get scenario simulation
   scenario_initial_state_vector <- initial_state_vector
   scenario_clamping_vector <- clamping_vector
-  scenario_simulation <- simulate_fcm(adj_matrix,
+  scenario_simulation <- simulate_fcm_with_pulse(adj_matrix,
                                       scenario_initial_state_vector, scenario_clamping_vector,
                                       activation, squashing, lambda,
                                       max_iter, min_error, lambda_optimization,
@@ -133,12 +134,12 @@ confer_fcm <- function(adj_matrix = matrix(),
       scenario_simulation = scenario_simulation,
       baseline_simulation = baseline_simulation
     ),
-    class = "fcmconfer"
+    class = "fcm_inference_with_clamping"
   )
 }
 
 
-#' simulate_fcm
+#' simulate_fcm_with_pulse
 #'
 #' @description
 #' This calculates a sequence of iterations of a simulation over an fcm object
@@ -176,22 +177,22 @@ confer_fcm <- function(adj_matrix = matrix(),
 #' column names of adjacancy matrix (if given).
 #'
 #' @export
-simulate_fcm <- function(adj_matrix = matrix(),
-                          initial_state_vector = c(),
-                          clamping_vector = c(),
-                          activation = "kosko", # Problems when activation == "rescale",
-                          squashing = "tanh",
-                          lambda = 1,
-                          max_iter = 100,
-                          min_error = 1e-5,
-                          lambda_optimization = "none", # Verify this function works
-                          IDs = c()) {
+simulate_fcm_with_pulse <- function(adj_matrix = matrix(),
+                         initial_state_vector = c(),
+                         clamping_vector = c(),
+                         activation = "kosko", # Problems when activation == "rescale",
+                         squashing = "tanh",
+                         lambda = 1,
+                         max_iter = 100,
+                         min_error = 1e-5,
+                         lambda_optimization = "none", # Verify this function works
+                         IDs = c()) {
 
   confirm_adj_matrix_is_square(adj_matrix)
 
   if (identical(initial_state_vector, c())) {
     warning("No initial_state_vector input given. Assuming all nodes have an initial state of 1.")
-   initial_state_vector <- rep(1, nrow(adj_matrix))
+    initial_state_vector <- rep(1, nrow(adj_matrix))
   }
 
   if (identical(clamping_vector, c())) {
@@ -203,7 +204,7 @@ simulate_fcm <- function(adj_matrix = matrix(),
     lambda <- optimize_fcm_lambda(adj_matrix, squashing, lambda_optimization)
   }
 
-  confirm_initial_state_vector_is_compatible_with_adj_matrix(adj_matrix, initial_state_vector)
+  confirm_input_vector_is_compatible_with_adj_matrix(adj_matrix, initial_state_vector)
   IDs <- get_node_IDs_from_input(adj_matrix, IDs)
 
   state_vectors <- data.frame(matrix(data = numeric(), nrow = max_iter + 1, ncol = length(initial_state_vector)))
@@ -450,7 +451,7 @@ normalize_state_vector_with_optimized_lambda <- function(raw_state = numeric(),
 }
 
 
-#' confirm_initial_state_vector_is_compatible_with_adj_matrix
+#' confirm_input_vector_is_compatible_with_adj_matrix
 #'
 #' @description
 #' Confirm that an initial state vector is algorithmically compatible with an adjacency matrix
@@ -465,58 +466,13 @@ normalize_state_vector_with_optimized_lambda <- function(raw_state = numeric(),
 #'
 #' @param adj_matrix An n x n adjacency matrix that represents an FCM
 #' @param initial_state_vector An n-length list of the initial states of each node in an fcm simulation
-confirm_initial_state_vector_is_compatible_with_adj_matrix <- function(adj_matrix = matrix(), initial_state_vector = c()) {
+confirm_input_vector_is_compatible_with_adj_matrix <- function(adj_matrix = matrix(), initial_state_vector = c()) {
   if (length(initial_state_vector) != unique(dim(adj_matrix))) {
     stop("Length of input initial_state_vector is does not comply with the dimensions of the input adjacency matrix", .call = FALSE)
   } else {
     TRUE
   }
 }
-
-
-
-#' fcm (fuzzy cognitive map) S3 class
-#'
-#' @description
-#' This class is an organization scheme for ordinary fuzzy cognitive maps (See
-#' Kosko, XXXX for example). It stores the nodes of an FCM and its
-#' corresponding adjacency matrix and edgelist.
-#'
-#' @details
-#' fcm stores fcm data in forms useful to data manipulation, particular
-#' regarding pairing with popular network analysis libraries like igraph
-#' or visNetwork.
-#'
-#' Use vignette("fcm-class") for more information.
-#'
-#' @param adj_matrix An n x n adjacency matrix that represents an FCM
-#' @param IDs A list of names for each node (must have n items)
-#'
-#' @export
-#' @examples
-#' fcm(adj_matrix = matrix(data = c(0, 1, 1, 0), nrow = 2, ncol = 2))
-fcm <- function(adj_matrix = matrix(), IDs = c()) {
-  # Validate input
-  confirm_adj_matrix_is_square(adj_matrix)
-  IDs <- get_node_IDs_from_input(adj_matrix, IDs)
-
-  data_types <- unique(vapply(adj_matrix, class, character(1)))
-  only_numeric_data_types <- identical(data_types, "numeric")
-  if (!only_numeric_data_types) {
-    stop("Input adjacency matrix must only contain numeric objects, and all
-         objects must be numeric")
-  }
-
-  structure(
-    .Data = list(
-      concepts = IDs,
-      adj_matrix = adj_matrix,
-      edgelist = get_edgelist_from_adj_matrix(adj_matrix)
-    ),
-    class = "fcm"
-  )
-}
-
 
 
 #' Construct an aggregate fcm from a group (list) of fcms
@@ -538,23 +494,15 @@ fcm <- function(adj_matrix = matrix(), IDs = c()) {
 #' @export
 aggregate_fcm <- function(adj_matrices = list(), aggregation_fun = "mean", include_zeroes = TRUE, IDs = c()) {
   # error checks ----
-  concepts_in_fcms <- lapply(adj_matrices, function(x) get_node_IDs_from_input(x, IDs))
-  all_fcms_have_same_concepts <- length(unique(concepts_in_fcms)) == 1
-  if (!all_fcms_have_same_concepts) {
-    stop("All adjacency matrices must have the same concepts.")
-  }
-
-  dimensions_of_input_adj_matrices <- lapply(adj_matrices, dim)
-  all_fcms_have_same_dimensions <- length(unique(dimensions_of_input_adj_matrices)) == 1
-  if (!all_fcms_have_same_dimensions) {
-    stop("All adjacency matrices must have the same dimensions (n x n) throughout the entire list")
-  }
+  concepts_in_adj_matrices <- lapply(adj_matrices, function(x) get_node_IDs_from_input(x, IDs))
+  node_names <- unlist(unique(concepts_in_adj_matrices))
+  confirm_adj_matrices_have_same_concepts(concepts_in_adj_matrices)
+  confirm_adj_matrices_have_same_dimensions(adj_matrices)
 
   # Check that adj_matrices are correct format
-  lapply(adj_matrices, function(x) fcm(x, IDs))
+  # lapply(adj_matrices, function(x) fcm(x, IDs))
 
   # function ----
-  node_names <- unlist(unique(concepts_in_fcms))
   n_nodes <- length(node_names)
   n_maps <- length(adj_matrices)
 
@@ -591,4 +539,232 @@ aggregate_fcm <- function(adj_matrices = list(), aggregation_fun = "mean", inclu
     class = "aggregate"
   )
 }
+
+
+#' print.fcmconfr
+#'
+#' @description
+#' This improves the readability of the fcmconfr
+#'
+#' @details
+#' Show the objects listed in the fcmconfr output $inference and $params, as well
+#' as $bootstrap if present in output. Additionally, this prints descriptions/summaries
+#' of objects within each sub-list like inference_opts, bootstrap_input_opts, etc.
+#'
+#' Use vignette("fcm-class") for more information.
+#'
+#' @param x an fgcm_simulation object
+#' @param ... additional inputs
+#'
+#' @export
+print.fcmconfr <- function(x, ...) {
+  n_sims <- x$params$bootstrap_input_opts$samples
+  n_input_fcm <- length(x$params$fcms)
+
+  if ("bootstrap" %in% names(x)) {
+    cat("$inference",
+        paste0("Inferences of ", n_sims, " fcm constructed from the ", n_input_fcm, " input fcm adj. matrices."),
+        "\n$bootstrap\n",
+        paste0(" -     mean_CI_by_node: ", x$params$bootstrap_output_opts$bootstrap_CI, "% CI of means of inference\n"),
+        paste0(" - raw_bootstrap_means: ", x$params$bootstrap_output_opts$bootstrap_reps, " actualizations of the avg inference of ", x$params$bootstrap_output_opts$bootstrap_draws_per_rep, " draws with replacement"),
+        "\n$params\n",
+        " -      inference_opts:",
+        paste0("act = ", x$params$inference_opts$activation, "; squash = ", x$params$inference_opts$squashing, "; lambda = ", x$params$inference_opts$lambda),
+        "\n  -       bootstrap_input_opts:",
+        paste0("sampling = ", x$params$bootstrap_input_opts$sampling, "; n_samples = ", x$params$bootstrap_input_opts$samples)
+    )
+  } else {
+    cat("$inference",
+        paste0("Inferences of ", n_sims, " fcm constructed from the ", n_input_fcm, " input fcm adj. matrices."),
+        "\n$params\n",
+        " -   inference_opts:",
+        paste0("act = ", x$params$inference_opts$activation, "; squash = ", x$params$inference_opts$squashing, "; lambda = ", x$params$inference_opts$lambda),
+        "\n  -    bootstrap_input_opts:",
+        paste0("sampling = ", x$params$bootstrap_input_opts$sampling, "; n_samples = ", x$params$bootstrap_input_opts$samples)
+    )
+  }
+
+  # average_inference <- data.frame(value = round(apply(x$inference, 2, mean), 3))
+  # average_inference$node <- rownames(average_inference)
+  # largest_three_average_inferences <- sort(average_inference$value, decreasing = TRUE)[1:3]
+  # average_inference$node[vapply(largest_three_average_inferences, function(rank_value) which(average_inference$value == rank_value), numeric(1))]
+  #
+  # rounded_inferences <- apply(x$inference, c(1, 2), function(value) round(value, 2))
+}
+
+
+#' #' [DEPRECATED]fcmconfr
+#' #'
+#' #' @description
+#' #' [ADD DETAILS HERE!!!!]
+#' #'
+#' #' @details
+#' #' [ADD DETAILS HERE!!!]
+#' #'
+#' #' Use vignette("fmcm-class") for more information.
+#' #'
+#' #' @param fcm_adj_matrices A list of n x n adjacencey matrices representing fcms
+#' #' @param sampling The sampling method to be applied. Must be one of the following: "nonparametric", "uniform", or "triangular"
+#' #' @param samples The number of samples to draw with the selected sampling method. Also,
+#' #' the number of sampled models to generate
+#' #' @param initial_state_vector A list state values at the start of an fcm simulation
+#' #' @param clamping_vector A list of values representing specific actions taken to
+#' #' control the behavior of an FCM. Specifically, non-zero values defined in this vector
+#' #' will remain constant throughout the entire simulation as if they were "clamped" at those values.
+#' #' @param activation The activation function to be applied. Must be one of the following:
+#' #' 'kosko', 'modified-kosko', or 'papageorgiou'.
+#' #' @param squashing A squashing function to apply. Must be one of the following:
+#' #' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' #' @param lambda A numeric value that defines the steepness of the slope of the
+#' #' squashing function when tanh or sigmoid are applied
+#' #' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
+#' #' @param min_error The lowest error (sum of the absolute value of the current state
+#' #' vector minus the previous state vector) at which no more iterations are necessary
+#' #' and the simulation will stop
+#' #' @param bootstrap_inference_means TRUE/FALSE Whether to estimate the CIs about the mean inferences
+#' #' of each node via bootstrapping
+#' #' @param bootstrap_CI Bootstrap confidence interval
+#' #' @param bootstrap_reps Number of reps and draws during bootstrapping
+#' #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
+#' #' from the pbapply package as the underlying function.
+#' #' @param parallel TRUE/FALSE Whether to utilize parallel processing
+#' #' @param n_cores Number of cores to use in parallel processing. If no input given,
+#' #' will use all available cores in the machine.
+#' #' @param IDs A list of names for each node (must have n items). If empty, will use
+#' #' column names of adjacancy matrix (if given).
+#' #' @param include_simulations_in_output TRUE/FALSE whether to include simulations of monte-carlo-generated
+#' #' FCM. Will dramatically increase size of output if TRUE.
+#' #'
+#' #' @export
+#' fcmconfr_deprecated <- function(fcm_adj_matrices = list(matrix()),
+#'                      sampling = c("nonparametric", "uniform", "triangular"), # Options: 'nonparametric', 'uniform', 'triangular'
+#'                      samples = 1000,
+#'                      initial_state_vector = c(),
+#'                      clamping_vector = c(),
+#'                      activation = c("kosko", "modified-kosko", "rescale"),
+#'                      squashing = c("sigmoid", "tanh"),
+#'                      lambda = 1,
+#'                      max_iter = 100,
+#'                      min_error = 1e-5,
+#'                      bootstrap_inference_means = TRUE,
+#'                      bootstrap_CI = 0.95,
+#'                      bootstrap_reps = 5000,
+#'                      bootstrap_draws_per_rep = 5000,
+#'                      show_progress = TRUE,
+#'                      parallel = TRUE,
+#'                      n_cores = integer(),
+#'                      IDs = c(),
+#'                      include_simulations_in_output = FALSE,
+#'                      ...) {
+#'
+#'   concepts_in_fcms <- lapply(fcm_adj_matrices, function(x) get_node_IDs_from_input(x, IDs))
+#'   all_fcms_have_same_concepts <- length(unique(concepts_in_fcms)) == 1
+#'   if (!all_fcms_have_same_concepts) {
+#'     stop("All adjacency matrices must have the same concepts.")
+#'   }
+#'
+#'   dimensions_of_input_adj_matrices <- lapply(fcm_adj_matrices, dim)
+#'   all_fcms_have_same_dimensions <- length(unique(dimensions_of_input_adj_matrices)) == 1
+#'   if (!all_fcms_have_same_dimensions) {
+#'     stop("All adjacency matrices must have the same dimensions (n x n) throughout the entire list")
+#'   }
+#'
+#'   # Confirm packages necessary packages are available. If not, change run options
+#'   if (parallel) {
+#'     package_checks <- check_if_local_machine_has_parallel_processing_packages(parallel, show_progress)
+#'     parallel <- package_checks$parallel_check
+#'   }
+#'   if (show_progress) {
+#'     package_checks <- check_if_local_machine_has_parallel_processing_packages(parallel, show_progress)
+#'     show_progress <- package_checks$show_progress_check
+#'   }
+#'
+#'   # Check that adj_matrices are correct format
+#'   lapply(fcm_adj_matrices, function(x) fcm(x, IDs))
+#'
+#'   nodes <- unlist(unique(concepts_in_fcms))
+#'   sampled_adj_matrices <- build_fcmconfr_models(fcm_adj_matrices, sampling, samples, nodes, show_progress)
+#'
+#'   sampled_adj_matrices_are_representative_of_population <- check_simulated_fcmconfr_models(fcm_adj_matrices, sampled_adj_matrices, sampling, samples, nodes, parallel, n_cores, show_progress)
+#'   new_samples <- samples + 1000
+#'   while (!sampled_adj_matrices_are_representative_of_population) {
+#'     cat(" Random draws are likely not representative of the population.\n Adding 1000 to the number of draws (i.e. samples)\n",
+#'         paste0("New samples = ", new_samples, "\n"))
+#'     sampled_adj_matrices <- build_fcmconfr_models(fcm_adj_matrices, sampling, new_samples, nodes, parallel, n_cores, show_progress)
+#'     sampled_adj_matrices_are_representative_of_population <- check_simulated_fcmconfr_models(fcm_adj_matrices, sampled_adj_matrices, sampling, new_samples, nodes, parallel, n_cores, show_progress)
+#'     new_samples <- new_samples + 1000
+#'   }
+#'
+#'   fmcm_results <- infer_fmcm(
+#'     simulated_adj_matrices = sampled_adj_matrices,
+#'     initial_state_vector = initial_state_vector,
+#'     clamping_vector = clamping_vector,
+#'     activation = activation,
+#'     squashing = squashing,
+#'     lambda = lambda,
+#'     max_iter = max_iter,
+#'     min_error = min_error,
+#'     parallel = parallel,
+#'     show_progress = show_progress,
+#'     n_cores = n_cores,
+#'     include_simulations_in_output = include_simulations_in_output
+#'   )
+#'
+#'   params <- list(
+#'     fcms = fcm_adj_matrices,
+#'     inference_opts = list(initial_state_vector = initial_state_vector,
+#'                           clamping_vector = clamping_vector,
+#'                           activation = activation,
+#'                           squashing = squashing,
+#'                           lambda = lambda,
+#'                           max_iter = max_iter,
+#'                           min_error = min_error,
+#'                           IDs = IDs),
+#'     bootstrap_input_opts = list(sampling = sampling,
+#'                                 samples = samples),
+#'     runtime_opts = list(parallel = parallel,
+#'                         n_cores = n_cores,
+#'                         show_progress = show_progress,
+#'                         include_simulations_in_output = include_simulations_in_output)
+#'   )
+#'
+#'   if (bootstrap_inference_means) {
+#'     means_of_fmcm_inferences <- get_means_of_fmcm_inference(
+#'       fmcm_inference = fmcm_results$inference,
+#'       get_bootstrapped_means = bootstrap_inference_means,
+#'       confidence_interval = bootstrap_CI,
+#'       bootstrap_reps = bootstrap_reps,
+#'       bootstrap_samples_per_rep = bootstrap_reps,
+#'       parallel = parallel,
+#'       n_cores = n_cores
+#'     )
+#'
+#'     params$bootstrap_output_opts = list(bootstrap_inference_means =  bootstrap_inference_means,
+#'                                         bootstrap_CI = bootstrap_CI,
+#'                                         bootstrap_reps = bootstrap_reps,
+#'                                         bootstrap_draws_per_rep = bootstrap_draws_per_rep)
+#'
+#'     fcmconfr_output <- structure(
+#'       .Data = list(
+#'         inference = fmcm_results$inference,
+#'         params = params,
+#'         bootstrap = list(
+#'           mean_CI_by_node = means_of_fmcm_inferences$mean_CI_by_node,
+#'           raw_bootstrap_means = means_of_fmcm_inferences$bootstrap_means
+#'         )
+#'       ),
+#'       class = "fcmconfr"
+#'     )
+#'   } else {
+#'     fcmconfr_output <- structure(
+#'       .Data = list(
+#'         inference = fmcm_results$inference,
+#'         params = params
+#'       ),
+#'       class = "fcmconfr"
+#'     )
+#'   }
+#'
+#'   fcmconfr_output
+#' }
 
