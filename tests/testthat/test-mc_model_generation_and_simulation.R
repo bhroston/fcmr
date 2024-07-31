@@ -129,18 +129,22 @@ test_that("infer_fmcm_with_clamping works", {
   gm_3 <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix*0.8, upper_adj_matrix*0.8)
   fgcm_adj_matrices <- list(gm_1, gm_2, gm_3)
   sampled_adj_matrices <- build_unconventional_fcmconfr_models(fgcm_adj_matrices, "mean", 1000)
-  test_fmcm_inference <- infer_fmcm_with_clamping(
-    simulated_adj_matrices = sampled_adj_matrices,
-    initial_state_vector <- c(1, 1, 1, 1),
-    clamping_vector <- c(1, 0, 0, 0),
-    activation = "kosko",
-    squashing = "sigmoid",
-    lambda = 1,
-    max_iter = 1000,
-    min_error = 1e-5,
-    parallel = TRUE,
-    show_progress = TRUE
+  expect_no_error(
+    test_fmcm_inference <- infer_fmcm_with_clamping(
+      simulated_adj_matrices = sampled_adj_matrices,
+      initial_state_vector <- c(1, 1, 1, 1),
+      clamping_vector <- c(1, 0, 0, 0),
+      activation = "kosko",
+      squashing = "sigmoid",
+      lambda = 1,
+      max_iter = 1000,
+      min_error = 1e-5,
+      parallel = TRUE,
+      show_progress = TRUE,
+      n_cores = 2
+    )
   )
+
 
   # initial_state_vector <- c(1, 1, 1, 1)
   # clamping_vector <- c(1, 0, 0, 0)
@@ -186,14 +190,15 @@ test_that("get_means_of_fmcm_inference", {
     max_iter = 1000,
     min_error = 1e-5,
     parallel = TRUE,
-    show_progress = TRUE
+    show_progress = TRUE,
+    n_cores = 2
   )
 
   test_means <- round(apply(test_fmcm_inference$inference, 2, mean), 1)
   names(test_means) <- NULL
   expect_equal(test_means, c(0.5, 0.1, 0, 0))
 
-  bootstrap_mean_CIs <- get_means_of_fmcm_inference(test_fmcm_inference$inference)
+  bootstrap_mean_CIs <- get_means_of_fmcm_inference(test_fmcm_inference$inference, n_cores = 2)
 
   test_nobootstrap <- get_means_of_fmcm_inference(
     test_fmcm_inference$inference,
@@ -303,7 +308,8 @@ test_that("get_quantiles_of_simulated_values_across_iters works", {
     max_iter = 1000,
     min_error = 1e-5,
     parallel = TRUE,
-    show_progress = TRUE
+    show_progress = TRUE,
+    n_cores = 2
   )
 
   test_lower_quantile <- get_quantile_of_fmcm_inference(test_fmcm_inference$inference, quantile = 0.25)

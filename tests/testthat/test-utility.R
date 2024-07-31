@@ -208,7 +208,7 @@ test_that("get_node_IDs_from_input works", {
 
 
 
-test_that("confirm_input_vector_is_compatable_with_adj_matrices works", {
+test_that("confirm_input_vector_is_compatible_with_adj_matrices works", {
   test_adj_matrix <- data.frame(
     "A" = c(0, 0, 0, 0),
     "B" = c(1, 0, 0, 1),
@@ -216,10 +216,10 @@ test_that("confirm_input_vector_is_compatable_with_adj_matrices works", {
     "D" = c(0, 0, 1, 0)
   )
   expect_no_error(
-    confirm_input_vector_is_compatable_with_adj_matrices(test_adj_matrix, c(1, 1, 1, 1), "fcm")
+    confirm_input_vector_is_compatible_with_adj_matrices(test_adj_matrix, c(1, 1, 1, 1), "fcm")
   )
   expect_error(
-    confirm_input_vector_is_compatable_with_adj_matrices(test_adj_matrix, c(1, 1, 1, 1, 1), "fcm")
+    confirm_input_vector_is_compatible_with_adj_matrices(test_adj_matrix, c(1, 1, 1, 1, 1), "fcm")
   )
 
   lower_adj_matrix <- data.frame(
@@ -237,10 +237,10 @@ test_that("confirm_input_vector_is_compatable_with_adj_matrices works", {
   )
   test_grey_adj_matrix <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix, upper_adj_matrix)
   expect_no_error(
-    confirm_input_vector_is_compatable_with_adj_matrices(test_grey_adj_matrix, c(1, 1, 1, 1), "fgcm")
+    confirm_input_vector_is_compatible_with_adj_matrices(test_grey_adj_matrix, c(1, 1, 1, 1), "fgcm")
   )
   expect_error(
-    confirm_input_vector_is_compatable_with_adj_matrices(test_grey_adj_matrix, c(1, 1, 1, 1, 1), "fgcm")
+    confirm_input_vector_is_compatible_with_adj_matrices(test_grey_adj_matrix, c(1, 1, 1, 1, 1), "fgcm")
   )
 
   test_tri_adj_matrix <- get_triangular_adj_matrix_from_lower_mode_and_upper_adj_matrices(
@@ -249,10 +249,10 @@ test_that("confirm_input_vector_is_compatable_with_adj_matrices works", {
     upper = matrix(data = c(0, 0.4, 0, 0.7), nrow = 2, ncol = 2)
   )
   expect_no_error(
-    confirm_input_vector_is_compatable_with_adj_matrices(test_tri_adj_matrix, c(1, 1), "ftcm")
+    confirm_input_vector_is_compatible_with_adj_matrices(test_tri_adj_matrix, c(1, 1), "ftcm")
   )
   expect_error(
-    confirm_input_vector_is_compatable_with_adj_matrices(test_tri_adj_matrix, c(1, 1, 1, 1, 1), "ftcm")
+    confirm_input_vector_is_compatible_with_adj_matrices(test_tri_adj_matrix, c(1, 1, 1, 1, 1), "ftcm")
   )
 })
 

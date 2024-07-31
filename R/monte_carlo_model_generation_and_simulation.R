@@ -30,8 +30,6 @@
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
 #' and the simulation will stop
-#' @param lambda_optimization A lambda optimization procedure to apply. Must be one
-#' of the following: 'none' or 'koutsellis'
 #' @param IDs A list of names for each node (must have n items). If empty, will use
 #' column names of adjacancy matrix (if given).
 #' @param parallel TRUE/FALSE Whether to utilize parallel processing
@@ -110,7 +108,7 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
     vars <- list("simulated_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
                  "squashing", "lambda", "max_iter", "min_error", "IDs",
                  "infer_fcm_with_clamping", "simulate_fcm_with_pulse",  "confirm_adj_matrix_is_square",
-                 "confirm_initial_state_vector_is_compatible_with_adj_matrix",
+                 "confirm_input_vector_is_compatible_with_adj_matrix",
                  "get_node_IDs_from_input", "optimize_fcm_lambda",
                  "calculate_next_fcm_state_vector", "squash")
 
@@ -160,7 +158,7 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
                  "squashing", "lambda", "max_iter", "min_error",
                  "lambda_optimization", "IDs",
                  "infer_fcm_with_clamping", "simulate_fcm_with_pulse",  "confirm_adj_matrix_is_square",
-                 "confirm_initial_state_vector_is_compatible_with_adj_matrix",
+                 "confirm_input_vector_is_compatible_with_adj_matrix",
                  "get_node_IDs_from_input", "optimize_fcm_lambda",
                  "calculate_next_fcm_state_vector", "squash")
 
@@ -506,8 +504,8 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
 #' @param sampling The sampling method to be applied. Must be one of the following: "nonparametric", "uniform", or "triangular"
 #' @param samples The number of samples to draw with the selected sampling method. Also,
 #' the number of sampled models to generate
-#' @param nodes A vector of node names (IDs) present in every adjacency matrix
-#' @param parallel TRUE/FALSE Whether to utilize parallel processing
+#' @param include_zeroes TRUE/FALSE Whether to incorporate zeroes as intentionally-defined
+#' edge weights or ignore them in aggregation
 #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 #' from the pbapply package as the underlying function.
 #'
@@ -515,6 +513,7 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
 build_conventional_fcmconfr_models <- function(adj_matrices = list(matrix()),
                                                sampling = "nonparametric", # 'nonparametric', 'uniform', or 'triangular'
                                                samples = integer(),
+                                               include_zeroes = TRUE,
                                                show_progress = TRUE) {
   n_nodes <- unique(unlist(lapply(adj_matrices, dim)))
   n_maps <- length(adj_matrices)
@@ -528,14 +527,14 @@ build_conventional_fcmconfr_models <- function(adj_matrices = list(matrix()),
     min_adj_matrix <- apply(adj_matrices_as_arrays, c(1, 2), min)
     max_adj_matrix <- apply(adj_matrices_as_arrays, c(1, 2), max)
     empirical_grey_adj_matrix <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(min_adj_matrix, max_adj_matrix)
-    empirical_grey_adj_matrix_with_distributions <- get_unconventional_adj_matrices_with_distributions(empirical_grey_adj_matrix, samples, include_zeroes = TRUE)
+    empirical_grey_adj_matrix_with_distributions <- get_unconventional_adj_matrices_with_distributions(empirical_grey_adj_matrix, samples, include_zeroes = include_zeroes)
     sampled_adj_matrices <- build_models_from_adj_matrices_with_unconventional_values_as_distributions(empirical_grey_adj_matrix_with_distributions, "mean") # The mean of a single value is itself so okay to ignore the "mean" call; just for syntax
   } else if (sampling == "triangular") {
     min_adj_matrix <- apply(adj_matrices_as_arrays, c(1, 2), min)
     max_adj_matrix <- apply(adj_matrices_as_arrays, c(1, 2), max)
     mode_adj_matrix <- apply(adj_matrices_as_arrays, c(1, 2), mean)
     empirical_triangular_adj_matrix <- get_triangular_adj_matrix_from_lower_mode_and_upper_adj_matrices(min_adj_matrix, mode_adj_matrix, max_adj_matrix)
-    empirical_triangular_adj_matrix_with_distributions <- get_unconventional_adj_matrices_with_distributions(empirical_triangular_adj_matrix, samples, include_zeroes = TRUE)
+    empirical_triangular_adj_matrix_with_distributions <- get_unconventional_adj_matrices_with_distributions(empirical_triangular_adj_matrix, samples, include_zeroes = include_zeroes)
     sampled_adj_matrices <- build_models_from_adj_matrices_with_unconventional_values_as_distributions(empirical_triangular_adj_matrix_with_distributions, "mean") # The mean of a single value is itself so okay to ignore the "mean" call; just for syntax
   }
 
@@ -558,12 +557,12 @@ build_conventional_fcmconfr_models <- function(adj_matrices = list(matrix()),
 #'
 #' Use vignette("fcmconfr-class") for more information.
 #'
-#' @param adj_matrices A list of n x n adjacencey matrices representing fcms
-#' @param sampling The sampling method to be applied. Must be one of the following: "nonparametric", "uniform", or "triangular"
+#' @param unconventional_adj_matrix_list A list of n x n adjacencey matrices representing fcms
+#' @param aggregation_fun The aggregation function, either mean or median
 #' @param samples The number of samples to draw with the selected sampling method. Also,
 #' the number of sampled models to generate
-#' @param nodes A vector of node names (IDs) present in every adjacency matrix
-#' @param parallel TRUE/FALSE Whether to utilize parallel processing
+#' @param include_zeroes TRUE/FALSE Whether to incorporate zeroes as intentionally-defined
+#' edge weights or ignore them in aggregation
 #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 #' from the pbapply package as the underlying function.
 #'
@@ -620,7 +619,7 @@ get_unconventional_value_as_distribution <- function(value = numeric(), n_sample
   }
 
   if (value_class == "grey_number") {
-    distribution <- runif(n = n_samples, min = value$lower, max = value$upper)
+    distribution <- stats::runif(n = n_samples, min = value$lower, max = value$upper)
   } else if (value_class == "triangular_number") {
     distribution <- get_triangular_distribution_of_values(n = n_samples, lower = value$lower, mode = value$mode, upper = value$upper)
   } else if (!(value_class %in% c("grey_number", "triangular_number"))) {
@@ -644,14 +643,13 @@ get_unconventional_value_as_distribution <- function(value = numeric(), n_sample
 #'
 #' Use vignette("fcmconfr-class") for more information.
 #'
-#' @param unconventional_adj_matrices A list of adjacency matrices with numeric and
+#' @param unconventional_adj_matrix_list A list of adjacency matrices with numeric and
 #' either grey_number or triangular_number elements
 #' @param samples The number of samples drawn from the representative pdf
-#' @param element_class The class of the unconventional elements in the list of
-#' adjacency_matrices. Either grey_number or triangular_number.
 #' @param include_zeroes TRUE/FALSE Whether or not to incorporate zeroes in
 #' aggregation. If FALSE, zeroes are converted to NA values during aggregation and
 #' returned to zero afterwards.
+#' @param show_progress TRUE/FALSE Whether to display a progress bar at runtime
 #'
 #' @export
 get_unconventional_adj_matrices_with_distributions <- function(unconventional_adj_matrix_list = list(matrix()),
@@ -775,6 +773,7 @@ get_unconventional_adj_matrices_with_distributions <- function(unconventional_ad
 #' represented as their corresponding distributions.
 #' @param aggregation_fun Either mean or median. The function to aggregate
 #' distributions representing the same edges across multiple adjacency matrices
+#' @param show_progress TRUE/FALSE Whether to display a progress bar at runtime
 #'
 #' @export
 build_models_from_adj_matrices_with_unconventional_values_as_distributions <- function(adj_matrices_with_unconventional_values_as_distributions = list(matrix()),

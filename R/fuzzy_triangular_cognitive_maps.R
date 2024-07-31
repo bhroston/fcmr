@@ -65,7 +65,7 @@ confirm_input_vector_is_compatible_with_triangular_adj_matrix <- function(triang
 #' @examples
 #' get_triangular_adj_matrix_from_lower_mode_and_upper_adj_matrices(
 #'  lower = matrix(data = c(0, 0.2, 0, 0.5), nrow = 2, ncol = 2),
-#'  mode = matrix(data = c(0, 0.3, 0, 0.6), nrow = 2, ncol = 2)
+#'  mode = matrix(data = c(0, 0.3, 0, 0.6), nrow = 2, ncol = 2),
 #'  upper = matrix(data = c(0, 0.4, 0, 0.7), nrow = 2, ncol = 2)
 #' )
 get_triangular_adj_matrix_from_lower_mode_and_upper_adj_matrices <- function(lower = matrix(),

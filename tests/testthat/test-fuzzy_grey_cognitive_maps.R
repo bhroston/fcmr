@@ -17,7 +17,7 @@ test_that("infer_fgcm_with_pulse works", {
   grey_adj_matrix <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix, upper_adj_matrix)
   initial_state_vector <- c(1, 1, 1, 1)
 
-  expect_no_error(infer_fgcm_with_pulse(grey_adj_matrix, activation_vector,
+  expect_no_error(infer_fgcm_with_pulse(grey_adj_matrix, initial_state_vector,
                                 "kosko", "tanh", max_iter = 1000))
   #
   #   # Test from Salmeron & Papageorgiou, 2014 - https://doi.org/10.1007/s10489-013-0511-z

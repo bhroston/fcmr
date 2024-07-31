@@ -391,7 +391,7 @@ get_fcm_class_from_adj_matrices <- function(adj_matrices = list(matrix())) {
 
 
 
-#' confirm_input_vector_is_compatable_with_adj_matrices
+#' confirm_input_vector_is_compatible_with_adj_matrices
 #'
 #' @description
 #' Check whether an input vector (initial_state_vector or clamping_vector) is
@@ -407,7 +407,7 @@ get_fcm_class_from_adj_matrices <- function(adj_matrices = list(matrix())) {
 #' @param input_vector An input vector, either the initial_state_vector input or
 #' the clamping_vector input
 #' @param fcm_class The class of fcm represented by the representative_adj_matrix
-confirm_input_vector_is_compatable_with_adj_matrices <- function(representative_adj_matrix = matrix(),
+confirm_input_vector_is_compatible_with_adj_matrices <- function(representative_adj_matrix = matrix(),
                                                                  input_vector = c(),
                                                                  fcm_class = c("fcm", "fgcm", "ftcm")) {
 

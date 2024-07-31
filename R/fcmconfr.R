@@ -12,6 +12,9 @@
 #' @param adj_matrices A list of n x n adjacencey matrices representing fcms, fgcms, or ftcms.
 #' @param samples The number of samples to draw with the selected sampling method. Also,
 #' the number of sampled models to generate
+#' @param include_zeroes_in_aggregation TRUE/FALSE Whether to incorporate zeroes as intentionally-defined
+#' edge weights or ignore them in aggregation
+#' @param aggregation_fun The aggregation function, either mean or median
 #' @param initial_state_vector A list state values at the start of an fcm simulation
 #' @param clamping_vector A list of values representing specific actions taken to
 #' control the behavior of an FCM. Specifically, non-zero values defined in this vector
@@ -26,6 +29,13 @@
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
 #' and the simulation will stop
+#' @param bootstrap_inference_means TRUE/FALSE Whether to estimate a CI about the mean
+#' inferences
+#' @param bootstrap_CI What are of the distribution should be bounded by the
+#' confidence intervals? (e.g. 0.95)
+#' @param bootstrap_reps Repetitions for bootstrap process, if chosen
+#' @param bootstrap_draws_per_rep Number of samples to draw (with replacement) from
+#' the data per bootstrap_rep
 #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 #' from the pbapply package as the underlying function.
 #' @param parallel TRUE/FALSE Whether to utilize parallel processing
@@ -35,6 +45,7 @@
 #' column names of adjacancy matrix (if given).
 #' @param include_simulations_in_output TRUE/FALSE whether to include simulations of monte-carlo-generated
 #' FCM. Will dramatically increase size of output if TRUE.
+#' @param ... Additional input for adjacency matrices of class fcm. sampling = c('nonparametric', 'uniform', 'triangular')
 #'
 #' @export
 fcmconfr <- function(adj_matrices = list(matrix()),
@@ -59,8 +70,13 @@ fcmconfr <- function(adj_matrices = list(matrix()),
                      include_simulations_in_output = FALSE,
                      ...) {
 
+  additional_vars <- list(...)
+  if ("sampling" %in% names(additional_vars)) {
+    sampling <- additional_vars$sampling
+  }
+
   fcm_class <- get_fcm_class_from_adj_matrices(adj_matrices)
-  if (fcm_class == "fcm" & !("sampling" %in% as.list(environment()))) {
+  if (fcm_class == "fcm" & !("sampling" %in% names(as.list(environment())))) {
     sampling <- "nonparametric"
     warning("Type fcm adjacency matrices requires the sampling parameter as an additional
             input. Assuming sampling = 'nonparametric'.")
@@ -70,8 +86,8 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   nodes <- unlist(unique(concepts_in_adj_matrices))
   confirm_adj_matrices_have_same_concepts(concepts_in_adj_matrices)
   confirm_adj_matrices_have_same_dimensions(adj_matrices)
-  confirm_input_vector_is_compatable_with_adj_matrices(adj_matrices, initial_state_vector, fcm_class)
-  confirm_input_vector_is_compatable_with_adj_matrices(adj_matrices, clamping_vector, fcm_class)
+  confirm_input_vector_is_compatible_with_adj_matrices(adj_matrices[[1]], initial_state_vector, fcm_class)
+  confirm_input_vector_is_compatible_with_adj_matrices(adj_matrices[[1]], clamping_vector, fcm_class)
 
   # Confirm necessary packages are available. If not, warn user and change run options
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
@@ -81,7 +97,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   if (fcm_class == "fcm") {
     sampled_adj_matrices <- build_conventional_fcmconfr_models(adj_matrices, sampling, samples, show_progress)
   } else if (fcm_class == "fgcm" | fcm_class == "ftcm") {
-    sampled_adj_matrices <- build_unconventional_fcmconfr_models(adj_matrices, aggregation_fun, samples, include_zeroes, show_progress)
+    sampled_adj_matrices <- build_unconventional_fcmconfr_models(adj_matrices, aggregation_fun, samples, include_zeroes_in_aggregation, show_progress)
   } else {
     stop("Incompatible collection of data types found in input adj_matrices")
   }
@@ -101,7 +117,11 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     squashing = squashing,
     lambda = lambda,
     max_iter = max_iter,
-    min_error = min_error
+    min_error = min_error,
+    parallel = parallel,
+    show_progress = show_progress,
+    n_cores = n_cores,
+    IDs = nodes
   )
 
   if (bootstrap_inference_means) {
@@ -164,14 +184,15 @@ organize_fcmconfr_output <- function(...) {
       inference = variables$fmcm_results$inference,
       params = params
     ),
-    class = paste0(fcm_class, "confr")
+    class = paste0(variables$fcm_class, "confr")
   )
 
   if (variables$bootstrap_inference_means) {
-    fcmconfr_output$params$bootstrap_output_opts = list(bootstrap_inference_means =  variables$bootstrap_inference_means,
-                                        bootstrap_CI = variables$bootstrap_CI,
-                                        bootstrap_reps = variables$bootstrap_reps,
-                                        bootstrap_draws_per_rep = variables$bootstrap_draws_per_rep)
+    fcmconfr_output$params$bootstrap_output_opts = list(
+      bootstrap_inference_means = variables$bootstrap_inference_means,
+      bootstrap_CI = variables$bootstrap_CI,
+      bootstrap_reps = variables$bootstrap_reps,
+      bootstrap_draws_per_rep = variables$bootstrap_draws_per_rep)
     fcmconfr_output$bootstrap = list(
       mean_CI_by_node = variables$means_of_fmcm_inferences$mean_CI_by_node,
       raw_bootstrap_means = variables$means_of_fmcm_inferences$bootstrap_means
