@@ -61,7 +61,7 @@ infer_fgcm_with_pulse <- function(grey_adj_matrix = matrix(),
   if (!typeof(initial_state_vector) == "list") {
     initial_state_vector <- as.list(initial_state_vector)
   }
-  confirm_initial_state_vector_is_compatible_with_grey_adj_matrix(grey_adj_matrix, initial_state_vector)
+  confirm_input_vector_is_compatible_with_grey_adj_matrix(grey_adj_matrix, initial_state_vector)
 
   IDs <- get_node_IDs_from_input(grey_adj_matrix, IDs)
   grey_adj_matrix_domain <- get_domain_of_grey_adj_matrix(grey_adj_matrix)
@@ -358,7 +358,7 @@ calculate_next_fgcm_state_vector_with_concepcion_algorithm <- function(state_vec
 }
 
 
-#' confirm_initial_state_vector_is_compatible_with_grey_adj_matrix
+#' confirm_input_vector_is_compatible_with_grey_adj_matrix
 #'
 #' @description
 #' Confirm that an initial state vector is algorithmically compatible with a grey adjacency matrix
@@ -373,7 +373,7 @@ calculate_next_fgcm_state_vector_with_concepcion_algorithm <- function(state_vec
 #'
 #' @param grey_adj_matrix An n x n grey adjacency matrix that represents an FCM
 #' @param initial_state_vector An n-length list of the initial states of each node in an fcm simulation
-confirm_initial_state_vector_is_compatible_with_grey_adj_matrix <- function(grey_adj_matrix = matrix(), initial_state_vector = c()) {
+confirm_input_vector_is_compatible_with_grey_adj_matrix <- function(grey_adj_matrix = matrix(), initial_state_vector = c()) {
   if (length(initial_state_vector) != unique(dim(grey_adj_matrix))) {
     stop("Length of input initial_state_vector is does not comply with the dimensions of the input adjacency matrix", .call = FALSE)
   } else {

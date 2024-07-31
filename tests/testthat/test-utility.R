@@ -208,3 +208,53 @@ test_that("get_node_IDs_from_input works", {
 
 
 
+test_that("confirm_input_vector_is_compatable_with_adj_matrices works", {
+  test_adj_matrix <- data.frame(
+    "A" = c(0, 0, 0, 0),
+    "B" = c(1, 0, 0, 1),
+    "C" = c(0, 1, 0, 0),
+    "D" = c(0, 0, 1, 0)
+  )
+  expect_no_error(
+    confirm_input_vector_is_compatable_with_adj_matrices(test_adj_matrix, c(1, 1, 1, 1), "fcm")
+  )
+  expect_error(
+    confirm_input_vector_is_compatable_with_adj_matrices(test_adj_matrix, c(1, 1, 1, 1, 1), "fcm")
+  )
+
+  lower_adj_matrix <- data.frame(
+    "A" = c(0, 0, 0, 0),
+    "B" = c(0.25, 0, 0, 0.25),
+    "C" = c(0, 0.25, 0, 0),
+    "D" = c(0, 0, 0.25, 0)
+  )
+
+  upper_adj_matrix <- data.frame(
+    "A" = c(0, 0, 0, 0),
+    "B" = c(0.75, 0, 0, 0.75),
+    "C" = c(0, 0.75, 0, 0),
+    "D" = c(0, 0, 0.75, 0)
+  )
+  test_grey_adj_matrix <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix, upper_adj_matrix)
+  expect_no_error(
+    confirm_input_vector_is_compatable_with_adj_matrices(test_grey_adj_matrix, c(1, 1, 1, 1), "fgcm")
+  )
+  expect_error(
+    confirm_input_vector_is_compatable_with_adj_matrices(test_grey_adj_matrix, c(1, 1, 1, 1, 1), "fgcm")
+  )
+
+  test_tri_adj_matrix <- get_triangular_adj_matrix_from_lower_mode_and_upper_adj_matrices(
+    lower = matrix(data = c(0, 0.2, 0, 0.5), nrow = 2, ncol = 2),
+    mode = matrix(data = c(0, 0.3, 0, 0.6), nrow = 2, ncol = 2),
+    upper = matrix(data = c(0, 0.4, 0, 0.7), nrow = 2, ncol = 2)
+  )
+  expect_no_error(
+    confirm_input_vector_is_compatable_with_adj_matrices(test_tri_adj_matrix, c(1, 1), "ftcm")
+  )
+  expect_error(
+    confirm_input_vector_is_compatable_with_adj_matrices(test_tri_adj_matrix, c(1, 1, 1, 1, 1), "ftcm")
+  )
+})
+
+
+

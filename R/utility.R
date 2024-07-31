@@ -391,6 +391,37 @@ get_fcm_class_from_adj_matrices <- function(adj_matrices = list(matrix())) {
 
 
 
+#' confirm_input_vector_is_compatable_with_adj_matrices
+#'
+#' @description
+#' Check whether an input vector (initial_state_vector or clamping_vector) is
+#' compatible with the data types present in the representative_adj_matrix.
+#'
+#' @details
+#' [ADD DETAILS HERE!!!]
+#'
+#' Intended for developer use only to improve package readability.
+#'
+#' @param representative_adj_matrix An adjacency matrix whose format (i.e. dims and data.types)
+#' are representative of a larger list of adjacency matrices
+#' @param input_vector An input vector, either the initial_state_vector input or
+#' the clamping_vector input
+#' @param fcm_class The class of fcm represented by the representative_adj_matrix
+confirm_input_vector_is_compatable_with_adj_matrices <- function(representative_adj_matrix = matrix(),
+                                                                 input_vector = c(),
+                                                                 fcm_class = c("fcm", "fgcm", "ftcm")) {
+
+  if (fcm_class == "fcm") {
+    confirm_input_vector_is_compatible_with_adj_matrix(representative_adj_matrix, input_vector)
+  } else if (fcm_class == "fgcm") {
+    confirm_input_vector_is_compatible_with_grey_adj_matrix(representative_adj_matrix, input_vector)
+  } else if (fcm_class == "ftcm") {
+    confirm_input_vector_is_compatible_with_triangular_adj_matrix(representative_adj_matrix, input_vector)
+  }
+}
+
+
+
 #' match_state_vector_df_shapes
 #'
 #' @description
