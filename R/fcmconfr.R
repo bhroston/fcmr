@@ -71,15 +71,16 @@ fcmconfr <- function(adj_matrices = list(matrix()),
                      ...) {
 
   additional_vars <- list(...)
-  if ("sampling" %in% names(additional_vars)) {
-    sampling <- additional_vars$sampling
-  }
 
   fcm_class <- get_fcm_class_from_adj_matrices(adj_matrices)
-  if (fcm_class == "fcm" & !("sampling" %in% names(as.list(environment())))) {
+  if (fcm_class == "fcm" & ("sampling" %in% names(as.list(environment()))) | "sampling" %in% names(additional_vars)) {
+    sampling <- additional_vars$sampling
+  } else if (fcm_class == "fcm" & !("sampling" %in% names(as.list(environment()))) | "sampling" %in% names(additional_vars)) {
     sampling <- "nonparametric"
     warning("Type fcm adjacency matrices requires the sampling parameter as an additional
             input. Assuming sampling = 'nonparametric'.")
+  } else {
+    sampling <- NULL
   }
 
   concepts_in_adj_matrices <- lapply(adj_matrices, function(x) get_node_IDs_from_input(x, IDs))
