@@ -231,31 +231,34 @@ setup_fcmconfr <- function() {
   session_variables$clamping_vector <- eval(parse(text = session_variables$clamping_vector))
   session_variables
 
-  fcmconfr_function_call <- paste0(
-    "fcmconfr(",
-    "adj_matrices = ", gsub("list\\(A", "data.frame\\(A", paste0(list(session_variables$adj_matrices))),
-    ", samples = ", session_variables$samples,
-    ", include_zeroes_in_aggregation = ", session_variables$include_zeroes_in_aggregation,
-    ", aggregation_fun = ", paste0("'", session_variables$aggregation_fun, "'"),
-    ", initial_state_vector = ", list(session_variables$initial_state_vector),
-    ", clamping_vector = ", list(session_variables$clamping_vector),
-    ", activation = ", paste0("'", session_variables$activation, "'"),
-    ", squashing = ", paste0("'", session_variables$squashing, "'"),
-    ", lambda = ", session_variables$lambda,
-    ", max_iter = ", session_variables$max_iter,
-    ", min_error = ", session_variables$min_error,
-    ", bootstrap_inference_means = ", session_variables$bootstrap_inference_means,
-    ", bootstrap_CI = ", session_variables$bootstrap_CI,
-    ", bootstrap_reps = ", session_variables$bootstrap_reps,
-    ", bootstrap_draws_per_rep = ", session_variables$bootstrap_draws_per_rep,
-    ", show_progress = ", session_variables$show_progress,
-    ", parallel = ", session_variables$parallel,
-    ", n_cores = ", session_variables$n_cores,
-    ", include_simulations_in_output = ", session_variables$include_simulations_in_output,
-    ", sampling = ", paste0("'", session_variables$sampling, "'"),
-    ")"
-  )
 
-    eval(parse(text = fcmconfr_function_call))
 }
+
+
+fcmconfr_function_call <- paste0(
+  "fcmconfr(",
+  "adj_matrices = ", gsub("list\\(A", "data.frame\\(A", paste0(list(session_variables$adj_matrices))),
+  ", samples = ", session_variables$samples,
+  ", include_zeroes_in_aggregation = ", session_variables$include_zeroes_in_aggregation,
+  ", aggregation_fun = ", paste0("'", session_variables$aggregation_fun, "'"),
+  ", initial_state_vector = ", list(session_variables$initial_state_vector),
+  ", clamping_vector = ", list(session_variables$clamping_vector),
+  ", activation = ", paste0("'", session_variables$activation, "'"),
+  ", squashing = ", paste0("'", session_variables$squashing, "'"),
+  ", lambda = ", session_variables$lambda,
+  ", max_iter = ", session_variables$max_iter,
+  ", min_error = ", session_variables$min_error,
+  ", bootstrap_inference_means = ", session_variables$bootstrap_inference_means,
+  ", bootstrap_CI = ", session_variables$bootstrap_CI,
+  ", bootstrap_reps = ", session_variables$bootstrap_reps,
+  ", bootstrap_draws_per_rep = ", session_variables$bootstrap_draws_per_rep,
+  ", show_progress = ", session_variables$show_progress,
+  ", parallel = ", session_variables$parallel,
+  ", n_cores = ", session_variables$n_cores,
+  ", include_simulations_in_output = ", session_variables$include_simulations_in_output,
+  ", sampling = ", paste0("'", session_variables$sampling, "'"),
+  ")"
+)
+
+x <- eval(parse(text = fcmconfr_function_call))
 
