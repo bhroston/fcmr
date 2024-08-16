@@ -402,7 +402,7 @@ test_that("get_means_of_fmcm_inference", {
   gm_2 <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix*1.2, upper_adj_matrix*1.2)
   gm_3 <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix*0.8, upper_adj_matrix*0.8)
   fgcm_adj_matrices <- list(gm_1, gm_2, gm_3)
-  sampled_adj_matrices <- build_unconventional_fcmconfr_models(fgcm_adj_matrices, "mean", 1000)
+  sampled_adj_matrices <-  build_monte_carlo_fcms(fgcm_adj_matrices, 1000, include_zeroes = TRUE, show_progress = FALSE)
   test_fmcm_inference <- infer_fmcm_with_clamping(
     simulated_adj_matrices = sampled_adj_matrices,
     initial_state_vector <- c(1, 1, 1, 1),
@@ -520,7 +520,7 @@ test_that("get_quantiles_of_simulated_values_across_iters works", {
   gm_2 <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix*1.2, upper_adj_matrix*1.2)
   gm_3 <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix*0.8, upper_adj_matrix*0.8)
   fgcm_adj_matrices <- list(gm_1, gm_2, gm_3)
-  sampled_adj_matrices <- build_unconventional_fcmconfr_models(fgcm_adj_matrices, "mean", 1000)
+  sampled_adj_matrices <- build_monte_carlo_fcms(fgcm_adj_matrices, 1000, include_zeroes = TRUE, show_progress = FALSE)
   test_fmcm_inference <- infer_fmcm_with_clamping(
     simulated_adj_matrices = sampled_adj_matrices,
     initial_state_vector <- c(1, 1, 1, 1),

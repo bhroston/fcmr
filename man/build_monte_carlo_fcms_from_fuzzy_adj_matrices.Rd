@@ -5,7 +5,7 @@
 \title{build_monte_carlo_fcms_from_fuzzy_adj_matrices}
 \usage{
 build_monte_carlo_fcms_from_fuzzy_adj_matrices(
-  fuzzy_adj_matrix_list = list(data.frame::data.frame()),
+  fuzzy_adj_matrix_list = list(data.frame()),
   fuzzy_adj_matrix_list_class = c("fcm", "fgcm", "ftcm"),
   N_samples = integer(),
   include_zeroes = FALSE,
@@ -13,16 +13,17 @@ build_monte_carlo_fcms_from_fuzzy_adj_matrices(
 )
 }
 \arguments{
+\item{fuzzy_adj_matrix_list}{A list of n x n fuzzy adjacencey matrices representing fcms}
+
+\item{fuzzy_adj_matrix_list_class}{"fgcm" or "ftcm" - the class of elements in the fuzzy_adj_matrix_list}
+
+\item{N_samples}{The number of samples to draw from the corresponding distribution}
+
 \item{include_zeroes}{TRUE/FALSE Whether to incorporate zeroes as intentionally-defined
 edge weights or ignore them in aggregation}
 
 \item{show_progress}{TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 from the pbapply package as the underlying function.}
-
-\item{unconventional_adj_matrix_list}{A list of n x n adjacencey matrices representing fcms}
-
-\item{samples}{The number of samples to draw with the selected sampling method. Also,
-the number of sampled models to generate}
 }
 \description{
 This function generates n fcm adjacency matrices whose edge weights are sampled

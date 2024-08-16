@@ -12,18 +12,16 @@ build_monte_carlo_fcms_from_conventional_adj_matrices(
 )
 }
 \arguments{
+\item{adj_matrix_list}{A list of n x n adjacencey matrices representing fcms}
+
+\item{N_samples}{The number of samples to draw with the selected sampling method. Also,
+the number of sampled models to generate}
+
 \item{include_zeroes}{TRUE/FALSE Whether to incorporate zeroes as intentionally-defined
 edge weights or ignore them in aggregation}
 
 \item{show_progress}{TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 from the pbapply package as the underlying function.}
-
-\item{adj_matrices}{A list of n x n adjacencey matrices representing fcms}
-
-\item{sampling}{The sampling method to be applied. Must be one of the following: "nonparametric", "uniform", or "triangular"}
-
-\item{samples}{The number of samples to draw with the selected sampling method. Also,
-the number of sampled models to generate}
 }
 \description{
 This function generates n fcm models whose edge weights are sampled from either

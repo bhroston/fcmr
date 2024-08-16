@@ -501,8 +501,8 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
 #'
 #' Use vignette("fcmconfr-class") for more information.
 #'
-#' @param unconventional_adj_matrix_list A list of n x n adjacencey matrices representing fcms
-#' @param samples The number of samples to draw with the selected sampling method. Also,
+#' @param adj_matrix_list A list of n x n adjacencey matrices representing fcms
+#' @param N_samples The number of samples to draw with the selected sampling method. Also,
 #' the number of sampled models to generate
 #' @param include_zeroes TRUE/FALSE Whether to incorporate zeroes as intentionally-defined
 #' edge weights or ignore them in aggregation
@@ -542,9 +542,8 @@ build_monte_carlo_fcms <- function(adj_matrix_list = list(matrix()),
 #'
 #' Use vignette("fcmconfr-class") for more information.
 #'
-#' @param adj_matrices A list of n x n adjacencey matrices representing fcms
-#' @param sampling The sampling method to be applied. Must be one of the following: "nonparametric", "uniform", or "triangular"
-#' @param samples The number of samples to draw with the selected sampling method. Also,
+#' @param adj_matrix_list A list of n x n adjacencey matrices representing fcms
+#' @param N_samples The number of samples to draw with the selected sampling method. Also,
 #' the number of sampled models to generate
 #' @param include_zeroes TRUE/FALSE Whether to incorporate zeroes as intentionally-defined
 #' edge weights or ignore them in aggregation
@@ -566,7 +565,7 @@ build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_lis
   if (show_progress) {
     cat(print("Sampling from column vectors", quote = FALSE))
     column_samples <- pbapply::pbapply(flattened_adj_matrices, 2, function(column_vec) {
-      na_omit_column_vec <- na.omit(column_vec)
+      na_omit_column_vec <- stats::na.omit(column_vec)
       if (length(na_omit_column_vec) != 0) {
         sample(na_omit_column_vec, N_samples, replace = TRUE)
       } else {
@@ -577,7 +576,7 @@ build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_lis
     sampled_adj_matrices <- pbapply::pbapply(column_samples, 1, function(row_vec) matrix(row_vec, nrow = n_nodes, ncol = n_nodes), simplify = FALSE)
   } else {
     column_samples <- apply(flattened_adj_matrices, 2, function(column_vec) {
-      na_omit_column_vec <- na.omit(column_vec)
+      na_omit_column_vec <- stats::na.omit(column_vec)
       if (length(na_omit_column_vec) != 0) {
         sample(na_omit_column_vec, N_samples, replace = TRUE)
       } else {
@@ -606,16 +605,16 @@ build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_lis
 #'
 #' Use vignette("fcmconfr-class") for more information.
 #'
-#' @param unconventional_adj_matrix_list A list of n x n adjacencey matrices representing fcms
-#' @param samples The number of samples to draw with the selected sampling method. Also,
-#' the number of sampled models to generate
+#' @param fuzzy_adj_matrix_list A list of n x n fuzzy adjacencey matrices representing fcms
+#' @param fuzzy_adj_matrix_list_class "fgcm" or "ftcm" - the class of elements in the fuzzy_adj_matrix_list
+#' @param N_samples The number of samples to draw from the corresponding distribution
 #' @param include_zeroes TRUE/FALSE Whether to incorporate zeroes as intentionally-defined
 #' edge weights or ignore them in aggregation
 #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 #' from the pbapply package as the underlying function.
 #'
 #' @export
-build_monte_carlo_fcms_from_fuzzy_adj_matrices <- function(fuzzy_adj_matrix_list = list(data.frame::data.frame()),
+build_monte_carlo_fcms_from_fuzzy_adj_matrices <- function(fuzzy_adj_matrix_list = list(data.frame()),
                                                            fuzzy_adj_matrix_list_class = c("fcm", "fgcm", "ftcm"),
                                                            N_samples = integer(),
                                                            include_zeroes = FALSE,
@@ -643,7 +642,7 @@ build_monte_carlo_fcms_from_fuzzy_adj_matrices <- function(fuzzy_adj_matrix_list
     cat(print("Sampling from column vectors", quote = FALSE))
     column_samples <- pbapply::pbapply(flattened_fuzzy_adj_matrix_list_w_distributions, 2, function(column_vec) {
       # sample_list_of_vectors_ignoring_NAs
-      na_omit_column_vec <- na.omit(do.call(c, column_vec))
+      na_omit_column_vec <- stats::na.omit(do.call(c, column_vec))
       if (length(na_omit_column_vec) != 0) {
         column_vec_with_numerics_replicated <- lapply(
           column_vec,
@@ -654,7 +653,7 @@ build_monte_carlo_fcms_from_fuzzy_adj_matrices <- function(fuzzy_adj_matrix_list
               value
             }
           })
-        na_omit_column_vec <- na.omit(do.call(c, column_vec_with_numerics_replicated))
+        na_omit_column_vec <- stats::na.omit(do.call(c, column_vec_with_numerics_replicated))
         sample(na_omit_column_vec, N_samples, replace = TRUE)
       } else {
         rep(0, N_samples)
@@ -665,7 +664,7 @@ build_monte_carlo_fcms_from_fuzzy_adj_matrices <- function(fuzzy_adj_matrix_list
   } else {
     column_samples <- apply(flattened_fuzzy_adj_matrix_list_w_distributions, 2, function(column_vec) {
       # sample_list_of_vectors_ignoring_NAs
-      na_omit_column_vec <- na.omit(do.call(c, column_vec))
+      na_omit_column_vec <- stats::na.omit(do.call(c, column_vec))
       if (length(na_omit_column_vec) != 0) {
         column_vec_with_numerics_replicated <- lapply(
           column_vec,
@@ -676,7 +675,7 @@ build_monte_carlo_fcms_from_fuzzy_adj_matrices <- function(fuzzy_adj_matrix_list
               value
             }
           })
-        na_omit_column_vec <- na.omit(do.call(c, column_vec_with_numerics_replicated))
+        na_omit_column_vec <- stats::na.omit(do.call(c, column_vec_with_numerics_replicated))
         sample(na_omit_column_vec, N_samples, replace = TRUE)
       } else {
         rep(0, N_samples)
@@ -703,13 +702,9 @@ build_monte_carlo_fcms_from_fuzzy_adj_matrices <- function(fuzzy_adj_matrix_list
 #'
 #' Use vignette("fcmconfr-class") for more information.
 #'
-#' @param adj_matrix_list A list of adjacency matrices with numeric and
-#' either grey_number or triangular_number elements
-#' @param samples The number of samples drawn from the representative pdf
-#' @param include_zeroes TRUE/FALSE Whether or not to incorporate zeroes in
-#' aggregation. If FALSE, zeroes are converted to NA values during aggregation and
-#' returned to zero afterwards.
-#' @param show_progress TRUE/FALSE Whether to display a progress bar at runtime
+#' @param fuzzy_matrix A matrix that can contain fuzzy sets as elements
+#' @param fuzzy_element_class "fgcm" or "ftcm" - the class of elements in the fuzzy_matrix
+#' @param N_samples The number of samples to draw from the corresponding distribution
 #'
 #' @export
 convert_fuzzy_elements_in_matrix_to_distributions <- function(fuzzy_matrix = data.table::data.table(),
@@ -725,8 +720,8 @@ convert_fuzzy_elements_in_matrix_to_distributions <- function(fuzzy_matrix = dat
     fuzzy_matrix_w_distributions <- apply(
       fuzzy_matrix, c(1, 2),
       function(element) {
-        if (class(element[[1]]) == "grey_number") {
-          element <- runif(N_samples, element[[1]]$lower, element[[1]]$upper)
+        if (identical(methods::is(element[[1]]), "grey_number")) {
+          element <- stats::runif(N_samples, element[[1]]$lower, element[[1]]$upper)
         } else {
           element[[1]]
         }
@@ -736,7 +731,7 @@ convert_fuzzy_elements_in_matrix_to_distributions <- function(fuzzy_matrix = dat
     fuzzy_matrix_w_distributions <- apply(
       fuzzy_matrix, c(1, 2),
       function(element) {
-        if (class(element[[1]]) == "triangular_number") {
+        if (identical(methods::is(element[[1]]), "triangular_number")) {
           element <- rtri(N_samples, lower = element[[1]]$lower, mode = element[[1]]$mode, upper = element[[1]]$upper)
         } else {
           element[[1]]

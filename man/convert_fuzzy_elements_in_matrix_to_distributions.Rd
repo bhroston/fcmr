@@ -5,22 +5,17 @@
 \title{convert_fuzzy_elements_in_matrix_to_distributions}
 \usage{
 convert_fuzzy_elements_in_matrix_to_distributions(
-  fuzzy_adj_matrix = data.table::data.table(),
+  fuzzy_matrix = data.table::data.table(),
   fuzzy_element_class = c("fgcm", "ftcm"),
   N_samples = integer()
 )
 }
 \arguments{
-\item{adj_matrix_list}{A list of adjacency matrices with numeric and
-either grey_number or triangular_number elements}
+\item{fuzzy_matrix}{A matrix that can contain fuzzy sets as elements}
 
-\item{samples}{The number of samples drawn from the representative pdf}
+\item{fuzzy_element_class}{"fgcm" or "ftcm" - the class of elements in the fuzzy_matrix}
 
-\item{include_zeroes}{TRUE/FALSE Whether or not to incorporate zeroes in
-aggregation. If FALSE, zeroes are converted to NA values during aggregation and
-returned to zero afterwards.}
-
-\item{show_progress}{TRUE/FALSE Whether to display a progress bar at runtime}
+\item{N_samples}{The number of samples to draw from the corresponding distribution}
 }
 \description{
 Given a list of adjacency matrices which include either grey_numbers or
