@@ -129,62 +129,6 @@ get_adj_matrix_from_edgelist <- function(edgelist = matrix(),
 
 
 
-#' squash
-#'
-#' @description
-#' Calculate squashing function output of an input value and lambda values
-#'
-#' @details
-#' This function calculates the 'squashed' value of a state based upon five
-#' available squashing functions typical in the literature (as identified in
-#' Gonzales et al. 2018 - https://doi.org/10.1142/S0218213018600102)
-#'
-#' @param value A numeric value to 'squash'
-#' @param squashing A squashing function to apply. Must be one of the following: 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'
-#' @param lambda A numeric value that defines the steepness of the slope of the squashing function when tanh or sigmoid are applied
-squash <- function(value = numeric(), squashing = "sigmoid", lambda = 1) {
-  if (lambda <= 0) {
-    stop("Input lambda must be greater than zero")
-  }
-
-  # Use full names here instead of abbreviations to improve readability even
-  # though developers will need to type more characters.
-  if (squashing == "bivalent") {
-    if (value > 0) {
-      squashed_value <- 1
-    } else if (value <= 0) {
-      squashed_value <- 0
-    }
-  } else if (squashing == "saturation") {
-    if (value <= 0) {
-      squashed_value <- 0
-    } else if (value > 0 & value < 1) {
-      squashed_value <- value
-    } else if (value >= 1) {
-      squashed_value <- 1
-    }
-  } else if (squashing == "trivalent") {
-    if (value < 0) {
-      squashed_value <- -1
-    } else if (value == 0) {
-      squashed_value <- 0
-    } else if (value > 0) {
-      squashed_value <- 1
-    }
-  } else if (squashing == "tanh") {
-    squashed_value <- (exp(2*lambda*value) - 1)/(exp(2*lambda*value) + 1)
-  } else if (squashing == "sigmoid") {
-    squashed_value <- 1/(1 + exp(-lambda*value))
-  } else {
-    stop("squashing value must be one of the following:
-      'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'")
-  }
-
-  squashed_value
-}
-
-
-
 #' confirm_adj_matrix_is_square
 #'
 #' @description
@@ -349,10 +293,34 @@ confirm_only_numeric_data_in_adj_matrix <- function(adj_matrix = matrix()) {
 }
 
 
-#' get_fcm_class_from_adj_matrices
+#' check_adj_matrix_list_is_list
 #'
 #' @description
-#' Get the class of fcm from the input adj matrices
+#' Check that the input adj_matrix_list is either a list of adj. matrices or if
+#' only one adj. matrix is given, abstract that matrix within a list (this is to
+#' comply with lapply functionalities within the codebase)
+#'
+#' @details
+#' This is just in case the function isn't passed an actual list of adj. matrices.
+#' In R, both matrix and list are of class "list" so you have to do some odd checks
+#' to check if the input is just a singular matrix or a list of matrices
+#'
+#' Intended for developer use only to improve package readability.
+#'
+#' @param adj_matrix_list A list of n x n adjacency matrix that represents an FCM
+check_adj_matrix_list_is_list <- function(adj_matrix_list = list(matrix())) {
+  if (!is.null(dim(adj_matrix_list)) & (length(unique(dim(adj_matrix_list))) == 1)) {
+    adj_matrix_list <- list(adj_matrix_list)
+  }
+  adj_matrix_list
+}
+
+
+
+#' get_class_of_adj_matrix
+#'
+#' @description
+#' Get the class of map from the input adj matrix
 #'
 #' @details
 #' This returns the class of fcm represented by the input adjacency matrices i.e.
@@ -360,33 +328,21 @@ confirm_only_numeric_data_in_adj_matrix <- function(adj_matrix = matrix()) {
 #'
 #' Intended for developer use only to improve package readability.
 #'
-#' @param adj_matrices A list of n x n adjacency matrix that represents an FCM
-get_fcm_class_from_adj_matrices <- function(adj_matrices = list(matrix())) {
-  data_types_in_adj_matrices_by_adj_matrix <- lapply(
-    adj_matrices,
-    function(adj_matrix) {
-      unique(unlist(apply(adj_matrix, c(1, 2), function(element) class(element[[1]]), simplify = FALSE)))  # ifelse(class(element[[1]]) != "numeric", class(element[[1]]), class(element[[1]])))
-    }
-  )
+#' @param adj_matrix An n x n adjacency matrix that represents an FCM, FGCM, or FTCM
+get_class_of_adj_matrix <- function(adj_matrix = matrix()) {
+  object_classes_in_adj_matrix <- unique(as.vector(apply(adj_matrix, c(1, 2), function(element) class(element[[1]]))))
 
-  all_adj_matrices_are_of_same_class <- length(unique(data_types_in_adj_matrices_by_adj_matrix)) == 1
-  if (!all_adj_matrices_are_of_same_class) {
-    stop("All input adj_matrices must have the same data types, i.e. they must all be
-         either conventional fcm, fuzzy grey cognitive maps, or fuzzy triangular cognitive maps.")
-  }
-
-  data_types_in_adj_matrices <- unlist(unique(data_types_in_adj_matrices_by_adj_matrix))
-  if (all(data_types_in_adj_matrices %in% "numeric")) {
-    fcm_class <- "fcm"
-  } else if (all(data_types_in_adj_matrices %in% c("numeric", "grey_number"))) {
-    fcm_class <- "fgcm"
-  } else if (all(data_types_in_adj_matrices %in% c("numeric", "triangular_number"))) {
-    fcm_class <- "ftcm"
+  if (all(object_classes_in_adj_matrix %in% "numeric")) {
+    adj_matrix_class <- "fcm"
+  } else if (all(object_classes_in_adj_matrix %in% c("numeric", "grey_number"))) {
+    adj_matrix_class <- "fgcm"
+  } else if (all(object_classes_in_adj_matrix %in% c("numeric", "triangular_number"))) {
+    adj_matrix_class <- "ftcm"
   } else {
-    stop(paste0("Incompatible collection of data types found in input adj_matrices: '", paste0(data_types_in_adj_matrices, collapse = '', "'")))
+    stop(paste0("Incompatible collection of data types found in input adj_matrix: '", paste0(object_classes_in_adj_matrix, collapse = '', "'")))
   }
 
-  fcm_class
+  adj_matrix_class
 }
 
 
@@ -418,6 +374,61 @@ confirm_input_vector_is_compatible_with_adj_matrices <- function(representative_
   } else if (fcm_class == "ftcm") {
     confirm_input_vector_is_compatible_with_triangular_adj_matrix(representative_adj_matrix, input_vector)
   }
+}
+
+
+#' squash
+#'
+#' @description
+#' Calculate squashing function output of an input value and lambda values
+#'
+#' @details
+#' This function calculates the 'squashed' value of a state based upon five
+#' available squashing functions typical in the literature (as identified in
+#' Gonzales et al. 2018 - https://doi.org/10.1142/S0218213018600102)
+#'
+#' @param value A numeric value to 'squash'
+#' @param squashing A squashing function to apply. Must be one of the following: 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'
+#' @param lambda A numeric value that defines the steepness of the slope of the squashing function when tanh or sigmoid are applied
+squash <- function(value = numeric(), squashing = "sigmoid", lambda = 1) {
+  if (lambda <= 0) {
+    stop("Input lambda must be greater than zero")
+  }
+
+  # Use full names here instead of abbreviations to improve readability even
+  # though developers will need to type more characters.
+  if (squashing == "bivalent") {
+    if (value > 0) {
+      squashed_value <- 1
+    } else if (value <= 0) {
+      squashed_value <- 0
+    }
+  } else if (squashing == "saturation") {
+    if (value <= 0) {
+      squashed_value <- 0
+    } else if (value > 0 & value < 1) {
+      squashed_value <- value
+    } else if (value >= 1) {
+      squashed_value <- 1
+    }
+  } else if (squashing == "trivalent") {
+    if (value < 0) {
+      squashed_value <- -1
+    } else if (value == 0) {
+      squashed_value <- 0
+    } else if (value > 0) {
+      squashed_value <- 1
+    }
+  } else if (squashing == "tanh") {
+    squashed_value <- (exp(2*lambda*value) - 1)/(exp(2*lambda*value) + 1)
+  } else if (squashing == "sigmoid") {
+    squashed_value <- 1/(1 + exp(-lambda*value))
+  } else {
+    stop("squashing value must be one of the following:
+      'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'")
+  }
+
+  squashed_value
 }
 
 
@@ -552,52 +563,3 @@ check_if_local_machine_has_access_to_parallel_processing_functionalities <- func
   }
   parallel_check
 }
-
-
-# get_number_of_fcm_combinations <- function(adj_matrices = list(matrix())) {
-#   non_zero_edge_indexes_by_adj_matrix <- lapply(adj_matrices, function(adj_matrix) which(adj_matrix != 0, arr.ind = TRUE))
-#   non_zero_edge_indexes_across_adj_matrices <- unique(do.call(rbind, non_zero_edge_indexes_by_adj_matrix))
-#
-#
-#
-#   included_edge_weights_across_adj_matrices <- lapply(adj_matrices, function(adj_matrix) adj_matrix[non_zero_edge_indexes_across_adj_matrices])
-#   unique_included_edge_weights_across_adj_matrices <- lapply(included_edge_weights_across_adj_matrices, unique)
-#   unique(expand.grid(unique_included_edge_weights_across_adj_matrices))
-#
-#   if (!include_zeroes) {
-#     included_edge_weights_across_adj_matrices <- lapply(included_edge_weights_across_adj_matrices, function(x) x[x != 0])
-#   }
-#   num_included_edge_weights_across_adj_matrices <- lapply(included_edge_weights_across_adj_matrices, length)
-#   estimated_number_of_fcm_combinations <- prod(unlist(num_included_edge_weights_across_adj_matrices))
-#
-#   estimated_number_of_fcm_combinations
-# }
-#
-#.  adj_matrices_dims <- unlist(unique(lapply(adj_matrices, function(adj_matrix) dim(adj_matrix))))
-#   edge_weights_by_adj_matrix <- lapply(adj_matrices, function(adj_matrix) unlist(array(adj_matrix, c(1, n_nodes))))
-#   edge_weights_by_adj_matrix <- do.call(rbind, edge_weights_by_adj_matrix)
-#   non_zero_edge_indexes <- apply(edge_weights_by_adj_matrix, 2, function(col_values) !identical(unique(col_values), 0))
-#   valued_edge_weights_by_adj_matrix <- edge_weights_by_adj_matrix[, non_zero_edge_indexes]
-#
-#   number_of_fcm_combinations <- apply(nrow(valued_edge_weights_by_adj_matrix), 2, function(x) length(x))
-#
-#   widened_combined_adj_matrix_as_lists <- lapply(seq_len(ncol(nonzero_widened_combined_adj_matrix)), function(x) nonzero_widened_combined_adj_matrix[, x])
-#
-#   seq_len()
-#
-#
-#   non_zero_edge_indexes <- apply(edge_weights_by_adj_matrix, 2, function(col_values) !identical(unique(col_values), 0))
-#
-#
-#
-#
-#   combined_adj_matrix <- apply(adj_matrices, c(1, 2), function(x) x, simplify = FALSE)
-#   widened_combined_adj_matrix <- array(combined_adj_matrix, c(1, n_nodes^2))
-#   widened_combined_adj_matrix <- apply(widened_combined_adj_matrix, 2, unlist)
-#   non_zero_value_indexes <- unlist(lapply(apply(widened_combined_adj_matrix, 2, unique), function(x) !identical(x, 0)))
-#   nonzero_widened_combined_adj_matrix <- widened_combined_adj_matrix[, non_zero_value_indexes]
-#
-#   widened_combined_adj_matrix_as_lists <- lapply(seq_len(ncol(nonzero_widened_combined_adj_matrix)), function(x) nonzero_widened_combined_adj_matrix[, x])
-#
-# }
-
