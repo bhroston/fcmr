@@ -1,8 +1,117 @@
 
-test_that("build_conventional_fcmconfr_models works", {
+# microbenchmark(
+#   build_monte_carlo_fcms_from_conventional_adj_matrices(adj_matrix_list, N_samples, include_zeroes = TRUE, show_progress),
+#   build_monte_carlo_fcms_from_conventional_adj_matrices(adj_matrix_list, N_samples, include_zeroes = FALSE, show_progress)
+# )
+#
+# microbenchmark(
+#   build_monte_carlo_fcms_from_fuzzy_adj_matrices(adj_matrix_list, adj_matrix_list_class, N_samples, include_zeroes = TRUE, show_progress),
+#   build_monte_carlo_fcms_from_fuzzy_adj_matrices(adj_matrix_list, adj_matrix_list_class, N_samples, include_zeroes = FALSE, show_progress)
+# )
+
+test_that("build_monte_carlo_fcms works", {
   test_adj_matrix_1 <- data.frame(
     "A" = c(0, 0, 0, 0),
-    "B" = c(1, 0, 0, 1),
+    "B" = c(0, 0, 0, 1),
+    "C" = c(0, 1, 0, 0),
+    "D" = c(0, 0, 1, 0)
+  )
+  test_adj_matrix_2 <- data.frame(
+    "A" = c(0, 0, 0, 0),
+    "B" = c(0.25, 0, 0, 0.25),
+    "C" = c(0, 0.25, 0, 0),
+    "D" = c(0, 0, 0.25, 0)
+  )
+  test_adj_matrix_3 <- data.frame(
+    "A" = c(0, 0, 0, 0),
+    "B" = c(0.75, 0, 0, 0.75),
+    "C" = c(0, 0.75, 0, 0),
+    "D" = c(0, 0, 0.75, 0)
+  )
+  test_adj_matrix_4 <- data.frame(
+    "A" = c(0, 0, 0, 0),
+    "B" = c(0.5, 0, 0, 0.5),
+    "C" = c(0, 0.5, 0, 0),
+    "D" = c(0, 0, 0.5, 0)
+  )
+  test_fcms <- list(test_adj_matrix_1, test_adj_matrix_2, test_adj_matrix_3, test_adj_matrix_4)
+  expect_no_error(
+    build_monte_carlo_fcms(test_fcms, N_samples = 1000, include_zeroes = TRUE, show_progress = TRUE)
+  )
+  expect_no_error(
+    build_monte_carlo_fcms(test_fcms, N_samples = 1000, include_zeroes = FALSE, show_progress = TRUE)
+  )
+  expect_no_error(
+    build_monte_carlo_fcms(test_fcms, N_samples = 1000, include_zeroes = TRUE, show_progress = FALSE)
+  )
+  expect_no_error(
+    build_monte_carlo_fcms(test_fcms, N_samples = 1000, include_zeroes = FALSE, show_progress = FALSE)
+  )
+
+  lower_adj_matrix <- data.frame(
+    "A" = c(0, 0, 0, 0),
+    "B" = c(0.25, 0, 0, 0.25),
+    "C" = c(0, 0.25, 0, 0),
+    "D" = c(0, 0, 0.25, 0)
+  )
+  upper_adj_matrix <- data.frame(
+    "A" = c(0, 0, 0, 0),
+    "B" = c(0.75, 0, 0, 0.75),
+    "C" = c(0, 0.75, 0, 0),
+    "D" = c(0, 0, 0.75, 0)
+  )
+  gm_1 <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix, upper_adj_matrix)
+  gm_2 <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix*1.2, upper_adj_matrix*1.2)
+  gm_3 <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix*0.8, upper_adj_matrix*0.8)
+  test_fgcms <- list(gm_1, gm_2, gm_3)
+  expect_no_error(
+    build_monte_carlo_fcms(test_fgcms, N_samples = 1000, include_zeroes = TRUE, show_progress = TRUE)
+  )
+  expect_no_error(
+    build_monte_carlo_fcms(test_fgcms, N_samples = 1000, include_zeroes = FALSE, show_progress = TRUE)
+  )
+  expect_no_error(
+    build_monte_carlo_fcms(test_fgcms, N_samples = 1000, include_zeroes = TRUE, show_progress = FALSE)
+  )
+  expect_no_error(
+    build_monte_carlo_fcms(test_fgcms, N_samples = 1000, include_zeroes = FALSE, show_progress = FALSE)
+  )
+
+  tri_matrix_1 <- get_triangular_adj_matrix_from_lower_mode_and_upper_adj_matrices(
+    lower = matrix(data = c(0, 0.2, 0, 0.5), nrow = 2, ncol = 2),
+    mode = matrix(data = c(0, 0.3, 0, 0.6), nrow = 2, ncol = 2),
+    upper = matrix(data = c(0, 0.4, 0, 0.7), nrow = 2, ncol = 2)
+  )
+  tri_matrix_2 <- get_triangular_adj_matrix_from_lower_mode_and_upper_adj_matrices(
+    lower = matrix(data = c(0, 0.4, 0, 0.1), nrow = 2, ncol = 2),
+    mode = matrix(data = c(0, 0.6, 0, 0.3), nrow = 2, ncol = 2),
+    upper = matrix(data = c(0, 0.8, 0, 0.4), nrow = 2, ncol = 2)
+  )
+  tri_matrix_3 <- get_triangular_adj_matrix_from_lower_mode_and_upper_adj_matrices(
+    lower = matrix(data = c(0, 0.4, 0.1, 0.1), nrow = 2, ncol = 2),
+    mode = matrix(data = c(0, 0.6, 0.2, 0.3), nrow = 2, ncol = 2),
+    upper = matrix(data = c(0, 0.8, 0.3, 0.4), nrow = 2, ncol = 2)
+  )
+  test_ftcms <- list(tri_matrix_1, tri_matrix_2, tri_matrix_3)
+  expect_no_error(
+    build_monte_carlo_fcms(test_ftcms, N_samples = 1000, include_zeroes = TRUE, show_progress = TRUE)
+  )
+  expect_no_error(
+    build_monte_carlo_fcms(test_ftcms, N_samples = 1000, include_zeroes = FALSE, show_progress = TRUE)
+  )
+  expect_no_error(
+    build_monte_carlo_fcms(test_ftcms, N_samples = 1000, include_zeroes = TRUE, show_progress = FALSE)
+  )
+  expect_no_error(
+    build_monte_carlo_fcms(test_ftcms, N_samples = 1000, include_zeroes = FALSE, show_progress = FALSE)
+  )
+})
+
+
+test_that("build_monte_carlo_fcms_from_conventional_adj_matrices works", {
+  test_adj_matrix_1 <- data.frame(
+    "A" = c(0, 0, 0, 0),
+    "B" = c(0, 0, 0, 1),
     "C" = c(0, 1, 0, 0),
     "D" = c(0, 0, 1, 0)
   )
@@ -27,23 +136,145 @@ test_that("build_conventional_fcmconfr_models works", {
   test_fcms <- list(test_adj_matrix_1, test_adj_matrix_2, test_adj_matrix_3, test_adj_matrix_4)
 
   expect_no_error(
-    nonparametric_models <- build_conventional_fcmconfr_models(test_fcms, "nonparametric", 1000)
+    mc_fcms <- build_monte_carlo_fcms_from_conventional_adj_matrices(test_fcms, N_samples = 1000, include_zeroes = FALSE, show_progress = TRUE)
   )
-  expect_no_error(
-    uniform_models <- build_conventional_fcmconfr_models(test_fcms, "uniform", 1000)
-  )
-  expect_no_error(
-    triangular_models <- build_conventional_fcmconfr_models(test_fcms, "triangular", 1000)
-  )
+  hist(unlist(lapply(mc_fcms, function(fcm) fcm[1, 2])))
 
   # Check visualizations to confirm distribution shapes
   # hist(unlist(lapply(nonparametric_models, function(x) x[1, 2])))
   # hist(unlist(lapply(uniform_models, function(x) x[1, 2])))
   # hist(unlist(lapply(triangular_models, function(x) x[1, 2])))
+
+
+  # # Illustration for build_conventional_fcmconfr_models ####
+  # ex_adj_matrix_1 <- data.frame(
+  #   "A" = c(0, 0, 0),
+  #   "B" = c(0.35, 0, 0.27),
+  #   "C" = c(0, 0.17, 0)
+  # )
+  # ex_adj_matrix_2 <- data.frame(
+  #   "A" = c(0, 0, 0.28),
+  #   "B" = c(0.5, 0, 0),
+  #   "C" = c(0, 0.63, 0)
+  # )
+  # ex_adj_matrix_3 <- data.frame(
+  #   "A" = c(0, 0, 0.54),
+  #   "B" = c(0.12, 0, 0.24),
+  #   "C" = c(0, 0.34, 0)
+  # )
+  # ex_adj_matrix_4 <- data.frame(
+  #   "A" = c(0, 0, 0.35),
+  #   "B" = c(0.26, 0, 0.9),
+  #   "C" = c(0, 0, 0)
+  # )
+  #
+  # flattened_adj_matrices <- data.frame(do.call(rbind, list(
+  #   "map_1" = c(0, 0, 0, 0.35, 0, 0.27, 0, 0.17, 0),
+  #   "map_2" = c(0, 0, 0.28, 0.5, 0, 0, 0, 0.63, 0),
+  #   "map_3" = c(0, 0, 0.54, 0.12, 0, 0.24, 0, 0.34, 0),
+  #   "map_4" = c(0, 0, 0.35, 0.26, 0, 0.9, 0, 0, 0)
+  # )))
+  # colnames(flattened_adj_matrices) <- c("A-A", "B-A", "C-A", "A-B", "B-B", "C-B", "A-C", "B-C", "C-C")
+  #
+  # N = 100
+  # CB_vector <- c(0.27, 0, 0.24, 0.90)
+  # CB_vector <- c(0.27, 0.24, 0.9)
+  #
+  # beta <- (mean())
+
+
+
+  # flattened_sample_adj_matrices <- apply(flattened_adj_matrices, 2,
+  #                                        function(col_vector) {
+  #                                          a <- min(col_vector)
+  #                                          b <- max(col_vector)
+  #                                          mu <- (a + b)/2
+  #                                          sd <- sqrt(((b - a)^2)/12)
+  #                                          rnorm(N, mean = mu, sd = sd)
+  #                                        })
+  # rownames(flattened_sample_adj_matrices) <- paste0("sample_map_", 1:N)
+  # flattened_sample_adj_matrices <- apply(flattened_sample_adj_matrices, c(1, 2),
+  #                                        function(x) round(x, 4))
+  # get_mode_of_vector <- function(x) {
+  #   unique_values <- unique(x)
+  #   unique_values[which.max(tabulate(match(x, unique_values)))]
+  # }
+  # ####
+  #
+  # # Ex. for build_unconventional_fcmconfr_models ####
+  # lower_ex_adj_matrix_1 <- data.frame(
+  #   "A" = c(0, 0, 0),
+  #   "B" = c(0.2, 0, 0.3),
+  #   "C" = c(0, 0.1, 0)
+  # )
+  # upper_ex_adj_matrix_1 <- data.frame(
+  #   "A" = c(0, 0, 0),
+  #   "B" = c(0.5, 0, 0.4),
+  #   "C" = c(0, 0.3, 0)
+  # )
+  # ex_grey_adj_matrix_1 <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_ex_adj_matrix_1, upper_ex_adj_matrix_1)
+  # lower_ex_adj_matrix_2 <- data.frame(
+  #   "A" = c(0, 0, 0.15),
+  #   "B" = c(0.4, 0, 0),
+  #   "C" = c(0, 0.55, 0)
+  # )
+  # upper_ex_adj_matrix_2 <- data.frame(
+  #   "A" = c(0, 0, 0.35),
+  #   "B" = c(0.6, 0, 0),
+  #   "C" = c(0, 0.7, 0)
+  # )
+  # ex_grey_adj_matrix_2 <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_ex_adj_matrix_2, upper_ex_adj_matrix_2)
+  # lower_ex_adj_matrix_3 <- data.frame(
+  #   "A" = c(0, 0, 0.4),
+  #   "B" = c(0.05, 0, 0.2),
+  #   "C" = c(0, 0.25, 0)
+  # )
+  # upper_ex_adj_matrix_3 <- data.frame(
+  #   "A" = c(0, 0, 0.6),
+  #   "B" = c(0.18, 0, 0.3),
+  #   "C" = c(0, 0.5, 0)
+  # )
+  # ex_grey_adj_matrix_3 <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_ex_adj_matrix_3, upper_ex_adj_matrix_3)
+  # lower_ex_adj_matrix_4 <- data.frame(
+  #   "A" = c(0, 0, 0.3),
+  #   "B" = c(0.2, 0, 0.8),
+  #   "C" = c(0, 0, 0)
+  # )
+  # upper_ex_adj_matrix_4 <- data.frame(
+  #   "A" = c(0, 0, 0.4),
+  #   "B" = c(0.3, 0, 1),
+  #   "C" = c(0, 0, 0)
+  # )
+  # ex_grey_adj_matrix_4 <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_ex_adj_matrix_4, upper_ex_adj_matrix_4)
+  # ex_grey_adj_matrices <- list(ex_grey_adj_matrix_1, ex_grey_adj_matrix_2, ex_grey_adj_matrix_3, ex_grey_adj_matrix_4)
+  #
+  #
+  # d1 <- runif(10000, 0.1, 0.3)
+  # d2 <- runif(10000, 0.55, 0.7)
+  # d3 <- runif(10000, 0.25, 0.5)
+  # comb <- c(d1, d2, d3)
+  #
+  # flattened_adj_matrices <- do.call(rbind, list(
+  #   "map_1" = list(0, 0, 0, numeric(1000), 0, numeric(1000), 0, numeric(1000), 0),
+  #   "map_2" = list(0, 0, numeric(1000), numeric(1000), 0, 0, 0, numeric(1000), 0),
+  #   "map_3" = list(0, 0, numeric(1000), numeric(1000), 0, numeric(1000), 0, numeric(1000), 0),
+  #   "map_4" = list(0, 0, numeric(1000), numeric(1000), 0, numeric(1000), 0, 0, 0)
+  # ))
+  # flattened_adj_matrices <- do.call(rbind, list(
+  #   "map_1" = list(NA, NA, NA, numeric(1000), NA, numeric(1000), NA, numeric(1000), NA),
+  #   "map_2" = list(NA, NA, numeric(1000), numeric(1000), NA, NA, NA, numeric(1000), NA),
+  #   "map_3" = list(NA, NA, numeric(1000), numeric(1000), NA, numeric(1000), NA, numeric(1000), NA),
+  #   "map_4" = list(NA, NA, numeric(1000), numeric(1000), NA, numeric(1000), NA, NA, NA)
+  # ))
+  # flattened_adj_matrices[equivalent(flattened_adj_matrices, 0)] <- NA
+  # colnames(flattened_adj_matrices) <- c("A-A", "B-A", "C-A", "A-B", "B-B", "C-B", "A-C", "B-C", "C-C")
+  #
+  #
+  ####
 })
 
 
-test_that("build_unconventional_fcmconfr_models works", {
+test_that("build_monte_carlo_fcms_from_fuzzy_adj_matrices works", {
   lower_adj_matrix <- data.frame(
     "A" = c(0, 0, 0, 0),
     "B" = c(0.25, 0, 0, 0.25),
@@ -60,6 +291,17 @@ test_that("build_unconventional_fcmconfr_models works", {
   gm_2 <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix*1.2, upper_adj_matrix*1.2)
   gm_3 <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix*0.8, upper_adj_matrix*0.8)
   fgcm_adj_matrices <- list(gm_1, gm_2, gm_3)
+
+  expect_no_error(
+    mc_fcm <- build_monte_carlo_fcms_from_fuzzy_adj_matrices(fgcm_adj_matrices, "fgcm", N_samples = 1000, include_zeroes = FALSE, show_progress = TRUE)
+  )
+  # x <- unlist(lapply(mc_fcm, function(fcm) fcm[1, 2]))
+  # hist(unlist(lapply(mc_fcm, function(fcm) fcm[1, 2])))
+
+  # test_fgcms <- lapply(fgcm_adj_matrices, function(fgcm) as(fgcm, "sparseMatrix"))
+  # test_fgcms <- lapply(fgcm_adj_matrices, function(fgcm) as(fgcm, "data.table"))
+  # test_fgcms <- lapply(fgcm_adj_matrices, function(fgcm) tibble::as_tibble(fgcm))
+  # test <- test_fgcms[[3]]
 
   tri_matrix_1 <- get_triangular_adj_matrix_from_lower_mode_and_upper_adj_matrices(
     lower = matrix(data = c(0, 0.2, 0, 0.5), nrow = 2, ncol = 2),
@@ -78,32 +320,12 @@ test_that("build_unconventional_fcmconfr_models works", {
   )
   triangular_adj_matrices <- list(tri_matrix_1, tri_matrix_2, tri_matrix_3)
 
+  expect_no_error(
+    build_monte_carlo_fcms_from_fuzzy_adj_matrices(triangular_adj_matrices, "ftcm", 1000, include_zeroes = TRUE)
+  )
+  # x <- unlist(lapply(mc_fcm, function(fcm) fcm[1, 2]))
+  # hist(unlist(lapply(mc_fcm, function(fcm) fcm[1, 2])))
 
-  expect_no_error(
-    fgcm_models <- build_unconventional_fcmconfr_models(fgcm_adj_matrices, "mean", 1000)
-  )
-  expect_no_error(
-    fgcm_models <- build_unconventional_fcmconfr_models(fgcm_adj_matrices, "mean", 1000, include_zeroes = TRUE)
-  )
-  expect_no_error(
-    fgcm_models <- build_unconventional_fcmconfr_models(fgcm_adj_matrices, "median", 1000)
-  )
-  expect_no_error(
-    fgcm_models <- build_unconventional_fcmconfr_models(fgcm_adj_matrices, "median", 1000, include_zeroes = TRUE)
-  )
-
-  expect_no_error(
-    ftcm_models <- build_unconventional_fcmconfr_models(triangular_adj_matrices, "mean", 1000)
-  )
-  expect_no_error(
-    ftcm_models <- build_unconventional_fcmconfr_models(triangular_adj_matrices, "mean", 1000, include_zeroes = TRUE)
-  )
-  expect_no_error(
-    ftcm_models <- build_unconventional_fcmconfr_models(triangular_adj_matrices, "median", 1000)
-  )
-  expect_no_error(
-    ftcm_models <- build_unconventional_fcmconfr_models(triangular_adj_matrices, "median", 1000, include_zeroes = TRUE)
-  )
 
   # Check visualizations to confirm distribution shapes
   # hist(unlist(lapply(fgcm_models, function(x) x[1, 2])))
@@ -128,7 +350,7 @@ test_that("infer_fmcm_with_clamping works", {
   gm_2 <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix*1.2, upper_adj_matrix*1.2)
   gm_3 <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix*0.8, upper_adj_matrix*0.8)
   fgcm_adj_matrices <- list(gm_1, gm_2, gm_3)
-  sampled_adj_matrices <- build_unconventional_fcmconfr_models(fgcm_adj_matrices, "mean", 1000)
+  sampled_adj_matrices <- build_monte_carlo_fcms(fgcm_adj_matrices, 1000, include_zeroes = TRUE, show_progress = FALSE)
   expect_no_error(
     test_fmcm_inference <- infer_fmcm_with_clamping(
       simulated_adj_matrices = sampled_adj_matrices,
@@ -144,6 +366,7 @@ test_that("infer_fmcm_with_clamping works", {
       n_cores = 2
     )
   )
+
 
 
   # initial_state_vector <- c(1, 1, 1, 1)
@@ -179,7 +402,7 @@ test_that("get_means_of_fmcm_inference", {
   gm_2 <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix*1.2, upper_adj_matrix*1.2)
   gm_3 <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix*0.8, upper_adj_matrix*0.8)
   fgcm_adj_matrices <- list(gm_1, gm_2, gm_3)
-  sampled_adj_matrices <- build_unconventional_fcmconfr_models(fgcm_adj_matrices, "mean", 1000)
+  sampled_adj_matrices <-  build_monte_carlo_fcms(fgcm_adj_matrices, 1000, include_zeroes = TRUE, show_progress = FALSE)
   test_fmcm_inference <- infer_fmcm_with_clamping(
     simulated_adj_matrices = sampled_adj_matrices,
     initial_state_vector <- c(1, 1, 1, 1),
@@ -297,7 +520,7 @@ test_that("get_quantiles_of_simulated_values_across_iters works", {
   gm_2 <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix*1.2, upper_adj_matrix*1.2)
   gm_3 <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix*0.8, upper_adj_matrix*0.8)
   fgcm_adj_matrices <- list(gm_1, gm_2, gm_3)
-  sampled_adj_matrices <- build_unconventional_fcmconfr_models(fgcm_adj_matrices, "mean", 1000)
+  sampled_adj_matrices <- build_monte_carlo_fcms(fgcm_adj_matrices, 1000, include_zeroes = TRUE, show_progress = FALSE)
   test_fmcm_inference <- infer_fmcm_with_clamping(
     simulated_adj_matrices = sampled_adj_matrices,
     initial_state_vector <- c(1, 1, 1, 1),

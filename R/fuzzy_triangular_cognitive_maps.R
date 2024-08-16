@@ -69,8 +69,8 @@ confirm_input_vector_is_compatible_with_triangular_adj_matrix <- function(triang
 #'  upper = matrix(data = c(0, 0.4, 0, 0.7), nrow = 2, ncol = 2)
 #' )
 get_triangular_adj_matrix_from_lower_mode_and_upper_adj_matrices <- function(lower = matrix(),
-                                                                        mode = matrix(),
-                                                                        upper = matrix()) {
+                                                                             mode = matrix(),
+                                                                             upper = matrix()) {
   if (!identical(dim(lower), dim(mode), dim(upper))) {
     stop("Failed Validation: Input adjacency matrices must be the same size")
   }
@@ -88,34 +88,33 @@ get_triangular_adj_matrix_from_lower_mode_and_upper_adj_matrices <- function(low
     IDs <- paste0("C", 1:nrow(lower))
   }
 
-  edge_locs_in_lower <- data.table::data.table(which(lower != 0, arr.ind = TRUE))
-  edge_locs_in_mode <- data.table::data.table(which(mode != 0, arr.ind = TRUE))
-  edge_locs_in_upper <- data.table::data.table(which(upper != 0, arr.ind = TRUE))
-  all_input_matrices_have_same_edge_locs <- length(unique(list(edge_locs_in_lower, edge_locs_in_mode, edge_locs_in_upper))) == 1
-  if (!all_input_matrices_have_same_edge_locs) {
-    warning("Input adjacency matrices must be structurally equivallent. i.e. If
-    there is a non-zero value in one matrix, there must be another non-zero
-    value at the same location in the other matrix. If one matrix has a non-zero
-    value where the other has a zero value, it is assumed that the zero value is
-    a part of the triangular number for that edge.")
+  if ((!all(lower <= mode) | !all(mode <= upper))) {
+    offense_locs <- unique(rbind(which(!lower <= mode, arr.ind = TRUE), which(!mode <= upper, arr.ind = TRUE)))
+    offenses_df <- data.frame(
+      row = offense_locs[, 1],
+      col = offense_locs[, 2],
+      lower = apply(offense_locs, 1,function(locs) lower[locs[1], locs[2]]),
+      mode = apply(offense_locs, 1,function(locs) mode[locs[1], locs[2]]),
+      upper = apply(offense_locs, 1,function(locs) upper[locs[1], locs[2]])
+    )
+    rownames(offenses_df) <- NULL
+    writeLines("\n\nERROR: Failed to create triangular adj. matrix from input.\nCheck:")
+    print(offenses_df)
+    stop(
+      "All lower values must be less than or equal to mode values which in turn, \n  must be less than or equal to upper values."
+    )
   }
-  all_edge_locs <- unique(rbind(edge_locs_in_lower, edge_locs_in_mode, edge_locs_in_upper))
 
-  #triangular_adj_matrix <- as.data.frame(matrix(data = list(0), nrow = size, ncol = size))
+  edge_locs <- unique(rbind(which(lower != 0, arr.ind = TRUE), which(mode != 0, arr.ind = TRUE), which(upper != 0, arr.ind = TRUE)))
+
   triangular_adj_matrix <- as.data.frame(matrix(data = list(0), nrow = size, ncol = size))
   colnames(triangular_adj_matrix) <- IDs
   rownames(triangular_adj_matrix) <- IDs
 
-  for (index in 1:nrow(all_edge_locs)) {
-    i <- all_edge_locs$row[index]
-    j <- all_edge_locs$col[index]
-    triangular_adj_matrix[[j]][[i]] <- triangular_number( # [[j]][[i]] instead of [[i]][[j]]
-      # because this notation is
-      # [[col]][[row]] for data.frames
-      lower = lower[i, j],
-      mode = mode[i, j],
-      upper = upper[i, j]
-    )
+  for (i in seq_along(triangular_adj_matrix)) {
+    row <- edge_locs[, 1][i]
+    col <- edge_locs[, 2][i]
+    triangular_adj_matrix[[col]][[row]] <- triangular_number(lower[row, col], mode[row, col], upper[row, col])
   }
 
   triangular_adj_matrix
@@ -227,7 +226,7 @@ c.triangular_number <- function(...) {
 
 
 
-#' get_triangular_distribution_of_values
+#' rtri
 #'
 #' @description
 #' This pulls n samples from a triangular distribution described by shape parameters
@@ -235,7 +234,7 @@ c.triangular_number <- function(...) {
 #'
 #' @details
 #'
-#' Use vignette("fcmcmrr-class") for more information.
+#' Use vignette("fcmcmr-class") for more information.
 #'
 #' @param lower lower limit or minimum of the sample space
 #' @param upper upper limit or maximum of the sample space
@@ -243,7 +242,7 @@ c.triangular_number <- function(...) {
 #' @param n number of samples to draw from the triangular distribution
 #'
 #' @export
-get_triangular_distribution_of_values <- function(lower = double(), upper = double(), mode = double(), n = 1000) {
+rtri <- function(n = integer(), lower = double(), mode = double(), upper = double()) {
   if (lower > upper) {
     stop("lower input must be less than upper input")
   }
@@ -268,270 +267,4 @@ get_triangular_distribution_of_values <- function(lower = double(), upper = doub
 }
 
 
-
-
-
-#' #' ftcmconfr
-#' #'
-#' #' @description
-#' #' [ADD DETAILS HERE!!!!]
-#' #'
-#' #' @details
-#' #' [ADD DETAILS HERE!!!]
-#' #'
-#' #' Use vignette("fmcm-class") for more information.
-#' #'
-#' #' @param ftcm_adj_matrices A list of n x n adjacencey matrices representing fcms
-#' #' @param samples The number of samples to draw with the selected sampling method. Also,
-#' #' the number of sampled models to generate
-#' #' @param initial_state_vector A list state values at the start of an fcm simulation
-#' #' @param clamping_vector A list of values representing specific actions taken to
-#' #' control the behavior of an FCM. Specifically, non-zero values defined in this vector
-#' #' will remain constant throughout the entire simulation as if they were "clamped" at those values.
-#' #' @param activation The activation function to be applied. Must be one of the following:
-#' #' 'kosko', 'modified-kosko', or 'papageorgiou'.
-#' #' @param squashing A squashing function to apply. Must be one of the following:
-#' #' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
-#' #' @param lambda A numeric value that defines the steepness of the slope of the
-#' #' squashing function when tanh or sigmoid are applied
-#' #' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
-#' #' @param min_error The lowest error (sum of the absolute value of the current state
-#' #' vector minus the previous state vector) at which no more iterations are necessary
-#' #' and the simulation will stop
-#' #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
-#' #' from the pbapply package as the underlying function.
-#' #' @param parallel TRUE/FALSE Whether to utilize parallel processing
-#' #' @param n_cores Number of cores to use in parallel processing. If no input given,
-#' #' will use all available cores in the machine.
-#' #' @param IDs A list of names for each node (must have n items). If empty, will use
-#' #' column names of adjacancy matrix (if given).
-#' #' @param include_simulations_in_output TRUE/FALSE whether to include simulations of monte-carlo-generated
-#' #' FCM. Will dramatically increase size of output if TRUE.
-#' #'
-#' #' @export
-#' ftcmconfr <- function(ftcm_adj_matrices = list(matrix()),
-#'                       samples = 1000,
-#'                       include_zeroes_in_aggregation = TRUE,
-#'                       aggregation_fun = c("mean", "median"),
-#'                       initial_state_vector = c(),
-#'                       clamping_vector = c(),
-#'                       activation = c("kosko", "modified-kosko", "rescale"),
-#'                       squashing = c("sigmoid", "tanh"),
-#'                       lambda = 1,
-#'                       max_iter = 100,
-#'                       min_error = 1e-5,
-#'                       bootstrap_inference_means = TRUE,
-#'                       bootstrap_CI = 0.95,
-#'                       bootstrap_reps = 5000,
-#'                       bootstrap_draws_per_rep = 5000,
-#'                       show_progress = TRUE,
-#'                       parallel = TRUE,
-#'                       n_cores = integer(),
-#'                       IDs = c(),
-#'                       include_simulations_in_output = FALSE,
-#'                       ...) {
-#'
-#'   concepts_in_ftcms <- lapply(ftcm_adj_matrices, function(x) get_node_IDs_from_input(x, IDs))
-#'   all_ftcms_have_same_concepts <- length(unique(concepts_in_ftcms)) == 1
-#'   if (!all_ftcms_have_same_concepts) {
-#'     stop("All triangular adjacency matrices must have the same concepts.")
-#'   }
-#'
-#'   dimensions_of_input_triangular_adj_matrices <- lapply(ftcm_adj_matrices, dim)
-#'   all_ftcms_have_same_dimensions <- length(unique(dimensions_of_input_triangular_adj_matrices)) == 1
-#'   if (!all_ftcms_have_same_dimensions) {
-#'     stop("All triangular adjacency matrices must have the same dimensions (n x n) throughout the entire list")
-#'   }
-#'
-#'   # Confirm packages necessary packages are available. If not, change run options
-#'   if (parallel) {
-#'     package_checks <- check_if_local_machine_has_parallel_processing_packages(parallel, show_progress)
-#'     parallel <- package_checks$parallel_check
-#'   }
-#'   if (show_progress) {
-#'     package_checks <- check_if_local_machine_has_parallel_processing_packages(parallel, show_progress)
-#'     show_progress <- package_checks$show_progress_check
-#'   }
-#'
-#'   # Check that adj_matrices are correct format
-#'   # lapply(ftcm_adj_matrices, function(x) ftcm(x, IDs))
-#'
-#'   nodes <- unlist(unique(concepts_in_ftcms))
-#'   sampled_triangular_adj_matrices <- build_ftcmconfr_models(ftcm_adj_matrices, samples, aggregation_fun, include_zeroes_in_aggregation, nodes, show_progress)
-#'
-#'   fmcm_results <- infer_fmcm(
-#'     simulated_adj_matrices = sampled_triangular_adj_matrices,
-#'     initial_state_vector = initial_state_vector,
-#'     clamping_vector = clamping_vector,
-#'     activation = activation,
-#'     squashing = squashing,
-#'     lambda = lambda,
-#'     max_iter = max_iter,
-#'     min_error = min_error
-#'   )
-#'
-#'   params <- list(
-#'     ftcms = ftcm_adj_matrices,
-#'     inference_opts = list(initial_state_vector = initial_state_vector,
-#'                           clamping_vector = clamping_vector,
-#'                           activation = activation,
-#'                           squashing = squashing,
-#'                           lambda = lambda,
-#'                           max_iter = max_iter,
-#'                           min_error = min_error,
-#'                           IDs = IDs),
-#'     bootstrap_input_opts = list(aggregation_fun = aggregation_fun,
-#'                                 samples = samples,
-#'                                 include_zeroes = include_zeroes_in_aggregation),
-#'     runtime_opts = list(parallel = parallel,
-#'                         n_cores = n_cores,
-#'                         show_progress = show_progress,
-#'                         include_simulations_in_output = include_simulations_in_output)
-#'   )
-#'
-#'   if (bootstrap_inference_means) {
-#'     means_of_fmcm_inferences <- get_means_of_fmcm_inference(
-#'       fmcm_inference = fmcm_results$inference,
-#'       get_bootstrapped_means = bootstrap_inference_means,
-#'       confidence_interval = bootstrap_CI,
-#'       bootstrap_reps = bootstrap_reps,
-#'       bootstrap_samples_per_rep = bootstrap_reps,
-#'       parallel = parallel,
-#'       n_cores = n_cores
-#'     )
-#'
-#'     params$bootstrap_output_opts = list(bootstrap_inference_means =  bootstrap_inference_means,
-#'                                         bootstrap_CI = bootstrap_CI,
-#'                                         bootstrap_reps = bootstrap_reps,
-#'                                         bootstrap_draws_per_rep = bootstrap_draws_per_rep)
-#'
-#'     ftcmconfr_output <- structure(
-#'       .Data = list(
-#'         inference = fmcm_results$inference,
-#'         params = params,
-#'         bootstrap = list(
-#'           mean_CI_by_node = means_of_fmcm_inferences$mean_CI_by_node,
-#'           raw_bootstrap_means = means_of_fmcm_inferences$bootstrap_means
-#'         )
-#'       ),
-#'       class = "ftcmconfr"
-#'     )
-#'   } else {
-#'     ftcmconfr_output <- structure(
-#'       .Data = list(
-#'         inference = fmcm_results$inference,
-#'         params = params
-#'       ),
-#'       class = "ftcmconfr"
-#'     )
-#'   }
-#'
-#'   ftcmconfr_output
-#' }
-#'
-
-#' #' build_ftcmconfr_models
-#' #'
-#' #' @description
-#' #' This function generates n ftcm models whose edge weights are sampled from either
-#' #' the defined edge values in a set of adjacency matrices or continuous (uniform or triangular)
-#' #' parametric distributions derived from the sets of edge values, and stores them
-#' #' as a list of adjacency matrices.
-#' #'
-#' #' @details
-#' #' [ADD DETAILS HERE!!!]
-#' #'
-#' #' Use vignette("ftcm-class") for more information.
-#' #'
-#' #' @param triangular_adj_matrices A list of n x n adjacencey matrices representing fcms
-#' #' @param sampling The sampling method to be applied. Must be one of the following: "nonparametric", "uniform", or "triangular"
-#' #' @param samples The number of samples to draw with the selected sampling method. Also,
-#' #' the number of sampled models to generate
-#' #' @param nodes A vector of node names (IDs) present in every adjacency matrix
-#' #' @param parallel TRUE/FALSE Whether to utilize parallel processing
-#' #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
-#' #' from the pbapply package as the underlying function.
-#' #'
-#' #' @export
-#' build_ftcmconfr_models <- function(triangular_adj_matrices, samples, aggregation_fun = c("mean", "median"), include_zeroes = FALSE,  nodes, show_progress) {
-#'   n_nodes <- length(nodes)
-#'   n_maps <- length(triangular_adj_matrices)
-#'
-#'   lower_adj_matrices <- lapply(triangular_adj_matrices, function(triangular_adj_matrix) apply(triangular_adj_matrix, c(1, 2), function(x) ifelse(class(x[[1]]) == "triangular_number", x[[1]]$lower, x[[1]])))
-#'   upper_adj_matrices <- lapply(triangular_adj_matrices, function(triangular_adj_matrix) apply(triangular_adj_matrix, c(1, 2), function(x) ifelse(class(x[[1]]) == "triangular_number", x[[1]]$upper, x[[1]])))
-#'
-#'   lower_adj_matrices_as_arrays <- array(unlist(lower_adj_matrices), c(n_nodes, n_nodes, n_maps))
-#'   upper_adj_matrices_as_arrays <- array(unlist(upper_adj_matrices), c(n_nodes, n_nodes, n_maps))
-#'
-#'   if (!include_zeroes) {
-#'     triangular_adj_matrices_with_distributions <- lapply(
-#'       triangular_adj_matrices,
-#'       function(triangular_adj_matrix) {
-#'         apply(triangular_adj_matrix, c(1, 2),
-#'               function(x) {
-#'                 #print(class(x[[1]]))
-#'                 ifelse(class(x[[1]]) == "triangular_number",
-#'                        yes = list(get_triangular_distribution_of_values(lower = x[[1]]$lower, mode = x[[1]]$mode, upper = x[[1]]$upper, n = samples)),
-#'                        no = NA)
-#'               })
-#'         })
-#'   } else {
-#'     triangular_adj_matrices_with_distributions <- lapply(
-#'       triangular_adj_matrices,
-#'       function(triangular_adj_matrix) {
-#'         apply(triangular_adj_matrix, c(1, 2),
-#'               function(x) {
-#'                 ifelse(class(x[[1]]) == "triangular_number",
-#'                        yes = list(runif(samples, x[[1]]$lower, x[[1]]$upper)),
-#'                        no = list(rep(0, samples)))
-#'               })})
-#'   }
-#'   triangular_adj_matrices_distributions_by_index <- do.call(cbind, lapply(triangular_adj_matrices_with_distributions, function(triangular_adj_matrix_with_distributions) do.call(list, triangular_adj_matrix_with_distributions)))
-#'
-#'   if (aggregation_fun == "mean") {
-#'     combined_triangular_adj_matrices_distributions_by_index <- apply(
-#'       triangular_adj_matrices_distributions_by_index, 1,
-#'       function(distributions) {
-#'         sum_of_distributions <- rep(0, samples)
-#'         n_nonzero_distributions <- 0
-#'         if (all(lapply(distributions, typeof) == "list")) {
-#'           distributions <- lapply(distributions, unlist)
-#'         }
-#'         for (i in 1:n_maps) {
-#'           if (!identical(unique(distributions[[i]]), NA)) {
-#'             n_nonzero_distributions <- n_nonzero_distributions + 1
-#'             sum_of_distributions <- sum_of_distributions + distributions[[i]]
-#'           }
-#'         }
-#'         sum_of_distributions/n_nonzero_distributions
-#'       }
-#'     )
-#'     combined_triangular_adj_matrices_distributions_by_index <- apply(combined_triangular_adj_matrices_distributions_by_index, c(1, 2), function(x) ifelse(is.na(x), 0, x))
-#'   } else if (aggregation_fun == "median") {
-#'     combined_triangular_adj_matrices_distributions_by_index <- do.call(cbind, apply(
-#'       triangular_adj_matrices_distributions_by_index, 1,
-#'       function(distributions) {
-#'         if (all(lapply(distributions, typeof) == "list")) {
-#'           distributions <- lapply(distributions, unlist)
-#'         }
-#'         combined_distributions <- do.call(cbind, lapply(distributions, unlist))
-#'         apply(combined_distributions, 1, stats::median, na.rm = TRUE)
-#'       }, simplify = FALSE
-#'     ))
-#'     combined_triangular_adj_matrices_distributions_by_index <- apply(combined_triangular_adj_matrices_distributions_by_index, c(1, 2), function(x) ifelse(is.na(x), 0, x))
-#'   }
-#'
-#'   sampled_adj_matrices <- apply(combined_triangular_adj_matrices_distributions_by_index, 1, function(row) data.frame(array(row, c(n_nodes, n_nodes))), simplify = FALSE)
-#'   sampled_adj_matrices <- lapply(sampled_adj_matrices,
-#'                                  function(sampled_adj_matrix) {
-#'                                    colnames(sampled_adj_matrix) <- nodes
-#'                                    rownames(sampled_adj_matrix) <- nodes
-#'                                    sampled_adj_matrix
-#'                                  })
-#'
-#'   sampled_adj_matrices
-#'
-#'   # test <- data.frame(do.call(rbind, lapply(sampled_adj_matrices, unlist)))
-#'   # test <- test[, colSums(test) != 0]
-#' }
 

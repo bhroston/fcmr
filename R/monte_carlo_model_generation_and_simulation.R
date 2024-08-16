@@ -488,7 +488,49 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
 
 
 
-#' build_conventional_fcmconfr_models
+#' build_monte_carlo_fcms
+#'
+#' @description
+#' This function generates N fcm adjacency matrices whose edge weights are sampled
+#' from edge values (that may be numeric, grey_numbers, or triangular_numbers) and
+#' stores them as a list of adjacency matrices.
+#'
+#' @details
+#' If an edge is represented by multiple grey/triangular_numbers, then those distributions
+#' are averaged together to create the aggregate distribution to sample from.
+#'
+#' Use vignette("fcmconfr-class") for more information.
+#'
+#' @param adj_matrix_list A list of n x n adjacencey matrices representing fcms
+#' @param N_samples The number of samples to draw with the selected sampling method. Also,
+#' the number of sampled models to generate
+#' @param include_zeroes TRUE/FALSE Whether to incorporate zeroes as intentionally-defined
+#' edge weights or ignore them in aggregation
+#' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
+#' from the pbapply package as the underlying function.
+#'
+#' @export
+build_monte_carlo_fcms <- function(adj_matrix_list = list(matrix()),
+                                   N_samples = integer(),
+                                   include_zeroes = TRUE,
+                                   show_progress = TRUE) {
+  adj_matrix_list_class <- unique(vapply(adj_matrix_list, get_class_of_adj_matrix, character(1)))
+  if (length(adj_matrix_list_class) != 1) {
+    stop("All adj. matrices in input adj_matrix_list must be of the same class (i.e. fcm, fgcm, or ftcm")
+  }
+
+  if (adj_matrix_list_class == "fcm") {
+    sampled_adj_matrices <- build_monte_carlo_fcms_from_conventional_adj_matrices(adj_matrix_list, N_samples, include_zeroes, show_progress)
+  } else {
+    sampled_adj_matrices <- build_monte_carlo_fcms_from_fuzzy_adj_matrices(adj_matrix_list, adj_matrix_list_class, N_samples, include_zeroes, show_progress)
+  }
+
+  sampled_adj_matrices
+}
+
+
+
+#' build_monte_carlo_fcms_from_conventional_fcms
 #'
 #' @description
 #' This function generates n fcm models whose edge weights are sampled from either
@@ -500,9 +542,8 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
 #'
 #' Use vignette("fcmconfr-class") for more information.
 #'
-#' @param adj_matrices A list of n x n adjacencey matrices representing fcms
-#' @param sampling The sampling method to be applied. Must be one of the following: "nonparametric", "uniform", or "triangular"
-#' @param samples The number of samples to draw with the selected sampling method. Also,
+#' @param adj_matrix_list A list of n x n adjacencey matrices representing fcms
+#' @param N_samples The number of samples to draw with the selected sampling method. Also,
 #' the number of sampled models to generate
 #' @param include_zeroes TRUE/FALSE Whether to incorporate zeroes as intentionally-defined
 #' edge weights or ignore them in aggregation
@@ -510,32 +551,39 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
 #' from the pbapply package as the underlying function.
 #'
 #' @export
-build_conventional_fcmconfr_models <- function(adj_matrices = list(matrix()),
-                                               sampling = "nonparametric", # 'nonparametric', 'uniform', or 'triangular'
-                                               samples = integer(),
-                                               include_zeroes = TRUE,
-                                               show_progress = TRUE) {
-  n_nodes <- unique(unlist(lapply(adj_matrices, dim)))
-  n_maps <- length(adj_matrices)
-  adj_matrices_as_arrays <- array(unlist(adj_matrices), c(n_nodes, n_nodes, n_maps))
+build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_list = list(Matrix::sparseMatrix()),
+                                                                  N_samples = integer(),
+                                                                  include_zeroes = TRUE,
+                                                                  show_progress = TRUE) {
+  n_nodes <- unique(unlist(lapply(adj_matrix_list, dim)))
+  flatten_conventional_adj_matrix <- function(adj_matrix) do.call(c, as.vector(adj_matrix))
+  flattened_adj_matrices <- do.call(rbind, lapply(adj_matrix_list, flatten_conventional_adj_matrix))
+  if (!include_zeroes) {
+    flattened_adj_matrices[flattened_adj_matrices == 0] <- NA
+  }
 
-  if (sampling == "nonparametric") {
-    adj_matrix_of_samples_per_edge <- apply(adj_matrices_as_arrays, c(1, 2), function(x) sample(x, samples, replace = TRUE), simplify = FALSE)
-    wider_adj_matrix_of_samples_per_edge <- apply(array(adj_matrix_of_samples_per_edge, c(1, n_nodes^2)), 2, unlist)
-    sampled_adj_matrices <- apply(wider_adj_matrix_of_samples_per_edge, 1, function(x) array(x, c(n_nodes, n_nodes)), simplify = FALSE)
-  } else if (sampling == "uniform") {
-    min_adj_matrix <- apply(adj_matrices_as_arrays, c(1, 2), min)
-    max_adj_matrix <- apply(adj_matrices_as_arrays, c(1, 2), max)
-    empirical_grey_adj_matrix <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(min_adj_matrix, max_adj_matrix)
-    empirical_grey_adj_matrix_with_distributions <- get_unconventional_adj_matrices_with_distributions(empirical_grey_adj_matrix, samples, include_zeroes = include_zeroes)
-    sampled_adj_matrices <- build_models_from_adj_matrices_with_unconventional_values_as_distributions(empirical_grey_adj_matrix_with_distributions, "mean") # The mean of a single value is itself so okay to ignore the "mean" call; just for syntax
-  } else if (sampling == "triangular") {
-    min_adj_matrix <- apply(adj_matrices_as_arrays, c(1, 2), min)
-    max_adj_matrix <- apply(adj_matrices_as_arrays, c(1, 2), max)
-    mode_adj_matrix <- apply(adj_matrices_as_arrays, c(1, 2), mean)
-    empirical_triangular_adj_matrix <- get_triangular_adj_matrix_from_lower_mode_and_upper_adj_matrices(min_adj_matrix, mode_adj_matrix, max_adj_matrix)
-    empirical_triangular_adj_matrix_with_distributions <- get_unconventional_adj_matrices_with_distributions(empirical_triangular_adj_matrix, samples, include_zeroes = include_zeroes)
-    sampled_adj_matrices <- build_models_from_adj_matrices_with_unconventional_values_as_distributions(empirical_triangular_adj_matrix_with_distributions, "mean") # The mean of a single value is itself so okay to ignore the "mean" call; just for syntax
+  if (show_progress) {
+    cat(print("Sampling from column vectors", quote = FALSE))
+    column_samples <- pbapply::pbapply(flattened_adj_matrices, 2, function(column_vec) {
+      na_omit_column_vec <- stats::na.omit(column_vec)
+      if (length(na_omit_column_vec) != 0) {
+        sample(na_omit_column_vec, N_samples, replace = TRUE)
+      } else {
+        rep(0, N_samples)
+      }
+    })
+    cat(print("Constructing monte carlo fcms from samples", quote = FALSE))
+    sampled_adj_matrices <- pbapply::pbapply(column_samples, 1, function(row_vec) matrix(row_vec, nrow = n_nodes, ncol = n_nodes), simplify = FALSE)
+  } else {
+    column_samples <- apply(flattened_adj_matrices, 2, function(column_vec) {
+      na_omit_column_vec <- stats::na.omit(column_vec)
+      if (length(na_omit_column_vec) != 0) {
+        sample(na_omit_column_vec, N_samples, replace = TRUE)
+      } else {
+        rep(0, N_samples)
+      }
+    })
+    sampled_adj_matrices <- apply(column_samples, 1, function(row_vec) matrix(row_vec, nrow = n_nodes, ncol = n_nodes), simplify = FALSE)
   }
 
   sampled_adj_matrices
@@ -544,7 +592,7 @@ build_conventional_fcmconfr_models <- function(adj_matrices = list(matrix()),
 
 
 
-#' build_unconventional_fcmconfr_models
+#' build_monte_carlo_fcms_from_fuzzy_adj_matrices
 #'
 #' @description
 #' This function generates n fcm adjacency matrices whose edge weights are sampled
@@ -557,81 +605,92 @@ build_conventional_fcmconfr_models <- function(adj_matrices = list(matrix()),
 #'
 #' Use vignette("fcmconfr-class") for more information.
 #'
-#' @param unconventional_adj_matrix_list A list of n x n adjacencey matrices representing fcms
-#' @param aggregation_fun The aggregation function, either mean or median
-#' @param samples The number of samples to draw with the selected sampling method. Also,
-#' the number of sampled models to generate
+#' @param fuzzy_adj_matrix_list A list of n x n fuzzy adjacencey matrices representing fcms
+#' @param fuzzy_adj_matrix_list_class "fgcm" or "ftcm" - the class of elements in the fuzzy_adj_matrix_list
+#' @param N_samples The number of samples to draw from the corresponding distribution
 #' @param include_zeroes TRUE/FALSE Whether to incorporate zeroes as intentionally-defined
 #' edge weights or ignore them in aggregation
 #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 #' from the pbapply package as the underlying function.
 #'
 #' @export
-build_unconventional_fcmconfr_models <- function(unconventional_adj_matrix_list,
-                                                 aggregation_fun,
-                                                 samples,
-                                                 include_zeroes = FALSE,
-                                                 show_progress = TRUE) {
+build_monte_carlo_fcms_from_fuzzy_adj_matrices <- function(fuzzy_adj_matrix_list = list(data.frame()),
+                                                           fuzzy_adj_matrix_list_class = c("fcm", "fgcm", "ftcm"),
+                                                           N_samples = integer(),
+                                                           include_zeroes = FALSE,
+                                                           show_progress = TRUE) {
 
-  if (!is.null(dim(unconventional_adj_matrix_list)) & (length(unique(dim(unconventional_adj_matrix_list))) == 1)) {
-    unconventional_adj_matrix_list <- list(unconventional_adj_matrix_list)
+  if (!(fuzzy_adj_matrix_list_class %in% c("fcm", "fgcm", "ftcm"))) {
+    stop("Input fuzzy_adj_matrix_list_class must be one of the following: 'fcm', 'fgcm', or 'ftcm'")
   }
 
-  unconventional_adj_matrices_with_special_values_as_distributions <- get_unconventional_adj_matrices_with_distributions(
-    unconventional_adj_matrix_list,
-    samples = samples,
-    include_zeroes = include_zeroes
-  )
+  n_nodes <- unique(unlist(lapply(fuzzy_adj_matrix_list, dim)))
 
-  unconventional_fcmconfr_models <- build_models_from_adj_matrices_with_unconventional_values_as_distributions(
-    unconventional_adj_matrices_with_special_values_as_distributions,
-    aggregation_fun = aggregation_fun,
-    show_progress = show_progress
-  )
+  flatten_fuzzy_adj_matrix <- function(fuzzy_adj_matrix) do.call(cbind, lapply(as.vector(fuzzy_adj_matrix), rbind))
+  flattened_fuzzy_adj_matrix_list <- do.call(rbind, lapply(fuzzy_adj_matrix_list, flatten_fuzzy_adj_matrix))
+  flattened_fuzzy_adj_matrix_list_w_distributions <- convert_fuzzy_elements_in_matrix_to_distributions(flattened_fuzzy_adj_matrix_list, fuzzy_adj_matrix_list_class, N_samples)
 
-  unconventional_fcmconfr_models
+  if (!include_zeroes) {
+    flattened_fuzzy_adj_matrix_list_w_distributions <- apply(
+      flattened_fuzzy_adj_matrix_list_w_distributions, c(1, 2),
+      function(element) {
+        ifelse(identical(element[[1]], 0), NA, element)
+      })
+  }
+
+  if (show_progress) {
+    cat(print("Sampling from column vectors", quote = FALSE))
+    column_samples <- pbapply::pbapply(flattened_fuzzy_adj_matrix_list_w_distributions, 2, function(column_vec) {
+      # sample_list_of_vectors_ignoring_NAs
+      na_omit_column_vec <- stats::na.omit(do.call(c, column_vec))
+      if (length(na_omit_column_vec) != 0) {
+        column_vec_with_numerics_replicated <- lapply(
+          column_vec,
+          function(value) {
+            if (is.numeric(value) & length(value) == 1) {
+              rep(value, N_samples)
+            } else {
+              value
+            }
+          })
+        na_omit_column_vec <- stats::na.omit(do.call(c, column_vec_with_numerics_replicated))
+        sample(na_omit_column_vec, N_samples, replace = TRUE)
+      } else {
+        rep(0, N_samples)
+      }
+    })
+    cat(print("Constructing monte carlo fcms from samples", quote = FALSE))
+    sampled_adj_matrices <- pbapply::pbapply(column_samples, 1, function(row_vec) matrix(row_vec, nrow = n_nodes, ncol = n_nodes), simplify = FALSE)
+  } else {
+    column_samples <- apply(flattened_fuzzy_adj_matrix_list_w_distributions, 2, function(column_vec) {
+      # sample_list_of_vectors_ignoring_NAs
+      na_omit_column_vec <- stats::na.omit(do.call(c, column_vec))
+      if (length(na_omit_column_vec) != 0) {
+        column_vec_with_numerics_replicated <- lapply(
+          column_vec,
+          function(value) {
+            if (is.numeric(value) & length(value) == 1) {
+              rep(value, N_samples)
+            } else {
+              value
+            }
+          })
+        na_omit_column_vec <- stats::na.omit(do.call(c, column_vec_with_numerics_replicated))
+        sample(na_omit_column_vec, N_samples, replace = TRUE)
+      } else {
+        rep(0, N_samples)
+      }
+    })
+    sampled_adj_matrices <- apply(column_samples, 1, function(row_vec) matrix(row_vec, nrow = n_nodes, ncol = n_nodes), simplify = FALSE)
+  }
+
+  sampled_adj_matrices
 }
 
 
 
-#' get_unconventional_value_as_distribution
-#'
-#' @description
-#' Convert a grey/triangular number into a list of values sampled from a pdf of the
-#' corresponding distribution (uniform for grey_numbers and triangular for triangular_numbers)
-#'
-#' @details
-#' [ADD DETAILS HERE!!!!]
-#'
-#' Use vignette("fcmconfr-class") for more information.
-#'
-#' @param value A grey_number or triangular_number object
-#' @param n_samples The number of samples drawn from the representative pdf
-#' @param value_class The class of the input value. Either grey_number or triangular_number. Can be left blank.
-#'
-#' @export
-get_unconventional_value_as_distribution <- function(value = numeric(), n_samples = 1000, value_class = "") {
-  class_of_value <- class(value)
-  if (value_class == "") {
-    value_class <- class_of_value
-  } else if (class_of_value != value_class) {
-    stop("Input value_class does not match the class of the input value")
-  }
 
-  if (value_class == "grey_number") {
-    distribution <- stats::runif(n = n_samples, min = value$lower, max = value$upper)
-  } else if (value_class == "triangular_number") {
-    distribution <- get_triangular_distribution_of_values(n = n_samples, lower = value$lower, mode = value$mode, upper = value$upper)
-  } else if (!(value_class %in% c("grey_number", "triangular_number"))) {
-    stop("Input value_class must be one of the following: 'grey_number', 'triangular_number'")
-  }
-
-  distribution
-}
-
-
-
-#' get_unconventional_adj_matrices_with_distributions
+#' convert_fuzzy_elements_in_matrix_to_distributions
 #'
 #' @description
 #' Given a list of adjacency matrices which include either grey_numbers or
@@ -643,203 +702,45 @@ get_unconventional_value_as_distribution <- function(value = numeric(), n_sample
 #'
 #' Use vignette("fcmconfr-class") for more information.
 #'
-#' @param unconventional_adj_matrix_list A list of adjacency matrices with numeric and
-#' either grey_number or triangular_number elements
-#' @param samples The number of samples drawn from the representative pdf
-#' @param include_zeroes TRUE/FALSE Whether or not to incorporate zeroes in
-#' aggregation. If FALSE, zeroes are converted to NA values during aggregation and
-#' returned to zero afterwards.
-#' @param show_progress TRUE/FALSE Whether to display a progress bar at runtime
+#' @param fuzzy_matrix A matrix that can contain fuzzy sets as elements
+#' @param fuzzy_element_class "fgcm" or "ftcm" - the class of elements in the fuzzy_matrix
+#' @param N_samples The number of samples to draw from the corresponding distribution
 #'
 #' @export
-get_unconventional_adj_matrices_with_distributions <- function(unconventional_adj_matrix_list = list(matrix()),
-                                                               samples = 1000,
-                                                               include_zeroes = FALSE,
-                                                               show_progress = TRUE) {
-
-  if (!is.null(dim(unconventional_adj_matrix_list)) & (length(unique(dim(unconventional_adj_matrix_list))) == 1)) {
-    unconventional_adj_matrix_list <- list(unconventional_adj_matrix_list)
+convert_fuzzy_elements_in_matrix_to_distributions <- function(fuzzy_matrix = data.table::data.table(),
+                                                              fuzzy_element_class = c("fgcm", "ftcm"),
+                                                              N_samples = integer()) {
+  if (!(fuzzy_element_class %in% c("fgcm", "ftcm"))) {
+    stop("Input fuzzy_element_class must be either fgcm or ftcm")
+  } else if (identical(fuzzy_element_class, c("fgcm", "ftcm"))) {
+    fuzzy_element_class <- get_class_of_adj_matrix(fuzzy_matrix)
   }
 
-  element_class <- get_fcm_class_from_adj_matrices(unconventional_adj_matrix_list)
-  if (element_class == "fcm") {
-    element_class <- "numeric"
-  } else if (element_class == "fgcm") {
-    element_class <- "grey_number"
-  } else if (element_class == "ftcm") {
-    element_class <- "triangular_number"
-  }
-
-  possible_element_classes <- c("numeric", "grey_number", "triangular_number")
-  if (!(element_class %in% possible_element_classes)) {
-    stop(paste0("Input element_class must be one of the following: '", paste0(possible_element_classes, collapse = "', '"), "'"))
-  }
-
-  data_types_in_adj_matrices <- unique(unlist(lapply(
-    unconventional_adj_matrix_list,
-    function(unconventional_adj_matrix) {
-      apply(unconventional_adj_matrix, c(1, 2),
-            function(element) class(element[[1]])
-      )
-    }
-  )))
-
-  if (!all(data_types_in_adj_matrices %in% possible_element_classes)) {
-    stop(paste0("All elements in unconventional_adj_matrix_list input must be either
-       of type 'numeric' or '", element_class, "'"))
-  }
-
-  if (show_progress) {
-    print("Converting Values to Distributions where Appropriate", quote = FALSE)
-    if (include_zeroes) {
-      adj_matrices_with_unconventional_values_as_distributions <- pbapply::pblapply(
-        unconventional_adj_matrix_list,
-        function(unconventional_adj_matrix) {
-          apply(unconventional_adj_matrix, c(1, 2),
-                function(element) {
-                  ifelse(
-                    class(element[[1]]) == element_class,
-                    yes = list(get_unconventional_value_as_distribution(value = element[[1]], value_class = element_class, n_samples = samples)),
-                    no = list(rep(0, samples))
-                  )
-                })
-        }
-      )
-    } else {
-      adj_matrices_with_unconventional_values_as_distributions <- pbapply::pblapply(
-        unconventional_adj_matrix_list,
-        function(unconventional_adj_matrix) {
-          apply(unconventional_adj_matrix, c(1, 2),
-                function(element) {
-                  ifelse(
-                    class(element[[1]]) == element_class,
-                    yes = list(get_unconventional_value_as_distribution(value = element[[1]], value_class = element_class, n_samples = samples)),
-                    no = NA
-                  )
-                })
-        }
-      )
-    }
-  } else {
-    if (include_zeroes) {
-      adj_matrices_with_unconventional_values_as_distributions <- lapply(
-        unconventional_adj_matrix_list,
-        function(unconventional_adj_matrix) {
-          apply(unconventional_adj_matrix, c(1, 2),
-                function(element) {
-                  ifelse(
-                    class(element[[1]]) == element_class,
-                    yes = list(get_unconventional_value_as_distribution(value = element[[1]], value_class = element_class, n_samples = samples)),
-                    no = list(rep(0, samples))
-                  )
-                })
-        }
-      )
-    } else {
-      adj_matrices_with_unconventional_values_as_distributions <- lapply(
-        unconventional_adj_matrix_list,
-        function(unconventional_adj_matrix) {
-          apply(unconventional_adj_matrix, c(1, 2),
-                function(element) {
-                  ifelse(
-                    class(element[[1]]) == element_class,
-                    yes = list(get_unconventional_value_as_distribution(value = element[[1]], value_class = element_class, n_samples = samples)),
-                    no = NA
-                  )
-                })
-        }
-      )
-    }
-  }
-
-  adj_matrices_with_unconventional_values_as_distributions
-
-}
-
-
-
-#' build_models_from_adj_matrices_with_unconventional_values_as_distributions
-#'
-#' @description
-#' [ADD DETAILS HERE!!!!]
-#'
-#' @details
-#' [ADD DETAILS HERE!!!!]
-#'
-#' Use vignette("fcmconfr-class") for more information.
-#'
-#' @param adj_matrices_with_unconventional_values_as_distributions A list of
-#' adjacency matrices with numeric and either grey_number or triangular_number elements
-#' represented as their corresponding distributions.
-#' @param aggregation_fun Either mean or median. The function to aggregate
-#' distributions representing the same edges across multiple adjacency matrices
-#' @param show_progress TRUE/FALSE Whether to display a progress bar at runtime
-#'
-#' @export
-build_models_from_adj_matrices_with_unconventional_values_as_distributions <- function(adj_matrices_with_unconventional_values_as_distributions = list(matrix()),
-                                                                                       aggregation_fun = c("mean", "median"),
-                                                                                       show_progress = TRUE) {
-
-  n_nodes <- unique(unlist(lapply(adj_matrices_with_unconventional_values_as_distributions, function(x) unique(dim(x)))))
-  adj_matrices_with_unconventional_values_as_distributions_by_index <- do.call(cbind, lapply(adj_matrices_with_unconventional_values_as_distributions, function(adj_matrix_with_unconventional_values_as_distributions) do.call(list, adj_matrix_with_unconventional_values_as_distributions)))
-
-  if (show_progress) {
-    print("Sampling edges", quote = FALSE)
-    aggregated_sampled_adj_matrices_with_unconventional_values_as_distributions_by_index <- pbapply::pbapply(
-      adj_matrices_with_unconventional_values_as_distributions_by_index, 1,
-      function(elements_in_same_locs_across_adj_matrices) {
-        sum_of_corresponding_elements <- 0
-        n_na_corresponding_elements <- 0
-        if (all(lapply(elements_in_same_locs_across_adj_matrices, typeof) == "list")) {
-          elements_in_same_locs_across_adj_matrices <- lapply(elements_in_same_locs_across_adj_matrices, unlist)
-        }
-        elements_in_same_locs_across_adj_matrices <- do.call(cbind, elements_in_same_locs_across_adj_matrices)
-        if (aggregation_fun == "mean") {
-          apply(elements_in_same_locs_across_adj_matrices, 1, mean, na.rm = TRUE)
-        } else if (aggregation_fun == "median") {
-          apply(elements_in_same_locs_across_adj_matrices, 1, stats::median, na.rm = TRUE)
+  if (fuzzy_element_class == "fgcm") {
+    fuzzy_matrix_w_distributions <- apply(
+      fuzzy_matrix, c(1, 2),
+      function(element) {
+        if (identical(methods::is(element[[1]]), "grey_number")) {
+          element <- stats::runif(N_samples, element[[1]]$lower, element[[1]]$upper)
         } else {
-          stop("Input aggregation_fun must be either 'mean' or 'median'")
+          element[[1]]
         }
       }
     )
-  } else {
-    aggregated_sampled_adj_matrices_with_unconventional_values_as_distributions_by_index <- apply(
-      adj_matrices_with_unconventional_values_as_distributions_by_index, 1,
-      function(elements_in_same_locs_across_adj_matrices) {
-        sum_of_corresponding_elements <- 0
-        n_na_corresponding_elements <- 0
-        if (all(lapply(elements_in_same_locs_across_adj_matrices, typeof) == "list")) {
-          elements_in_same_locs_across_adj_matrices <- lapply(elements_in_same_locs_across_adj_matrices, unlist)
-        }
-        elements_in_same_locs_across_adj_matrices <- do.call(cbind, elements_in_same_locs_across_adj_matrices)
-        if (aggregation_fun == "mean") {
-          apply(elements_in_same_locs_across_adj_matrices, 1, mean, na.rm = TRUE)
-        } else if (aggregation_fun == "median") {
-          apply(elements_in_same_locs_across_adj_matrices, 1, stats::median, na.rm = TRUE)
+  } else if (fuzzy_element_class == "ftcm") {
+    fuzzy_matrix_w_distributions <- apply(
+      fuzzy_matrix, c(1, 2),
+      function(element) {
+        if (identical(methods::is(element[[1]]), "triangular_number")) {
+          element <- rtri(N_samples, lower = element[[1]]$lower, mode = element[[1]]$mode, upper = element[[1]]$upper)
         } else {
-          stop("Input aggregation_fun must be either 'mean' or 'median'")
+          element[[1]]
         }
       }
     )
   }
 
-  # NA_only_values_in_output <- any(unlist(lapply(aggregated_sampled_adj_matrices_with_unconventional_values_as_distributions_by_index, is.na)))
-  output_returned_as_list <- is.null(dim(aggregated_sampled_adj_matrices_with_unconventional_values_as_distributions_by_index)) & length(aggregated_sampled_adj_matrices_with_unconventional_values_as_distributions_by_index) == nrow(adj_matrices_with_unconventional_values_as_distributions_by_index)
-  if (output_returned_as_list) {
-    aggregated_sampled_adj_matrices_with_unconventional_values_as_distributions_by_index <- do.call(cbind, aggregated_sampled_adj_matrices_with_unconventional_values_as_distributions_by_index)
-  }
-
-  if (show_progress) {
-    print("Converting NA values generated from mean/median functions to 0's", quote = FALSE)
-    aggregated_sampled_adj_matrices_with_unconventional_values_as_distributions_by_index <- pbapply::pbapply(aggregated_sampled_adj_matrices_with_unconventional_values_as_distributions_by_index, c(1, 2), function(element) ifelse(is.na(element), 0, element))
-    print("Building empirical adjacency matrices from samples", quote = FALSE)
-    sampled_adj_matrices <- pbapply::pbapply(aggregated_sampled_adj_matrices_with_unconventional_values_as_distributions_by_index, 1, function(row) data.frame(array(row, c(n_nodes, n_nodes))), simplify = FALSE)
-  } else {
-    aggregated_sampled_adj_matrices_with_unconventional_values_as_distributions_by_index <- apply(aggregated_sampled_adj_matrices_with_unconventional_values_as_distributions_by_index, c(1, 2), function(element) ifelse(is.na(element), 0, element))
-    sampled_adj_matrices <- apply(aggregated_sampled_adj_matrices_with_unconventional_values_as_distributions_by_index, 1, function(row) data.frame(array(row, c(n_nodes, n_nodes))), simplify = FALSE)
-  }
-
-  sampled_adj_matrices
+  fuzzy_matrix_w_distributions
 }
+
 

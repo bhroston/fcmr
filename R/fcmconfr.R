@@ -9,7 +9,7 @@
 #'
 #' Use vignette("fmcm-class") for more information.
 #'
-#' @param adj_matrices A list of n x n adjacencey matrices representing fcms, fgcms, or ftcms.
+#' @param adj_matrix_list A list of n x n adjacencey matrices representing fcms, fgcms, or ftcms.
 #' @param samples The number of samples to draw with the selected sampling method. Also,
 #' the number of sampled models to generate
 #' @param include_zeroes_in_aggregation TRUE/FALSE Whether to incorporate zeroes as intentionally-defined
@@ -45,10 +45,9 @@
 #' column names of adjacancy matrix (if given).
 #' @param include_simulations_in_output TRUE/FALSE whether to include simulations of monte-carlo-generated
 #' FCM. Will dramatically increase size of output if TRUE.
-#' @param ... Additional input for adjacency matrices of class fcm. sampling = c('nonparametric', 'uniform', 'triangular')
 #'
 #' @export
-fcmconfr <- function(adj_matrices = list(matrix()),
+fcmconfr <- function(adj_matrix_list = list(matrix()),
                      samples = 1000,
                      include_zeroes_in_aggregation = TRUE,
                      aggregation_fun = c("mean", "median"),
@@ -67,40 +66,26 @@ fcmconfr <- function(adj_matrices = list(matrix()),
                      parallel = TRUE,
                      n_cores = integer(),
                      IDs = c(),
-                     include_simulations_in_output = FALSE,
-                     ...) {
-
-  additional_vars <- list(...)
-  if ("sampling" %in% names(additional_vars)) {
-    sampling <- additional_vars$sampling
+                     include_simulations_in_output = FALSE
+                     ) {
+  fcm_class <- unique(vapply(adj_matrix_list, get_class_of_adj_matrix, character(1)))
+  if (length(fcm_class) != 1) {
+    stop("All adj. matrices in input adj_matrix_list must be of the same class (i.e. fcm, fgcm, or ftcm")
   }
 
-  fcm_class <- get_fcm_class_from_adj_matrices(adj_matrices)
-  if (fcm_class == "fcm" & !("sampling" %in% names(as.list(environment())))) {
-    sampling <- "nonparametric"
-    warning("Type fcm adjacency matrices requires the sampling parameter as an additional
-            input. Assuming sampling = 'nonparametric'.")
-  }
-
-  concepts_in_adj_matrices <- lapply(adj_matrices, function(x) get_node_IDs_from_input(x, IDs))
-  nodes <- unlist(unique(concepts_in_adj_matrices))
-  confirm_adj_matrices_have_same_concepts(concepts_in_adj_matrices)
-  confirm_adj_matrices_have_same_dimensions(adj_matrices)
-  confirm_input_vector_is_compatible_with_adj_matrices(adj_matrices[[1]], initial_state_vector, fcm_class)
-  confirm_input_vector_is_compatible_with_adj_matrices(adj_matrices[[1]], clamping_vector, fcm_class)
+  concepts_in_adj_matrix_list <- lapply(adj_matrix_list, function(x) get_node_IDs_from_input(x, IDs))
+  nodes <- unlist(unique(concepts_in_adj_matrix_list))
+  confirm_adj_matrices_have_same_concepts(concepts_in_adj_matrix_list)
+  confirm_adj_matrices_have_same_dimensions(adj_matrix_list)
+  confirm_input_vector_is_compatible_with_adj_matrices(adj_matrix_list[[1]], initial_state_vector, fcm_class)
+  confirm_input_vector_is_compatible_with_adj_matrices(adj_matrix_list[[1]], clamping_vector, fcm_class)
 
   # Confirm necessary packages are available. If not, warn user and change run options
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
   parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
 
   # Build monte carlo models
-  if (fcm_class == "fcm") {
-    sampled_adj_matrices <- build_conventional_fcmconfr_models(adj_matrices, sampling, samples, show_progress)
-  } else if (fcm_class == "fgcm" | fcm_class == "ftcm") {
-    sampled_adj_matrices <- build_unconventional_fcmconfr_models(adj_matrices, aggregation_fun, samples, include_zeroes_in_aggregation, show_progress)
-  } else {
-    stop("Incompatible collection of data types found in input adj_matrices")
-  }
+  sampled_adj_matrices <- build_monte_carlo_fcms(adj_matrix_list, samples, include_zeroes_in_aggregation, show_progress)
   sampled_adj_matrices <- lapply(sampled_adj_matrices,
                                  function(sampled_adj_matrix) {
                                    colnames(sampled_adj_matrix) <- nodes
@@ -163,7 +148,7 @@ organize_fcmconfr_output <- function(...) {
 
   params <- list(
     fcm_class = variables$fcm_class,
-    fcms = variables$adj_matrices,
+    fcms = variables$adj_matrix_list,
     inference_opts = list(initial_state_vector = variables$initial_state_vector,
                           clamping_vector = variables$clamping_vector,
                           activation = variables$activation,
