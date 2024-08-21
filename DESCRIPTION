@@ -26,7 +26,8 @@ Imports:
     foreach,
     doSNOW,
     pbapply,
-    Matrix
+    Matrix,
+    tidyr
 Depends: 
     R (>= 2.10)
 VignetteBuilder: knitr

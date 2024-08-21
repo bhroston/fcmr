@@ -432,52 +432,59 @@ squash <- function(value = numeric(), squashing = "sigmoid", lambda = 1) {
 }
 
 
-
-#' match_state_vector_df_shapes
+#' convert_fuzzy_elements_in_matrix_to_distributions
 #'
 #' @description
-#' Given two data frames of state vectors, extend the one with the least number of rows
-#' by repeating its final iteration value until the data frames are the same shape (i.e.
-#' have the same number of rows)
+#' Given a list of adjacency matrices which include either grey_numbers or
+#' triangular_numbers, convert those objects to their corresponding
+#' distributions representative of those values.
 #'
 #' @details
-#' Ensure that both input data frames are the same shape
+#' [ADD DETAILS HERE!!!!]
 #'
-#' Intended for developer use only to improve package readability.
+#' Use vignette("fcmconfr-class") for more information.
 #'
-#' @param baseline_state_vectors A state vectors dataframe for the baseline simulation
-#' @param scenario_state_vectors A state vectors dataframe for the scenario simulation
-match_state_vector_df_shapes <- function(baseline_state_vectors, scenario_state_vectors) {
-  n_rows_baseline <- nrow(baseline_state_vectors)
-  n_rows_scenario <- nrow(scenario_state_vectors)
-
-  if (n_rows_baseline == n_rows_scenario) {
-    new_baseline_state_vectors <- baseline_state_vectors
-    new_scenario_state_vectors <- scenario_state_vectors
-  } else if (n_rows_baseline < n_rows_scenario) {
-    extended_baseline_state_vectors <- data.frame(apply(
-      baseline_state_vectors, 2, function(sim) {
-        c(sim, rep(sim[n_rows_baseline], n_rows_scenario - n_rows_baseline))
-      }
-    ))
-    new_baseline_state_vectors <- extended_baseline_state_vectors
-    new_scenario_state_vectors <- scenario_state_vectors
-  } else if (n_rows_scenario < n_rows_baseline) {
-    extended_scenario_state_vectors <- data.frame(apply(
-      scenario_state_vectors, 2, function(sim) {
-        c(sim, rep(sim[n_rows_scenario], n_rows_baseline - n_rows_scenario))
-      }
-    ))
-    new_baseline_state_vectors <- baseline_state_vectors
-    new_scenario_state_vectors <- extended_scenario_state_vectors
+#' @param fuzzy_matrix A matrix that can contain fuzzy sets as elements
+#' @param fuzzy_element_class "fgcm" or "ftcm" - the class of elements in the fuzzy_matrix
+#' @param N_samples The number of samples to draw from the corresponding distribution
+#'
+#' @export
+convert_fuzzy_elements_in_matrix_to_distributions <- function(fuzzy_matrix = data.frame(),
+                                                              fuzzy_element_class = c("fgcm", "ftcm"),
+                                                              N_samples = integer()) {
+  if (!(fuzzy_element_class %in% c("fgcm", "ftcm"))) {
+    stop("Input fuzzy_element_class must be either fgcm or ftcm")
+  } else if (identical(fuzzy_element_class, c("fgcm", "ftcm"))) {
+    fuzzy_element_class <- get_class_of_adj_matrix(fuzzy_matrix)
   }
 
-  list(
-    baseline = data.frame(new_baseline_state_vectors),
-    scenario = data.frame(new_scenario_state_vectors)
-  )
-}
+  # browser()
+  if (fuzzy_element_class == "fgcm") {
+    fuzzy_matrix_w_distributions <- apply(
+      fuzzy_matrix, c(1, 2),
+      function(element) {
+        if (identical(methods::is(element[[1]]), "grey_number")) {
+          element <- list(stats::runif(N_samples, element[[1]]$lower, element[[1]]$upper))
+        } else {
+          element[[1]]
+        }
+      }
+    )
+  } else if (fuzzy_element_class == "ftcm") {
+    fuzzy_matrix_w_distributions <- apply(
+      fuzzy_matrix, c(1, 2),
+      function(element) {
+        if (identical(methods::is(element[[1]]), "triangular_number")) {
+          element <- list(rtri(N_samples, lower = element[[1]]$lower, mode = element[[1]]$mode, upper = element[[1]]$upper))
+        } else {
+          element[[1]]
+        }
+      }
+    )
+  }
 
+  fuzzy_matrix_w_distributions
+}
 
 
 #' check_if_local_machine_has_access_to_show_progress_functionalities
@@ -563,3 +570,143 @@ check_if_local_machine_has_access_to_parallel_processing_functionalities <- func
   }
   parallel_check
 }
+
+
+
+#' check_simulation_inputs
+#'
+#' @description
+#' Confirm that all inputs will work with the simulation function and return
+#' appropriate error messages where necessary
+#'
+#' @details
+#' This checks that all inputs for a simulation function are of an appropriate
+#' format, and also fills in missing inputs for initial_state_vector, clamping_vector,
+#' and IDs when appropriate.
+#'
+#' @param adj_matrix An n x n adjacency matrix that represents an FCM
+#' @param initial_state_vector A list state values at the start of an fcm simulation
+#' @param clamping_vector A list of values representing specific actions taken to
+#' control the behavior of an FCM. Specifically, non-zero values defined in this vector
+#' will remain constant throughout the entire simulation as if they were "clamped" at those values.
+#' @param activation The activation function to be applied. Must be one of the following:
+#' 'kosko', 'modified-kosko', or 'rescale'.
+#' @param squashing A squashing function to apply. Must be one of the following:
+#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' @param lambda A numeric value that defines the steepness of the slope of the
+#' squashing function when tanh or sigmoid are applied
+#' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
+#' @param min_error The lowest error (sum of the absolute value of the current state
+#' vector minus the previous state vector) at which no more iterations are necessary
+#' and the simulation will stop
+#' @param IDs A list of names for each node (must have n items). If empty, will use
+#' column names of adjacancy matrix (if given).
+#'
+#' @export
+check_simulation_inputs <- function(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error, IDs) {
+  confirm_adj_matrix_is_square(adj_matrix)
+  if (identical(initial_state_vector, c())) {
+    warning("No initial_state_vector input given. Assuming all nodes have an initial state of 1.")
+    initial_state_vector <- rep(1, nrow(adj_matrix))
+  }
+  if (identical(clamping_vector, c())) {
+    warning("No clamping_vector input given. Assuming no values are clamped.")
+    clamping_vector <- rep(0, length(initial_state_vector))
+  }
+  confirm_input_vector_is_compatible_with_adj_matrix(adj_matrix, initial_state_vector)
+  confirm_input_vector_is_compatible_with_adj_matrix(adj_matrix, clamping_vector)
+
+  if (!(activation %in% c("kosko", "modified-kosko", "rescale"))) {
+    stop("Input activation must be one of the following: 'kosko', 'modified-kosko', or 'rescale'")
+  }
+  if (!(squashing %in% c("sigmoid", "tanh"))) {
+    stop("Input squashing must be one of the following: 'sigmoid', 'tanh'")
+  }
+  if (activation == "rescale" & squashing != "sigmoid") {
+    stop(
+      paste0(
+        "   !!!Please use the sigmoid squashing function with the rescale activation function!!!
+
+          The rescale activation function is designed to optimize performance
+          with the sigmoid squashing function. Results are unreliable if
+          using a different squashing function.\n",
+
+        "\n          Input squashing function: ", squashing)
+    )
+  }
+
+  if (!is.numeric(lambda)) {
+    stop("Input lambda must be numeric")
+  }
+  if (lambda <= 0) {
+    stop("Input lambda must be greater than 0")
+  }
+
+  if (!(max_iter == round(max_iter))) {
+    stop("Input max_iter must be a positive integer")
+  }
+  if (max_iter <= 0) {
+    stop("Input max_iter must be a positive integer")
+  }
+
+  if (!is.numeric(min_error)) {
+    stop("Input min_error must be numeric")
+  }
+  if (min_error <= 0) {
+    stop("Input min_error must be greater than 0")
+  }
+
+  IDs <- get_node_IDs_from_input(adj_matrix, IDs)
+
+  list(
+    initial_state_vector = initial_state_vector,
+    clamping_vector = clamping_vector,
+    IDs = IDs
+  )
+}
+
+
+#' #' match_state_vector_df_shapes
+#' #'
+#' #' @description
+#' #' Given two data frames of state vectors, extend the one with the least number of rows
+#' #' by repeating its final iteration value until the data frames are the same shape (i.e.
+#' #' have the same number of rows)
+#' #'
+#' #' @details
+#' #' Ensure that both input data frames are the same shape
+#' #'
+#' #' Intended for developer use only to improve package readability.
+#' #'
+#' #' @param baseline_state_vectors A state vectors dataframe for the baseline simulation
+#' #' @param scenario_state_vectors A state vectors dataframe for the scenario simulation
+#' match_state_vector_df_shapes <- function(baseline_state_vectors, scenario_state_vectors) {
+#'   n_rows_baseline <- nrow(baseline_state_vectors)
+#'   n_rows_scenario <- nrow(scenario_state_vectors)
+#'
+#'   if (n_rows_baseline == n_rows_scenario) {
+#'     new_baseline_state_vectors <- baseline_state_vectors
+#'     new_scenario_state_vectors <- scenario_state_vectors
+#'   } else if (n_rows_baseline < n_rows_scenario) {
+#'     extended_baseline_state_vectors <- data.frame(apply(
+#'       baseline_state_vectors, 2, function(sim) {
+#'         c(sim, rep(sim[n_rows_baseline], n_rows_scenario - n_rows_baseline))
+#'       }
+#'     ))
+#'     new_baseline_state_vectors <- extended_baseline_state_vectors
+#'     new_scenario_state_vectors <- scenario_state_vectors
+#'   } else if (n_rows_scenario < n_rows_baseline) {
+#'     extended_scenario_state_vectors <- data.frame(apply(
+#'       scenario_state_vectors, 2, function(sim) {
+#'         c(sim, rep(sim[n_rows_scenario], n_rows_baseline - n_rows_scenario))
+#'       }
+#'     ))
+#'     new_baseline_state_vectors <- baseline_state_vectors
+#'     new_scenario_state_vectors <- extended_scenario_state_vectors
+#'   }
+#'
+#'   list(
+#'     baseline = data.frame(new_baseline_state_vectors),
+#'     scenario = data.frame(new_scenario_state_vectors)
+#'   )
+#' }
