@@ -6,7 +6,7 @@
 \usage{
 build_monte_carlo_fcms_from_fuzzy_adj_matrices(
   fuzzy_adj_matrix_list = list(data.frame()),
-  fuzzy_adj_matrix_list_class = c("fcm", "fgcm", "ftcm"),
+  fuzzy_adj_matrix_list_class = c("fcm", "fgcm", "fcm_w_tfn"),
   N_samples = integer(),
   include_zeroes = FALSE,
   show_progress = TRUE
@@ -15,7 +15,7 @@ build_monte_carlo_fcms_from_fuzzy_adj_matrices(
 \arguments{
 \item{fuzzy_adj_matrix_list}{A list of n x n fuzzy adjacencey matrices representing fcms}
 
-\item{fuzzy_adj_matrix_list_class}{"fgcm" or "ftcm" - the class of elements in the fuzzy_adj_matrix_list}
+\item{fuzzy_adj_matrix_list_class}{"fgcm" or "fcm_w_tfn" - the class of elements in the fuzzy_adj_matrix_list}
 
 \item{N_samples}{The number of samples to draw from the corresponding distribution}
 

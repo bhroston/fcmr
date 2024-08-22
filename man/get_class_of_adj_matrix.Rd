@@ -7,14 +7,14 @@
 get_class_of_adj_matrix(adj_matrix = matrix())
 }
 \arguments{
-\item{adj_matrix}{An n x n adjacency matrix that represents an FCM, FGCM, or FTCM}
+\item{adj_matrix}{An n x n adjacency matrix that represents an FCM, FGCM, or fcm_w_tfn}
 }
 \description{
 Get the class of map from the input adj matrix
 }
 \details{
 This returns the class of fcm represented by the input adjacency matrices i.e.
-fcm, fgcm, ftcm, etc.
+fcm, fgcm, fcm_w_tfn, etc.
 
 Intended for developer use only to improve package readability.
 }

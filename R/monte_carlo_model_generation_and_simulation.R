@@ -514,9 +514,10 @@ build_monte_carlo_fcms <- function(adj_matrix_list = list(matrix()),
                                    N_samples = integer(),
                                    include_zeroes = TRUE,
                                    show_progress = TRUE) {
+
   adj_matrix_list_class <- unique(vapply(adj_matrix_list, get_class_of_adj_matrix, character(1)))
   if (length(adj_matrix_list_class) != 1) {
-    stop("All adj. matrices in input adj_matrix_list must be of the same class (i.e. fcm, fgcm, or ftcm")
+    stop("All adj. matrices in input adj_matrix_list must be of the same class (i.e. fcm, fgcm, or fcm_w_tfn")
   }
 
   if (adj_matrix_list_class == "fcm") {
@@ -606,7 +607,7 @@ build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_lis
 #' Use vignette("fcmconfr-class") for more information.
 #'
 #' @param fuzzy_adj_matrix_list A list of n x n fuzzy adjacencey matrices representing fcms
-#' @param fuzzy_adj_matrix_list_class "fgcm" or "ftcm" - the class of elements in the fuzzy_adj_matrix_list
+#' @param fuzzy_adj_matrix_list_class "fgcm" or "fcm_w_tfn" - the class of elements in the fuzzy_adj_matrix_list
 #' @param N_samples The number of samples to draw from the corresponding distribution
 #' @param include_zeroes TRUE/FALSE Whether to incorporate zeroes as intentionally-defined
 #' edge weights or ignore them in aggregation
@@ -615,13 +616,13 @@ build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_lis
 #'
 #' @export
 build_monte_carlo_fcms_from_fuzzy_adj_matrices <- function(fuzzy_adj_matrix_list = list(data.frame()),
-                                                           fuzzy_adj_matrix_list_class = c("fcm", "fgcm", "ftcm"),
+                                                           fuzzy_adj_matrix_list_class = c("fcm", "fgcm", "fcm_w_tfn"),
                                                            N_samples = integer(),
                                                            include_zeroes = FALSE,
                                                            show_progress = TRUE) {
 
-  if (!(fuzzy_adj_matrix_list_class %in% c("fcm", "fgcm", "ftcm"))) {
-    stop("Input fuzzy_adj_matrix_list_class must be one of the following: 'fcm', 'fgcm', or 'ftcm'")
+  if (!(fuzzy_adj_matrix_list_class %in% c("fcm", "fgcm", "fcm_w_tfn"))) {
+    stop("Input fuzzy_adj_matrix_list_class must be one of the following: 'fcm', 'fgcm', or 'fcm_w_tfn'")
   }
 
   n_nodes <- unique(unlist(lapply(fuzzy_adj_matrix_list, dim)))

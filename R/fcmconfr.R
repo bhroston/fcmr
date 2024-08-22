@@ -9,7 +9,7 @@
 #'
 #' Use vignette("fmcm-class") for more information.
 #'
-#' @param adj_matrix_list A list of n x n adjacencey matrices representing fcms, fgcms, or ftcms.
+#' @param adj_matrix_list A list of n x n adjacencey matrices representing fcms, fgcms, or fcm_w_tfns.
 #' @param samples The number of samples to draw with the selected sampling method. Also,
 #' the number of sampled models to generate
 #' @param include_zeroes_in_aggregation TRUE/FALSE Whether to incorporate zeroes as intentionally-defined
@@ -70,7 +70,7 @@ fcmconfr <- function(adj_matrix_list = list(matrix()),
                      ) {
   fcm_class <- unique(vapply(adj_matrix_list, get_class_of_adj_matrix, character(1)))
   if (length(fcm_class) != 1) {
-    stop("All adj. matrices in input adj_matrix_list must be of the same class (i.e. fcm, fgcm, or ftcm")
+    stop("All adj. matrices in input adj_matrix_list must be of the same class (i.e. fcm, fgcm, or fcm_w_tfn")
   }
 
   concepts_in_adj_matrix_list <- lapply(adj_matrix_list, function(x) get_node_IDs_from_input(x, IDs))

@@ -6,20 +6,20 @@
 \usage{
 convert_fuzzy_elements_in_matrix_to_distributions(
   fuzzy_matrix = data.frame(),
-  fuzzy_element_class = c("fgcm", "ftcm"),
+  fuzzy_element_class = c("fgcm", "fcm_w_tfn"),
   N_samples = integer()
 )
 }
 \arguments{
 \item{fuzzy_matrix}{A matrix that can contain fuzzy sets as elements}
 
-\item{fuzzy_element_class}{"fgcm" or "ftcm" - the class of elements in the fuzzy_matrix}
+\item{fuzzy_element_class}{"fgcm" or "fcm_w_tfn" - the class of elements in the fuzzy_matrix}
 
 \item{N_samples}{The number of samples to draw from the corresponding distribution}
 }
 \description{
 Given a list of adjacency matrices which include either grey_numbers or
-triangular_numbers, convert those objects to their corresponding
+tfns, convert those objects to their corresponding
 distributions representative of those values.
 }
 \details{

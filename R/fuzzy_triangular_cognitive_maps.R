@@ -1,8 +1,8 @@
 
-#' infer_ftcm_with_clamping
+#' infer_fcm_w_fcm_w_tfn_with_clamping
 #'
 #' @description
-#' This confers with a baseline simulation of an FTCM and a scenario (scenario vector)
+#' This confers with a baseline simulation of an fcm_w_fcm_w_tfn and a scenario (scenario vector)
 #' to estimate how outputs change compared to the structural or expected behavior
 #' of the system.
 #'
@@ -20,10 +20,10 @@
 #'  - squashing = either "sigmoid" or "tanh"
 #'  - lambda = 1
 #'
-#' Use vignette("ftcm-class") for more information about each of these
+#' Use vignette("fcm_w_fcm_w_tfn-class") for more information about each of these
 #' functions/algorithms alongside their originating sources.
 #'
-#' @param tfn_adj_matrix An n x n adjacency matrix that represents an FCM
+#' @param fcm_w_tfn_adj_matrix An n x n adjacency matrix that represents an FCM
 #' @param initial_state_vector A list state values at the start of an fcm simulation
 #' @param clamping_vector A list of values representing specific actions taken to
 #' control the behavior of an FCM. Specifically, non-zero values defined in this vector
@@ -43,7 +43,7 @@
 #' column names of adjacancy matrix (if given).
 #'
 #' @export
-infer_ftcm_with_clamping <- function(tfn_adj_matrix = matrix(),
+infer_fcm_w_tfn_with_clamping <- function(fcm_w_tfn_adj_matrix = matrix(),
                                      initial_state_vector = c(),
                                      clamping_vector = c(),
                                      activation = "kosko", # Problems when activation == "rescale",
@@ -55,7 +55,7 @@ infer_ftcm_with_clamping <- function(tfn_adj_matrix = matrix(),
                                      IDs = c()) {
 
   # Perform checks
-  checks <- check_simulation_inputs(tfn_adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error, IDs)
+  checks <- check_simulation_inputs(fcm_w_tfn_adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error, IDs)
   initial_state_vector <- checks$initial_state_vector
   clamping_vector <- checks$clamping_vector
   IDs <- checks$IDs
@@ -63,21 +63,21 @@ infer_ftcm_with_clamping <- function(tfn_adj_matrix = matrix(),
   # Get baseline simulation
   baseline_initial_state_vector <- initial_state_vector
   baseline_clamping_vector <- rep(0, length(clamping_vector))
-  baseline_simulation <- simulate_tfn_with_clamping_or_pulse_only(tfn_adj_matrix, baseline_initial_state_vector, baseline_clamping_vector, activation, squashing, lambda, max_iter, min_error, IDs)
+  baseline_simulation <- simulate_fcm_w_tfn_with_clamping_or_pulse_only(fcm_w_tfn_adj_matrix, baseline_initial_state_vector, baseline_clamping_vector, activation, squashing, lambda, max_iter, min_error, IDs)
 
   # Get scenario simulation
   scenario_initial_state_vector <- initial_state_vector
   scenario_clamping_vector <- clamping_vector
-  scenario_simulation <- simulate_tfn_with_clamping_or_pulse_only(tfn_adj_matrix, scenario_initial_state_vector, scenario_clamping_vector, activation, squashing, lambda, max_iter, min_error, IDs)
+  scenario_simulation <- simulate_fcm_w_tfn_with_clamping_or_pulse_only(fcm_w_tfn_adj_matrix, scenario_initial_state_vector, scenario_clamping_vector, activation, squashing, lambda, max_iter, min_error, IDs)
 
-  equalized_dfs <- equalize_tfn_simulation_state_vectors_dataframes(baseline_simulation, scenario_simulation)
+  equalized_dfs <- equalize_fcm_w_tfn_simulation_state_vectors_dataframes(baseline_simulation, scenario_simulation)
   baseline_simulation$state_vectors <- equalized_dfs$baseline$state_vectors
   baseline_simulation$defuzzed_state_vectors <- equalized_dfs$baseline$defuzzed_state_vectors
   scenario_simulation$state_vectors <- equalized_dfs$scenario$state_vectors
   scenario_simulation$defuzzed_state_vectors <- equalized_dfs$scenario$defuzzed_state_vectors
 
-  baseline_state_vectors_as_distributions <- convert_fuzzy_elements_in_matrix_to_distributions(baseline_simulation$state_vectors, "ftcm", 1000)# [, -1]
-  scenario_state_vectors_as_distributions <- convert_fuzzy_elements_in_matrix_to_distributions(scenario_simulation$state_vectors, "ftcm", 1000)# [, -1]
+  baseline_state_vectors_as_distributions <- convert_fuzzy_elements_in_matrix_to_distributions(baseline_simulation$state_vectors, "fcm_w_tfn", 1000)# [, -1]
+  scenario_state_vectors_as_distributions <- convert_fuzzy_elements_in_matrix_to_distributions(scenario_simulation$state_vectors, "fcm_w_tfn", 1000)# [, -1]
 
   # browser()
   inference_state_vectors_as_distributions <- baseline_state_vectors_as_distributions
@@ -90,7 +90,7 @@ infer_ftcm_with_clamping <- function(tfn_adj_matrix = matrix(),
   inference_CI_state_vectors <- data.frame(
     apply(inference_state_vectors_as_distributions, c(1, 2),
           function(element) {
-            triangular_number(
+            tfn(
               lower = stats::quantile(element[[1]], 0.5 - CI/2),
               mode = mean(element[[1]]),
               upper = stats::quantile(element[[1]], 0.5 + CI/2)
@@ -99,10 +99,10 @@ infer_ftcm_with_clamping <- function(tfn_adj_matrix = matrix(),
   defuzzed_inference_CI_state_vectors <- data.frame(
     apply(inference_CI_state_vectors, c(1, 2),
           function(element) {
-            defuzz_tfn(element[[1]], "cog")}))
+            defuzz_fcm_w_tfn(element[[1]], "cog")}))
 
-  inference_CI_state_vectors <- clean_ftcm_simulation_output(inference_CI_state_vectors, IDs)
-  defuzzed_inference_CI_state_vectors <- clean_ftcm_simulation_output(defuzzed_inference_CI_state_vectors, IDs)
+  inference_CI_state_vectors <- clean_fcm_w_fcm_w_tfn_simulation_output(inference_CI_state_vectors, IDs)
+  defuzzed_inference_CI_state_vectors <- clean_fcm_w_fcm_w_tfn_simulation_output(defuzzed_inference_CI_state_vectors, IDs)
 
   inference_values <- defuzzed_inference_CI_state_vectors[nrow(defuzzed_inference_CI_state_vectors),][, -1]
   final_inference_CI_state_vectors <- inference_CI_state_vectors[nrow(inference_CI_state_vectors), ][, -1]
@@ -127,25 +127,25 @@ infer_ftcm_with_clamping <- function(tfn_adj_matrix = matrix(),
       scenario_simulation = scenario_simulation,
       baseline_simulation = baseline_simulation
     ),
-    class = "ftcm_inference_with_clamping"
+    class = "fcm_w_fcm_w_tfn_inference_with_clamping"
   )
 }
 
 
 
-#' equalize_tfn_simulation_state_vectors_dataframes
+#' equalize_fcm_w_tfn_simulation_state_vectors_dataframes
 #'
 #' @description
 #' This reformats the dataframes of the simulation with the least number of iterations
 #' (rows) and repeats the final row until dataframes across the baseline and scenario
 #' simulations have the same number of iterations (rows)
 #'
-#' Use vignette("tfn-class") for more information about each of these
+#' Use vignette("fcm_w_tfn-class") for more information about each of these
 #' functions/algorithms alongside their originating sources.
 #'
-#' @param baseline The output of a ftcm simulation using the baseline inputs
-#' @param scenario The output of a ftcm simulation using the scenario inputs
-equalize_tfn_simulation_state_vectors_dataframes <- function(baseline, scenario) {
+#' @param baseline The output of a fcm_w_fcm_w_tfn simulation using the baseline inputs
+#' @param scenario The output of a fcm_w_fcm_w_tfn simulation using the scenario inputs
+equalize_fcm_w_tfn_simulation_state_vectors_dataframes <- function(baseline, scenario) {
   n_iters_baseline <- nrow(baseline$state_vectors)
   n_iters_scenario <- nrow(scenario$state_vectors)
 
@@ -184,24 +184,24 @@ equalize_tfn_simulation_state_vectors_dataframes <- function(baseline, scenario)
 
 
 
-#' simulate_tfn_with_pulse
+#' simulate_fcm_w_tfn_with_pulse
 #'
 #' @description
-#' This calculates a sequence of iterations of a simulation over a tfn m object
+#' This calculates a sequence of iterations of a simulation over a fcm_w_tfn m object
 #' given an initial state vector along with the activation, squashing, and lambda
 #' parameters. Additional variables may be defined to control simulation length,
 #' column names, and lambda optimization.
 #'
 #' @details
-#' This simulates how an tfn reacts to an input initial state vector. There is a
+#' This simulates how an fcm_w_tfn reacts to an input initial state vector. There is a
 #' multi-decadal long body of work that has explored numerous activation and squashing
 #' functions as well as algorithms to optimize the lambda value for the
 #' sigmoid and tanh squashing functions.
 #'
-#' Use vignette("tfn-class") for more information about each of these
+#' Use vignette("fcm_w_tfn-class") for more information about each of these
 #' functions/algorithms alongside their originating sources.
 #'
-#' @param tfn_adj_matrix An n x n adjacency matrix that represents an FCM
+#' @param fcm_w_tfn_adj_matrix An n x n adjacency matrix that represents an FCM
 #' @param initial_state_vector A list state values at the start of an fcm simulation
 #' @param clamping_vector A list of values representing specific actions taken to
 #' control the behavior of an FCM. Specifically, non-zero values defined in this vector
@@ -220,7 +220,7 @@ equalize_tfn_simulation_state_vectors_dataframes <- function(baseline, scenario)
 #' column names of adjacancy matrix (if given).
 #'
 #' @export
-simulate_tfn_with_clamping_or_pulse_only <- function(tfn_adj_matrix = matrix(),
+simulate_fcm_w_tfn_with_clamping_or_pulse_only <- function(fcm_w_tfn_adj_matrix = matrix(),
                                                      initial_state_vector = c(),
                                                      clamping_vector = c(),
                                                      activation = "kosko", # Problems when activation == "rescale",
@@ -230,46 +230,46 @@ simulate_tfn_with_clamping_or_pulse_only <- function(tfn_adj_matrix = matrix(),
                                                      min_error = 1e-5,
                                                      IDs = c()) {
   # Perform checks
-  checks <- check_simulation_inputs(tfn_adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error, IDs)
+  checks <- check_simulation_inputs(fcm_w_tfn_adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error, IDs)
   initial_state_vector <- checks$initial_state_vector
   clamping_vector <- checks$clamping_vector
   IDs <- checks$IDs
 
   # Convert elements in adj_matrix, initial_state_vectors, and clamping_vectors to
-  # triangular_number objects to streamline data management in simulation
-  formatted_tfn_adj_matrix <- data.frame(apply(tfn_adj_matrix, c(1, 2), convert_element_to_triangular_number_if_numeric))
-  formatted_initial_state_vector <- vapply(initial_state_vector, convert_element_to_triangular_number_if_numeric, list(1))
+  # tfn objects to streamline data management in simulation
+  formatted_fcm_w_tfn_adj_matrix <- data.frame(apply(fcm_w_tfn_adj_matrix, c(1, 2), convert_element_to_tfn_if_numeric))
+  formatted_initial_state_vector <- vapply(initial_state_vector, convert_element_to_tfn_if_numeric, list(1))
   clamped_node_locs <- which(clamping_vector != 0)
-  formatted_clamped_nodes <- vapply(clamping_vector[clamped_node_locs], convert_element_to_triangular_number_if_numeric, list(1))
+  formatted_clamped_nodes <- vapply(clamping_vector[clamped_node_locs], convert_element_to_tfn_if_numeric, list(1))
 
   # Generate empty output objects prior to looping to improve runtime speed
-  tfn_state_vectors <- vector(mode = "list", length = max_iter)
-  tfn_errors <- vector(mode = "list", length = max_iter)
-  defuzzed_tfn_state_vectors <- data.frame(matrix(data = numeric(), nrow = max_iter, ncol = length(initial_state_vector)))
-  defuzzed_tfn_errors <- data.frame(matrix(data = numeric(), nrow = max_iter, ncol = length(initial_state_vector)))
+  fcm_w_tfn_state_vectors <- vector(mode = "list", length = max_iter)
+  fcm_w_tfn_errors <- vector(mode = "list", length = max_iter)
+  defuzzed_fcm_w_tfn_state_vectors <- data.frame(matrix(data = numeric(), nrow = max_iter, ncol = length(initial_state_vector)))
+  defuzzed_fcm_w_tfn_errors <- data.frame(matrix(data = numeric(), nrow = max_iter, ncol = length(initial_state_vector)))
 
-  tfn_state_vectors[[1]] <- formatted_initial_state_vector
-  tfn_errors[[1]] <- rep(list(triangular_number(0, 0, 0)), length(initial_state_vector))
-  defuzzed_tfn_state_vectors[1, ] <- unlist(lapply(formatted_initial_state_vector, defuzz_tfn, "cog"))
-  defuzzed_tfn_errors[1, ] <- 0
+  fcm_w_tfn_state_vectors[[1]] <- formatted_initial_state_vector
+  fcm_w_tfn_errors[[1]] <- rep(list(tfn(0, 0, 0)), length(initial_state_vector))
+  defuzzed_fcm_w_tfn_state_vectors[1, ] <- unlist(lapply(formatted_initial_state_vector, defuzz_fcm_w_tfn, "cog"))
+  defuzzed_fcm_w_tfn_errors[1, ] <- 0
 
   for (i in 2:(max_iter + 1)) {
     # Calculate simulation step
-    tfn_state_vector <- tfn_state_vectors[[i - 1]]
-    defuzzed_tfn_state_vector <- defuzzed_tfn_state_vectors[i - 1, ]
-    next_tfn_state_vector <- calculate_next_tfn_state_vector(formatted_tfn_adj_matrix, tfn_state_vector, defuzzed_tfn_state_vector, activation)
-    normalized_next_tfn_state_vector <- lapply(
-      next_tfn_state_vector,
+    fcm_w_tfn_state_vector <- fcm_w_tfn_state_vectors[[i - 1]]
+    defuzzed_fcm_w_tfn_state_vector <- defuzzed_fcm_w_tfn_state_vectors[i - 1, ]
+    next_fcm_w_tfn_state_vector <- calculate_next_fcm_w_tfn_state_vector(formatted_fcm_w_tfn_adj_matrix, fcm_w_tfn_state_vector, defuzzed_fcm_w_tfn_state_vector, activation)
+    normalized_next_fcm_w_tfn_state_vector <- lapply(
+      next_fcm_w_tfn_state_vector,
       function(element) {
-        triangular_number(squash(element$lower, squashing, lambda), squash(element$mode, squashing, lambda), squash(element$upper, squashing, lambda))
+        tfn(squash(element$lower, squashing, lambda), squash(element$mode, squashing, lambda), squash(element$upper, squashing, lambda))
       }
     )
-    normalized_next_tfn_state_vector[clamped_node_locs] <- formatted_clamped_nodes
-    defuzzed_normalized_next_tfn_state_vector <- unlist(lapply(normalized_next_tfn_state_vector, defuzz_tfn, "cog"))
+    normalized_next_fcm_w_tfn_state_vector[clamped_node_locs] <- formatted_clamped_nodes
+    defuzzed_normalized_next_fcm_w_tfn_state_vector <- unlist(lapply(normalized_next_fcm_w_tfn_state_vector, defuzz_fcm_w_tfn, "cog"))
     # Store result in output objects
-    tfn_state_vectors[[i]] <- normalized_next_tfn_state_vector
-    defuzzed_tfn_state_vectors[i, ] <- defuzzed_normalized_next_tfn_state_vector
-    tfn_errors[[i]] <- mapply(
+    fcm_w_tfn_state_vectors[[i]] <- normalized_next_fcm_w_tfn_state_vector
+    defuzzed_fcm_w_tfn_state_vectors[i, ] <- defuzzed_normalized_next_fcm_w_tfn_state_vector
+    fcm_w_tfn_errors[[i]] <- mapply(
       function(state_vector, next_state_vector) {
         data.frame(
           error_in_lower = abs(state_vector$lower - next_state_vector$lower),
@@ -277,12 +277,12 @@ simulate_tfn_with_clamping_or_pulse_only <- function(tfn_adj_matrix = matrix(),
           error_in_upper = abs(state_vector$upper - next_state_vector$upper)
         )
       },
-      state_vector = tfn_state_vector,
-      next_state_vector = normalized_next_tfn_state_vector,
+      state_vector = fcm_w_tfn_state_vector,
+      next_state_vector = normalized_next_fcm_w_tfn_state_vector,
       SIMPLIFY = FALSE
     )
-    defuzzed_tfn_errors[i, ] <- abs(defuzzed_tfn_state_vector - defuzzed_normalized_next_tfn_state_vector)
-    total_error <- sum(defuzzed_tfn_errors[i, ])
+    defuzzed_fcm_w_tfn_errors[i, ] <- abs(defuzzed_fcm_w_tfn_state_vector - defuzzed_normalized_next_fcm_w_tfn_state_vector)
+    total_error <- sum(defuzzed_fcm_w_tfn_errors[i, ])
     if (total_error < min_error) {
       break
     }
@@ -301,19 +301,19 @@ simulate_tfn_with_clamping_or_pulse_only <- function(tfn_adj_matrix = matrix(),
   }
 
   # Clean output objects
-  tfn_state_vectors <- clean_ftcm_simulation_output(tfn_state_vectors, IDs)
-  tfn_errors <- clean_ftcm_simulation_output(tfn_errors, IDs)
-  defuzzed_tfn_state_vectors <- clean_ftcm_simulation_output(defuzzed_tfn_state_vectors, IDs)
-  defuzzed_tfn_errors <- clean_ftcm_simulation_output(defuzzed_tfn_errors, IDs)
+  fcm_w_tfn_state_vectors <- clean_fcm_w_fcm_w_tfn_simulation_output(fcm_w_tfn_state_vectors, IDs)
+  fcm_w_tfn_errors <- clean_fcm_w_fcm_w_tfn_simulation_output(fcm_w_tfn_errors, IDs)
+  defuzzed_fcm_w_tfn_state_vectors <- clean_fcm_w_fcm_w_tfn_simulation_output(defuzzed_fcm_w_tfn_state_vectors, IDs)
+  defuzzed_fcm_w_tfn_errors <- clean_fcm_w_fcm_w_tfn_simulation_output(defuzzed_fcm_w_tfn_errors, IDs)
 
   structure(
     .Data = list(
-      state_vectors = tfn_state_vectors,
-      defuzzed_state_vectors = defuzzed_tfn_state_vectors,
-      errors = tfn_errors,
-      defuzzed_errors = defuzzed_tfn_errors,
+      state_vectors = fcm_w_tfn_state_vectors,
+      defuzzed_state_vectors = defuzzed_fcm_w_tfn_state_vectors,
+      errors = fcm_w_tfn_errors,
+      defuzzed_errors = defuzzed_fcm_w_tfn_errors,
       params = list(
-        adj_matrix = tfn_adj_matrix,
+        adj_matrix = fcm_w_tfn_adj_matrix,
         initial_state_vector = initial_state_vector,
         activation = activation,
         squashing = squashing,
@@ -323,12 +323,12 @@ simulate_tfn_with_clamping_or_pulse_only <- function(tfn_adj_matrix = matrix(),
         IDs = IDs
       )
     ),
-    class = "ftcm_simulation"
+    class = "fcm_w_fcm_w_tfn_simulation"
   )
 }
 
 
-#' convert_element_to_triangular_number_if_numeric
+#' convert_element_to_tfn_if_numeric
 #'
 #' @description
 #' This checks whether the input element is an ordinary number or a triangular number.
@@ -338,10 +338,10 @@ simulate_tfn_with_clamping_or_pulse_only <- function(tfn_adj_matrix = matrix(),
 #' @param element An element in a matrix
 #'
 #' @export
-convert_element_to_triangular_number_if_numeric <- function(element) {
-  ifelse(identical(methods::is(element[[1]]), "triangular_number"),
+convert_element_to_tfn_if_numeric <- function(element) {
+  ifelse(identical(methods::is(element[[1]]), "tfn"),
          element,
-         list(triangular_number(element[[1]], element[[1]], element[[1]])))
+         list(tfn(element[[1]], element[[1]], element[[1]])))
 }
 
 
@@ -352,12 +352,12 @@ convert_element_to_triangular_number_if_numeric <- function(element) {
 #' This adds quality-of-life improvements and detail to simulation output objects
 #' such as adding column names and an iter column
 #'
-#' @param output_obj An ftcm simulation output object
+#' @param output_obj An fcm_w_fcm_w_tfn simulation output object
 #' @param IDs A list of names for each node (must have n items). If empty, will use
 #' column names of adjacancy matrix (if given).
 #'
 #' @export
-clean_ftcm_simulation_output <- function(output_obj, IDs) {
+clean_fcm_w_fcm_w_tfn_simulation_output <- function(output_obj, IDs) {
   if (identical(methods::is(data.frame()), methods::is(output_obj))) {
     # output_obj is a data.frame
     output_obj <- stats::na.omit(output_obj)
@@ -371,7 +371,7 @@ clean_ftcm_simulation_output <- function(output_obj, IDs) {
 }
 
 
-#' calculate_next_tfn_state_vector
+#' calculate_next_fcm_w_tfn_state_vector
 #'
 #' @description
 #' This calculates the next iteration of a state vector in an fcm simulation
@@ -392,69 +392,69 @@ clean_ftcm_simulation_output <- function(output_obj, IDs) {
 #'
 #' Use vignette("fcm-class") for more information.
 #'
-#' @param formatted_tfn_adj_matrix An n x n adjacency matrix that represents an FCM
-#' and every element in the matrix is a triangular_number.
-#' @param tfn_state_vector A list of state values as triangular_number objects
-#' @param defuzzed_tfn_state_vector A list of state values as defuzzed triangular_number objects
+#' @param formatted_fcm_w_tfn_adj_matrix An n x n adjacency matrix that represents an FCM
+#' and every element in the matrix is a tfn.
+#' @param fcm_w_tfn_state_vector A list of state values as tfn objects
+#' @param defuzzed_fcm_w_tfn_state_vector A list of state values as defuzzed tfn objects
 #' @param activation The activation function to be applied. Must be one of the following:
 #' 'kosko', 'modified-kosko', or 'rescale'.
 #' @param squashing A squashing function to apply. Must be one of the following:
 #' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
 #'
 #' @export
-calculate_next_tfn_state_vector <- function(formatted_tfn_adj_matrix = matrix(),
-                                            tfn_state_vector = c(),
-                                            defuzzed_tfn_state_vector = c(),
+calculate_next_fcm_w_tfn_state_vector <- function(formatted_fcm_w_tfn_adj_matrix = matrix(),
+                                            fcm_w_tfn_state_vector = c(),
+                                            defuzzed_fcm_w_tfn_state_vector = c(),
                                             activation = c("kosko", "modified-kosko", "rescale"),
                                             squashing = c("sigmoid", "tanh")) {
 
-    next_tfn_state_vector <- vector(mode = "list", length = length(defuzzed_tfn_state_vector))
-    for (col in seq_along(formatted_tfn_adj_matrix)) {
+    next_fcm_w_tfn_state_vector <- vector(mode = "list", length = length(defuzzed_fcm_w_tfn_state_vector))
+    for (col in seq_along(formatted_fcm_w_tfn_adj_matrix)) {
       dot_product_multiplication_only <- mapply(
-        function(coefficient, tfn) {
-          tfn <- tfn[[1]]
+        function(coefficient, fcm_w_tfn) {
+          fcm_w_tfn <- fcm_w_tfn[[1]]
           if (coefficient >= 0) {
-            triangular_number(coefficient*tfn$lower, coefficient*tfn$mode, coefficient*tfn$upper)
+            tfn(coefficient*fcm_w_tfn$lower, coefficient*fcm_w_tfn$mode, coefficient*fcm_w_tfn$upper)
           } else {
-            triangular_number(coefficient*tfn$upper, coefficient*tfn$mode, coefficient*tfn$lower)
+            tfn(coefficient*fcm_w_tfn$upper, coefficient*fcm_w_tfn$mode, coefficient*fcm_w_tfn$lower)
           }
         },
-        coefficient = defuzzed_tfn_state_vector,
-        tfn = formatted_tfn_adj_matrix[, col]
+        coefficient = defuzzed_fcm_w_tfn_state_vector,
+        fcm_w_tfn = formatted_fcm_w_tfn_adj_matrix[, col]
       )
       dot_product <- apply(dot_product_multiplication_only, 1, function(row) sum(unlist(row)))
-      next_tfn_state_vector[[col]] <- triangular_number(dot_product[1], dot_product[2], dot_product[3])
+      next_fcm_w_tfn_state_vector[[col]] <- tfn(dot_product[1], dot_product[2], dot_product[3])
     }
 
     if (activation == "kosko") {
-      next_tfn_state_vector <-  next_tfn_state_vector
+      next_fcm_w_tfn_state_vector <-  next_fcm_w_tfn_state_vector
     } else if (activation == "modified-kosko") {
-      next_tfn_state_vector <- mapply(
-        function(tfn_1, tfn_2) triangular_number(tfn_1$lower +  tfn_2$lower, tfn_1$mode +  tfn_2$mode, tfn_1$upper +  tfn_2$upper),
-        tfn_1 = tfn_state_vector,
-        tfn_2 = next_tfn_state_vector,
+      next_fcm_w_tfn_state_vector <- mapply(
+        function(fcm_w_tfn_1, fcm_w_tfn_2) tfn(fcm_w_tfn_1$lower +  fcm_w_tfn_2$lower, fcm_w_tfn_1$mode +  fcm_w_tfn_2$mode, fcm_w_tfn_1$upper +  fcm_w_tfn_2$upper),
+        fcm_w_tfn_1 = fcm_w_tfn_state_vector,
+        fcm_w_tfn_2 = next_fcm_w_tfn_state_vector,
         SIMPLIFY = FALSE
       )
     }
 
-    next_tfn_state_vector
+    next_fcm_w_tfn_state_vector
 }
 
 
-defuzz_tfn <- function(tfn = triangular_number(), method = c("cog", "distance")) {
+defuzz_fcm_w_tfn <- function(fcm_w_tfn = tfn(), method = c("cog", "distance")) {
   if (method == "cog") {
-    defuzzified_value <- (tfn$lower + tfn$mode + tfn$upper)/3
+    defuzzified_value <- (fcm_w_tfn$lower + fcm_w_tfn$mode + fcm_w_tfn$upper)/3
   } # else if (method == "distance") {
-    # x_centroid <- (tfn$lower + tfn$mode + tfn$upper)/3
-    # # peak density = 2/(tfn$upper - tfn$lower) from Area Tri = (1/2)*base*height = 1
-    # y_centroid <- (1/3)*(2/(tfn$upper - tfn$lower))
+    # x_centroid <- (fcm_w_tfn$lower + fcm_w_tfn$mode + fcm_w_tfn$upper)/3
+    # # peak density = 2/(fcm_w_tfn$upper - fcm_w_tfn$lower) from Area Tri = (1/2)*base*height = 1
+    # y_centroid <- (1/3)*(2/(fcm_w_tfn$upper - fcm_w_tfn$lower))
     # defuzzified_value <- sqrt(x_centroid^2 + y_centroid^2)
   # }
 }
 
 
 
-#' confirm_input_vector_is_compatible_with_triangular_adj_matrix
+#' confirm_input_vector_is_compatible_with_fcm_w_tfn_adj_matrix
 #'
 #' @description
 #' Confirm that an initial state vector is algorithmically compatible with a triangular adjacency matrix
@@ -462,34 +462,34 @@ defuzz_tfn <- function(tfn = triangular_number(), method = c("cog", "distance"))
 #' @details
 #' Boolean. TRUE if the number of entries in the initial
 #' state vector match the number of rows/columns in the adjacency matrix and 2. The
-#' datatypes stored within each object are the same (i.e. "numeric" vs "triangular_number"),
+#' datatypes stored within each object are the same (i.e. "numeric" vs "tfn"),
 #' FALSE if not
 #'
 #' Intended for developer use only to improve package readability.
 #'
-#' @param triangular_adj_matrix An n x n triangular adjacency matrix that represents an FCM
+#' @param fcm_w_tfn_adj_matrix An n x n triangular adjacency matrix that represents an FCM
 #' @param initial_state_vector An n-length list of the initial states of each node in an fcm simulation
-confirm_input_vector_is_compatible_with_triangular_adj_matrix <- function(triangular_adj_matrix = matrix(), initial_state_vector = c()) {
-  if (length(initial_state_vector) != unique(dim(triangular_adj_matrix))) {
+confirm_input_vector_is_compatible_with_fcm_w_tfn_adj_matrix <- function(fcm_w_tfn_adj_matrix = matrix(), initial_state_vector = c()) {
+  if (length(initial_state_vector) != unique(dim(fcm_w_tfn_adj_matrix))) {
     stop("Length of input initial_state_vector is does not comply with the dimensions of the input adjacency matrix", .call = FALSE)
   } else {
     TRUE
   }
 
   data_types <- unique(vapply(initial_state_vector, class, character(1)))
-  both_numeric_or_triangular_number_data_types <- identical(data_types, c("numeric", "triangular_number")) | identical(data_types, c("triangular_number", "numeric"))
+  both_numeric_or_tfn_data_types <- identical(data_types, c("numeric", "tfn")) | identical(data_types, c("tfn", "numeric"))
   only_numeric_data_types <- identical(data_types, "numeric")
-  only_triangular_number_data_types <- identical(data_types, "triangular_number")
+  only_tfn_data_types <- identical(data_types, "tfn")
 
-  if (both_numeric_or_triangular_number_data_types | only_numeric_data_types | only_triangular_number_data_types) {
+  if (both_numeric_or_tfn_data_types | only_numeric_data_types | only_tfn_data_types) {
     TRUE
   } else {
-    stop("Input initial state vector must contain only numeric or triangular_number values")
+    stop("Input initial state vector must contain only numeric or tfn values")
   }
 }
 
 
-#' get_triangular_adj_matrix_from_lower_mode_and_upper_adj_matrices
+#' get_fcm_w_tfn_adj_matrix_from_lower_mode_and_upper_adj_matrices
 #'
 #' @description
 #' This "gets" a triangular adjacency matrix from an adjacency matrix of the lower
@@ -507,7 +507,7 @@ confirm_input_vector_is_compatible_with_triangular_adj_matrix <- function(triang
 #' in the triangular adjacency matrix. Otherwise, generic node IDs will be used
 #' (C1, C2, ... Cn).
 #'
-#' #' Use vignette("ftcm-class") for more information.
+#' #' Use vignette("fcm_w_fcm_w_tfn-class") for more information.
 #'
 #' @param lower An n x n adjacency matrix that represents the lower limits of
 #'              edges in an FCM
@@ -517,12 +517,12 @@ confirm_input_vector_is_compatible_with_triangular_adj_matrix <- function(triang
 #'
 #' @export
 #' @examples
-#' get_triangular_adj_matrix_from_lower_mode_and_upper_adj_matrices(
+#' get_fcm_w_tfn_adj_matrix_from_lower_mode_and_upper_adj_matrices(
 #'  lower = matrix(data = c(0, 0.2, 0, 0.5), nrow = 2, ncol = 2),
 #'  mode = matrix(data = c(0, 0.3, 0, 0.6), nrow = 2, ncol = 2),
 #'  upper = matrix(data = c(0, 0.4, 0, 0.7), nrow = 2, ncol = 2)
 #' )
-get_triangular_adj_matrix_from_lower_mode_and_upper_adj_matrices <- function(lower = matrix(),
+get_fcm_w_tfn_adj_matrix_from_lower_mode_and_upper_adj_matrices <- function(lower = matrix(),
                                                                              mode = matrix(),
                                                                              upper = matrix()) {
   if (!identical(dim(lower), dim(mode), dim(upper))) {
@@ -561,22 +561,22 @@ get_triangular_adj_matrix_from_lower_mode_and_upper_adj_matrices <- function(low
 
   edge_locs <- unique(rbind(which(lower != 0, arr.ind = TRUE), which(mode != 0, arr.ind = TRUE), which(upper != 0, arr.ind = TRUE)))
 
-  triangular_adj_matrix <- as.data.frame(matrix(data = list(0), nrow = size, ncol = size))
-  colnames(triangular_adj_matrix) <- IDs
-  rownames(triangular_adj_matrix) <- IDs
+  fcm_w_tfn_adj_matrix <- as.data.frame(matrix(data = list(0), nrow = size, ncol = size))
+  colnames(fcm_w_tfn_adj_matrix) <- IDs
+  rownames(fcm_w_tfn_adj_matrix) <- IDs
 
-  for (i in seq_along(triangular_adj_matrix)) {
+  for (i in seq_along(fcm_w_tfn_adj_matrix)) {
     row <- edge_locs[, 1][i]
     col <- edge_locs[, 2][i]
-    triangular_adj_matrix[[col]][[row]] <- triangular_number(lower[row, col], mode[row, col], upper[row, col])
+    fcm_w_tfn_adj_matrix[[col]][[row]] <- tfn(lower[row, col], mode[row, col], upper[row, col])
   }
 
-  triangular_adj_matrix
+  fcm_w_tfn_adj_matrix
 }
 
 
 
-#' triangular_number S3 class
+#' tfn S3 class
 #'
 #' @description
 #' This class is an organization scheme for Triangular Numbers (See
@@ -586,10 +586,10 @@ get_triangular_adj_matrix_from_lower_mode_and_upper_adj_matrices <- function(low
 #' Triangular Numbers represent intervals within a possibility space (typically
 #' [0, 1] or [-1, 1]) that contains the true value of an object.
 #'
-#' The triangular_number class does not perform any operations on its input, rather
+#' The tfn class does not perform any operations on its input, rather
 #' it checks whether the input follows the defining criteria of triangular numbers
 #'
-#' Use vignette("ftcm-class") for more information.
+#' Use vignette("fcm_w_fcm_w_tfn-class") for more information.
 #'
 #' @param lower lower limit of a Triangular Number set (the lower value must be less than or equal to the upper value)
 #' @param mode the most likely value of a Triangular Number set
@@ -597,8 +597,8 @@ get_triangular_adj_matrix_from_lower_mode_and_upper_adj_matrices <- function(low
 #'
 #' @export
 #' @examples
-#' triangular_number(lower = 0, mode = 0.5, upper = 1)
-triangular_number <- function(lower = double(), mode = double(), upper = double()) {
+#' tfn(lower = 0, mode = 0.5, upper = 1)
+tfn <- function(lower = double(), mode = double(), upper = double()) {
   if (identical(lower, double())) {
     lower <- -Inf
   }
@@ -625,12 +625,12 @@ triangular_number <- function(lower = double(), mode = double(), upper = double(
 
   structure(
     .Data = data.frame(lower = lower, mode = mode, upper = upper),
-    class = "triangular_number"
+    class = "tfn"
   )
 }
 
 
-#' print.triangular_number
+#' print.tfn
 #'
 #' @description
 #' This improves the readability of the output
@@ -639,42 +639,42 @@ triangular_number <- function(lower = double(), mode = double(), upper = double(
 #' triangular Numbers represent intervals within a possibility space (typically
 #' [0, 1] or [-1, 1]) that contains the true value of an object.
 #'
-#' The triangular_number class does not perform any operations on its input, rather
+#' The tfn class does not perform any operations on its input, rather
 #' it checks whether the input follows the defining criteria of triangular numbers
 #'
-#' triangular_numbers are constructed using vctrs::new_vctr instead of the typical call to
+#' tfns are constructed using vctrs::new_vctr instead of the typical call to
 #' structure() because ...
 #'
-#' Use vignette("ftcm-class") for more information.
+#' Use vignette("fcm_w_fcm_w_tfn-class") for more information.
 #'
-#' @param x a triangular_number object
+#' @param x a tfn object
 #' @param ... additional inputs
 #'
 #' @export
 #' @examples
-#' triangular_number(lower = 0, upper = 1)
-print.triangular_number <- function(x, ...) {
+#' tfn(lower = 0, upper = 1)
+print.tfn <- function(x, ...) {
   cat(class(x), ": [", x$lower, ", ", x$mode, ", ", x$upper, "]", sep = "")
 }
 
 
-#' c.triangular_number
+#' c.tfn
 #'
 #' @description
 #' This forces the output of c() to the equivalent of list() only for inputs of
-#' type triangular_number
+#' type tfn
 #'
 #' @details
-#' For triangular_number objects, c() combines all of the lower and upper data into
-#' a single triangular_number object, but list() returns the expected output of a
-#' list of distinct triangular_number objects.
+#' For tfn objects, c() combines all of the lower and upper data into
+#' a single tfn object, but list() returns the expected output of a
+#' list of distinct tfn objects.
 #'
-#' @param ... a set of triangular_number objects
+#' @param ... a set of tfn objects
 #'
 #' @export
 #' @examples
-#' c(triangular_number(0, 1), triangular_number(0.2, 0.5))
-c.triangular_number <- function(...) {
+#' c(tfn(0, 1), tfn(0.2, 0.5))
+c.tfn <- function(...) {
   list(...)
 }
 

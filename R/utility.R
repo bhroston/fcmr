@@ -324,11 +324,11 @@ check_adj_matrix_list_is_list <- function(adj_matrix_list = list(matrix())) {
 #'
 #' @details
 #' This returns the class of fcm represented by the input adjacency matrices i.e.
-#' fcm, fgcm, ftcm, etc.
+#' fcm, fgcm, fcm_w_tfn, etc.
 #'
 #' Intended for developer use only to improve package readability.
 #'
-#' @param adj_matrix An n x n adjacency matrix that represents an FCM, FGCM, or FTCM
+#' @param adj_matrix An n x n adjacency matrix that represents an FCM, FGCM, or fcm_w_tfn
 get_class_of_adj_matrix <- function(adj_matrix = matrix()) {
   object_classes_in_adj_matrix <- unique(as.vector(apply(adj_matrix, c(1, 2), function(element) class(element[[1]]))))
 
@@ -336,8 +336,8 @@ get_class_of_adj_matrix <- function(adj_matrix = matrix()) {
     adj_matrix_class <- "fcm"
   } else if (all(object_classes_in_adj_matrix %in% c("numeric", "grey_number"))) {
     adj_matrix_class <- "fgcm"
-  } else if (all(object_classes_in_adj_matrix %in% c("numeric", "triangular_number"))) {
-    adj_matrix_class <- "ftcm"
+  } else if (all(object_classes_in_adj_matrix %in% c("numeric", "tfn"))) {
+    adj_matrix_class <- "fcm_w_tfn"
   } else {
     stop(paste0("Incompatible collection of data types found in input adj_matrix: '", paste0(object_classes_in_adj_matrix, collapse = '', "'")))
   }
@@ -365,13 +365,13 @@ get_class_of_adj_matrix <- function(adj_matrix = matrix()) {
 #' @param fcm_class The class of fcm represented by the representative_adj_matrix
 confirm_input_vector_is_compatible_with_adj_matrices <- function(representative_adj_matrix = matrix(),
                                                                  input_vector = c(),
-                                                                 fcm_class = c("fcm", "fgcm", "ftcm")) {
+                                                                 fcm_class = c("fcm", "fgcm", "fcm_w_tfn")) {
 
   if (fcm_class == "fcm") {
     confirm_input_vector_is_compatible_with_adj_matrix(representative_adj_matrix, input_vector)
   } else if (fcm_class == "fgcm") {
     confirm_input_vector_is_compatible_with_grey_adj_matrix(representative_adj_matrix, input_vector)
-  } else if (fcm_class == "ftcm") {
+  } else if (fcm_class == "fcm_w_tfn") {
     confirm_input_vector_is_compatible_with_triangular_adj_matrix(representative_adj_matrix, input_vector)
   }
 }
@@ -436,7 +436,7 @@ squash <- function(value = numeric(), squashing = "sigmoid", lambda = 1) {
 #'
 #' @description
 #' Given a list of adjacency matrices which include either grey_numbers or
-#' triangular_numbers, convert those objects to their corresponding
+#' tfns, convert those objects to their corresponding
 #' distributions representative of those values.
 #'
 #' @details
@@ -445,16 +445,16 @@ squash <- function(value = numeric(), squashing = "sigmoid", lambda = 1) {
 #' Use vignette("fcmconfr-class") for more information.
 #'
 #' @param fuzzy_matrix A matrix that can contain fuzzy sets as elements
-#' @param fuzzy_element_class "fgcm" or "ftcm" - the class of elements in the fuzzy_matrix
+#' @param fuzzy_element_class "fgcm" or "fcm_w_tfn" - the class of elements in the fuzzy_matrix
 #' @param N_samples The number of samples to draw from the corresponding distribution
 #'
 #' @export
 convert_fuzzy_elements_in_matrix_to_distributions <- function(fuzzy_matrix = data.frame(),
-                                                              fuzzy_element_class = c("fgcm", "ftcm"),
+                                                              fuzzy_element_class = c("fgcm", "fcm_w_tfn"),
                                                               N_samples = integer()) {
-  if (!(fuzzy_element_class %in% c("fgcm", "ftcm"))) {
-    stop("Input fuzzy_element_class must be either fgcm or ftcm")
-  } else if (identical(fuzzy_element_class, c("fgcm", "ftcm"))) {
+  if (!(fuzzy_element_class %in% c("fgcm", "fcm_w_tfn"))) {
+    stop("Input fuzzy_element_class must be either fgcm or fcm_w_tfn")
+  } else if (identical(fuzzy_element_class, c("fgcm", "fcm_w_tfn"))) {
     fuzzy_element_class <- get_class_of_adj_matrix(fuzzy_matrix)
   }
 
@@ -470,11 +470,11 @@ convert_fuzzy_elements_in_matrix_to_distributions <- function(fuzzy_matrix = dat
         }
       }
     )
-  } else if (fuzzy_element_class == "ftcm") {
+  } else if (fuzzy_element_class == "fcm_w_tfn") {
     fuzzy_matrix_w_distributions <- apply(
       fuzzy_matrix, c(1, 2),
       function(element) {
-        if (identical(methods::is(element[[1]]), "triangular_number")) {
+        if (identical(methods::is(element[[1]]), "tfn")) {
           element <- list(rtri(N_samples, lower = element[[1]]$lower, mode = element[[1]]$mode, upper = element[[1]]$upper))
         } else {
           element[[1]]

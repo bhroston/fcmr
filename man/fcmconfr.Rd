@@ -28,7 +28,7 @@ fcmconfr(
 )
 }
 \arguments{
-\item{adj_matrix_list}{A list of n x n adjacencey matrices representing fcms, fgcms, or ftcms.}
+\item{adj_matrix_list}{A list of n x n adjacencey matrices representing fcms, fgcms, or fcm_w_tfns.}
 
 \item{samples}{The number of samples to draw with the selected sampling method. Also,
 the number of sampled models to generate}
