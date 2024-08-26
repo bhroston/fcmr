@@ -55,9 +55,9 @@ test_that("asdfasd", {
                                         show_progress = TRUE,
                                         include_simulations_in_output = FALSE)
 
-  lower_quantile_inference <- get_quantile_of_fmcm_inference(test_mcmc$inference, 0.975)
+  lower_quantile_inference <- get_quantile_of_fmcm_inference(test_mcmc$inference, 0.025)
   mean_inference <- apply(test_mcmc$inference, 2, mean)
-  upper_quantile_inference <- get_quantile_of_fmcm_inference(test_mcmc$inference, 0.025)
+  upper_quantile_inference <- get_quantile_of_fmcm_inference(test_mcmc$inference, 0.975)
 
   mcmc_inference <- data.frame(
     nodes = names(lower_quantile_inference),
