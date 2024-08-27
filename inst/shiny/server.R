@@ -8,23 +8,59 @@
 #' @param output the data streamed from to the ui from the server
 #' @param session data surrounding the shiny instance itself
 shiny_server <- function(input, output, session) {
-  adj_matrix <- reactive({as.list(.GlobalEnv)[names(.GlobalEnv) == input$adj_matrix_list][[1]]})
-  concepts <- reactive({colnames(adj_matrix())})
+  adj_matrix <- shiny::reactive({as.list(.GlobalEnv)[names(.GlobalEnv) == input$adj_matrix_list][[1]]})
+  concepts <- shiny::reactive({colnames(adj_matrix())})
 
+  # Data Nav Panel ####
   output$initial_state_vector_numeric_inputs <- shiny::renderUI({
     lapply(concepts(), function(i) {
-      shiny::sliderInput(i, label = i, value = 0, min = -1, max = 1, step = 0.05)
+      shiny::numericInput(paste0("initial_state_", i), label = i, value = 1, min = -1, max = 1, step = 0.05)
     })
   })
 
+  initial_state_vector <- reactive({
+    initial_state_vector_input_vars <- paste0("initial_state_", concepts())
+    unlist(lapply(initial_state_vector_input_vars, function(i) input[[i]][[1]]))
+  })
+
   output$initial_state_vector_table <- shiny::renderTable({
-    initial_state_vector_table_df <- data.frame(
+    data.frame(
       cbind(
         "Concept" = concepts(),
-        "Value" = unlist(lapply(concepts(), function(i) input[[i]]))
+        "Value" = initial_state_vector()
       )
     )
   }, align = "c", spacing = "xs")
+
+  shiny::observeEvent(input$reset_initial_state_vectors, {
+    lapply(paste0("initial_state_", concepts()), function(i) shiny::updateNumericInput(session, i, value = 1))
+  })
+
+  output$clamping_vector_numeric_inputs <- shiny::renderUI({
+    lapply(concepts(), function(i) {
+      shiny::numericInput(paste0("clamping_", i), label = i, value = 0, min = -1, max = 1, step = 0.05)
+    })
+  })
+
+  clamping_vector <- reactive({
+    clamping_vector_input_vars <- paste0("clamping_", concepts())
+    unlist(lapply(clamping_vector_input_vars, function(i) input[[i]][[1]]))
+  })
+
+  output$clamping_vector_table <- shiny::renderTable({
+    clamping_vector_table_df <- data.frame(
+      cbind(
+        "Concept" = concepts(),
+        "Value" = clamping_vector()
+      )
+    )
+  }, align = "c", spacing = "xs")
+
+  shiny::observeEvent(input$reset_clamping_vectors, {
+    lapply(paste0("clamping_", concepts()), function(i) shiny::updateNumericInput(session, i, value = 0))
+  })
+  #####
+
 
 
 

@@ -5,34 +5,119 @@ shiny_ui <- function() {
     bslib::navset_underline(
       bslib::nav_panel(
         title = "Data", icon = shiny::icon("laptop-file"),
+        #####
+        shiny::fluidRow(
+          shiny::column(width = 12, div(style = "height:20px"))
+        ),
         shiny::selectInput("adj_matrix_list", "Adj. Matrix or List of Adj. Matrices", choices = names(as.list(.GlobalEnv))),
         bslib::navset_underline(
           bslib::nav_panel(
             title = "Initial State (Pulse) Vector", icon = shiny::icon("wave-square"),
             shiny::fluidRow(
-              shiny::p("\nThe Initial State (Pulse) Vector represents the starting 'activation' levels of each concept.")
-              # shiny::column( # Yo fuq these radio button alignments
-              #   width = 6, align = "center",
-              #   shiny::radioButtons("initial_state_vector_input_type", "", choices = c("Sliders", "Numeric"), selected = "Sliders"),
-              # )
+              shiny::column(
+                width = 12, div(style = "height:15px"),
+                shiny::p("\nThe Initial State (Pulse) Vector represents the starting 'activation' levels of each concept.")
+              )
+            ),
+            shiny::fluidRow(
+              shiny::column(
+                width = 12, div(style = "height:20px"),
+              )
             ),
             shiny::fluidRow(
               shiny::column(
                 width = 6, align = "center",
-                shinyWidgets::materialSwitch("show_initial_state_vector_as_numeric_inputs", value = FALSE, right = TRUE),
                 shiny::uiOutput("initial_state_vector_numeric_inputs")
               ),
               shiny::column(
                 width = 6, align = "center",
-                shiny::tableOutput("initial_state_vector_table")
+                shiny::tableOutput("initial_state_vector_table"),
+                shiny::actionButton("reset_initial_state_vectors", "Reset", icon = shiny::icon("rotate-right"))
               )
             )
           ),
-          bslib::nav_panel(title = "Clamping Vector", icon = shiny::icon("grip-lines"))
+          bslib::nav_panel(
+            title = "Clamping Vector", icon = shiny::icon("grip-lines"),
+            shiny::fluidRow(
+              shiny::column(
+                width = 12, div(style = "height:15px"),
+                shiny::p("\nThe Clamping Vector represents the steady 'activation' level or clamped 'activation' level for each concept throughout the simulation.")
+              )
+            ),
+            shiny::fluidRow(
+              shiny::column(
+                width = 12, div(style = "height:20px"),
+              )
+            ),
+            shiny::fluidRow(
+              shiny::column(
+                width = 6, align = "center",
+                shiny::uiOutput("clamping_vector_numeric_inputs")
+              ),
+              shiny::column(
+                width = 6, align = "center",
+                shiny::tableOutput("clamping_vector_table"),
+                shiny::actionButton("reset_initial_state_vectors", "Reset", icon = shiny::icon("rotate-right"))
+              )
+            )
+          )
         )
-      ),
+      ),#####
       bslib::nav_panel(
-        title = "Simulation Options", icon = shiny::icon("calculator")
+        title = "Simulation Options", icon = shiny::icon("calculator"),
+        shiny::fluidRow(
+          shiny::column(width = 12, div(style = "height:20px"))
+        ),
+        shiny::fluidRow(
+          shiny::column(
+            width = 5, align = "right",
+            shiny::h5("Activation Function", style = "padding: 35px;")
+          ),
+          shiny::column(
+            width = 7, align = "left",
+            shinyWidgets::radioGroupButtons("activation", "", choices = c("Kosko", "Modified-Kosko", "Rescale"))
+          )
+        ),
+        shiny::fluidRow(
+          shiny::column(
+            width = 5, align = "right",
+            shiny::h5("Squashing Function", style = "padding: 35px;")
+          ),
+          shiny::column(
+            width = 7, align = "left",
+            shinyWidgets::radioGroupButtons("squashing", "", choices = c("sigmoid", "tanh"))
+          )
+        ),
+        shiny::fluidRow(
+          shiny::column(
+            width = 5, align = "right",
+            shiny::h5(paste0("Lambda (", "\U03BB", ")"), style = "padding: 28px;")
+          ),
+          shiny::column(
+            width = 3, align = "left",
+            shiny::numericInput("lambda", "", 1, min = 1, max = 10, step = 0.05)
+          )
+        ),
+        shiny::fluidRow(
+          shiny::column(
+            width = 5, align = "right",
+            shiny::h5(paste0("Max # of Iterations per Sim"), style = "padding: 28px;")
+          ),
+          shiny::column(
+            width = 3, align = "left",
+            shiny::numericInput("max_iter", "", 100, min = 1, step = 1)
+          )
+        ),
+        shiny::fluidRow(
+          shiny::column(
+            width = 5, align = "right",
+            shiny::h5(paste0("Min Acceptable Error per Step"), style = "padding: 28px;")
+          ),
+          shiny::column(
+            width = 3, align = "left",
+            shiny::numericInput("min_error", "", 1e-5, min = 0, max = 1)
+          )
+        )
       ),
       bslib::nav_panel(title = "Aggregation/Uncertainty Options", icon = shiny::icon("layer-group"), p("Second tab content.")),
       bslib::nav_panel(title = "Bootstrap Options", icon = shiny::icon("seedling"), p("Third tab content")),
@@ -43,22 +128,6 @@ shiny_ui <- function() {
     #bslib::nav_panel(
       #         title = "Inference Options",
       #         shiny::fluidPage(
-      #           shiny::fluidRow(
-      #             shiny::column(
-      #               width = 6,
-      #               shiny::selectInput("adj_matrices", shiny::HTML("Adjacency Matrices<br>(adj_matrices)"), choices = names(as.list(.GlobalEnv)))
-      #             ),
-      #           ),
-      #           shiny::fluidRow(
-      #             shiny::column(
-      #               width = 6,
-      #               shiny::textInput("initial_state_vector", shiny::HTML("Initial State (Pulse) Vector<br>(initial_state_vector)"), value = "c(1, 1, ..., 1)"),
-      #             ),
-      #             shiny::column(
-      #               width = 6,
-      #               shiny::textInput("clamping_vector", shiny::HTML("Clamping Vector<br>(clamping_vector)"), value = "c(1, 0, ..., 0)")
-      #             )
-      #           ),
       #           shiny::fluidRow(
       #             shiny::column(
       #               width = 4,
