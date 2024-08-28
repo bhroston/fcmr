@@ -61,26 +61,32 @@ shiny_server <- function(input, output, session) {
   })
   #####
 
+  form_data <- shiny::reactive({
+    inputs <- shiny::reactiveValuesToList(input)
+    inputs$initial_state_vector <- initial_state_vector()
+    inputs$clamping_vector <- clamping_vector()
+    inputs$adj_matrix_list <- adj_matrix()
+    inputs
+  })
 
+  shiny::observeEvent(input$submit, {
+    assign(
+      x = "session_variables",
+      value = form_data(),
+      envir = .GlobalEnv
+    )
+    shiny::stopApp()
+  })
 
-
-   #output$test_sliders <- shiny::renderUI({
-   # concepts <- colnames(input$adj_matrix_list)
-    # lapply(1:length(concepts), function(i) {
-    #
-    #})
-    #lapply(1:length(concepts), function(i) {
-    #  shiny::sliderInput(inputID = paste0("concept_", i), label = concepts[i], min = -1, max = 1, value = 0, step = 0.05)
-    #})
-  #})
-
-  #output$test_sliders <- shiny::renderUI({
-  #  concepts <- colnames(input$adj_matrix_list)
-
-  #  lapply(concepts, function(i) {
-  #    numericInput(paste0("n_input_", i), label = paste0("n_input", i), value = 0)
-  #  })
-  #})
+  shiny::onStop(
+    function() {
+      assign(
+        x = "session_variables",
+        value = shiny::isolate(form_data()),
+        envir = .GlobalEnv
+      )
+    }
+  )
 }
 
 
@@ -168,4 +174,125 @@ shiny_server <- function(input, output, session) {
 #'
 #'     shiny::stopApp()
 #'   })
-#' }
+#' #' }
+#'
+#'
+#'
+#' output$aggregation_or_mc_selection_ui <- shiny::renderUI({
+#'   if (aggregation_or_mc_selection() == "aggregate") {
+#'     shiny::fluidPage(
+#'       # Aggregation UI Elements
+#'       shinydashboard::box(
+#'         id = "aggregate_options_ui", title = "", width = 12,
+#'         shiny::fluidRow(
+#'           shiny::column(
+#'             width = 5, align = "right",
+#'             shiny::h5("Aggregation Function", style = "padding: 35px;")
+#'           ),
+#'           shiny::column(
+#'             width = 7, align = "left",
+#'             shinyWidgets::radioGroupButtons("aggregation_fun", "", choices = c("Mean", "Median"), selected = "Mean")
+#'           )
+#'         ),
+#'         shiny::fluidRow(
+#'           shiny::column(
+#'             width = 5, align = "right",
+#'             shiny::h5("Include 0's in Calculations", style = "padding: 35px;")
+#'           ),
+#'           shiny::column(
+#'             width = 7, align = "left",
+#'             shinyWidgets::radioGroupButtons("include_zeroes_in_aggregation", "", choices = c("Yes", "No"), selected = "No")
+#'           )
+#'         )
+#'       ),
+#'       shinyjs::hidden(
+#'         shinydashboard::box(
+#'           id = "monte_carlo_options_ui", title = "", width = 12,
+#'           shiny::fluidRow(
+#'             shiny::column(
+#'               width = 5, align = "right",
+#'               shiny::h5("# Sample Maps To Generate", style = "padding: 35px;")
+#'             ),
+#'             shiny::column(
+#'               width = 7, align = "left",
+#'               shiny::numericInput("samples", "", value = 1000, min = 0, step = 100)
+#'             )
+#'           )
+#'         )
+#'       )
+#'     )
+#'   } else if (aggregation_or_mc_selection() == "mc") {
+#'     shiny::fluidPage(
+#'       shinyjs::hidden(
+#'         # Aggregation UI Elements
+#'         shinydashboard::box(
+#'           id = "aggregate_options_ui", title = "", width = 12,
+#'           shiny::fluidRow(
+#'             shiny::column(
+#'               width = 5, align = "right",
+#'               shiny::h5("Aggregation Function", style = "padding: 35px;")
+#'             ),
+#'             shiny::column(
+#'               width = 7, align = "left",
+#'               shinyWidgets::radioGroupButtons("aggregation_fun", "", choices = c("Mean", "Median"), selected = "Mean")
+#'             )
+#'           ),
+#'           shiny::fluidRow(
+#'             shiny::column(
+#'               width = 5, align = "right",
+#'               shiny::h5("Include 0's in Calculations", style = "padding: 35px;")
+#'             ),
+#'             shiny::column(
+#'               width = 7, align = "left",
+#'               shinyWidgets::radioGroupButtons("include_zeroes_in_aggregation", "", choices = c("Yes", "No"), selected = "No")
+#'             )
+#'           )
+#'         )
+#'       ),
+#'       shinydashboard::box(
+#'         id = "monte_carlo_options_ui", title = "", width = 12,
+#'         shiny::fluidRow(
+#'           shiny::column(
+#'             width = 5, align = "right",
+#'             shiny::h5("# Sample Maps To Generate", style = "padding: 35px;")
+#'           ),
+#'           shiny::column(
+#'             width = 7, align = "left",
+#'             shiny::numericInput("samples", "", value = 1000, min = 0, step = 100)
+#'           )
+#'         )
+#'       )
+#'     )
+#'   }
+#' })
+#'
+#' observe({
+#'   print(input[["samples"]])
+#' })
+#'
+#'
+#' # observe({
+#' #   if (aggregation_or_mc_selection() == "mc") {
+#' #     if (!is.null(input[["aggregation_fun"]])) rm(input[["aggregation_fun"]])
+#' #     if (!is.null(input[["include_zeroes_in_aggregation"]])) rm(input[["include_zeroes_in_aggregation"]])
+#' #   } else if (aggregation_or_mc_selection() == "aggregate") {
+#' #     if (!is.null(input[["samples"]])) rm(input[["samples"]])
+#' #   }
+#' # })
+#'
+#' # observe({
+#' #   if (aggregation_or_mc_selection() == "mc") {
+#' #     shinyjs::hide("aggregate_options_ui")
+#' #     shinyjs::show("monte_carlo_options_ui")
+#' #   } else if (aggregation_or_mc_selection() == "aggregate") {
+#' #     shinyjs::hide("monte_carlo_options_ui")
+#' #     shinyjs::show("aggregate_options_ui")
+#' #   }
+#' # })
+#'
+#' observe({
+#'   print(input[["aggregation_or_mc_selection"]])
+#' })
+
+
+
