@@ -5,7 +5,7 @@
 \title{fcmconfr}
 \usage{
 fcmconfr(
-  adj_matrices = list(matrix()),
+  adj_matrix_list = list(matrix()),
   samples = 1000,
   include_zeroes_in_aggregation = TRUE,
   aggregation_fun = c("mean", "median"),
@@ -24,12 +24,11 @@ fcmconfr(
   parallel = TRUE,
   n_cores = integer(),
   IDs = c(),
-  include_simulations_in_output = FALSE,
-  ...
+  include_simulations_in_output = FALSE
 )
 }
 \arguments{
-\item{adj_matrices}{A list of n x n adjacencey matrices representing fcms, fgcms, or ftcms.}
+\item{adj_matrix_list}{A list of n x n adjacencey matrices representing fcms, fgcms, or fcm_w_tfns.}
 
 \item{samples}{The number of samples to draw with the selected sampling method. Also,
 the number of sampled models to generate}
@@ -84,8 +83,6 @@ column names of adjacancy matrix (if given).}
 
 \item{include_simulations_in_output}{TRUE/FALSE whether to include simulations of monte-carlo-generated
 FCM. Will dramatically increase size of output if TRUE.}
-
-\item{...}{Additional input for adjacency matrices of class fcm. sampling = c('nonparametric', 'uniform', 'triangular')}
 }
 \description{
 [ADD DETAILS HERE!!!]

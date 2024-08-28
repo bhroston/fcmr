@@ -45,8 +45,7 @@ test_that("fcmconfr works", {
   expect_no_error(
     test <- fcmconfr(
       adj_matrices <- test_fcms,
-      samples = 5000,
-      sampling = "nonparametric",
+      samples = 100,
       include_zeroes_in_aggregation = FALSE,
       aggregation_fun = "mean",
       initial_state_vector <- c(1, 1, 1, 1),
@@ -55,8 +54,8 @@ test_that("fcmconfr works", {
       activation = "kosko",
       squashing = "sigmoid",
       bootstrap_CI = 0.95,
-      bootstrap_reps = 5000,
-      bootstrap_draws_per_rep = 5000,
+      bootstrap_reps = 1000,
+      bootstrap_draws_per_rep = 1000,
       max_iter = 100,
       min_error = 1e-5,
       n_cores = 2
@@ -83,7 +82,7 @@ test_that("fcmconfr works", {
   expect_no_error(
     test <- fcmconfr(
       adj_matrices <- fgcm_adj_matrices,
-      samples = 5000,
+      samples = 1000,
       include_zeroes_in_aggregation = FALSE,
       aggregation_fun = "mean",
       initial_state_vector <- c(1, 1, 1, 1),
@@ -92,8 +91,8 @@ test_that("fcmconfr works", {
       activation = "kosko",
       squashing = "sigmoid",
       bootstrap_CI = 0.95,
-      bootstrap_reps = 5000,
-      bootstrap_draws_per_rep = 5000,
+      bootstrap_reps = 1000,
+      bootstrap_draws_per_rep = 1000,
       max_iter = 100,
       min_error = 1e-5,
       n_cores = 2
@@ -121,7 +120,7 @@ test_that("fcmconfr works", {
   expect_no_error(
     test <- fcmconfr(
       adj_matrices <- triangular_adj_matrices,
-      samples = 5000,
+      samples = 1000,
       include_zeroes_in_aggregation = FALSE,
       aggregation_fun = "mean",
       initial_state_vector <- c(1, 1),
@@ -130,8 +129,8 @@ test_that("fcmconfr works", {
       activation = "kosko",
       squashing = "sigmoid",
       bootstrap_CI = 0.95,
-      bootstrap_reps = 5000,
-      bootstrap_draws_per_rep = 5000,
+      bootstrap_reps = 1000,
+      bootstrap_draws_per_rep = 1000,
       max_iter = 100,
       min_error = 1e-5,
       n_cores = 2

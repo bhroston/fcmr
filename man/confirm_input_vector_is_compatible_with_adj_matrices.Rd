@@ -7,7 +7,7 @@
 confirm_input_vector_is_compatible_with_adj_matrices(
   representative_adj_matrix = matrix(),
   input_vector = c(),
-  fcm_class = c("fcm", "fgcm", "ftcm")
+  fcm_class = c("fcm", "fgcm", "fcm_w_tfn")
 )
 }
 \arguments{
