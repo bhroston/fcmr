@@ -68,17 +68,6 @@ fcmconfr <- function(adj_matrix_list = list(matrix()),
                      IDs = c(),
                      include_simulations_in_output = FALSE
                      ) {
-  fcm_class <- unique(vapply(adj_matrix_list, get_class_of_adj_matrix, character(1)))
-  if (length(fcm_class) != 1) {
-    stop("All adj. matrices in input adj_matrix_list must be of the same class (i.e. fcm, fgcm, or fcm_w_tfn")
-  }
-
-  concepts_in_adj_matrix_list <- lapply(adj_matrix_list, function(x) get_node_IDs_from_input(x, IDs))
-  nodes <- unlist(unique(concepts_in_adj_matrix_list))
-  confirm_adj_matrices_have_same_concepts(concepts_in_adj_matrix_list)
-  confirm_adj_matrices_have_same_dimensions(adj_matrix_list)
-  confirm_input_vector_is_compatible_with_adj_matrices(adj_matrix_list[[1]], initial_state_vector, fcm_class)
-  confirm_input_vector_is_compatible_with_adj_matrices(adj_matrix_list[[1]], clamping_vector, fcm_class)
 
   # Confirm necessary packages are available. If not, warn user and change run options
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
