@@ -69,6 +69,12 @@ fcmconfr <- function(adj_matrix_list = list(matrix()),
                      include_simulations_in_output = FALSE
                      ) {
 
+  # Perform checks
+  checks <- check_simulation_inputs(adj_matrix_list, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error, IDs)
+  initial_state_vector <- checks$initial_state_vector
+  clamping_vector <- checks$clamping_vector
+  IDs <- checks$IDs
+
   # Confirm necessary packages are available. If not, warn user and change run options
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
   parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
