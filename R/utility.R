@@ -666,47 +666,81 @@ check_simulation_inputs <- function(adj_matrix, initial_state_vector, clamping_v
 }
 
 
-#' #' match_state_vector_df_shapes
-#' #'
-#' #' @description
-#' #' Given two data frames of state vectors, extend the one with the least number of rows
-#' #' by repeating its final iteration value until the data frames are the same shape (i.e.
-#' #' have the same number of rows)
-#' #'
-#' #' @details
-#' #' Ensure that both input data frames are the same shape
-#' #'
-#' #' Intended for developer use only to improve package readability.
-#' #'
-#' #' @param baseline_state_vectors A state vectors dataframe for the baseline simulation
-#' #' @param scenario_state_vectors A state vectors dataframe for the scenario simulation
-#' match_state_vector_df_shapes <- function(baseline_state_vectors, scenario_state_vectors) {
-#'   n_rows_baseline <- nrow(baseline_state_vectors)
-#'   n_rows_scenario <- nrow(scenario_state_vectors)
+
+#' get_adj_matrix_list_object_type
 #'
-#'   if (n_rows_baseline == n_rows_scenario) {
-#'     new_baseline_state_vectors <- baseline_state_vectors
-#'     new_scenario_state_vectors <- scenario_state_vectors
-#'   } else if (n_rows_baseline < n_rows_scenario) {
-#'     extended_baseline_state_vectors <- data.frame(apply(
-#'       baseline_state_vectors, 2, function(sim) {
-#'         c(sim, rep(sim[n_rows_baseline], n_rows_scenario - n_rows_baseline))
-#'       }
-#'     ))
-#'     new_baseline_state_vectors <- extended_baseline_state_vectors
-#'     new_scenario_state_vectors <- scenario_state_vectors
-#'   } else if (n_rows_scenario < n_rows_baseline) {
-#'     extended_scenario_state_vectors <- data.frame(apply(
-#'       scenario_state_vectors, 2, function(sim) {
-#'         c(sim, rep(sim[n_rows_scenario], n_rows_baseline - n_rows_scenario))
-#'       }
-#'     ))
-#'     new_baseline_state_vectors <- baseline_state_vectors
-#'     new_scenario_state_vectors <- extended_scenario_state_vectors
-#'   }
+#' @description
+#' A short description...
 #'
-#'   list(
-#'     baseline = data.frame(new_baseline_state_vectors),
-#'     scenario = data.frame(new_scenario_state_vectors)
-#'   )
-#' }
+#' @param adj_matrix_list_object A list of adj matrices or an individual adj matrix
+get_adj_matrix_list_input_type <- function(adj_matrix_list_input) {
+  # classes_in_list_objects <- c("list", "vector")
+  # classes_in_dataframe_objects <- c("data.frame", "list", "oldClass", "vector")
+  # classes_in_matrix_objects <- c("matrix", "array", "mMatrix", "structure", "vector")
+  # classes_in_sparse_matrix_objects <- c("dgCMatrix", "CsparseMatrix", "dsparseMatrix", "generalMatrix", "dCsparseMatrix", "dMatrix", "sparseMatrix", "compMatrix", "Matrix", "xMatrix", "mMatrix", "replValueSp")
+  # classes_in_datatable_objects <- c("data.table", "data.frame", "list", "oldClass", "vector")
+  # classes_in_tibble_objects <- c("tbl_df", "tbl", "data.frame", "list", "oldClass", "vector")
+
+  classes_in_list_objects <- is(list())
+  classes_in_dataframe_objects <- is(data.frame())
+  classes_in_matrix_objects <- is(matrix())
+  classes_in_sparse_matrix_objects <- is(as(matrix(), "sparseMatrix"))
+  classes_in_datatable_objects <- is(data.table::data.table())
+  classes_in_tibble_objects <- is(tibble::tibble())
+
+  classes_in_adj_matrix_list_input <- methods::is(adj_matrix_list_input)
+  if (identical(classes_in_adj_matrix_list_input, classes_in_list_objects)) {
+    input_type <- "list"
+  } else if (identical(classes_in_adj_matrix_list_input, classes_in_dataframe_objects)) {
+    input_type <- "data.frame"
+  } else if (identical(classes_in_adj_matrix_list_input, classes_in_matrix_objects)) {
+    input_type <- "matrix"
+  } else if (identical(classes_in_adj_matrix_list_input, classes_in_sparse_matrix_objects)) {
+    input_type <- "sparseMatrix"
+  } else if (identical(classes_in_adj_matrix_list_input, classes_in_datatable_objects)) {
+    input_type <- "data.table"
+  } else if (identical(classes_in_adj_matrix_list_input, classes_in_tibble_objects)) {
+    input_type <- "tibble"
+  } else {
+    if (shiny::isRunning()) {
+      input_type <- "unavailable"
+    } else {
+      stop("Input adj. matrix list must be one of the following: 'list' 'data.frame' 'matrix' 'sparseMatrix' 'data,table' 'tibble'")
+    }
+  }
+
+  if (input_type == "list") {
+    num_object_types_in_input_list <- length(unique(lapply(adj_matrix_list_input, is)))
+    if (shiny::isRunning() & num_object_types_in_input_list != 1) {
+      objects_in_list_type = "unavailable"
+    } else if (!shiny::isRunning() & num_object_types_in_input_list != 1) {
+      stop("All objects in adj matrix list must be of the same type.")
+    }
+    object_types_in_input_list <- unique(lapply(adj_matrix_list_input, is))[[1]]
+
+    if (identical(object_types_in_input_list, classes_in_dataframe_objects)) {
+      objects_in_list_type <- "data.frame"
+    } else if (identical(object_types_in_input_list, classes_in_matrix_objects)) {
+      objects_in_list_type <- "matrix"
+    } else if (identical(object_types_in_input_list, classes_in_sparse_matrix_objects)) {
+      objects_in_list_type <- "sparseMatrix"
+    } else if (identical(object_types_in_input_list, classes_in_datatable_objects)) {
+      objects_in_list_type <- "data.table"
+    } else if (identical(object_types_in_input_list, classes_in_tibble_objects)) {
+      objects_in_list_type <- "tibble"
+    } else {
+      if (shiny::isRunning()) {
+        objects_in_list_type <- "unavailable"
+      } else {
+        stop("The list of objects in adj. matrix list must be one of the following: 'data.frame' 'matrix' 'sparseMatrix' 'data,table' 'tibble'")
+      }
+    }
+  } else {
+    objects_in_list_type <- "unavailable"
+  }
+
+  list(
+    input_type = input_type,
+    list_objects = objects_in_list_type
+  )
+}
