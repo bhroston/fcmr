@@ -8,10 +8,123 @@
 #' @param output the data streamed from to the ui from the server
 #' @param session data surrounding the shiny instance itself
 shiny_server <- function(input, output, session) {
-  adj_matrix <- shiny::reactive({as.list(.GlobalEnv)[names(.GlobalEnv) == input$adj_matrix_list][[1]]})
-  concepts <- shiny::reactive({colnames(adj_matrix())})
+  #adj_matrix <- shiny::reactive({as.list(.GlobalEnv)[names(.GlobalEnv) == input$adj_matrix_list][[1]]})
+  #concepts <- shiny::reactive({colnames(adj_matrix())})
+
 
   # Data Nav Panel ####
+  adj_matrix_list_selected <- reactive({
+    input$adj_matrix_list != ""
+  })
+  adj_matrix_list_checks <- shiny::eventReactive(input$adj_matrix_list, {
+    note <- NULL
+    if (!adj_matrix_list_selected()) {
+      adj_matrix_list_input <- list(data.frame())
+      checked_adj_matrix_list <- list(data.frame())
+      note <- "nothing_selected"
+    } else {
+      adj_matrix_list_input <- as.list(.GlobalEnv)[names(as.list(.GlobalEnv)) == input$adj_matrix_list][[1]]
+    }
+
+    adj_matrix_list_input_type <- get_adj_matrix_list_input_type(adj_matrix_list_input)
+    if (adj_matrix_list_input_type$input_type == "unavailable" & adj_matrix_list_input_type$list_objects == "unavailable") {
+      checked_adj_matrix_list <- list(data.frame())
+      note <- "non_list_or_matrix_input"
+    } else if (adj_matrix_list_input_type$input_type %in% c("data.frame", "matrix", "sparseMatrix", "data.table", "tibble")) {
+      checked_adj_matrix_list <- list(adj_matrix_list_input)
+    } else if (adj_matrix_list_input_type$input_type == "list" & adj_matrix_list_input_type$list_objects %in% c("data.frame", "matrix", "sparseMatrix", "data.table", "tibble")) {
+      checked_adj_matrix_list <- adj_matrix_list_input
+    } else if (adj_matrix_list_input_type$input_type == "list" & adj_matrix_list_input_type$list_objects == "unavailable") {
+      checked_adj_matrix_list <- list(data.frame())
+      note <- "list_of_nonmatrices_input"
+    } else {
+      checked_adj_matrix_list <- list(data.frame())
+      note <- "incompatible_input"
+    }
+
+    squared_dims_of_adj_matrix_list <- unlist(unique(lapply(checked_adj_matrix_list, function(x) (unique(dim(x))))))
+    concept_names_in_adj_matrix_list <- unique(lapply(checked_adj_matrix_list, function(x) colnames(x)))
+    if (length(squared_dims_of_adj_matrix_list) > 1) {
+      checked_adj_matrix_list <- list(data.frame())
+      note <- "adj_matrices_of_different_dimensions_or_not_square"
+    }
+    if (length(concept_names_in_adj_matrix_list) > 1) {
+      checked_adj_matrix_list <- list(data.frame())
+      note <- "adj_matrices_have_different_named_concepts"
+    }
+
+    list(
+      adj_matrix_list = checked_adj_matrix_list,
+      note = note
+    )
+  })
+  accepted_adj_matrix_list <- shiny::reactive({
+    if (!identical(adj_matrix_list_checks()$adj_matrix, list(data.frame())) & !is.null(adj_matrix_list_checks()$note)) {
+      FALSE
+    } else {
+      TRUE
+    }
+  })
+  output$accepted_adj_matrix_list <- reactive({accepted_adj_matrix_list()})
+  shiny::outputOptions(output, "accepted_adj_matrix_list", suspendWhenHidden = FALSE)
+  output$rejected_adj_matrix_list_note <- shiny::renderUI({
+    if (!exists("adj_matrix_list_checks")) {
+      NULL
+    } else if (accepted_adj_matrix_list()) {
+      NULL
+    } else {
+      note <- adj_matrix_list_checks()$note
+      shiny::fluidRow(
+        if (note == "nothing_selected") {
+          NULL
+        } else if (note == "non_list_or_matrix_input") {
+          shiny::column(
+            width = 12, align = "center",
+            shiny::h5("Selection is NOT a matrix or list of matrices")
+          )
+        } else if (note == "list_of_nonmatrices_input") {
+          shiny::column(
+            width = 12, align = "center",
+            shiny::h5("Selection is NOT a list of matrices"),
+            shiny::p("All matrices in list must be of the same object type."),
+            shiny::p("Acceptable object types include: data.frame, matrix, sparseMatrix, data.table, or tibble")
+          )
+        } else if (note == "adj_matrices_of_different_dimensions_or_not_square") {
+          shiny::column(
+            width = 12, align = "center",
+            shiny::h5("Selection is must be either a square matrix or a list of square matrices (all of the same size)")
+          )
+        } else if (note == "adj_matrices_have_different_named_concepts") {
+          shiny::column(
+            width = 12, align = "center",
+            shiny::h5("Selection is a list of matrices, but all matrices must have the same concepts (i.e. column names)")
+          )
+        }
+        else if (note == "incompatible_input") {
+          shiny::column(
+            width = 12, align = "center",
+            shiny::h5("Selection is unable to be read.")
+          )
+        }
+      )
+    }
+  })
+
+  adj_matrix_list <- shiny::reactive({
+    if (accepted_adj_matrix_list()) {
+      adj_matrix_list_checks()$adj_matrix
+    } else {
+      list(data.frame())
+    }
+  })
+  concepts <- reactive({
+    if (accepted_adj_matrix_list()) {
+      concepts <- unique(lapply(adj_matrix_list(), colnames))[[1]]
+    } else {
+      concepts <- NULL
+    }
+  })
+
   output$initial_state_vector_numeric_inputs <- shiny::renderUI({
     lapply(concepts(), function(i) {
       shiny::numericInput(paste0("initial_state_", i), label = i, value = 1, min = -1, max = 1, step = 0.05)
@@ -65,7 +178,8 @@ shiny_server <- function(input, output, session) {
     inputs <- shiny::reactiveValuesToList(input)
     inputs$initial_state_vector <- initial_state_vector()
     inputs$clamping_vector <- clamping_vector()
-    inputs$adj_matrix_list <- adj_matrix()
+    #inputs$adj_matrix_list <- adj_matrix_list()
+    #inputs$concepts = concepts()
     inputs
   })
 
@@ -88,211 +202,4 @@ shiny_server <- function(input, output, session) {
     }
   )
 }
-
-
-#'
-#' #' shiny_server
-#' #'
-#' #' @description
-#' #' [ADD DETAILS HERE!!!]
-#' #'
-#' #' @param input the data streamed into the server from the ui
-#' #' @param output the data streamed from to the ui from the server
-#' #' @param session data surrounding the shiny instance itself
-#' shiny_server <- function(input, output, session) {
-#'   adj_matrices_obj <- shiny::reactive({
-#'     adj_matrices_obj_name <- input$adj_matrices
-#'     as.list(.GlobalEnv)[names(as.list(.GlobalEnv)) == adj_matrices_obj_name]
-#'   })
-#'
-#'   # observe({
-#'   #  print(adj_matrices_obj())
-#'   #  print(length(adj_matrices_obj()))
-#'   #})
-#'
-#'   adj_matrices_obj_is_a_list_of_adj_matrices <- shiny::reactive({
-#'     adj_matrices_obj_is_not_an_individual_matrix <- is.null(dim(adj_matrices_obj()))
-#'     adj_matrices_obj_is_a_list <- identical(typeof(adj_matrices_obj()), "list")
-#'     adj_matrices_obj_has_length_greater_than_one <- length(adj_matrices_obj()[[1]]) > 1
-#'     adj_matrices_obj_is_a_list_of_square_matrices <- all(unlist(lapply(lapply(adj_matrices_obj()[[1]], dim), function(x) length(unique(x)) == 1)))
-#'
-#'     # print(paste0("Adj Matrices is not a singular matrix: ", adj_matrices_obj_is_not_an_individual_matrix))
-#'     #print(paste0("Adj Matrices is list: ", adj_matrices_obj_is_a_list))
-#'     #print(paste0("Adj Matrices is list > 1: ", adj_matrices_obj_has_length_greater_than_one))
-#'     #print(paste0("Adj Matrices is list of square mats: ", adj_matrices_obj_is_a_list_of_square_matrices))
-#'
-#'     (adj_matrices_obj_is_not_an_individual_matrix &
-#'         adj_matrices_obj_is_a_list &
-#'         adj_matrices_obj_has_length_greater_than_one &
-#'         adj_matrices_obj_is_a_list_of_square_matrices)
-#'   })
-#'
-#'   input_adj_matrices_fcm_class <- shiny::reactive({
-#'     if (adj_matrices_obj_is_a_list_of_adj_matrices()) {
-#'       get_fcm_class_from_adj_matrices(adj_matrices_obj()[[1]])
-#'     } else {
-#'       FALSE
-#'     }
-#'   })
-#'
-#'   nodes <- reactive({
-#'     if (adj_matrices_obj_is_a_list_of_adj_matrices()) {
-#'       colnames(adj_matrices_obj()[[1]][[1]])
-#'     }
-#'   })
-#'
-#'   #observe({
-#'   #  print(nodes())
-#'   #})
-#'
-#'   observe({
-#'     if (adj_matrices_obj_is_a_list_of_adj_matrices()) {
-#'       shiny::updateTextInput(session, "initial_state_vector",  value = paste0(list(rep(1, length(nodes())))))
-#'       shiny::updateTextInput(session, "clamping_vector",  value = paste0(list(rep(0, length(nodes())))))
-#'     }
-#'   })
-#'
-#'   output$sampling <- shiny::renderUI({
-#'     if (adj_matrices_obj_is_a_list_of_adj_matrices() & input_adj_matrices_fcm_class() == "fcm") {
-#'       shiny::selectInput("sampling", "If FCM only, select mc sampling method\n(sampling)", choices = c("", "nonparametric", "uniform", "triangular"))
-#'     } else {
-#'       NULL
-#'     }}
-#'   )
-#'
-#'   form_data <- shiny::reactive({
-#'     data <- sapply(fields, function(x) input[[x]])
-#'     data
-#'   })
-#'
-#'   shiny::observeEvent(input$submit, {
-#'     assign(
-#'       x = "session_variables",
-#'       value = as.list(form_data()),
-#'       envir = .GlobalEnv
-#'     )
-#'
-#'     shiny::stopApp()
-#'   })
-#' #' }
-#'
-#'
-#'
-#' output$aggregation_or_mc_selection_ui <- shiny::renderUI({
-#'   if (aggregation_or_mc_selection() == "aggregate") {
-#'     shiny::fluidPage(
-#'       # Aggregation UI Elements
-#'       shinydashboard::box(
-#'         id = "aggregate_options_ui", title = "", width = 12,
-#'         shiny::fluidRow(
-#'           shiny::column(
-#'             width = 5, align = "right",
-#'             shiny::h5("Aggregation Function", style = "padding: 35px;")
-#'           ),
-#'           shiny::column(
-#'             width = 7, align = "left",
-#'             shinyWidgets::radioGroupButtons("aggregation_fun", "", choices = c("Mean", "Median"), selected = "Mean")
-#'           )
-#'         ),
-#'         shiny::fluidRow(
-#'           shiny::column(
-#'             width = 5, align = "right",
-#'             shiny::h5("Include 0's in Calculations", style = "padding: 35px;")
-#'           ),
-#'           shiny::column(
-#'             width = 7, align = "left",
-#'             shinyWidgets::radioGroupButtons("include_zeroes_in_aggregation", "", choices = c("Yes", "No"), selected = "No")
-#'           )
-#'         )
-#'       ),
-#'       shinyjs::hidden(
-#'         shinydashboard::box(
-#'           id = "monte_carlo_options_ui", title = "", width = 12,
-#'           shiny::fluidRow(
-#'             shiny::column(
-#'               width = 5, align = "right",
-#'               shiny::h5("# Sample Maps To Generate", style = "padding: 35px;")
-#'             ),
-#'             shiny::column(
-#'               width = 7, align = "left",
-#'               shiny::numericInput("samples", "", value = 1000, min = 0, step = 100)
-#'             )
-#'           )
-#'         )
-#'       )
-#'     )
-#'   } else if (aggregation_or_mc_selection() == "mc") {
-#'     shiny::fluidPage(
-#'       shinyjs::hidden(
-#'         # Aggregation UI Elements
-#'         shinydashboard::box(
-#'           id = "aggregate_options_ui", title = "", width = 12,
-#'           shiny::fluidRow(
-#'             shiny::column(
-#'               width = 5, align = "right",
-#'               shiny::h5("Aggregation Function", style = "padding: 35px;")
-#'             ),
-#'             shiny::column(
-#'               width = 7, align = "left",
-#'               shinyWidgets::radioGroupButtons("aggregation_fun", "", choices = c("Mean", "Median"), selected = "Mean")
-#'             )
-#'           ),
-#'           shiny::fluidRow(
-#'             shiny::column(
-#'               width = 5, align = "right",
-#'               shiny::h5("Include 0's in Calculations", style = "padding: 35px;")
-#'             ),
-#'             shiny::column(
-#'               width = 7, align = "left",
-#'               shinyWidgets::radioGroupButtons("include_zeroes_in_aggregation", "", choices = c("Yes", "No"), selected = "No")
-#'             )
-#'           )
-#'         )
-#'       ),
-#'       shinydashboard::box(
-#'         id = "monte_carlo_options_ui", title = "", width = 12,
-#'         shiny::fluidRow(
-#'           shiny::column(
-#'             width = 5, align = "right",
-#'             shiny::h5("# Sample Maps To Generate", style = "padding: 35px;")
-#'           ),
-#'           shiny::column(
-#'             width = 7, align = "left",
-#'             shiny::numericInput("samples", "", value = 1000, min = 0, step = 100)
-#'           )
-#'         )
-#'       )
-#'     )
-#'   }
-#' })
-#'
-#' observe({
-#'   print(input[["samples"]])
-#' })
-#'
-#'
-#' # observe({
-#' #   if (aggregation_or_mc_selection() == "mc") {
-#' #     if (!is.null(input[["aggregation_fun"]])) rm(input[["aggregation_fun"]])
-#' #     if (!is.null(input[["include_zeroes_in_aggregation"]])) rm(input[["include_zeroes_in_aggregation"]])
-#' #   } else if (aggregation_or_mc_selection() == "aggregate") {
-#' #     if (!is.null(input[["samples"]])) rm(input[["samples"]])
-#' #   }
-#' # })
-#'
-#' # observe({
-#' #   if (aggregation_or_mc_selection() == "mc") {
-#' #     shinyjs::hide("aggregate_options_ui")
-#' #     shinyjs::show("monte_carlo_options_ui")
-#' #   } else if (aggregation_or_mc_selection() == "aggregate") {
-#' #     shinyjs::hide("monte_carlo_options_ui")
-#' #     shinyjs::show("aggregate_options_ui")
-#' #   }
-#' # })
-#'
-#' observe({
-#'   print(input[["aggregation_or_mc_selection"]])
-#' })
-
-
 

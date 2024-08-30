@@ -12,7 +12,12 @@ shiny_ui <- function() {
         shiny::fluidRow(
           shiny::column(width = 12, div(style = "height:20px"))
         ),
-        shiny::selectInput("adj_matrix_list", "Adj. Matrix or List of Adj. Matrices", choices = names(as.list(.GlobalEnv))),
+        shiny::selectInput("adj_matrix_list", "Adj. Matrix or List of Adj. Matrices", choices = c(names(as.list(.GlobalEnv)), ""), selected = ""),
+        shiny::uiOutput("rejected_adj_matrix_list_note"),
+        #shiny::conditionalPanel(
+        #  condition = "!output.accepted_adj_matrix_list",
+        #  shiny::uiOutput("rejected_adj_matrix_list_note")
+        #),
         bslib::navset_underline(
           bslib::nav_panel(
             title = "Initial State (Pulse) Vector", icon = shiny::icon("wave-square"),
@@ -22,20 +27,23 @@ shiny_ui <- function() {
                 shiny::p("\nThe Initial State (Pulse) Vector represents the starting 'activation' levels of each concept.")
               )
             ),
-            shiny::fluidRow(
-              shiny::column(
-                width = 12, div(style = "height:20px"),
-              )
-            ),
-            shiny::fluidRow(
-              shiny::column(
-                width = 6, align = "center",
-                shiny::uiOutput("initial_state_vector_numeric_inputs")
+            shiny::conditionalPanel(
+              condition = "output.accepted_adj_matrix_list",
+              shiny::fluidRow(
+                shiny::column(
+                  width = 12, div(style = "height:20px"),
+                )
               ),
-              shiny::column(
-                width = 6, align = "center",
-                shiny::tableOutput("initial_state_vector_table"),
-                shiny::actionButton("reset_initial_state_vectors", "Reset", icon = shiny::icon("rotate-right"))
+              shiny::fluidRow(
+                shiny::column(
+                  width = 6, align = "center",
+                  shiny::uiOutput("initial_state_vector_numeric_inputs")
+                ),
+                shiny::column(
+                  width = 6, align = "center",
+                  shiny::tableOutput("initial_state_vector_table"),
+                  shiny::actionButton("reset_initial_state_vectors", "Reset", icon = shiny::icon("rotate-right"))
+                )
               )
             )
           ),
@@ -47,20 +55,23 @@ shiny_ui <- function() {
                 shiny::p("\nThe Clamping Vector represents the steady 'activation' level or clamped 'activation' level for each concept throughout the simulation.")
               )
             ),
-            shiny::fluidRow(
-              shiny::column(
-                width = 12, div(style = "height:20px"),
-              )
-            ),
-            shiny::fluidRow(
-              shiny::column(
-                width = 6, align = "center",
-                shiny::uiOutput("clamping_vector_numeric_inputs")
+            shiny::conditionalPanel(
+              condition = "output.accepted_adj_matrix_list",
+              shiny::fluidRow(
+                shiny::column(
+                  width = 12, div(style = "height:20px"),
+                )
               ),
-              shiny::column(
-                width = 6, align = "center",
-                shiny::tableOutput("clamping_vector_table"),
-                shiny::actionButton("reset_initial_state_vectors", "Reset", icon = shiny::icon("rotate-right"))
+              shiny::fluidRow(
+                shiny::column(
+                  width = 6, align = "center",
+                  shiny::uiOutput("clamping_vector_numeric_inputs")
+                ),
+                shiny::column(
+                  width = 6, align = "center",
+                  shiny::tableOutput("clamping_vector_table"),
+                  shiny::actionButton("reset_initial_state_vectors", "Reset", icon = shiny::icon("rotate-right"))
+                )
               )
             )
           )
@@ -246,11 +257,11 @@ shiny_ui <- function() {
           ),
           shiny::column(
             width = 7, align = "left",
-            shinyWidgets::radioGroupButtons("parallel", "", choices = c("Yes", "No"), selected = "Yes")
+            shinyWidgets::radioGroupButtons("parallel", "", choices = c("Yes", "No"), selected = "No")
           )
         ),
         shiny::conditionalPanel(
-          condition  = "input.parallel == true",
+          condition  = "input.parallel == 'Yes'",
           shiny::fluidRow(
             shiny::column(
               width = 5, align = "right",
