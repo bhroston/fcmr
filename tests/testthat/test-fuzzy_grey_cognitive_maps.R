@@ -1,4 +1,7 @@
 
+
+
+
 test_that("infer_fgcm_with_pulse works", {
   lower_adj_matrix <- data.frame(
     "A" = c(0, 0, 0, 0),
@@ -14,7 +17,7 @@ test_that("infer_fgcm_with_pulse works", {
     "D" = c(0, 0, 0.75, 0)
   )
 
-  grey_adj_matrix <- get_grey_adj_matrix_from_lower_and_upper_adj_matrices(lower_adj_matrix, upper_adj_matrix)
+  grey_adj_matrix <- make_adj_matrix_w_IVFNs(lower_adj_matrix, upper_adj_matrix)
   initial_state_vector <- c(1, 1, 1, 1)
 
   expect_no_error(infer_fgcm_with_pulse(grey_adj_matrix, initial_state_vector,

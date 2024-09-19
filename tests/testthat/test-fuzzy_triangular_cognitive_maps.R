@@ -95,7 +95,7 @@ test_that("trying_simulate_fcm_w_tfn", {
     C5 = c(0.7, 0, 0, -0.1, 0, 0),
     C6 = c(0, -0.2, 0.25, 0, -0.7, 0)
   )
-  fcm_w_tfn_adj_matrix <- get_fcm_w_tfn_adj_matrix_from_lower_mode_and_upper_adj_matrices(lower_adj_matrix, mode_adj_matrix, upper_adj_matrix)
+  fcm_w_tfn_adj_matrix <- make_adj_matrix_w_tfns(lower_adj_matrix, mode_adj_matrix, upper_adj_matrix)
   initial_state_vector <- c(0.25, 0.5, -0.3, -0.2, -0.65, -0.7)
   clamping_vector = c(0.25, 0, 0.3, 0, 0, 0)
   activation = "kosko"

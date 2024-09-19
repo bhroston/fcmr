@@ -4,7 +4,7 @@
 \alias{get_node_IDs_from_input}
 \title{get_node_IDs_from_input}
 \usage{
-get_node_IDs_from_input(adj_matrix = matrix(), IDs = c())
+get_node_IDs_from_input(adj_matrix = matrix())
 }
 \arguments{
 \item{adj_matrix}{An n x n adjacency matrix that represents an FCM}

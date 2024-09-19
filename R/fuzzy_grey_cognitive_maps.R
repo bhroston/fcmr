@@ -443,12 +443,12 @@ fgcm <- function(grey_adj_matrix = matrix(), IDs = c()) {
 }
 
 
-#' get_grey_adj_matrix_from_lower_and_upper_adj_matrices
+#' make_adj_matrix_w_ivfns
 #'
 #' @description
-#' This "gets" a Grey adjacency matrix from an adjacency matrix of the lower
-#' limits of edges in an FCM and an adjacency matrix of the upper limits of edges
-#' in an FCM.
+#' This constructs an adjacency matrix with edges represented by interval-value
+#' fuzzy numbers (IVFNs) from an adjacency matrix of lower bounds and an
+#' adjacency matrix of upper bounds
 #'
 #' @details
 #' The input adjacency matrices must square n x n matrices with the same dimensions.
@@ -461,8 +461,6 @@ fgcm <- function(grey_adj_matrix = matrix(), IDs = c()) {
 #' in the grey adjacency matrix. Otherwise, generic node IDs will be used
 #' (C1, C2, ... Cn).
 #'
-#' #' Use vignette("fgcm-class") for more information.
-#'
 #' @param lower An n x n adjacency matrix that represents the lower limits of
 #'              edges in an FCM
 #' @param upper An n x n adjacency matrix that represents the upper limits of
@@ -470,12 +468,11 @@ fgcm <- function(grey_adj_matrix = matrix(), IDs = c()) {
 #'
 #' @export
 #' @examples
-#' get_grey_adj_matrix_from_lower_and_upper_adj_matrices(
+#' make_adj_matrix_w_IVFNs(
 #'  lower = matrix(data = c(0, 0.2, 0, 0.5), nrow = 2, ncol = 2),
 #'  upper = matrix(data = c(0, 0.4, 0, 0.7), nrow = 2, ncol = 2)
 #' )
-get_grey_adj_matrix_from_lower_and_upper_adj_matrices <- function(lower = matrix(),
-                                                                  upper = matrix()) {
+make_adj_matrix_w_ivfns <- function(lower = matrix(), upper = matrix()) {
   if (!identical(dim(lower), dim(upper))) {
     stop("Failed Validation: Input adjacency matrices must be the same size")
   }
@@ -492,34 +489,25 @@ get_grey_adj_matrix_from_lower_and_upper_adj_matrices <- function(lower = matrix
     IDs <- paste0("C", 1:nrow(lower))
   }
 
-  edge_locs_in_lower <- data.table::data.table(which(lower != 0, arr.ind = TRUE))
-  edge_locs_in_upper <- data.table::data.table(which(upper != 0, arr.ind = TRUE))
-  if (!identical(edge_locs_in_lower, edge_locs_in_upper)) {
-    warning("Input adjacency matrices must be structurally equivallent. i.e. If
-    there is a non-zero value in one matrix, there must be another non-zero
-    value at the same location in the other matrix. If one matrix has a non-zero
-    value where the other has a zero value, it is assumed that the zero value is
-    a part of the grey number for that edge.")
-  }
-  all_edge_locs <- unique(rbind(edge_locs_in_lower, edge_locs_in_upper))
+  adj_matrix_w_ivfns <- as.data.frame(matrix(data = list(0), nrow = size, ncol = size))
+  colnames(adj_matrix_w_ivfns) <- IDs
+  rownames(adj_matrix_w_ivfns) <- IDs
 
-  #grey_adj_matrix <- as.data.frame(matrix(data = list(0), nrow = size, ncol = size))
-  grey_adj_matrix <- as.data.frame(matrix(data = list(0), nrow = size, ncol = size))
-  colnames(grey_adj_matrix) <- IDs
-  rownames(grey_adj_matrix) <- IDs
-
-  for (index in 1:nrow(all_edge_locs)) {
-    i <- all_edge_locs$row[index]
-    j <- all_edge_locs$col[index]
-    grey_adj_matrix[[j]][[i]] <- grey_number( # [[j]][[i]] instead of [[i]][[j]]
-      # because this notation is
-      # [[col]][[row]] for data.frames
-      lower = lower[i, j],
-      upper = upper[i, j]
-    )
+  for (i in 1:length(IDs)) {
+    for (j in 1:length(IDs)) {
+      adj_matrix_w_ivfns[[j]][[i]] <- ivfn(
+        # [[j]][[i]] instead of [[i]][[j]]
+        # because this notation is
+        # [[col]][[row]] for data.frames
+        lower = lower[i, j],
+        upper = upper[i, j]
+      )
+    }
   }
 
-  grey_adj_matrix
+  class(adj_matrix_w_ivfns) <- c("adj_matrix_w_ivfns", methods::is(adj_matrix_w_ivfns))
+
+  adj_matrix_w_ivfns
 }
 
 
@@ -668,31 +656,26 @@ get_edgelist_from_grey_adj_matrix <- function(grey_adj_matrix = matrix(), IDs = 
 }
 
 
-#' grey_number S3 class
+#' ivfn S3 class
 #'
 #' @description
 #' This class is an organization scheme for Grey Numbers (See
 #' ____, XXXX for example).
 #'
 #' @details
-#' Grey Numbers represent intervals within a possibility space (typically
+#' Interval Value Fuzzy Numbers (IVFNs) represent intervals within a possibility space (typically
 #' [0, 1] or [-1, 1]) that contains the true value of an object.
 #'
-#' The grey_number class does not perform any operations on its input, rather
-#' it checks whether the input follows the defining criteria of grey numbers
+#' The IVFN class does not perform any operations on its input, rather
+#' it checks whether the input follows the defining criteria of IVFNs
 #'
-#' grey_numbers are constructed using vctrs::new_vctr instead of the typical call to
-#' structure() because ...
-#'
-#' Use vignette("fgcm-class") for more information.
-#'
-#' @param lower lower limit of a Grey Number set (the lower value must be less than or equal to the upper value)
-#' @param upper upper limit of a Grey Number set (the upper value must be greater or equal to the lower value)
+#' @param lower lower limit of an IVFN (the lower value must be less than or equal to the upper value)
+#' @param upper upper limit of an IVFN (the upper value must be greater or equal to the lower value)
 #'
 #' @export
 #' @examples
-#' grey_number(lower = 0, upper = 1)
-grey_number <- function(lower = double(), upper = double()) {
+#' ivfn(lower = 0, upper = 1)
+ivfn <- function(lower = double(), upper = double()) {
   if (identical(lower, double())) {
     lower <- -Inf
   }
@@ -711,7 +694,7 @@ grey_number <- function(lower = double(), upper = double()) {
 
   structure(
     .Data = data.frame(lower = lower, upper = upper),
-    class = "grey_number"
+    class = "ivfn"
   )
 }
 

@@ -489,12 +489,12 @@ confirm_input_vector_is_compatible_with_fcm_w_tfn_adj_matrix <- function(fcm_w_t
 }
 
 
-#' get_fcm_w_tfn_adj_matrix_from_lower_mode_and_upper_adj_matrices
+#' make_adj_matrix_w_tfns
 #'
 #' @description
-#' This "gets" a triangular adjacency matrix from an adjacency matrix of the lower
-#' limits of edges in an FCM and an adjacency matrix of the upper limits of edges
-#' in an FCM.
+#' This constructs a triangular adjacency matrix from an adjacency matrix of the lower
+#' limits of edges in an FCM, an adjacency matrix of the averages or expected values
+#' of edges, and an adjacency matrix of the upper limits of edges in an FCM.
 #'
 #' @details
 #' The input adjacency matrices must square n x n matrices with the same dimensions.
@@ -507,8 +507,6 @@ confirm_input_vector_is_compatible_with_fcm_w_tfn_adj_matrix <- function(fcm_w_t
 #' in the triangular adjacency matrix. Otherwise, generic node IDs will be used
 #' (C1, C2, ... Cn).
 #'
-#' #' Use vignette("fcm_w_fcm_w_tfn-class") for more information.
-#'
 #' @param lower An n x n adjacency matrix that represents the lower limits of
 #'              edges in an FCM
 #' @param mode An n x n adjacency matrix that represents the modes of edges in an FCM
@@ -517,14 +515,14 @@ confirm_input_vector_is_compatible_with_fcm_w_tfn_adj_matrix <- function(fcm_w_t
 #'
 #' @export
 #' @examples
-#' get_fcm_w_tfn_adj_matrix_from_lower_mode_and_upper_adj_matrices(
+#' make_adj_matrix_w_tfns(
 #'  lower = matrix(data = c(0, 0.2, 0, 0.5), nrow = 2, ncol = 2),
 #'  mode = matrix(data = c(0, 0.3, 0, 0.6), nrow = 2, ncol = 2),
 #'  upper = matrix(data = c(0, 0.4, 0, 0.7), nrow = 2, ncol = 2)
 #' )
-get_fcm_w_tfn_adj_matrix_from_lower_mode_and_upper_adj_matrices <- function(lower = matrix(),
-                                                                             mode = matrix(),
-                                                                             upper = matrix()) {
+make_adj_matrix_w_tfns <- function(lower = matrix(),
+                                   mode = matrix(),
+                                   upper = matrix()) {
   if (!identical(dim(lower), dim(mode), dim(upper))) {
     stop("Failed Validation: Input adjacency matrices must be the same size")
   }
@@ -559,19 +557,26 @@ get_fcm_w_tfn_adj_matrix_from_lower_mode_and_upper_adj_matrices <- function(lowe
     )
   }
 
-  edge_locs <- unique(rbind(which(lower != 0, arr.ind = TRUE), which(mode != 0, arr.ind = TRUE), which(upper != 0, arr.ind = TRUE)))
+  adj_matrix_w_tfns <- as.data.frame(matrix(data = list(0), nrow = size, ncol = size))
+  colnames(adj_matrix_w_tfns) <- IDs
+  rownames(adj_matrix_w_tfns) <- IDs
 
-  fcm_w_tfn_adj_matrix <- as.data.frame(matrix(data = list(0), nrow = size, ncol = size))
-  colnames(fcm_w_tfn_adj_matrix) <- IDs
-  rownames(fcm_w_tfn_adj_matrix) <- IDs
-
-  for (i in seq_along(fcm_w_tfn_adj_matrix)) {
-    row <- edge_locs[, 1][i]
-    col <- edge_locs[, 2][i]
-    fcm_w_tfn_adj_matrix[[col]][[row]] <- tfn(lower[row, col], mode[row, col], upper[row, col])
+  for (i in 1:length(IDs)) {
+    for (j in 1:length(IDs)) {
+      adj_matrix_w_tfns[[j]][[i]] <- tfn(
+        # [[j]][[i]] instead of [[i]][[j]]
+        # because this notation is
+        # [[col]][[row]] for data.frames
+        lower = lower[i, j],
+        mode = mode[i, j],
+        upper = upper[i, j]
+      )
+    }
   }
 
-  fcm_w_tfn_adj_matrix
+  class(adj_matrix_w_tfns) <- c("adj_matrix_w_tfns", methods::is(adj_matrix_w_tfns))
+
+  adj_matrix_w_tfns
 }
 
 

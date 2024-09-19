@@ -12,8 +12,7 @@ check_simulation_inputs(
   squashing,
   lambda,
   max_iter,
-  min_error,
-  IDs
+  min_error
 )
 }
 \arguments{
@@ -39,9 +38,6 @@ squashing function when tanh or sigmoid are applied}
 \item{min_error}{The lowest error (sum of the absolute value of the current state
 vector minus the previous state vector) at which no more iterations are necessary
 and the simulation will stop}
-
-\item{IDs}{A list of names for each node (must have n items). If empty, will use
-column names of adjacancy matrix (if given).}
 }
 \description{
 Confirm that all inputs will work with the simulation function and return

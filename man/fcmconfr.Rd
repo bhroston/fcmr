@@ -28,7 +28,9 @@ fcmconfr(
 }
 \arguments{
 \item{adj_matrices}{A list of adjacency matrices (n x n) representing FCMs. This
-can also be an individual adjacency matrix.}
+can also be an individual adjacency matrix.Adj. Matrices can be conventional FCMs,
+FCMs with edge weights as Interval Value Fuzzy Numbers (IVFNs) or FCMs with edge
+weights as Triangular Fuzzy Numbers (TFNs)}
 
 \item{aggregation_function}{Aggregate the adj. matrices into a single FCM by taking
 either the mean or median of the edge weights for edges included in multiple maps}

@@ -27,6 +27,8 @@ test_that("streamlined fcmconfr works", {
   )
   test_fcms <- list(test_adj_matrix_1, test_adj_matrix_2, test_adj_matrix_3, test_adj_matrix_4)
 
+  aggregate_fcms(test_fcms, "mean")
+
   fcmconfr(
     adj_matrices = test_adj_matrix_1,
     # Aggregation and Monte Carlo Sampling

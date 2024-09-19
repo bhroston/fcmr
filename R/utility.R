@@ -242,24 +242,12 @@ confirm_unique_datatype_in_object <- function(object, datatype = "numeric") {
 #'
 #' @param adj_matrix An n x n adjacency matrix that represents an FCM
 #' @param IDs A list of names for each node (must have n items)
-get_node_IDs_from_input <- function(adj_matrix = matrix(), IDs = c()) {
+get_node_IDs_from_input <- function(adj_matrix = matrix()) {
   empty_colnames <- identical(colnames(adj_matrix), NULL)
-  no_IDs_given <- identical(IDs, c())
-  colnames_same_as_IDs <- identical(colnames(adj_matrix), IDs)
-  if (empty_colnames & no_IDs_given) {
+  if (empty_colnames) {
     IDs <- paste0("C", 1:nrow(adj_matrix))
-  } else if (empty_colnames & length(IDs) != nrow(adj_matrix)) {
-    stop("Input IDs must be the same length as matrix dimensions. i.e. if matrix
-         is n x n, length of IDs must be n.")
-  } else if (!empty_colnames & no_IDs_given) {
+  } else if (!empty_colnames) {
     IDs <- colnames(adj_matrix)
-  } else if (!colnames_same_as_IDs) {
-    warning("Input adjacency matrix has different column names that input IDs.
-            Using input IDs for node/concept names.")
-  } else if (colnames_same_as_IDs) {
-    NULL
-  } else {
-    stop("Unable to interpret input adjacency matrix and IDs objects")
   }
 
   IDs
@@ -685,14 +673,6 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
     adj_matrices_input_is_list <- FALSE
   }
 
-  # } else {
-  #   if (shiny::isRunning()) {
-  #     input_type <- "unavailable"
-  #   } else {
-  #     stop("Input adj. matrix list must be one of the following: 'list' 'data.frame' 'matrix' 'sparseMatrix' 'data,table' 'tibble'")
-  #   }
-  # }
-
   if (adj_matrices_input_is_list) {
     num_object_types_in_input_list <- length(unique(lapply(adj_matrix_list_input, methods::is)))
     if (shiny::isRunning() & num_object_types_in_input_list != 1) {
@@ -706,15 +686,19 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
   }
 
   if (identical(object_types_in_input_list, classes_in_dataframe_objects)) {
-    object_types_in_list <- "data.frame"
+    object_types_in_list <- c("conventional_adj_matrix", "data.frame")
   } else if (identical(object_types_in_input_list, classes_in_matrix_objects)) {
-    object_types_in_list <- "matrix"
+    object_types_in_list <- c("conventional_adj_matrix", "matrix")
   } else if (identical(object_types_in_input_list, classes_in_sparse_matrix_objects)) {
-    object_types_in_list <- "sparseMatrix"
+    object_types_in_list <- c("conventional_adj_matrix", "sparseMatrix")
   } else if (identical(object_types_in_input_list, classes_in_datatable_objects)) {
-    object_types_in_list <- "data.table"
+    object_types_in_list <- c("conventional_adj_matrix", "data.table")
   } else if (identical(object_types_in_input_list, classes_in_tibble_objects)) {
-    object_types_in_list <- "tibble"
+    object_types_in_list <- c("conventional_adj_matrix", "tibble")
+  } else if (identical(object_types_in_input_list, "adj_matrix_w_ivfns")) {
+    object_types_in_list <- "adj_matrix_w_ivfns"
+  } else if (identical(object_types_in_input_list, "adj_matrix_w_tfns")) {
+    object_types_in_list <- "adj_matrix_w_tfns"
   } else {
     if (shiny::isRunning()) {
       object_types_in_list <- "unavailable"
