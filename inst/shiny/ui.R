@@ -89,7 +89,7 @@ shiny_ui <- function() {
           ),
           shiny::column(
             width = 7, align = "left",
-            shinyWidgets::radioGroupButtons("activation", "", choices = c("Kosko", "Modified-Kosko", "Rescale"))
+            shinyWidgets::radioGroupButtons("activation", "", choiceValues = c("kosko", "modified-kosko", "rescale"), choiceNames = c("Kosko", "Modified-Kosko", "Rescale"))
           )
         ),
         shiny::fluidRow(

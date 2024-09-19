@@ -27,7 +27,9 @@ Imports:
     doSNOW,
     pbapply,
     Matrix,
-    tidyr
+    tidyr,
+    shiny,
+    tibble
 Depends: 
     R (>= 2.10)
 VignetteBuilder: knitr

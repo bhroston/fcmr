@@ -179,7 +179,7 @@ shiny_server <- function(input, output, session) {
     inputs$initial_state_vector <- initial_state_vector()
     inputs$clamping_vector <- clamping_vector()
     #inputs$adj_matrix_list <- adj_matrix_list()
-    #inputs$concepts = concepts()
+    inputs$concepts = concepts()
     inputs
   })
 

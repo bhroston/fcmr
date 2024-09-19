@@ -83,8 +83,8 @@ fcmconfr <- function(adj_matrix_list = list(matrix()),
   sampled_adj_matrices <- build_monte_carlo_fcms(adj_matrix_list, samples, include_zeroes_in_aggregation, show_progress)
   sampled_adj_matrices <- lapply(sampled_adj_matrices,
                                  function(sampled_adj_matrix) {
-                                   colnames(sampled_adj_matrix) <- nodes
-                                   rownames(sampled_adj_matrix) <- nodes
+                                   colnames(sampled_adj_matrix) <- IDs
+                                   rownames(sampled_adj_matrix) <- IDs
                                    sampled_adj_matrix
                                  })
 

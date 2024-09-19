@@ -372,7 +372,7 @@ confirm_input_vector_is_compatible_with_adj_matrices <- function(representative_
   } else if (fcm_class == "fgcm") {
     confirm_input_vector_is_compatible_with_grey_adj_matrix(representative_adj_matrix, input_vector)
   } else if (fcm_class == "fcm_w_tfn") {
-    confirm_input_vector_is_compatible_with_triangular_adj_matrix(representative_adj_matrix, input_vector)
+    confirm_input_vector_is_compatible_with_fcm_w_tfn_adj_matrix(representative_adj_matrix, input_vector)
   }
 }
 
@@ -667,12 +667,14 @@ check_simulation_inputs <- function(adj_matrix, initial_state_vector, clamping_v
 
 
 
-#' get_adj_matrix_list_object_type
+#' get_adj_matrix_list_input_type
 #'
 #' @description
-#' A short description...
+#' This function identifies whether input is a list of adjacency matrices or
+#' an individual adj matrix (input_type). If input is a list of adj matrices,
+#' checks what data types the adj matrices are (list_objects) (e.g. tibble, matrix, etc.)
 #'
-#' @param adj_matrix_list_object A list of adj matrices or an individual adj matrix
+#' @param adj_matrix_list_input A list of adj matrices or an individual adj matrix
 get_adj_matrix_list_input_type <- function(adj_matrix_list_input) {
   # classes_in_list_objects <- c("list", "vector")
   # classes_in_dataframe_objects <- c("data.frame", "list", "oldClass", "vector")
@@ -681,12 +683,12 @@ get_adj_matrix_list_input_type <- function(adj_matrix_list_input) {
   # classes_in_datatable_objects <- c("data.table", "data.frame", "list", "oldClass", "vector")
   # classes_in_tibble_objects <- c("tbl_df", "tbl", "data.frame", "list", "oldClass", "vector")
 
-  classes_in_list_objects <- is(list())
-  classes_in_dataframe_objects <- is(data.frame())
-  classes_in_matrix_objects <- is(matrix())
-  classes_in_sparse_matrix_objects <- is(as(matrix(), "sparseMatrix"))
-  classes_in_datatable_objects <- is(data.table::data.table())
-  classes_in_tibble_objects <- is(tibble::tibble())
+  classes_in_list_objects <- methods::is(list())
+  classes_in_dataframe_objects <- methods::is(data.frame())
+  classes_in_matrix_objects <- methods::is(matrix())
+  classes_in_sparse_matrix_objects <- methods::is(methods::as(matrix(), "sparseMatrix"))
+  classes_in_datatable_objects <- methods::is(data.table::data.table())
+  classes_in_tibble_objects <- methods::is(tibble::tibble())
 
   classes_in_adj_matrix_list_input <- methods::is(adj_matrix_list_input)
   if (identical(classes_in_adj_matrix_list_input, classes_in_list_objects)) {
@@ -710,7 +712,7 @@ get_adj_matrix_list_input_type <- function(adj_matrix_list_input) {
   }
 
   if (input_type == "list") {
-    num_object_types_in_input_list <- length(unique(lapply(adj_matrix_list_input, is)))
+    num_object_types_in_input_list <- length(unique(lapply(adj_matrix_list_input, methods::is)))
     if (shiny::isRunning() & num_object_types_in_input_list != 1) {
       objects_in_list_type = "unavailable"
     } else if (!shiny::isRunning() & num_object_types_in_input_list != 1) {
