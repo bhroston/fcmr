@@ -26,15 +26,15 @@ shiny_server <- function(input, output, session) {
       adj_matrix_list_input <- as.list(.GlobalEnv)[names(as.list(.GlobalEnv)) == input$adj_matrix_list][[1]]
     }
 
-    adj_matrix_list_input_type <- get_adj_matrix_list_input_type(adj_matrix_list_input)
-    if (adj_matrix_list_input_type$input_type == "unavailable" & adj_matrix_list_input_type$list_objects == "unavailable") {
+    adj_matrix_list_input_type <- get_adj_matrices_input_type(adj_matrix_list_input)
+    if (adj_matrix_list_input_type$adj_matrices_input_is_list & adj_matrix_list_input_type$object_types_in_list == "unavailable") {
       checked_adj_matrix_list <- list(data.frame())
       note <- "non_list_or_matrix_input"
-    } else if (adj_matrix_list_input_type$input_type %in% c("data.frame", "matrix", "sparseMatrix", "data.table", "tibble")) {
+    } else if (!adj_matrix_list_input_type$adj_matrices_input_is_list) {
       checked_adj_matrix_list <- list(adj_matrix_list_input)
-    } else if (adj_matrix_list_input_type$input_type == "list" & adj_matrix_list_input_type$list_objects %in% c("data.frame", "matrix", "sparseMatrix", "data.table", "tibble")) {
+    } else if (adj_matrix_list_input_type$adj_matrices_input_is_list & adj_matrix_list_input_type$object_types_in_list %in% c("data.frame", "matrix", "sparseMatrix", "data.table", "tibble")) {
       checked_adj_matrix_list <- adj_matrix_list_input
-    } else if (adj_matrix_list_input_type$input_type == "list" & adj_matrix_list_input_type$list_objects == "unavailable") {
+    } else if (adj_matrix_list_input_type$adj_matrices_input_is_list & adj_matrix_list_input_type$object_types_in_list == "unavailable") {
       checked_adj_matrix_list <- list(data.frame())
       note <- "list_of_nonmatrices_input"
     } else {

@@ -599,11 +599,9 @@ check_if_local_machine_has_access_to_parallel_processing_functionalities <- func
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
 #' and the simulation will stop
-#' @param IDs A list of names for each node (must have n items). If empty, will use
-#' column names of adjacancy matrix (if given).
 #'
 #' @export
-check_simulation_inputs <- function(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error, IDs) {
+check_simulation_inputs <- function(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error) {
   confirm_adj_matrix_is_square(adj_matrix)
   if (identical(initial_state_vector, c())) {
     warning("No initial_state_vector input given. Assuming all nodes have an initial state of 1.")
@@ -656,18 +654,15 @@ check_simulation_inputs <- function(adj_matrix, initial_state_vector, clamping_v
     stop("Input min_error must be greater than 0")
   }
 
-  IDs <- get_node_IDs_from_input(adj_matrix, IDs)
-
   list(
     initial_state_vector = initial_state_vector,
-    clamping_vector = clamping_vector,
-    IDs = IDs
+    clamping_vector = clamping_vector
   )
 }
 
 
 
-#' get_adj_matrix_list_input_type
+#' get_adj_matrices_input_type
 #'
 #' @description
 #' This function identifies whether input is a list of adjacency matrices or
@@ -675,14 +670,7 @@ check_simulation_inputs <- function(adj_matrix, initial_state_vector, clamping_v
 #' checks what data types the adj matrices are (list_objects) (e.g. tibble, matrix, etc.)
 #'
 #' @param adj_matrix_list_input A list of adj matrices or an individual adj matrix
-get_adj_matrix_list_input_type <- function(adj_matrix_list_input) {
-  # classes_in_list_objects <- c("list", "vector")
-  # classes_in_dataframe_objects <- c("data.frame", "list", "oldClass", "vector")
-  # classes_in_matrix_objects <- c("matrix", "array", "mMatrix", "structure", "vector")
-  # classes_in_sparse_matrix_objects <- c("dgCMatrix", "CsparseMatrix", "dsparseMatrix", "generalMatrix", "dCsparseMatrix", "dMatrix", "sparseMatrix", "compMatrix", "Matrix", "xMatrix", "mMatrix", "replValueSp")
-  # classes_in_datatable_objects <- c("data.table", "data.frame", "list", "oldClass", "vector")
-  # classes_in_tibble_objects <- c("tbl_df", "tbl", "data.frame", "list", "oldClass", "vector")
-
+get_adj_matrices_input_type <- function(adj_matrix_list_input) {
   classes_in_list_objects <- methods::is(list())
   classes_in_dataframe_objects <- methods::is(data.frame())
   classes_in_matrix_objects <- methods::is(matrix())
@@ -692,57 +680,51 @@ get_adj_matrix_list_input_type <- function(adj_matrix_list_input) {
 
   classes_in_adj_matrix_list_input <- methods::is(adj_matrix_list_input)
   if (identical(classes_in_adj_matrix_list_input, classes_in_list_objects)) {
-    input_type <- "list"
-  } else if (identical(classes_in_adj_matrix_list_input, classes_in_dataframe_objects)) {
-    input_type <- "data.frame"
-  } else if (identical(classes_in_adj_matrix_list_input, classes_in_matrix_objects)) {
-    input_type <- "matrix"
-  } else if (identical(classes_in_adj_matrix_list_input, classes_in_sparse_matrix_objects)) {
-    input_type <- "sparseMatrix"
-  } else if (identical(classes_in_adj_matrix_list_input, classes_in_datatable_objects)) {
-    input_type <- "data.table"
-  } else if (identical(classes_in_adj_matrix_list_input, classes_in_tibble_objects)) {
-    input_type <- "tibble"
+    adj_matrices_input_is_list <- TRUE
   } else {
-    if (shiny::isRunning()) {
-      input_type <- "unavailable"
-    } else {
-      stop("Input adj. matrix list must be one of the following: 'list' 'data.frame' 'matrix' 'sparseMatrix' 'data,table' 'tibble'")
-    }
+    adj_matrices_input_is_list <- FALSE
   }
 
-  if (input_type == "list") {
+  # } else {
+  #   if (shiny::isRunning()) {
+  #     input_type <- "unavailable"
+  #   } else {
+  #     stop("Input adj. matrix list must be one of the following: 'list' 'data.frame' 'matrix' 'sparseMatrix' 'data,table' 'tibble'")
+  #   }
+  # }
+
+  if (adj_matrices_input_is_list) {
     num_object_types_in_input_list <- length(unique(lapply(adj_matrix_list_input, methods::is)))
     if (shiny::isRunning() & num_object_types_in_input_list != 1) {
-      objects_in_list_type = "unavailable"
+      object_types_in_list = "unavailable"
     } else if (!shiny::isRunning() & num_object_types_in_input_list != 1) {
       stop("All objects in adj matrix list must be of the same type.")
     }
     object_types_in_input_list <- unique(lapply(adj_matrix_list_input, is))[[1]]
-
-    if (identical(object_types_in_input_list, classes_in_dataframe_objects)) {
-      objects_in_list_type <- "data.frame"
-    } else if (identical(object_types_in_input_list, classes_in_matrix_objects)) {
-      objects_in_list_type <- "matrix"
-    } else if (identical(object_types_in_input_list, classes_in_sparse_matrix_objects)) {
-      objects_in_list_type <- "sparseMatrix"
-    } else if (identical(object_types_in_input_list, classes_in_datatable_objects)) {
-      objects_in_list_type <- "data.table"
-    } else if (identical(object_types_in_input_list, classes_in_tibble_objects)) {
-      objects_in_list_type <- "tibble"
-    } else {
-      if (shiny::isRunning()) {
-        objects_in_list_type <- "unavailable"
-      } else {
-        stop("The list of objects in adj. matrix list must be one of the following: 'data.frame' 'matrix' 'sparseMatrix' 'data,table' 'tibble'")
-      }
-    }
   } else {
-    objects_in_list_type <- "unavailable"
+    object_types_in_input_list <- methods::is(adj_matrix_list_input)
+  }
+
+  if (identical(object_types_in_input_list, classes_in_dataframe_objects)) {
+    object_types_in_list <- "data.frame"
+  } else if (identical(object_types_in_input_list, classes_in_matrix_objects)) {
+    object_types_in_list <- "matrix"
+  } else if (identical(object_types_in_input_list, classes_in_sparse_matrix_objects)) {
+    object_types_in_list <- "sparseMatrix"
+  } else if (identical(object_types_in_input_list, classes_in_datatable_objects)) {
+    object_types_in_list <- "data.table"
+  } else if (identical(object_types_in_input_list, classes_in_tibble_objects)) {
+    object_types_in_list <- "tibble"
+  } else {
+    if (shiny::isRunning()) {
+      object_types_in_list <- "unavailable"
+    } else {
+      stop("The list of objects in adj. matrix list must be one of the following: 'data.frame' 'matrix' 'sparseMatrix' 'data,table' 'tibble'")
+    }
   }
 
   list(
-    input_type = input_type,
-    list_objects = objects_in_list_type
+    adj_matrices_input_is_list = adj_matrices_input_is_list,
+    object_types_in_list = object_types_in_list
   )
 }
