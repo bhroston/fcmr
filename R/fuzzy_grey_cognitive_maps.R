@@ -777,7 +777,7 @@ get_domain_of_grey_adj_matrix <- function(grey_adj_matrix = matrix()) {
 }
 
 
-#' print.grey_number
+#' print.ivfn
 #'
 #' @description
 #' This improves the readability of the output
@@ -800,7 +800,7 @@ get_domain_of_grey_adj_matrix <- function(grey_adj_matrix = matrix()) {
 #' @export
 #' @examples
 #' grey_number(lower = 0, upper = 1)
-print.grey_number <- function(x, ...) {
+print.ivfn <- function(x, ...) {
   cat(class(x), ": [", x$lower, ", ", x$upper, "]", sep = "")
 }
 

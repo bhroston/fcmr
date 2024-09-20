@@ -365,61 +365,6 @@ confirm_input_vector_is_compatible_with_adj_matrices <- function(representative_
 }
 
 
-#' squash
-#'
-#' @description
-#' Calculate squashing function output of an input value and lambda values
-#'
-#' @details
-#' This function calculates the 'squashed' value of a state based upon five
-#' available squashing functions typical in the literature (as identified in
-#' Gonzales et al. 2018 - https://doi.org/10.1142/S0218213018600102)
-#'
-#' @param value A numeric value to 'squash'
-#' @param squashing A squashing function to apply. Must be one of the following: 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'
-#' @param lambda A numeric value that defines the steepness of the slope of the squashing function when tanh or sigmoid are applied
-squash <- function(value = numeric(), squashing = "sigmoid", lambda = 1) {
-  if (lambda <= 0) {
-    stop("Input lambda must be greater than zero")
-  }
-
-  # Use full names here instead of abbreviations to improve readability even
-  # though developers will need to type more characters.
-  if (squashing == "bivalent") {
-    if (value > 0) {
-      squashed_value <- 1
-    } else if (value <= 0) {
-      squashed_value <- 0
-    }
-  } else if (squashing == "saturation") {
-    if (value <= 0) {
-      squashed_value <- 0
-    } else if (value > 0 & value < 1) {
-      squashed_value <- value
-    } else if (value >= 1) {
-      squashed_value <- 1
-    }
-  } else if (squashing == "trivalent") {
-    if (value < 0) {
-      squashed_value <- -1
-    } else if (value == 0) {
-      squashed_value <- 0
-    } else if (value > 0) {
-      squashed_value <- 1
-    }
-  } else if (squashing == "tanh") {
-    squashed_value <- (exp(2*lambda*value) - 1)/(exp(2*lambda*value) + 1)
-  } else if (squashing == "sigmoid") {
-    squashed_value <- 1/(1 + exp(-lambda*value))
-  } else {
-    stop("squashing value must be one of the following:
-      'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'")
-  }
-
-  squashed_value
-}
-
-
 #' convert_fuzzy_elements_in_matrix_to_distributions
 #'
 #' @description
@@ -686,19 +631,19 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
   }
 
   if (identical(object_types_in_input_list, classes_in_dataframe_objects)) {
-    object_types_in_list <- c("conventional_adj_matrix", "data.frame")
+    object_types_in_list <- c("conventional", "data.frame")
   } else if (identical(object_types_in_input_list, classes_in_matrix_objects)) {
-    object_types_in_list <- c("conventional_adj_matrix", "matrix")
+    object_types_in_list <- c("conventional", "matrix")
   } else if (identical(object_types_in_input_list, classes_in_sparse_matrix_objects)) {
-    object_types_in_list <- c("conventional_adj_matrix", "sparseMatrix")
+    object_types_in_list <- c("conventional", "sparseMatrix")
   } else if (identical(object_types_in_input_list, classes_in_datatable_objects)) {
-    object_types_in_list <- c("conventional_adj_matrix", "data.table")
+    object_types_in_list <- c("conventional", "data.table")
   } else if (identical(object_types_in_input_list, classes_in_tibble_objects)) {
-    object_types_in_list <- c("conventional_adj_matrix", "tibble")
+    object_types_in_list <- c("conventional", "tibble")
   } else if (identical(object_types_in_input_list, "adj_matrix_w_ivfns")) {
-    object_types_in_list <- "adj_matrix_w_ivfns"
+    object_types_in_list <- "ivfn"
   } else if (identical(object_types_in_input_list, "adj_matrix_w_tfns")) {
-    object_types_in_list <- "adj_matrix_w_tfns"
+    object_types_in_list <- "tfn"
   } else {
     if (shiny::isRunning()) {
       object_types_in_list <- "unavailable"

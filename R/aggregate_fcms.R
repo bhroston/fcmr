@@ -16,12 +16,12 @@ aggregate_fcms <- function(adj_matrices = list(matrix()),
   node_names <- unlist(unique(concepts_in_adj_matrices))
   confirm_adj_matrices_have_same_concepts(concepts_in_adj_matrices)
 
-  adj_matrix_type <- adj_matrices_input_type$object_types_in_list[1]
-  if (adj_matrix_type == "conventional_adj_matrix") {
+  fcm_class <- adj_matrices_input_type$object_types_in_list[1]
+  if (fcm_class == "conventional") {
     aggregate_adj_matrix <- aggregate_conventional_fcms(adj_matrices, aggregation_function, include_zeroes)
-  } else if (adj_matrix_type == "adj_matrix_w_ivfns") {
+  } else if (fcm_class == "ivfn") {
     aggregate_adj_matrix <- aggregate_fcms_w_ivfns(adj_matrices, aggregation_function, include_zeroes)
-  } else if (adj_matrix_type == "adj_matrix_w_tfns") {
+  } else if (fcm_class == "tfn") {
     aggregate_adj_matrix <- aggregate_fcms_w_tfns(adj_matrices, aggregation_function, include_zeroes)
   }
 

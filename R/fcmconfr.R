@@ -77,16 +77,13 @@ fcmconfr <- function(adj_matrices = list(matrix()),
                      parallel = TRUE,
                      n_cores = integer(),
                      # Additional Options
+                     # do monte_carlo
+                     # do aggregate
                      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
                      include_monte_carlo_FCM_simulations_in_output = TRUE,
                      estimate_inference_CI_w_bootstrap = TRUE) {
 
   # Perform Checks ----
-  adj_matrices_input_type <- get_adj_matrices_input_type(adj_matrices)
-  if (!adj_matrices_input_type$adj_matrices_input_is_list) {
-    adj_matrices <- list(adj_matrices)
-  }
-
   if (identical(initial_state_vector, c())) {
     warning("No initial_state_vector input given. Assuming all nodes have an initial state of 1.")
     initial_state_vector <- rep(1, nrow(adj_matrix))
@@ -105,10 +102,18 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
 
   # Aggregation and Monte Carlo Simulations ----
+  adj_matrices_input_type <- get_adj_matrices_input_type(adj_matrices)
+  fcm_class <- adj_matrices_input_type$object_types_in_list[1]
+  if (!adj_matrices_input_type$adj_matrices_input_is_list) {
+    adj_matrices <- list(adj_matrices)
+  }
+
   # Build aggregate adj_matrix
   aggregate_adj_matrix <- aggregate_fcms(adj_matrices, aggregation_function, include_zero_weighted_edges_in_aggregation_and_mc_sampling)
   # Infer aggregate adj_matrix
-  # Have a generalized simulate function here
+  # I've written the simulation code, now I need the infer code
+  aggregate_fcm_simulation <- simulate_fcm(aggregate_adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
+
 
   # Build monte carlo models
   sampled_adj_matrices <- build_monte_carlo_fcms(adj_matrices, monte_carlo_sampling_draws, include_zero_weighted_edges_in_aggregation_and_mc_sampling, show_progress)

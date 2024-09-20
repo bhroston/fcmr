@@ -402,13 +402,13 @@ clean_fcm_w_fcm_w_tfn_simulation_output <- function(output_obj, IDs) {
 #' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
 #'
 #' @export
-calculate_next_fcm_w_tfn_state_vector <- function(formatted_fcm_w_tfn_adj_matrix = matrix(),
-                                            fcm_w_tfn_state_vector = c(),
-                                            defuzzed_fcm_w_tfn_state_vector = c(),
-                                            activation = c("kosko", "modified-kosko", "rescale"),
-                                            squashing = c("sigmoid", "tanh")) {
+calculate_next_fuzzy_set_state_vector <- function(fuzzy_set_adj_matrix = matrix(),
+                                                  fuzzy_state_vector = c(),
+                                                  crisp_state_vector = c(),
+                                                  activation = c("kosko", "modified-kosko", "rescale"),
+                                                  squashing = c("sigmoid", "tanh")) {
 
-    next_fcm_w_tfn_state_vector <- vector(mode = "list", length = length(defuzzed_fcm_w_tfn_state_vector))
+    next_fuzzy_set_state_vector <- vector(mode = "list", length = length(crisp_state_vector))
     for (col in seq_along(formatted_fcm_w_tfn_adj_matrix)) {
       dot_product_multiplication_only <- mapply(
         function(coefficient, fcm_w_tfn) {
@@ -441,15 +441,17 @@ calculate_next_fcm_w_tfn_state_vector <- function(formatted_fcm_w_tfn_adj_matrix
 }
 
 
-defuzz_fcm_w_tfn <- function(fcm_w_tfn = tfn(), method = c("cog", "distance")) {
-  if (method == "cog") {
-    defuzzified_value <- (fcm_w_tfn$lower + fcm_w_tfn$mode + fcm_w_tfn$upper)/3
-  } # else if (method == "distance") {
-    # x_centroid <- (fcm_w_tfn$lower + fcm_w_tfn$mode + fcm_w_tfn$upper)/3
-    # # peak density = 2/(fcm_w_tfn$upper - fcm_w_tfn$lower) from Area Tri = (1/2)*base*height = 1
-    # y_centroid <- (1/3)*(2/(fcm_w_tfn$upper - fcm_w_tfn$lower))
-    # defuzzified_value <- sqrt(x_centroid^2 + y_centroid^2)
-  # }
+#' defuzz_tfn
+#'
+#' @description
+#' Translate a triangular fuzzy number (tfn) into a "crisp" value by calculating
+#' the average of the lower, mode, and upper values.
+#'
+#' @param tfn_object a tfn object (generated with tfn())
+#'
+#' @export
+defuzz_tfn <- function(tfn_object = tfn()) {
+  tfn_object$lower + tfn_object$mode + tfn_object$upper/3
 }
 
 
