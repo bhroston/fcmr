@@ -48,6 +48,7 @@ infer_fcm <- function(adj_matrix = matrix(),
                       min_error = 1e-5,
                       fuzzy_set_samples = 1000) {
 
+  # browser()
   check_simulation_inputs(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
 
   fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
@@ -235,8 +236,8 @@ infer_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
   baseline_simulation$crisp_state_vectors <- equalized_crisp_state_vector_dfs$baseline
   scenario_simulation$crisp_state_vectors <- equalized_crisp_state_vector_dfs$scenario
 
-  baseline_state_vectors_as_distributions <- convert_fuzzy_set_elements_in_matrix_to_distributions(baseline_simulation$state_vectors, fcm_class, samples)
-  scenario_state_vectors_as_distributions <- convert_fuzzy_set_elements_in_matrix_to_distributions(scenario_simulation$state_vectors, fcm_class, samples)
+  baseline_state_vectors_as_distributions <- convert_fuzzy_set_elements_in_matrix_to_distributions(baseline_simulation$state_vectors, fcm_class, fuzzy_set_samples)
+  scenario_state_vectors_as_distributions <- convert_fuzzy_set_elements_in_matrix_to_distributions(scenario_simulation$state_vectors, fcm_class, fuzzy_set_samples)
 
 
   inference_state_vectors_as_distributions <- baseline_state_vectors_as_distributions

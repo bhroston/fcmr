@@ -365,59 +365,59 @@ get_class_of_adj_matrix <- function(adj_matrix = matrix()) {
 #' }
 
 
-#' convert_fuzzy_elements_in_matrix_to_distributions
+#' #' convert_fuzzy_elements_in_matrix_to_distributions
+#' #'
+#' #' @description
+#' #' Given a list of adjacency matrices which include either grey_numbers or
+#' #' tfns, convert those objects to their corresponding
+#' #' distributions representative of those values.
+#' #'
+#' #' @details
+#' #' [ADD DETAILS HERE!!!!]
+#' #'
+#' #' Use vignette("fcmconfr-class") for more information.
+#' #'
+#' #' @param fuzzy_matrix A matrix that can contain fuzzy sets as elements
+#' #' @param fuzzy_element_class "fgcm" or "fcm_w_tfn" - the class of elements in the fuzzy_matrix
+#' #' @param N_samples The number of samples to draw from the corresponding distribution
+#' #'
+#' #' @export
+#' convert_fuzzy_elements_in_matrix_to_distributions <- function(fuzzy_matrix = data.frame(),
+#'                                                               fuzzy_element_class = c("fgcm", "fcm_w_tfn"),
+#'                                                               N_samples = integer()) {
+#'   if (!(fuzzy_element_class %in% c("fgcm", "fcm_w_tfn"))) {
+#'     stop("Input fuzzy_element_class must be either fgcm or fcm_w_tfn")
+#'   } else if (identical(fuzzy_element_class, c("fgcm", "fcm_w_tfn"))) {
+#'     fuzzy_element_class <- get_class_of_adj_matrix(fuzzy_matrix)
+#'   }
 #'
-#' @description
-#' Given a list of adjacency matrices which include either grey_numbers or
-#' tfns, convert those objects to their corresponding
-#' distributions representative of those values.
+#'   # browser()
+#'   if (fuzzy_element_class == "fgcm") {
+#'     fuzzy_matrix_w_distributions <- apply(
+#'       fuzzy_matrix, c(1, 2),
+#'       function(element) {
+#'         if (identical(methods::is(element[[1]]), "grey_number")) {
+#'           element <- list(stats::runif(N_samples, element[[1]]$lower, element[[1]]$upper))
+#'         } else {
+#'           element[[1]]
+#'         }
+#'       }
+#'     )
+#'   } else if (fuzzy_element_class == "fcm_w_tfn") {
+#'     fuzzy_matrix_w_distributions <- apply(
+#'       fuzzy_matrix, c(1, 2),
+#'       function(element) {
+#'         if (identical(methods::is(element[[1]]), "tfn")) {
+#'           element <- list(rtri(N_samples, lower = element[[1]]$lower, mode = element[[1]]$mode, upper = element[[1]]$upper))
+#'         } else {
+#'           element[[1]]
+#'         }
+#'       }
+#'     )
+#'   }
 #'
-#' @details
-#' [ADD DETAILS HERE!!!!]
-#'
-#' Use vignette("fcmconfr-class") for more information.
-#'
-#' @param fuzzy_matrix A matrix that can contain fuzzy sets as elements
-#' @param fuzzy_element_class "fgcm" or "fcm_w_tfn" - the class of elements in the fuzzy_matrix
-#' @param N_samples The number of samples to draw from the corresponding distribution
-#'
-#' @export
-convert_fuzzy_elements_in_matrix_to_distributions <- function(fuzzy_matrix = data.frame(),
-                                                              fuzzy_element_class = c("fgcm", "fcm_w_tfn"),
-                                                              N_samples = integer()) {
-  if (!(fuzzy_element_class %in% c("fgcm", "fcm_w_tfn"))) {
-    stop("Input fuzzy_element_class must be either fgcm or fcm_w_tfn")
-  } else if (identical(fuzzy_element_class, c("fgcm", "fcm_w_tfn"))) {
-    fuzzy_element_class <- get_class_of_adj_matrix(fuzzy_matrix)
-  }
-
-  # browser()
-  if (fuzzy_element_class == "fgcm") {
-    fuzzy_matrix_w_distributions <- apply(
-      fuzzy_matrix, c(1, 2),
-      function(element) {
-        if (identical(methods::is(element[[1]]), "grey_number")) {
-          element <- list(stats::runif(N_samples, element[[1]]$lower, element[[1]]$upper))
-        } else {
-          element[[1]]
-        }
-      }
-    )
-  } else if (fuzzy_element_class == "fcm_w_tfn") {
-    fuzzy_matrix_w_distributions <- apply(
-      fuzzy_matrix, c(1, 2),
-      function(element) {
-        if (identical(methods::is(element[[1]]), "tfn")) {
-          element <- list(rtri(N_samples, lower = element[[1]]$lower, mode = element[[1]]$mode, upper = element[[1]]$upper))
-        } else {
-          element[[1]]
-        }
-      }
-    )
-  }
-
-  fuzzy_matrix_w_distributions
-}
+#'   fuzzy_matrix_w_distributions
+#' }
 
 
 #' check_if_local_machine_has_access_to_show_progress_functionalities

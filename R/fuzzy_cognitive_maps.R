@@ -478,56 +478,6 @@ confirm_input_vector_is_compatible_with_adj_matrix <- function(adj_matrix = matr
 
 
 
-#' print.fcmconfr
-#'
-#' @description
-#' This improves the readability of the fcmconfr
-#'
-#' @details
-#' Show the objects listed in the fcmconfr output $inference and $params, as well
-#' as $bootstrap if present in output. Additionally, this prints descriptions/summaries
-#' of objects within each sub-list like inference_opts, bootstrap_input_opts, etc.
-#'
-#' Use vignette("fcm-class") for more information.
-#'
-#' @param x an fgcm_simulation object
-#' @param ... additional inputs
-#'
-#' @export
-print.fcmconfr <- function(x, ...) {
-  n_sims <- x$params$bootstrap_input_opts$samples
-  n_input_fcm <- length(x$params$fcms)
-
-  if ("bootstrap" %in% names(x)) {
-    cat("$inference",
-        paste0("Inferences of ", n_sims, " fcm constructed from the ", n_input_fcm, " input fcm adj. matrices."),
-        "\n$bootstrap\n",
-        paste0(" -     mean_CI_by_node: ", x$params$bootstrap_output_opts$bootstrap_CI, "% CI of means of inference\n"),
-        paste0(" - raw_bootstrap_means: ", x$params$bootstrap_output_opts$bootstrap_reps, " actualizations of the avg inference of ", x$params$bootstrap_output_opts$bootstrap_draws_per_rep, " draws with replacement"),
-        "\n$params\n",
-        " -      inference_opts:",
-        paste0("act = ", x$params$inference_opts$activation, "; squash = ", x$params$inference_opts$squashing, "; lambda = ", x$params$inference_opts$lambda),
-        "\n  -       bootstrap_input_opts:",
-        paste0("sampling = ", x$params$bootstrap_input_opts$sampling, "; n_samples = ", x$params$bootstrap_input_opts$samples)
-    )
-  } else {
-    cat("$inference",
-        paste0("Inferences of ", n_sims, " fcm constructed from the ", n_input_fcm, " input fcm adj. matrices."),
-        "\n$params\n",
-        " -   inference_opts:",
-        paste0("act = ", x$params$inference_opts$activation, "; squash = ", x$params$inference_opts$squashing, "; lambda = ", x$params$inference_opts$lambda),
-        "\n  -    bootstrap_input_opts:",
-        paste0("sampling = ", x$params$bootstrap_input_opts$sampling, "; n_samples = ", x$params$bootstrap_input_opts$samples)
-    )
-  }
-
-  # average_inference <- data.frame(value = round(apply(x$inference, 2, mean), 3))
-  # average_inference$node <- rownames(average_inference)
-  # largest_three_average_inferences <- sort(average_inference$value, decreasing = TRUE)[1:3]
-  # average_inference$node[vapply(largest_three_average_inferences, function(rank_value) which(average_inference$value == rank_value), numeric(1))]
-  #
-  # rounded_inferences <- apply(x$inference, c(1, 2), function(value) round(value, 2))
-}
 
 
 

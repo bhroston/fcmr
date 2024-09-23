@@ -51,7 +51,7 @@
 #' @param include_monte_carlo_FCM_simulations_in_output TRUE/FALSE
 #' Whether to include simulations of monte carlo FCMs. Switch to FALSE if concerned
 #' about the size of the output of fcmconfr (simulations are necessary and will run regardless)
-#' @param estimate_inference_CI_w_bootstrap TRUE/FALSE
+#' @param estimate_mc_inference_CI_w_bootstrap TRUE/FALSE
 #' Whether to estimate confidence intervals for the inferences of each concept across
 #' all monte carlo FCMs via bootstrap. Switch to FALSE if concerned about runtime
 #' and/or want to perform bootstrapping manually.
@@ -83,9 +83,16 @@ fcmconfr <- function(adj_matrices = list(matrix()),
                      # do aggregate
                      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
                      include_monte_carlo_FCM_simulations_in_output = TRUE,
-                     estimate_inference_CI_w_bootstrap = TRUE) {
+                     estimate_mc_inference_CI_w_bootstrap = TRUE) {
 
   # Perform Checks ----
+  # browser()
+  adj_matrices_input_type <- get_adj_matrices_input_type(adj_matrices)
+  fcm_class <- adj_matrices_input_type$object_types_in_list[1]
+  if (!adj_matrices_input_type$adj_matrices_input_is_list) {
+    adj_matrices <- list(adj_matrices)
+  }
+
   if (identical(initial_state_vector, c())) {
     warning("No initial_state_vector input given. Assuming all nodes have an initial state of 1.")
     initial_state_vector <- rep(1, nrow(adj_matrix))
@@ -111,10 +118,10 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
 
   # Aggregation and Monte Carlo Simulations ----
-  adj_matrices_input_type <- get_adj_matrices_input_type(adj_matrices)
-  fcm_class <- adj_matrices_input_type$object_types_in_list[1]
-  if (!adj_matrices_input_type$adj_matrices_input_is_list) {
-    adj_matrices <- list(adj_matrices)
+
+
+  if (length(adj_matrices) == 1) {
+    stop("Input adj_matrices must be a list of multiple adjacency matrices. Use infer_fcm for a single adjacency matrix.")
   }
 
   # Build aggregate adj_matrix
@@ -125,14 +132,14 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   # Build monte carlo models
   mc_adj_matrices <- build_monte_carlo_fcms(adj_matrices, monte_carlo_sampling_draws, include_zero_weighted_edges_in_aggregation_and_mc_sampling, show_progress)
   mc_adj_matrices <- lapply(mc_adj_matrices,
-                                 function(sampled_adj_matrix) {
-                                   colnames(sampled_adj_matrix) <- concepts
-                                   rownames(sampled_adj_matrix) <- concepts
-                                   sampled_adj_matrix
-                                 })
+                            function(sampled_adj_matrix) {
+                              colnames(sampled_adj_matrix) <- concepts
+                              rownames(sampled_adj_matrix) <- concepts
+                              sampled_adj_matrix
+                            })
 
   # Infer monte carlo models with clamping
-  fmcm_results <- infer_monte_carlo_fcm_set(
+  mc_simulations <- infer_monte_carlo_fcm_set(
     mc_adj_matrices = mc_adj_matrices,
     initial_state_vector = initial_state_vector,
     clamping_vector = clamping_vector,
@@ -147,17 +154,10 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     n_cores = n_cores
   )
 
-  if (estimate_inference_CI_w_bootstrap) {
-    means_of_fmcm_inferences <- get_means_of_fmcm_inference(
-      fmcm_inference = fmcm_results$inference,
-      get_bootstrapped_means = estimate_inference_CI_w_bootstrap,
-      confidence_interval = inference_estimation_CI,
-      inference_estimation_bootstrap_reps = inference_estimation_bootstrap_reps,
-      bootstrap_samples_per_rep = inference_estimation_bootstrap_draws_per_rep,
-      parallel = parallel,
-      n_cores = n_cores
-    )
+  if (estimate_mc_inference_CI_w_bootstrap) {
+    CIs_of_mc_simulation_inferences <- get_mc_simulations_inference_CIs_w_bootstrap(mc_simulations$inference, inference_estimation_CI, inference_estimation_bootstrap_reps, inference_estimation_bootstrap_draws_per_rep, parallel, n_cores, show_progress)
   }
+
   # ----
 
   # Organize Output
@@ -187,41 +187,43 @@ organize_fcmconfr_output <- function(...) {
 
   params <- list(
     fcm_class = variables$fcm_class,
-    fcms = variables$adj_matrices,
-    inference_opts = list(initial_state_vector = variables$initial_state_vector,
-                          clamping_vector = variables$clamping_vector,
-                          activation = variables$activation,
-                          squashing = variables$squashing,
-                          lambda = variables$lambda,
-                          max_iter = variables$max_iter,
-                          min_error = variables$min_error,
-                          IDs = variables$IDs),
-    bootstrap_input_opts = list(sampling = variables$sampling,
-                                samples = variables$samples),
+    adj_matrices = variables$adj_matrices,
+    aggregation_and_mc_sampling_opts = list(aggregation_function = variables$aggregation_function,
+                                            monte_carlo_sampling_draws = variables$monte_carlo_sampling_draws),
+    simulation_opts = list(initial_state_vector = variables$initial_state_vector,
+                           clamping_vector = variables$clamping_vector,
+                           activation = variables$activation,
+                           squashing = variables$squashing,
+                           lambda = variables$lambda,
+                           max_iter = variables$max_iter,
+                           min_error = variables$min_error,
+                           fuzzy_set_samples = variables$fuzzy_set_samples),
     runtime_opts = list(parallel = variables$parallel,
                         n_cores = variables$n_cores,
-                        show_progress = variables$show_progress,
-                        include_monte_carlo_FCM_simulations_in_output = variables$include_monte_carlo_FCM_simulations_in_output)
-  )
-  fcmconfr_output <- structure(
-    .Data = list(
-      inference = variables$fmcm_results$inference,
-      params = params
-    ),
-    class = paste0(variables$fcm_class, "confr")
+                        show_progress = variables$show_progress),
+    additional_opts = list(include_zero_weighted_edges_in_aggregation_and_mc_sampling = variables$include_zero_weighted_edges_in_aggregation_and_mc_sampling,
+                           include_monte_carlo_FCM_simulations_in_output = variables$include_monte_carlo_FCM_simulations_in_output,
+                           estimate_mc_inference_CI_w_bootstrap = variables$estimate_mc_inference_CI_w_bootstrap)
   )
 
-  if (variables$estimate_inference_CI_w_bootstrap) {
-    fcmconfr_output$params$bootstrap_output_opts = list(
-      estimate_inference_CI_w_bootstrap = variables$estimate_inference_CI_w_bootstrap,
-      inference_estimation_CI = variables$inference_estimation_CI,
-      inference_estimation_bootstrap_reps = variables$inference_estimation_bootstrap_reps,
-      inference_estimation_bootstrap_draws_per_rep = variables$inference_estimation_bootstrap_draws_per_rep)
+  fcmconfr_output <- structure(
+    .Data = list(
+      inference = variables$mc_simulations$inference,
+      params = params
+    ),
+    class = "fcmconfr"
+  )
+
+  if (variables$estimate_mc_inference_CI_w_bootstrap) {
+    fcmconfr_output$params$mc_confidence_intervals_opts = list(inference_estimation_CI = variables$inference_estimation_CI,
+                                                               inference_estimation_bootstrap_reps = variables$inference_estimation_bootstrap_reps,
+                                                               inference_estimation_bootstrap_draws_per_rep = variables$inference_estimation_bootstrap_draws_per_rep)
     fcmconfr_output$bootstrap = list(
-      mean_CI_by_node = variables$means_of_fmcm_inferences$mean_CI_by_node,
-      raw_bootstrap_means = variables$means_of_fmcm_inferences$bootstrap_means
+      CI_by_node = variables$CIs_of_mc_simulation_inferences$CI_by_node,
+      bootstrap_means = variables$CIs_of_mc_simulation_inferences$bootstrap_means
     )
   }
+
   fcmconfr_output
 }
 
@@ -244,29 +246,34 @@ organize_fcmconfr_output <- function(...) {
 #'
 #' @export
 print.fcmconfr <- function(x, ...) {
-  n_sims <- x$params$bootstrap_input_opts$samples
-  n_input_fcm <- length(x$params$fcms)
+  n_input_fcm <- length(x$params$adj_matrices)
+  n_mc_sims <- x$params$aggregation_and_mc_sampling_opts$monte_carlo_sampling_draws
 
   if ("bootstrap" %in% names(x)) {
-    cat("$inference",
-        paste0("Inferences of ", n_sims, " fcm constructed from the ", n_input_fcm, " input fcm adj. matrices."),
+    cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),
+        "\n$inference\n",
+        paste0(" - Inferences of ", n_mc_sims, " fcm constructed from the ", n_input_fcm, " input fcm adj. matrices."),
         "\n$bootstrap\n",
-        paste0(" -      mean_CI_by_node: ", x$params$bootstrap_output_opts$inference_estimation_CI, "% CI of means of inference\n"),
-        paste0(" -  raw_bootstrap_means: ", x$params$bootstrap_output_opts$inference_estimation_bootstrap_reps, " actualizations of the avg inference of ", x$params$bootstrap_output_opts$inference_estimation_bootstrap_draws_per_rep, " draws with replacement"),
+        paste0(" - CI_by_node: ", x$params$mc_confidence_intervals_opts$inference_estimation_CI, "% CI of means of inference\n"),
+        paste0(" - bootstrap_means: ", x$params$mc_confidence_intervals_opts$inference_estimation_bootstrap_reps, " actualizations of the avg inference of ", x$params$mc_confidence_intervals_opts$inference_estimation_bootstrap_draws_per_rep, " draws with replacement"),
         "\n$params\n",
-        " -       inference_opts:",
-        paste0("act = ", x$params$inference_opts$activation, "; squash = ", x$params$inference_opts$squashing, "; lambda = ", x$params$inference_opts$lambda),
-        "\n  - bootstrap_input_opts:",
-        paste0("sampling = ", x$params$bootstrap_input_opts$sampling, "; n_samples = ", x$params$bootstrap_input_opts$samples)
+        " - simulation_opts:",
+        paste0("act = ", x$params$simulation_opts$activation, "; squash = ", x$params$simulation_opts$squashing, "; lambda = ", x$params$simulation_opts$lambda),
+        "\n  - additional_opts"
     )
   } else {
-    cat("$inference",
-        paste0("Inferences of ", n_sims, " fcm constructed from the ", n_input_fcm, " input fcm adj. matrices."),
+    cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),
+        "\n$inference\n",
+        paste0(" - Inferences of ", n_mc_sims, " fcm constructed from the ", n_input_fcm, " input fcm adj. matrices."),
         "\n$params\n",
-        " -   inference_opts:",
-        paste0("act = ", x$params$inference_opts$activation, "; squash = ", x$params$inference_opts$squashing, "; lambda = ", x$params$inference_opts$lambda),
-        "\n  -  bootstrap_input_opts:",
-        paste0("sampling = ", x$params$bootstrap_input_opts$sampling, "; n_samples = ", x$params$bootstrap_input_opts$samples)
+        " - simulation_opts:",
+        paste0("act = ", x$params$simulation_opts$activation, "; squash = ", x$params$simulation_opts$squashing, "; lambda = ", x$params$simulation_opts$lambda),
+        "\n  - additional_opts"
     )
   }
+
+  # "$aggregate",
+  # paste0("Aggregation function: ", x$params$aggregation_and_mc_sampling_opts$aggregation_function),
+  # paste0("Include 0's in aggregation: ", x$params$additional_opts$include_zero_weighted_edges_in_aggregation_and_mc_sampling)
+  # "\n$monte_c"
 }

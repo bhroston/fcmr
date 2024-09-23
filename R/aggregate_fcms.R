@@ -6,6 +6,7 @@ aggregate_fcms <- function(adj_matrices = list(matrix()),
                            aggregation_function = c("mean", "median"),
                            include_zeroes = FALSE) {
 
+  #browser()
   adj_matrices_input_type <- get_adj_matrices_input_type(adj_matrices)
   if (!adj_matrices_input_type$adj_matrices_input_is_list) {
     adj_matrices <- list(adj_matrices)
@@ -131,7 +132,7 @@ aggregate_fcms_w_ivfns <- function(adj_matrices = list(matrix()),
 
   structure(
     .Data = list(
-      adj_matrix = as.data.frame(aggregate_adj_matrix_w_ivfns),
+      adj_matrix = aggregate_adj_matrix_w_ivfns,
       params = list(
         input_adj_matrices = adj_matrices,
         aggregation_fun = aggregation_function,
@@ -186,7 +187,7 @@ aggregate_fcms_w_tfns <- function(adj_matrices = list(matrix()),
 
   structure(
     .Data = list(
-      adj_matrix = as.data.frame(aggregate_adj_matrix_w_tfns),
+      adj_matrix = aggregate_adj_matrix_w_tfns,
       params = list(
         input_adj_matrices = adj_matrices,
         aggregation_fun = aggregation_function,

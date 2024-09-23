@@ -24,7 +24,7 @@ fcmconfr(
   n_cores = integer(),
   include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
   include_monte_carlo_FCM_simulations_in_output = TRUE,
-  estimate_inference_CI_w_bootstrap = TRUE
+  estimate_mc_inference_CI_w_bootstrap = TRUE
 )
 }
 \arguments{
@@ -87,7 +87,7 @@ them when aggregating adj. matrices and sampling for monte carlo FCMs}
 Whether to include simulations of monte carlo FCMs. Switch to FALSE if concerned
 about the size of the output of fcmconfr (simulations are necessary and will run regardless)}
 
-\item{estimate_inference_CI_w_bootstrap}{TRUE/FALSE
+\item{estimate_mc_inference_CI_w_bootstrap}{TRUE/FALSE
 Whether to estimate confidence intervals for the inferences of each concept across
 all monte carlo FCMs via bootstrap. Switch to FALSE if concerned about runtime
 and/or want to perform bootstrapping manually.}

@@ -250,17 +250,17 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
 #'
 #' Use vignette("fmcm-class") for more information.
 #'
-#' @param fmcm_inference Output of get_simulated_values_across_iters
+#' @param mc_simulations_inference_df Output of get_simulated_values_across_iters
 #' @param quantile The quantile to return. see ?quantile() for more
 #'
 #' @export
-get_quantile_of_fmcm_inference <- function(fmcm_inference = data.frame(), quantile = 0.5) {
-  mc_in_inferences_rownames <- identical("mc", unique(unlist(lapply(strsplit(rownames(fmcm_inference), "_"), function(x) x[[1]]))))
-  if (!mc_in_inferences_rownames | !identical(class(fmcm_inference), "data.frame")) {
+get_quantile_of_mc_simulations_inference_df <- function(mc_simulations_inference_df = data.frame(), quantile = 0.5) {
+  mc_in_inferences_rownames <- identical("mc", unique(unlist(lapply(strsplit(rownames(mc_simulations_inference_df), "_"), function(x) x[[1]]))))
+  if (!mc_in_inferences_rownames | !identical(class(mc_simulations_inference_df), "data.frame")) {
     stop("Input must be a data frame of values observed for each node across
     numerous simulations. They are produced by the infer_fmcm_with_clamping")
   }
-  node_quantile_values <- data.frame(t(apply(fmcm_inference, 2, function(node_sims) stats::quantile(node_sims, quantile))))
+  node_quantile_values <- data.frame(t(apply(mc_simulations_inference_df, 2, function(node_sims) stats::quantile(node_sims, quantile))))
   node_quantile_values
   #node_names <- rownames(node_quantile_values)
   #colnames(node_quantile_values) <- node_names
@@ -274,7 +274,7 @@ get_quantile_of_fmcm_inference <- function(fmcm_inference = data.frame(), quanti
 }
 
 
-#' get_means_of_fmcm_inference
+#' get_mc_simulations_inference_CIs_w_bootstrap
 #'
 #' @description
 #' This gets the mean of the distribution of simulated values
@@ -286,9 +286,7 @@ get_quantile_of_fmcm_inference <- function(fmcm_inference = data.frame(), quanti
 #' mean of means of a distribution of simulated values across individual iterations. Use get_bootstrapped_means
 #' to estimate the confidence intervals for the mean value across simulations.
 #'
-#' Use vignette("fmcm-class") for more information.
-#'
-#' @param fmcm_inference The final values of a set of fcm simulations; also the inference of a infer_fmcm object
+#' @param mc_simulations_inference_df The final values of a set of fcm simulations; also the inference of a infer_fmcm object
 #' @param get_bootstrapped_means TRUE/FALSE Whether to perform bootstrap sampling to obtain
 #' confidence intervals for the estimation of the mean value across simulations
 #' @param confidence_interval What are of the distribution should be bounded by the
@@ -303,21 +301,20 @@ get_quantile_of_fmcm_inference <- function(fmcm_inference = data.frame(), quanti
 #' from the pbapply package as the underlying function.
 #'
 #' @export
-get_means_of_fmcm_inference <- function(fmcm_inference = list(),
-                                        get_bootstrapped_means = TRUE,
-                                        confidence_interval = 0.95,
-                                        bootstrap_reps = 1000,
-                                        bootstrap_samples_per_rep = 1000,
-                                        parallel = TRUE,
-                                        n_cores = integer(),
-                                        show_progress = TRUE) {
+get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inference_df = data.frame(),
+                                                         confidence_interval = 0.95,
+                                                         bootstrap_reps = 1000,
+                                                         bootstrap_draws_per_rep = 1000,
+                                                         parallel = TRUE,
+                                                         n_cores = integer(),
+                                                         show_progress = TRUE) {
   # Adding for R CMD Check. Does not impact logic.
   iter <- NULL
 
-  # Write checks to confirm fmcm_inference object is correct... Also write a better name
+  # Write checks to confirm mc_simulations_inference_df object is correct... Also write a better name
   # so it is understood that it works for simulate_fmcm objects too
-  if (!identical(class(fmcm_inference), "data.frame")) {
-    stop("Input fmcm_inference must be a data.frame object from the
+  if (!identical(class(mc_simulations_inference_df), "data.frame")) {
+    stop("Input mc_simulations_inference_df must be a data.frame object from the
          output of simulate_fmcm_models (final_states_across_sims) or infer_fmcm
          (inference)")
   }
@@ -326,11 +323,7 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
   parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
 
-  if (!get_bootstrapped_means) {
-    means_of_inference_by_node <- data.frame(apply(fmcm_inference, 2, mean, simplify = FALSE)) # the simplify is purely for data cleaning reasons
-    return(means_of_inference_by_node)
-
-  } else if (get_bootstrapped_means & parallel & show_progress) {
+  if (parallel & show_progress) {
     print("Performing bootstrap simulations", quote = FALSE)
     print("Initializing cluster", quote = FALSE)
     if (identical(n_cores, integer())) {
@@ -340,9 +333,9 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
     # Have to store variables in new env that can be accessed by parLapply. There
     # is surely a better way to do this, but this way works
     # start <- Sys.time()
-    vars <- list("fmcm_inference",
+    vars <- list("mc_simulations_inference_df",
                  "bootstrap_reps",
-                 "bootstrap_samples_per_rep"
+                 "bootstrap_draws_per_rep"
     )
     parallel::clusterExport(cl, varlist = vars, envir = environment())
     print("Sampling means", quote = FALSE)
@@ -353,9 +346,9 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
     bootstrapped_means_of_inference_by_node <- foreach::foreach(
       i = 1:bootstrap_reps, .options.snow = opts) %dopar% {
         data.frame(apply(
-          fmcm_inference, 2,
+          mc_simulations_inference_df, 2,
           function(inference) {
-            random_draws <- sample(inference, bootstrap_samples_per_rep, replace = TRUE)
+            random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
             mean(random_draws)
           },
           simplify = FALSE
@@ -364,7 +357,7 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
     close(pb)
     parallel::stopCluster(cl)
 
-  } else if (get_bootstrapped_means & parallel & !show_progress) {
+  } else if (parallel & !show_progress) {
     print("Performing bootstrap simulations", quote = FALSE)
     print("Initializing cluster", quote = FALSE)
     if (identical(n_cores, integer())) {
@@ -374,14 +367,14 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
     # Have to store variables in new env that can be accessed by parLapply. There
     # is surely a better way to do this, but this way works
     # start <- Sys.time()
-    vars <- list("fmcm_inference",
+    vars <- list("mc_simulations_inference_df",
                  "bootstrap_reps",
-                 "bootstrap_samples_per_rep"
+                 "bootstrap_draws_per_rep"
     )
     parallel::clusterExport(cl, varlist = vars, envir = environment())
     print("Sampling means", quote = FALSE)
     rep_inference_by_node <- vector(mode = "list", length = bootstrap_reps)
-    rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- fmcm_inference)
+    rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- mc_simulations_inference_df)
     bootstrapped_means_of_inference_by_node <- parallel::parLapply(
       cl,
       rep_inference_by_node,
@@ -389,7 +382,7 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
         apply(
           inference_by_node_duplicate, 2,
           function(inference) {
-            random_draws <- sample(inference, bootstrap_samples_per_rep, replace = TRUE)
+            random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
             mean(random_draws)
           }
         )
@@ -397,33 +390,33 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
     )
     parallel::stopCluster(cl)
 
-  } else if (get_bootstrapped_means & !parallel & show_progress) {
+  } else if (!parallel & show_progress) {
     bootstrapped_means_of_inference_by_node <- vector(mode = "list", length = bootstrap_reps)
     rep_inference_by_node <- vector(mode = "list", length = bootstrap_reps)
-    rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- fmcm_inference)
+    rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- mc_simulations_inference_df)
     bootstrapped_means_of_inference_by_node <- pbapply::pblapply(
       rep_inference_by_node,
       function(inference_by_node_duplicate) {
         apply(
           inference_by_node_duplicate, 2,
           function(inference) {
-            random_draws <- sample(inference, bootstrap_samples_per_rep, replace = TRUE)
+            random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
             mean(random_draws)
           }
         )
       }
     )
 
-  } else if (get_bootstrapped_means & !parallel & !show_progress) {
+  } else if (!parallel & !show_progress) {
     rep_inference_by_node <- vector(mode = "list", length = bootstrap_reps)
-    rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- fmcm_inference)
+    rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- mc_simulations_inference_df)
     bootstrapped_means_of_inference_by_node <- lapply(
       rep_inference_by_node,
       function(inference_by_node_duplicate) {
         apply(
           inference_by_node_duplicate, 2,
           function(inference) {
-            random_draws <- sample(inference, bootstrap_samples_per_rep, replace = TRUE)
+            random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
             mean(random_draws)
           }
         )
@@ -440,7 +433,6 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
   upper_quantiles_by_node <- data.frame(apply(bootstrapped_means_of_inference_by_node, 2, function(bootstrapped_means) stats::quantile(bootstrapped_means, upper_quantile), simplify = FALSE))
 
   nodes <- ifelse(colnames(lower_quantiles_by_node) == colnames(upper_quantiles_by_node), colnames(lower_quantiles_by_node), stop("Error with quantiles calculation"))
-  quantiles_by_node <- vector(mode = "list", length = length(nodes))
 
   quantiles_by_node <- data.frame(
     node = nodes,
@@ -456,7 +448,7 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
 
   structure(
     .Data = list(
-      mean_CI_by_node = quantiles_by_node,
+      CI_by_node = quantiles_by_node,
       bootstrap_means = bootstrapped_means_of_inference_by_node
     )
   )
@@ -491,15 +483,13 @@ build_monte_carlo_fcms <- function(adj_matrix_list = list(matrix()),
                                    include_zeroes = TRUE,
                                    show_progress = TRUE) {
 
-  adj_matrix_list_class <- unique(vapply(adj_matrix_list, get_class_of_adj_matrix, character(1)))
-  if (length(adj_matrix_list_class) != 1) {
-    stop("All adj. matrices in input adj_matrix_list must be of the same class (i.e. fcm, fgcm, or fcm_w_tfn")
-  }
+  #browser()
+  adj_matrix_list_class <- get_adj_matrices_input_type(adj_matrix_list)$object_types_in_list
 
   if (adj_matrix_list_class == "fcm") {
     sampled_adj_matrices <- build_monte_carlo_fcms_from_conventional_adj_matrices(adj_matrix_list, N_samples, include_zeroes, show_progress)
   } else {
-    sampled_adj_matrices <- build_monte_carlo_fcms_from_fuzzy_adj_matrices(adj_matrix_list, adj_matrix_list_class, N_samples, include_zeroes, show_progress)
+    sampled_adj_matrices <- build_monte_carlo_fcms_from_fuzzy_set_adj_matrices(adj_matrix_list, adj_matrix_list_class, N_samples, include_zeroes, show_progress)
   }
 
   sampled_adj_matrices
@@ -569,7 +559,7 @@ build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_lis
 
 
 
-#' build_monte_carlo_fcms_from_fuzzy_adj_matrices
+#' build_monte_carlo_fcms_from_fuzzy_set_adj_matrices
 #'
 #' @description
 #' This function generates n fcm adjacency matrices whose edge weights are sampled
@@ -582,8 +572,8 @@ build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_lis
 #'
 #' Use vignette("fcmconfr-class") for more information.
 #'
-#' @param fuzzy_adj_matrix_list A list of n x n fuzzy adjacencey matrices representing fcms
-#' @param fuzzy_adj_matrix_list_class "fgcm" or "fcm_w_tfn" - the class of elements in the fuzzy_adj_matrix_list
+#' @param fuzzy_set_adj_matrix_list A list of n x n fuzzy adjacencey matrices representing fcms
+#' @param fuzzy_set_adj_matrix_list_class "fgcm" or "fcm_w_tfn" - the class of elements in the fuzzy_set_adj_matrix_list
 #' @param N_samples The number of samples to draw from the corresponding distribution
 #' @param include_zeroes TRUE/FALSE Whether to incorporate zeroes as intentionally-defined
 #' edge weights or ignore them in aggregation
@@ -591,45 +581,45 @@ build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_lis
 #' from the pbapply package as the underlying function.
 #'
 #' @export
-build_monte_carlo_fcms_from_fuzzy_adj_matrices <- function(fuzzy_adj_matrix_list = list(data.frame()),
-                                                           fuzzy_adj_matrix_list_class = c("fcm", "fgcm", "fcm_w_tfn"),
-                                                           N_samples = integer(),
-                                                           include_zeroes = FALSE,
-                                                           show_progress = TRUE) {
+build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_matrix_list = list(data.frame()),
+                                                               fuzzy_set_adj_matrix_list_class = c("conventional", "ivfn", "tfn"),
+                                                               N_samples = integer(),
+                                                               include_zeroes = FALSE,
+                                                               show_progress = TRUE) {
 
-  if (!(fuzzy_adj_matrix_list_class %in% c("fcm", "fgcm", "fcm_w_tfn"))) {
-    stop("Input fuzzy_adj_matrix_list_class must be one of the following: 'fcm', 'fgcm', or 'fcm_w_tfn'")
+  #browser()
+  if (!(fuzzy_set_adj_matrix_list_class %in% c("conventional", "ivfn", "tfn"))) {
+    stop("Input fuzzy_set_adj_matrix_list_class must be one of the following: 'conventional', 'ivfn', or 'tfn'")
   }
 
-  n_nodes <- unique(unlist(lapply(fuzzy_adj_matrix_list, dim)))
+  n_nodes <- unique(unlist(lapply(fuzzy_set_adj_matrix_list, dim)))
 
   flatten_fuzzy_adj_matrix <- function(fuzzy_adj_matrix) do.call(cbind, lapply(as.vector(fuzzy_adj_matrix), rbind))
-  flattened_fuzzy_adj_matrix_list <- do.call(rbind, lapply(fuzzy_adj_matrix_list, flatten_fuzzy_adj_matrix))
-  flattened_fuzzy_adj_matrix_list_w_distributions <- convert_fuzzy_elements_in_matrix_to_distributions(flattened_fuzzy_adj_matrix_list, fuzzy_adj_matrix_list_class, N_samples)
+  flattened_fuzzy_set_adj_matrix_list <- do.call(rbind, lapply(fuzzy_set_adj_matrix_list, flatten_fuzzy_adj_matrix))
+  flattened_fuzzy_set_adj_matrix_list_w_distributions <- convert_fuzzy_set_elements_in_matrix_to_distributions(flattened_fuzzy_set_adj_matrix_list, fuzzy_set_adj_matrix_list_class, N_samples)
 
   if (!include_zeroes) {
-    flattened_fuzzy_adj_matrix_list_w_distributions <- apply(
-      flattened_fuzzy_adj_matrix_list_w_distributions, c(1, 2),
-      function(element) {
-        ifelse(identical(element[[1]], 0), NA, element)
-      })
+    flattened_fuzzy_set_adj_matrix_list_w_distributions <- apply(flattened_fuzzy_set_adj_matrix_list_w_distributions, c(1, 2), function(element) ifelse(element[[1]][[1]] == 0, NA, element[[1]][[1]]), simplify = FALSE)
   }
 
   if (show_progress) {
     cat(print("Sampling from column vectors", quote = FALSE))
-    column_samples <- pbapply::pbapply(flattened_fuzzy_adj_matrix_list_w_distributions, 2, function(column_vec) {
-      # sample_list_of_vectors_ignoring_NAs
-      na_omit_column_vec <- stats::na.omit(do.call(c, column_vec))
-      if (length(na_omit_column_vec) != 0) {
-        column_vec_with_numerics_replicated <- lapply(
-          column_vec,
-          function(value) {
-            if (is.numeric(value) & length(value) == 1) {
-              rep(value, N_samples)
-            } else {
-              value
-            }
-          })
+    column_samples <- pbapply::pbapply(
+      flattened_fuzzy_set_adj_matrix_list_w_distributions, 2,
+      function(column_vec) {
+        #browser()
+        # sample_list_of_vectors_ignoring_NAs
+        na_omit_column_vec <- stats::na.omit(do.call(c, column_vec))
+        if (length(na_omit_column_vec) != 0) {
+          column_vec_with_numerics_replicated <- lapply(
+            column_vec,
+            function(value) {
+              if (is.numeric(value) & length(value) == 1) {
+                rep(value, N_samples)
+              } else {
+                value
+              }
+            })
         na_omit_column_vec <- stats::na.omit(do.call(c, column_vec_with_numerics_replicated))
         sample(na_omit_column_vec, N_samples, replace = TRUE)
       } else {
@@ -639,7 +629,7 @@ build_monte_carlo_fcms_from_fuzzy_adj_matrices <- function(fuzzy_adj_matrix_list
     cat(print("Constructing monte carlo fcms from samples", quote = FALSE))
     sampled_adj_matrices <- pbapply::pbapply(column_samples, 1, function(row_vec) matrix(row_vec, nrow = n_nodes, ncol = n_nodes), simplify = FALSE)
   } else {
-    column_samples <- apply(flattened_fuzzy_adj_matrix_list_w_distributions, 2, function(column_vec) {
+    column_samples <- apply(flattened_fuzzy_set_adj_matrix_list_w_distributions, 2, function(column_vec) {
       # sample_list_of_vectors_ignoring_NAs
       na_omit_column_vec <- stats::na.omit(do.call(c, column_vec))
       if (length(na_omit_column_vec) != 0) {
