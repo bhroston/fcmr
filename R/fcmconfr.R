@@ -31,6 +31,7 @@
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
 #' and the simulation will stop
+#' @param fuzzy_set_samples
 #' @param inference_estimation_CI The confidence interval to estimate for the inferences
 #' of each concept across all monte carlo FCMs (via bootstrap)
 #' @param inference_estimation_bootstrap_reps The number of bootstraps to perform in
@@ -68,6 +69,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
                      lambda = 1,
                      max_iter = 100,
                      min_error = 1e-5,
+                     fuzzy_set_samples = 1000,
                      # Inference Estimation (bootstrap)
                      inference_estimation_CI = 0.95,
                      inference_estimation_bootstrap_reps = 5000,
@@ -95,6 +97,13 @@ fcmconfr <- function(adj_matrices = list(matrix()),
 
   # Perform checks
   checks <- lapply(adj_matrices, check_simulation_inputs, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
+  identified_concepts <- unique(lapply(adj_matrices, colnames))
+  if (length(identified_concepts) != 1) {
+    stop("All input adjacency matrices must have the same concepts")
+  } else {
+    concepts <- unlist(identified_concepts)
+  }
+
   # ----
 
   # Confirm necessary packages are available. If not, warn user and change run options
@@ -111,22 +120,20 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   # Build aggregate adj_matrix
   aggregate_adj_matrix <- aggregate_fcms(adj_matrices, aggregation_function, include_zero_weighted_edges_in_aggregation_and_mc_sampling)
   # Infer aggregate adj_matrix
-  # I've written the simulation code, now I need the infer code
-  aggregate_fcm_simulation <- simulate_fcm(aggregate_adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
-
+  aggregate_fcm_inference <- infer_fcm(aggregate_adj_matrix$adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error, fuzzy_set_samples)
 
   # Build monte carlo models
-  sampled_adj_matrices <- build_monte_carlo_fcms(adj_matrices, monte_carlo_sampling_draws, include_zero_weighted_edges_in_aggregation_and_mc_sampling, show_progress)
-  sampled_adj_matrices <- lapply(sampled_adj_matrices,
+  mc_adj_matrices <- build_monte_carlo_fcms(adj_matrices, monte_carlo_sampling_draws, include_zero_weighted_edges_in_aggregation_and_mc_sampling, show_progress)
+  mc_adj_matrices <- lapply(mc_adj_matrices,
                                  function(sampled_adj_matrix) {
-                                   colnames(sampled_adj_matrix) <- IDs
-                                   rownames(sampled_adj_matrix) <- IDs
+                                   colnames(sampled_adj_matrix) <- concepts
+                                   rownames(sampled_adj_matrix) <- concepts
                                    sampled_adj_matrix
                                  })
 
   # Infer monte carlo models with clamping
-  fmcm_results <- infer_fmcm_with_clamping(
-    simulated_adj_matrices = sampled_adj_matrices,
+  fmcm_results <- infer_monte_carlo_fcm_set(
+    mc_adj_matrices = mc_adj_matrices,
     initial_state_vector = initial_state_vector,
     clamping_vector = clamping_vector,
     activation = activation,
@@ -134,10 +141,10 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     lambda = lambda,
     max_iter = max_iter,
     min_error = min_error,
+    fuzzy_set_samples = fuzzy_set_samples,
     parallel = parallel,
     show_progress = show_progress,
-    n_cores = n_cores,
-    IDs = nodes
+    n_cores = n_cores
   )
 
   if (estimate_inference_CI_w_bootstrap) {
@@ -152,8 +159,6 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     )
   }
   # ----
-
-
 
   # Organize Output
   env_variables <- as.list(environment())

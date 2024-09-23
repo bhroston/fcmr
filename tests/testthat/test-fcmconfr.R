@@ -30,7 +30,7 @@ test_that("streamlined fcmconfr works", {
   aggregate_fcms(test_fcms, "mean")
 
   fcmconfr(
-    adj_matrices = test_adj_matrix_1,
+    adj_matrices = test_fcms,
     # Aggregation and Monte Carlo Sampling
     aggregation_function = 'mean',
     monte_carlo_sampling_draws = 1000,
@@ -56,7 +56,7 @@ test_that("streamlined fcmconfr works", {
     estimate_inference_CI_w_bootstrap = TRUE
   )
 
-  adj_matrices = test_adj_matrix_1
+  adj_matrices = test_fcms
   # Aggregation and Monte Carlo Sampling
   aggregation_function = 'mean'
   monte_carlo_sampling_draws = 1000
@@ -68,6 +68,7 @@ test_that("streamlined fcmconfr works", {
   lambda = 1
   max_iter = 100
   min_error = 1e-05
+  fuzzy_set_samples = 1000
   # Inference Estimation (bootstrap)
   inference_estimation_CI = 0.95
   inference_estimation_bootstrap_reps = 1000

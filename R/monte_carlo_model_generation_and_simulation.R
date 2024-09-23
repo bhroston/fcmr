@@ -1,7 +1,7 @@
 
 
 
-#' infer_fmcm_with_clamping
+#' infer_monte_carlo_fcm_set
 #'
 #' @description
 #' This calculates a sequence of iterations of a simulation over every item in
@@ -11,11 +11,9 @@
 #' column names, and lambda optimization.
 #'
 #' @details
-#' [ADD DETAILS HERE!!!]
+#' [ADD DETAILS HERE!!!].
 #'
-#' Use vignette("fmcm-class") for more information.
-#'
-#' @param simulated_adj_matrices A list of adjecency matrices generated from simulation using build_fmcm_models.
+#' @param mc_adj_matrices A list of adjecency matrices generated from simulation using build_fmcm_models.
 #' @param initial_state_vector A list state values at the start of an fcm simulation
 #' @param clamping_vector A list of values representing specific actions taken to
 #' control the behavior of an FCM. Specifically, non-zero values defined in this vector
@@ -30,8 +28,7 @@
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
 #' and the simulation will stop
-#' @param IDs A list of names for each node (must have n items). If empty, will use
-#' column names of adjacancy matrix (if given).
+#' @param fuzzy_set_samples
 #' @param parallel TRUE/FALSE Whether to utilize parallel processing
 #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 #' from the pbapply package as the underlying function.
@@ -41,55 +38,29 @@
 #' FCM. Will dramatically increase size of output if TRUE.
 #'
 #' @export
-infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
-                                     initial_state_vector = c(),
-                                     clamping_vector = c(),
-                                     activation = c("kosko", "modified-kosko", "rescale"),
-                                     squashing = c("sigmoid", "tanh"),
-                                     lambda = 1,
-                                     max_iter = 100,
-                                     min_error = 1e-5,
-                                     IDs = c(),
-                                     parallel = TRUE,
-                                     n_cores = integer(),
-                                     show_progress = TRUE,
-                                     include_simulations_in_output = FALSE) {
+infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
+                                      initial_state_vector = c(),
+                                      clamping_vector = c(),
+                                      activation = c("kosko", "modified-kosko", "rescale"),
+                                      squashing = c("sigmoid", "tanh"),
+                                      lambda = 1,
+                                      max_iter = 100,
+                                      min_error = 1e-5,
+                                      fuzzy_set_samples = 1000,
+                                      parallel = TRUE,
+                                      n_cores = integer(),
+                                      show_progress = TRUE,
+                                      include_simulations_in_output = FALSE) {
 
   # Adding for R CMD check. Does not impact logic.
   # iter <- NULL
   i <- NULL
 
-  if (identical(activation, c("kosko", "modified-kosko", "rescale"))) {
-    activation <- "kosko"
-    warning("No activation input declared. Assuming activation = 'kosko'")
-  }
-  if (!(activation %in% c("kosko", "modified-kosko", "rescale"))) {
-    stop("Activation input must be one of the following: 'kosko', 'modified-kosko', 'rescale'")
-  }
-
-  if (identical(squashing, c("sigmoid", "tanh"))) {
-    activation <- "sigmoid"
-    warning("No squashing input declared. Assuming squashing = 'sigmoid'")
-  }
-  if (!(squashing %in% c("sigmoid", "tanh"))) {
-    stop("Squashing input must be one of the following: 'sigmoid', 'tanh'")
-  }
+  checks <- lapply(mc_adj_matrices, check_simulation_inputs, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
 
   # Confirm necessary packages are available. If not, warn user and change run options
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
   parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
-
-  lapply(simulated_adj_matrices, confirm_adj_matrix_is_square)
-
-  if (identical(initial_state_vector, c())) {
-    warning("No initial_state_vector input given. Assuming all nodes have an initial state of 1.")
-    initial_state_vector <- rep(1, nrow(simulated_adj_matrices[[1]]))
-  }
-
-  if (identical(clamping_vector, c())) {
-    warning("No clamping_vector input given. Assuming no values are clamped.")
-    clamping_vector <- rep(0, length(initial_state_vector))
-  }
 
   if (parallel & show_progress) {
     print("Initializing cluster", quote = FALSE)
@@ -105,26 +76,31 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
     # Have to store variables in new env that can be accessed by parLapply. There
     # is surely a better way to do this, but this way works
     # start <- Sys.time()
-    vars <- list("simulated_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
-                 "squashing", "lambda", "max_iter", "min_error", "IDs",
-                 "infer_fcm_with_clamping", "simulate_fcm_with_pulse",  "confirm_adj_matrix_is_square",
-                 "confirm_input_vector_is_compatible_with_adj_matrix",
-                 "get_node_IDs_from_input", "optimize_fcm_lambda",
-                 "calculate_next_fcm_state_vector", "squash")
+    vars <- list(
+      "infer_fcm",  "infer_conventional_fcm", "infer_ivfn_or_tfn_fcm", "equalize_baseline_and_scenario_outputs",
+      "simulate_fcm", "simulate_conventional_fcm",  "simulate_ivfn_or_tfn_fcm",
+      "calculate_next_conventional_fcm_state_vector", "calculate_next_fuzzy_set_fcm_state_vector",
+      "check_simulation_inputs", "get_adj_matrices_input_type", "squash", "defuzz",
+      "convert_element_to_ivfn_or_tfn_if_numeric", "clean_simulation_output",
+      "check_simulation_inputs", "confirm_adj_matrix_is_square",
+      "confirm_input_vector_is_compatible_with_adj_matrix",
+      "mc_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
+      "squashing", "lambda", "max_iter", "min_error", "fuzzy_set_samples"
+    )
 
     parallel::clusterExport(cl, varlist = vars, envir = environment())
 
     doSNOW::registerDoSNOW(cl)
     # pb <- utils::txtProgressBar(min = 0, max = length(simulated_adj_matrices)/n_cores, style = 3)
-    invisible(utils::capture.output(pb <- utils::txtProgressBar(min = 0, max = length(simulated_adj_matrices)/n_cores, style = 3)))
+    invisible(utils::capture.output(pb <- utils::txtProgressBar(min = 0, max = length(mc_adj_matrices)/n_cores, style = 3)))
     progress <- function(n) utils::setTxtProgressBar(pb, n)
     # cat("\n")
     print("Running simulations. There may be an additional wait for larger sets.", quote = FALSE)
     opts <- list(progress = progress)
-    fmcm_confer_results <- foreach::foreach(
-      i = 1:length(simulated_adj_matrices), .options.snow = opts) %dopar% {
-        infer_fcm_with_clamping(
-          adj_matrix = simulated_adj_matrices[[i]],
+    inferences_for_mc_adj_matrices <- foreach::foreach(
+      i = 1:length(mc_adj_matrices), .options.snow = opts) %dopar% {
+        infer_fcm(
+          adj_matrix = mc_adj_matrices[[i]],
           initial_state_vector = initial_state_vector,
           clamping_vector = clamping_vector,
           activation = activation,
@@ -132,12 +108,11 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
           lambda = lambda,
           max_iter = max_iter,
           min_error = min_error,
-          lambda_optimization = 'none',
-          IDs = IDs
+          fuzzy_set_samples = fuzzy_set_samples
         )
       }
     close(pb)
-    names(fmcm_confer_results) <- paste0("mc_", 1:length(fmcm_confer_results))
+    names(inferences_for_mc_adj_matrices) <- paste0("mc_", 1:length(inferences_for_mc_adj_matrices))
     parallel::stopCluster(cl)
 
   } else if (parallel & !show_progress) {
@@ -154,24 +129,28 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
     # Have to store variables in new env that can be accessed by parLapply. There
     # is surely a better way to do this, but this way works
     # start <- Sys.time()
-    vars <- list("simulated_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
-                 "squashing", "lambda", "max_iter", "min_error",
-                 "lambda_optimization", "IDs",
-                 "infer_fcm_with_clamping", "simulate_fcm_with_pulse",  "confirm_adj_matrix_is_square",
-                 "confirm_input_vector_is_compatible_with_adj_matrix",
-                 "get_node_IDs_from_input", "optimize_fcm_lambda",
-                 "calculate_next_fcm_state_vector", "squash")
+    vars <- list(
+      "infer_fcm",  "infer_conventional_fcm", "infer_ivfn_or_tfn_fcm", "equalize_baseline_and_scenario_outputs",
+      "simulate_fcm", "simulate_conventional_fcm",  "simulate_ivfn_or_tfn_fcm",
+      "calculate_next_conventional_fcm_state_vector", "calculate_next_fuzzy_set_fcm_state_vector",
+      "check_simulation_inputs", "get_adj_matrices_input_type", "squash", "defuzz",
+      "convert_element_to_ivfn_or_tfn_if_numeric", "clean_simulation_output",
+      "check_simulation_inputs", "confirm_adj_matrix_is_square",
+      "confirm_input_vector_is_compatible_with_adj_matrix",
+      "mc_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
+      "squashing", "lambda", "max_iter", "min_error", "fuzzy_set_samples"
+    )
 
     parallel::clusterExport(cl, varlist = vars, envir = environment())
 
     cat("\n")
     print("Running simulations", quote = FALSE)
-    fmcm_confer_results <- parallel::parLapply(
+    inferences_for_mc_adj_matrices <- parallel::parLapply(
       cl,
-      simulated_adj_matrices,
-      function(simulated_adj_matrix) {
-        infer_fcm_with_clamping(
-          adj_matrix = simulated_adj_matrix,
+      mc_adj_matrices,
+      function(mc_adj_matrix) {
+        infer_fcm(
+          adj_matrix = mc_adj_matrix,
           initial_state_vector = initial_state_vector,
           clamping_vector = clamping_vector,
           activation = activation,
@@ -179,8 +158,7 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
           lambda = lambda,
           max_iter = max_iter,
           min_error = min_error,
-          lambda_optimization = 'none',
-          IDs = IDs
+          fuzzy_set_samples = fuzzy_set_samples
         )
       }
     )
@@ -189,11 +167,11 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
   } else if (!parallel & show_progress) {
     cat("\n")
     print("Running simulations", quote = FALSE)
-    fmcm_confer_results <- pbapply::pblapply(
-      simulated_adj_matrices,
-      function(simulated_adj_matrix) {
-        infer_fcm_with_clamping(
-          adj_matrix = simulated_adj_matrix,
+    inferences_for_mc_adj_matrices <- pbapply::pblapply(
+      mc_adj_matrices,
+      function(mc_adj_matrix) {
+        infer_fcm(
+          adj_matrix = mc_adj_matrix,
           initial_state_vector = initial_state_vector,
           clamping_vector = clamping_vector,
           activation = activation,
@@ -201,8 +179,7 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
           lambda = lambda,
           max_iter = max_iter,
           min_error = min_error,
-          lambda_optimization = 'none',
-          IDs = IDs
+          fuzzy_set_samples = fuzzy_set_samples
         )
       }
     )
@@ -210,11 +187,11 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
   } else if (!parallel & !show_progress) {
     cat("\n")
     print("Running simulations", quote = FALSE)
-    fmcm_confer_results <- lapply(
-      simulated_adj_matrices,
-      function(simulated_adj_matrix) {
-        infer_fcm_with_clamping(
-          adj_matrix = simulated_adj_matrix,
+    inferences_for_mc_adj_matrices <- lapply(
+      mc_adj_matrices,
+      function(mc_adj_matrix) {
+        infer_fcm(
+          adj_matrix = mc_adj_matrix,
           initial_state_vector = initial_state_vector,
           clamping_vector = clamping_vector,
           activation = activation,
@@ -222,8 +199,7 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
           lambda = lambda,
           max_iter = max_iter,
           min_error = min_error,
-          lambda_optimization = 'none',
-          IDs = IDs
+          fuzzy_set_samples = fuzzy_set_samples
         )
       }
     )
@@ -233,7 +209,7 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
   # print("Organizing Output", quote = FALSE)
   # cat("\n")
 
-  inference_values_by_sim <- lapply(fmcm_confer_results, function(sim) sim$inference)
+  inference_values_by_sim <- lapply(inferences_for_mc_adj_matrices, function(sim) sim$inference)
   inference_values_by_sim <- data.frame(do.call(rbind, inference_values_by_sim))
 
   inference_plot_data <- data.frame(
@@ -246,9 +222,9 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
       .Data = list(
         inference = inference_values_by_sim,
         inference_for_plotting = inference_plot_data,
-        sims = fmcm_confer_results
+        sims = inferences_for_mc_adj_matrices
       ),
-      class = "fmcmconfer"
+      class = "inference_of_monte_carlo_fcm_set"
     )
   } else {
     structure(
@@ -256,7 +232,7 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
         inference = inference_values_by_sim,
         inference_for_plotting = inference_plot_data
       ),
-      class = "fmcmconfer"
+      class = "inference_of_monte_carlo_fcm_set"
     )
   }
 }

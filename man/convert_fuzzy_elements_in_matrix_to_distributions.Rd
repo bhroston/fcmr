@@ -2,7 +2,7 @@
 % Please edit documentation in R/utility.R
 \name{convert_fuzzy_elements_in_matrix_to_distributions}
 \alias{convert_fuzzy_elements_in_matrix_to_distributions}
-\title{convert_fuzzy_elements_in_matrix_to_distributions}
+\title{}
 \usage{
 convert_fuzzy_elements_in_matrix_to_distributions(
   fuzzy_matrix = data.frame(),
@@ -23,7 +23,5 @@ tfns, convert those objects to their corresponding
 distributions representative of those values.
 }
 \details{
-[ADD DETAILS HERE!!!!]
 
-Use vignette("fcmconfr-class") for more information.
 }

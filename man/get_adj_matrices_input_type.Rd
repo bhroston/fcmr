@@ -2,7 +2,7 @@
 % Please edit documentation in R/utility.R
 \name{get_adj_matrices_input_type}
 \alias{get_adj_matrices_input_type}
-\title{get_adj_matrices_input_type}
+\title{}
 \usage{
 get_adj_matrices_input_type(adj_matrix_list_input)
 }
@@ -13,4 +13,7 @@ get_adj_matrices_input_type(adj_matrix_list_input)
 This function identifies whether input is a list of adjacency matrices or
 an individual adj matrix (input_type). If input is a list of adj matrices,
 checks what data types the adj matrices are (list_objects) (e.g. tibble, matrix, etc.)
+}
+\details{
+
 }
