@@ -129,79 +129,6 @@ get_adj_matrix_from_edgelist <- function(edgelist = matrix(),
 
 
 
-#' confirm_adj_matrices_have_same_concepts
-#'
-#' @description
-#' This checks a list of lists of column names of adjacency matrices and
-#' confirms that each list is identical.
-#'
-#' @details
-#' Note: This function does NOT take the raw adjacency matrices as an input. Rather,
-#' it takes a list of lists of column names of adjacency matrices.
-#'
-#'
-#' @param list_of_concepts_by_adj_matrix A list of lists of column names of adjacency matrices
-#'
-#' @export
-confirm_adj_matrices_have_same_concepts <- function(list_of_concepts_by_adj_matrix = list()) {
-  all_adj_matrices_have_same_concepts <- length(unique(list_of_concepts_by_adj_matrix)) == 1
-  if (!all_adj_matrices_have_same_concepts) {
-    stop("All input adjacency matrices must have the same concepts.")
-  }
-}
-
-
-
-#' confirm_adj_matrices_have_same_dimensions
-#'
-#' @description
-#' This checks that all adjacency matrices in a list have the same dimensions
-#' (i.e. all are n x n)
-#'
-#' @details
-#' Note: This function DOES take the raw adjacency matrices as an input.
-#'
-#' @param adj_matrices A list of n x n adjacency matrices
-#'
-#' @export
-confirm_adj_matrices_have_same_dimensions <- function(adj_matrices = list(matrix())) {
-  dimensions_of_input_adj_matrices <- lapply(adj_matrices, dim)
-  all_adj_matrices_have_same_dimensions <- length(unique(dimensions_of_input_adj_matrices)) == 1
-  if (!all_adj_matrices_have_same_dimensions) {
-    stop("All input adjacency matrices must have the same dimensions (n x n) throughout the entire list")
-  }
-}
-
-
-
-
-#' confirm_unique_datatype_in_object
-#'
-#' @description
-#' Confirm that an object contains data of a single class
-#'
-#' @details
-#' Boolean. TRUE if an object contains only data of a single class (e.g. "numeric"),
-#' FALSE if multiple classes detected
-#'
-#' Intended for developer use only to improve package readability.
-#'
-#' @param object A list-like object (matrix, data.frame, list, etc.)
-#' @param datatype The datatype of which the class of every value within the object should match
-confirm_unique_datatype_in_object <- function(object, datatype = "numeric") {
-  data_types <- unique(vapply(object, class, character(1)))
-  only_numeric_data_types <- identical(data_types, datatype)
-  if (!only_numeric_data_types) {
-    stop(paste(
-      "Input object must only containt", datatype, "objects, and all objects must be", datatype
-    ))
-  } else {
-    TRUE
-  }
-}
-
-
-
 #' get_node_IDs_from_input
 #'
 #' @description
@@ -227,86 +154,6 @@ get_node_IDs_from_input <- function(adj_matrix = matrix()) {
   }
 
   IDs
-}
-
-
-#' confirm_only_numeric_data_in_adj_matrix
-#'
-#' @description
-#' Confirm all values in an adj_matrix object are of type numeric
-#'
-#' @details
-#' Check that all values in an adjacency matrix are of type numeric (i.e. int,
-#' double, etc.)
-#'
-#' Intended for developer use only to improve package readability.
-#'
-#' @param adj_matrix An n x n adjacency matrix that represents an FCM
-confirm_only_numeric_data_in_adj_matrix <- function(adj_matrix = matrix()) {
-  if (sum(dim(adj_matrix)) == 2) {
-    warning("Input adj_matrix object is an empty 1 x 1 matrix")
-  } else {
-    adj_matrix_data_types <- unique(vapply(adj_matrix, class, character(1)))
-    only_numeric_data_types_in_adj_matrix <- identical(adj_matrix_data_types, "numeric")
-    if (!only_numeric_data_types_in_adj_matrix) {
-      stop("Input adj_matrix must only contain numeric objects, and all
-         objects must be numeric")
-    }
-  }
-  only_numeric_data_types_in_adj_matrix
-}
-
-
-#' check_adj_matrix_list_is_list
-#'
-#' @description
-#' Check that the input adj_matrix_list is either a list of adj. matrices or if
-#' only one adj. matrix is given, abstract that matrix within a list (this is to
-#' comply with lapply functionalities within the codebase)
-#'
-#' @details
-#' This is just in case the function isn't passed an actual list of adj. matrices.
-#' In R, both matrix and list are of class "list" so you have to do some odd checks
-#' to check if the input is just a singular matrix or a list of matrices
-#'
-#' Intended for developer use only to improve package readability.
-#'
-#' @param adj_matrix_list A list of n x n adjacency matrix that represents an FCM
-check_adj_matrix_list_is_list <- function(adj_matrix_list = list(matrix())) {
-  if (!is.null(dim(adj_matrix_list)) & (length(unique(dim(adj_matrix_list))) == 1)) {
-    adj_matrix_list <- list(adj_matrix_list)
-  }
-  adj_matrix_list
-}
-
-
-
-#' get_class_of_adj_matrix
-#'
-#' @description
-#' Get the class of map from the input adj matrix
-#'
-#' @details
-#' This returns the class of fcm represented by the input adjacency matrices i.e.
-#' fcm, fgcm, fcm_w_tfn, etc.
-#'
-#' Intended for developer use only to improve package readability.
-#'
-#' @param adj_matrix An n x n adjacency matrix that represents an FCM, FGCM, or fcm_w_tfn
-get_class_of_adj_matrix <- function(adj_matrix = matrix()) {
-  object_classes_in_adj_matrix <- unique(as.vector(apply(adj_matrix, c(1, 2), function(element) class(element[[1]]))))
-
-  if (all(object_classes_in_adj_matrix %in% "numeric")) {
-    adj_matrix_class <- "fcm"
-  } else if (all(object_classes_in_adj_matrix %in% c("numeric", "grey_number"))) {
-    adj_matrix_class <- "fgcm"
-  } else if (all(object_classes_in_adj_matrix %in% c("numeric", "tfn"))) {
-    adj_matrix_class <- "fcm_w_tfn"
-  } else {
-    stop(paste0("Incompatible collection of data types found in input adj_matrix: '", paste0(object_classes_in_adj_matrix, collapse = '', "'")))
-  }
-
-  adj_matrix_class
 }
 
 
@@ -454,4 +301,33 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
     adj_matrices_input_is_list = adj_matrices_input_is_list,
     object_types_in_list = object_types_in_list
   )
+}
+
+
+#' get_class_of_adj_matrix
+#'
+#' @description
+#' Get the class of map from the input adj matrix
+#'
+#' @details
+#' This returns the class of fcm represented by the input adjacency matrices i.e.
+#' fcm, fgcm, fcm_w_tfn, etc.
+#'
+#' Intended for developer use only to improve package readability.
+#'
+#' @param adj_matrix An n x n adjacency matrix that represents an FCM, FGCM, or fcm_w_tfn
+get_class_of_adj_matrix <- function(adj_matrix = matrix()) {
+  object_classes_in_adj_matrix <- unique(as.vector(apply(adj_matrix, c(1, 2), function(element) class(element[[1]]))))
+
+  if (all(object_classes_in_adj_matrix %in% "numeric")) {
+    adj_matrix_class <- "fcm"
+  } else if (all(object_classes_in_adj_matrix %in% c("numeric", "grey_number"))) {
+    adj_matrix_class <- "fgcm"
+  } else if (all(object_classes_in_adj_matrix %in% c("numeric", "tfn"))) {
+    adj_matrix_class <- "fcm_w_tfn"
+  } else {
+    stop(paste0("Incompatible collection of data types found in input adj_matrix: '", paste0(object_classes_in_adj_matrix, collapse = '', "'")))
+  }
+
+  adj_matrix_class
 }
