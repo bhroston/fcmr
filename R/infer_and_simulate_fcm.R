@@ -867,7 +867,9 @@ calculate_next_fuzzy_set_fcm_state_vector <- function(fuzzy_set_adj_matrix = mat
 #' @param value A numeric value to 'squash'
 #' @param squashing A squashing function to apply. Must be one of the following: 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'
 #' @param lambda A numeric value that defines the steepness of the slope of the squashing function when tanh or sigmoid are applied
-squash <- function(value = numeric(), squashing = "sigmoid", lambda = 1) {
+squash <- function(value = numeric(),
+                   squashing = c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"),
+                   lambda = 1) {
   if (lambda <= 0) {
     stop("Input lambda must be greater than zero")
   }
@@ -1017,24 +1019,65 @@ clean_simulation_output <- function(output_obj, concepts) {
 #' and the simulation will stop
 #'
 #' @export
-check_simulation_inputs <- function(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error) {
-  confirm_adj_matrix_is_square(adj_matrix)
+check_simulation_inputs <- function(adj_matrix = matrix(),
+                                    initial_state_vector = c(),
+                                    clamping_vector = c(),
+                                    activation = c("kosko"),
+                                    squashing = c("sigmoid"),
+                                    lambda = 1,
+                                    max_iter = 100,
+                                    min_error = 1e-4,
+                                    fuzzy_set_samples = 100) {
+
+  # Check adj_matrix ----
+  rows <- nrow(adj_matrix)
+  cols <- ncol(adj_matrix)
+  if (rows != cols) {
+    stop("Failed Input Validation: Input adjacency matrix must be a square (n x n) matrix")
+  }
+  data_types_in_adj_matrix <- unique(do.call(list, (apply(adj_matrix, c(1, 2), function(x) list(methods::is(x[[1]]))))))
+  if (length(data_types_in_adj_matrix) > 1) {
+    stop("Failed Input Validation: Input adjacency matrix must contain objects of the same type. Either numerics, ivfns, or tfns.")
+  }
+  n_nodes <- unique(dim(adj_matrix))
+
+  # ----
+
+  # Check initial_state_vector ----
   if (identical(initial_state_vector, c())) {
     warning("No initial_state_vector input given. Assuming all nodes have an initial state of 1.")
     initial_state_vector <- rep(1, nrow(adj_matrix))
   }
+  if (length(initial_state_vector) != n_nodes) {
+    stop("Failed Input Validation: Input initial_state_vector must have the same length as the number of nodes in the adj. matrix.")
+  }
+  data_types_in_initial_state_vector <- unlist(unique(sapply(initial_state_vector, methods::is, simplify = FALSE)))
+  if (!identical(data_types_in_initial_state_vector, methods::is(numeric()))) {
+    stop("Failed Input Validation: Input initial_state_vector must only contain numeric values.")
+  }
+
+  # ----
+
+  # Check clamping_vector ----
   if (identical(clamping_vector, c())) {
     warning("No clamping_vector input given. Assuming no values are clamped.")
     clamping_vector <- rep(0, length(initial_state_vector))
   }
-  confirm_input_vector_is_compatible_with_adj_matrix(adj_matrix, initial_state_vector)
-  confirm_input_vector_is_compatible_with_adj_matrix(adj_matrix, clamping_vector)
-
-  if (!(activation %in% c("kosko", "modified-kosko", "rescale"))) {
-    stop("Input activation must be one of the following: 'kosko', 'modified-kosko', or 'rescale'")
+  if (length(clamping_vector) != n_nodes) {
+    stop("Failed Input Validation: Input clamping_vector must have the same length as the number of nodes in the adj. matrix.")
   }
-  if (!(squashing %in% c("sigmoid", "tanh"))) {
-    stop("Input squashing must be one of the following: 'sigmoid', 'tanh'")
+  data_types_in_clamping_vector <- unlist(unique(sapply(clamping_vector, methods::is, simplify = FALSE)))
+  if (!identical(data_types_in_clamping_vector, methods::is(numeric()))) {
+    stop("Failed Input Validation: Input clamping_vector must only contain numeric values.")
+  }
+  # ----
+
+  # Check activation and squashing ----
+  if (!(activation %in% c("kosko", "modified-kosko", "rescale"))) {
+    stop("Failed Input Validation: Input activation must be one of the following: 'kosko', 'modified-kosko', or 'rescale'")
+  }
+  if (!(squashing %in% c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"))) {
+    stop('Failed Input Validation: Input squashing must be one of the following: "sigmoid", "tanh", "bivalent", "saturation", "trivalent"')
   }
   if (activation == "rescale" & squashing != "sigmoid") {
     stop(
@@ -1048,61 +1091,53 @@ check_simulation_inputs <- function(adj_matrix, initial_state_vector, clamping_v
         "\n          Input squashing function: ", squashing)
     )
   }
+  # ----
 
+  # Check lambda ----
   if (!is.numeric(lambda)) {
-    stop("Input lambda must be numeric")
+    stop("Failed Input Validation: Input lambda must be numeric")
   }
   if (lambda <= 0) {
-    stop("Input lambda must be greater than 0")
+    stop("Failed Input Validation: Input lambda must be greater than 0")
   }
+  # ----
 
+  # Check max_iter ----
+  if (!is.numeric(max_iter)) {
+    stop("Failed Input Validation: Input max_iter must be numeric")
+  }
   if (!(max_iter == round(max_iter))) {
-    stop("Input max_iter must be a positive integer")
+    stop("Failed Input Validation: Input max_iter must be a positive integer")
   }
   if (max_iter <= 0) {
-    stop("Input max_iter must be a positive integer")
+    stop("Failed Input Validation: Input max_iter must be a positive integer")
   }
+  # ----
 
+  # Check min_error ----
   if (!is.numeric(min_error)) {
-    stop("Input min_error must be numeric")
+    stop("Failed Input Validation: Input min_error must be numeric")
   }
   if (min_error <= 0) {
-    stop("Input min_error must be greater than 0")
+    stop("Failed Input Validation: Input min_error must be greater than 0")
   }
+  # ----
+
+  # Check fuzzy_set_samples ----
+  if (!is.numeric(fuzzy_set_samples)) {
+    stop("Failed Input Validation: Input fuzzy_set_samples must be numeric")
+  }
+  if (!(fuzzy_set_samples == round(fuzzy_set_samples))) {
+    stop("Failed Input Validation: Input fuzzy_set_samples must be a positive integer")
+  }
+  if (fuzzy_set_samples <= 0) {
+    stop("Failed Input Validation: Input fuzzy_set_samples must be a positive integer")
+  }
+  # ----
+
 
   list(
     initial_state_vector = initial_state_vector,
     clamping_vector = clamping_vector
   )
-}
-
-
-
-#' confirm_input_vector_is_compatible_with_adj_matrices
-#'
-#' @description
-#' Check whether an input vector (initial_state_vector or clamping_vector) is
-#' compatible with the data types present in the representative_adj_matrix.
-#'
-#' @details
-#' [ADD DETAILS HERE!!!]
-#'
-#' Intended for developer use only to improve package readability.
-#'
-#' @param representative_adj_matrix An adjacency matrix whose format (i.e. dims and data.types)
-#' are representative of a larger list of adjacency matrices
-#' @param input_vector An input vector, either the initial_state_vector input or
-#' the clamping_vector input
-#' @param fcm_class The class of fcm represented by the representative_adj_matrix
-confirm_input_vector_is_compatible_with_adj_matrices <- function(representative_adj_matrix = matrix(),
-                                                                 input_vector = c(),
-                                                                 fcm_class = c("fcm", "fgcm", "fcm_w_tfn")) {
-
-  if (fcm_class == "fcm") {
-    confirm_input_vector_is_compatible_with_adj_matrix(representative_adj_matrix, input_vector)
-  } else if (fcm_class == "fgcm") {
-    confirm_input_vector_is_compatible_with_grey_adj_matrix(representative_adj_matrix, input_vector)
-  } else if (fcm_class == "fcm_w_tfn") {
-    confirm_input_vector_is_compatible_with_fcm_w_tfn_adj_matrix(representative_adj_matrix, input_vector)
-  }
 }

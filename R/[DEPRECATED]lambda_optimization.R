@@ -451,30 +451,6 @@ normalize_state_vector_with_optimized_lambda <- function(raw_state = numeric(),
 }
 
 
-#' confirm_input_vector_is_compatible_with_adj_matrix
-#'
-#' @description
-#' Confirm that an initial state vector is algorithmically compatible with an adjacency matrix
-#'
-#' @details
-#' Boolean. TRUE if the number of entries in the initial
-#' state vector match the number of rows/columns in the adjacency matrix and 2. The
-#' datatypes stored within each object are the same (i.e. "numeric" vs "grey_number"),
-#' FALSE if not
-#'
-#' Intended for developer use only to improve package readability.
-#'
-#' @param adj_matrix An n x n adjacency matrix that represents an FCM
-#' @param initial_state_vector An n-length list of the initial states of each node in an fcm simulation
-confirm_input_vector_is_compatible_with_adj_matrix <- function(adj_matrix = matrix(), initial_state_vector = c()) {
-  if (length(initial_state_vector) != unique(dim(adj_matrix))) {
-    stop("Length of input initial_state_vector is does not comply with the dimensions of the input adjacency matrix", .call = FALSE)
-  } else {
-    TRUE
-  }
-}
-
-
 
 
 

@@ -129,30 +129,6 @@ get_adj_matrix_from_edgelist <- function(edgelist = matrix(),
 
 
 
-#' confirm_adj_matrix_is_square
-#'
-#' @description
-#' Confirm that an adjacency matrix is square (n x n)
-#'
-#' @details
-#' Boolean. TRUE if the dimensions of an adjacency matrix are equivalent (n x n).
-#' FALSE if not.
-#'
-#' Intended for developer use only to improve package readability.
-#'
-#' @param adj_matrix An n x n adjacency matrix that represents an FCM
-confirm_adj_matrix_is_square <- function(adj_matrix = matrix()) {
-  rows <- nrow(adj_matrix)
-  cols <- ncol(adj_matrix)
-  if (rows != cols) {
-    stop("Failed Validation: Input adjacency matrix must be a square (n x n) matrix")
-  } else {
-    TRUE
-  }
-}
-
-
-
 #' confirm_adj_matrices_have_same_concepts
 #'
 #' @description
@@ -332,39 +308,6 @@ get_class_of_adj_matrix <- function(adj_matrix = matrix()) {
 
   adj_matrix_class
 }
-
-
-
-#' #' confirm_input_vector_is_compatible_with_adj_matrices
-#' #'
-#' #' @description
-#' #' Check whether an input vector (initial_state_vector or clamping_vector) is
-#' #' compatible with the data types present in the representative_adj_matrix.
-#' #'
-#' #' @details
-#' #' [ADD DETAILS HERE!!!]
-#' #'
-#' #' Intended for developer use only to improve package readability.
-#' #'
-#' #' @param representative_adj_matrix An adjacency matrix whose format (i.e. dims and data.types)
-#' #' are representative of a larger list of adjacency matrices
-#' #' @param input_vector An input vector, either the initial_state_vector input or
-#' #' the clamping_vector input
-#' #' @param fcm_class The class of fcm represented by the representative_adj_matrix
-#' confirm_input_vector_is_compatible_with_adj_matrices <- function(representative_adj_matrix = matrix(),
-#'                                                                  input_vector = c(),
-#'                                                                  fcm_class = c("fcm", "fgcm", "fcm_w_tfn")) {
-#'
-#'   if (fcm_class == "fcm") {
-#'     confirm_input_vector_is_compatible_with_adj_matrix(representative_adj_matrix, input_vector)
-#'   } else if (fcm_class == "fgcm") {
-#'     confirm_input_vector_is_compatible_with_grey_adj_matrix(representative_adj_matrix, input_vector)
-#'   } else if (fcm_class == "fcm_w_tfn") {
-#'     confirm_input_vector_is_compatible_with_fcm_w_tfn_adj_matrix(representative_adj_matrix, input_vector)
-#'   }
-#' }
-
-
 
 
 

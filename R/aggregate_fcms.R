@@ -111,6 +111,7 @@ aggregate_fcms_w_ivfns <- function(adj_matrices = list(matrix()),
                                    aggregation_function = c("mean", "median"),
                                    include_zeroes = TRUE) {
 
+  # browser()
   concepts_in_adj_matrices <- lapply(adj_matrices, function(x) get_node_IDs_from_input(x))
   node_names <- unlist(unique(concepts_in_adj_matrices))
   n_nodes <- length(node_names)
@@ -175,10 +176,6 @@ aggregate_fcms_w_tfns <- function(adj_matrices = list(matrix()),
   lower_aggregate_adj_matrix <- aggregate_conventional_fcms(lower_adj_matrices, aggregation_function, include_zeroes)
   mode_aggregate_adj_matrix <- aggregate_conventional_fcms(mode_adj_matrices, aggregation_function, include_zeroes)
   upper_aggregate_adj_matrix <- aggregate_conventional_fcms(upper_adj_matrices, aggregation_function, include_zeroes)
-
-  #lower_aggregate_adj_matrix$adj_matrix[is.na(lower_aggregate_adj_matrix$adj_matrix)] <- 0
-  #mode_aggregate_adj_matrix$adj_matrix[is.na(mode_aggregate_adj_matrix$adj_matrix)] <- 0
-  #upper_aggregate_adj_matrix$adj_matrix[is.na(upper_aggregate_adj_matrix$adj_matrix)] <- 0
 
   aggregate_adj_matrix_w_tfns <- make_adj_matrix_w_tfns(lower_aggregate_adj_matrix$adj_matrix, mode_aggregate_adj_matrix$adj_matrix, upper_aggregate_adj_matrix$adj_matrix)
 

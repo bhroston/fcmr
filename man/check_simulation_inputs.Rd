@@ -5,14 +5,15 @@
 \title{check_simulation_inputs}
 \usage{
 check_simulation_inputs(
-  adj_matrix,
-  initial_state_vector,
-  clamping_vector,
-  activation,
-  squashing,
-  lambda,
-  max_iter,
-  min_error
+  adj_matrix = matrix(),
+  initial_state_vector = c(),
+  clamping_vector = c(),
+  activation = c("kosko", "modified-kosko", "rescale"),
+  squashing = c("sigmoid", "tanh"),
+  lambda = 1,
+  max_iter = 100,
+  min_error = 1e-04,
+  fuzzy_set_samples = 100
 )
 }
 \arguments{

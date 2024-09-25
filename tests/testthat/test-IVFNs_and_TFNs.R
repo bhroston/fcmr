@@ -1,0 +1,127 @@
+
+# IVFN Tests ----
+test_that("make_adj_matrix_w_ivfns works", {
+  test_lower_adj_matrix <- data.frame(
+    "C1" = c(0, 0, 0.51, -0.9, 0, 0, 0, 0),
+    "C2" = c(0, 0, 0, 0.7, -0.52, 0, 0, 0),
+    "C3" = c(0.13, 0, 0, 0, 0, 0.3, 0, 0),
+    "C4" = c(0.28, 0.6, 0, 0, 0, 0, 0.2, 0),
+    "C5" = c(0, 0.5, 0, 0, 0, 0, 0, 0),
+    "C6" = c(0, 0, 0, 0, 0, 0, 0, 0.35),
+    "C7" = c(0, 0, 0, -0.16, 0, 0, 0, 0),
+    "C8" = c(0, 0, 0, 0, 0, 0.43, 0, 0)
+  )
+  test_upper_adj_matrix <- data.frame(
+    "C1" = c(0, 0, 1.00, -0.7, 0, 0, 0, 0),
+    "C2" = c(0, 0, 0, 0.9, -0.32, 0, 0, 0),
+    "C3" = c(0.43, 0, 0, 0, 0, 0.5, 0, 0),
+    "C4" = c(0.48, 0.8, 0, 0, 0, 0, 0.4, 0),
+    "C5" = c(0, 0.7, 0, 0, 0, 0, 0, 0),
+    "C6" = c(0, 0, 0, 0, 0, 0, 0, 0.85),
+    "C7" = c(0, 0, 0, 0.34, 0, 0, 0, 0),
+    "C8" = c(0, 0, 0, 0, 0, 0.63, 0, 0)
+  )
+  test_ivfn_adj_matrix <- make_adj_matrix_w_ivfns(test_lower_adj_matrix, test_upper_adj_matrix)
+
+  testthat::expect_equal(methods::is(test_ivfn_adj_matrix), "adj_matrix_w_ivfns")
+  testthat::expect_equal(nrow(test_ivfn_adj_matrix), 8)
+  testthat::expect_equal(ncol(test_ivfn_adj_matrix), 8)
+  testthat::expect_equal(test_ivfn_adj_matrix[[3]][[6]], ivfn(0.3, 0.5))
+})
+
+
+test_that("ivfn works", {
+  test_ivfn <- ivfn(-1, 1)
+  expect_equal(test_ivfn$lower, -1)
+  expect_equal(test_ivfn$upper, 1)
+  expect_error(ivfn(1, -1))
+})
+
+
+test_that("print.ivfn works", {
+  expect_no_error(print(ivfn(-1, 1)))
+})
+
+
+test_that("c.ivfn works", {
+  test_set <- c(ivfn(-1, 1), ivfn(-0.8, 0.8))
+  expect_equal(length(test_set), 2)
+  expect_equal(test_set[[2]], ivfn(-0.8, 0.8))
+})
+
+# ----
+# TFN Tests ----
+test_that("make_adj_matrix_w_tfns works", {
+  lower_adj_matrix <- data.frame(
+    C1 = c(0, 0, 0, 0, 0, 0),
+    C2 = c(-0.85, 0, 0, 0.35, 0, 0),
+    C3 = c(0, 0, 0, 0, 0, 0),
+    C4 = c(-0.7, 0.6, -1, 0, -1, 0),
+    C5 = c(0.1, 0, 0, -0.8, 0, 0),
+    C6 = c(0, -0.95, 0, 0, -0.95, 0)
+  )
+  mode_adj_matrix <- data.frame(
+    C1 = c(0, 0, 0, 0, 0, 0),
+    C2 = c(-0.65, 0, 0, 0.80, 0, 0),
+    C3 = c(0, 0, 0, 0, 0, 0),
+    C4 = c(-0.6, 0.65, -0.85, 0, -0.95, 0),
+    C5 = c(0.6, 0, 0, -0.2, 0, 0),
+    C6 = c(0, -0.85, 0.1, 0, -0.75, 0)
+  )
+  upper_adj_matrix <- data.frame(
+    C1 = c(0, 0, 0, 0, 0, 0),
+    C2 = c(-0.1, 0, 0, 1, 0, 0),
+    C3 = c(0, 0, 0, 0, 0, 0),
+    C4 = c(-0.4, 0.7, -0.7, 0, -0.1, 0),
+    C5 = c(0.7, 0, 0, -0.1, 0, 0),
+    C6 = c(0, -0.2, 0.25, 0, -0.7, 0)
+  )
+  test_tfn_adj_matrix <- make_adj_matrix_w_tfns(lower_adj_matrix, mode_adj_matrix, upper_adj_matrix)
+
+  testthat::expect_equal(methods::is(test_tfn_adj_matrix), "adj_matrix_w_tfns")
+  testthat::expect_equal(nrow(test_tfn_adj_matrix), 6)
+  testthat::expect_equal(ncol(test_tfn_adj_matrix), 6)
+  testthat::expect_equal(test_tfn_adj_matrix[[2]][[4]], tfn(0.35, 0.8, 1))
+})
+
+
+test_that("tfn works", {
+  test_tfn <- tfn(-1, 0, 1)
+  expect_equal(test_tfn$lower, -1)
+  expect_equal(test_tfn$mode, 0)
+  expect_equal(test_tfn$upper, 1)
+  expect_error(tfn(1, 0, -1))
+  expect_error(tfn(-1, 1, 0.5))
+})
+
+
+test_that("print.ivfn works", {
+  expect_no_error(print(tfn(-1, 0, 1)))
+})
+
+
+test_that("c.tfn works", {
+  test_set <- c(tfn(-1, 0, 1), tfn(-0.8, 0, 0.8))
+  expect_equal(length(test_set), 2)
+  expect_equal(test_set[[2]], tfn(-0.8, 0, 0.8))
+})
+
+
+test_that("rtri works", {
+  test_lower <- 0.25
+  test_mode <- 0.5
+  test_upper <- 0.75
+
+  test_rtri <- rtri(test_lower, test_mode, test_upper, n = 1000)
+  test_mean <- mean(test_rtri)
+  test_variance <- var(test_rtri)
+
+  expected_mean <- (test_lower + test_mode + test_upper)/3
+  expected_variance <- (test_lower^2 + test_mode^2 + test_upper^2 - test_lower*test_mode - test_lower*test_upper - test_mode*test_upper)/18
+
+  perc_error_of_means <- abs(expected_mean - test_mean)/expected_mean
+  perc_error_of_vars <- abs(expected_variance - test_variance)/expected_variance
+
+  expect_lt(perc_error_of_means, 0.001)
+  expect_lt(perc_error_of_vars, 0.01)
+})
