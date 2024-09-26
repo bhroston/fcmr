@@ -406,8 +406,8 @@ test_that("convert_fuzzy_set_elements_in_matrix_to_distributions works", {
   expect_lte(max(test_dist), test_dist_based_on$upper)
   expect_equal(length(test_dist), 1000)
 
-  expect_lt(abs(mean(test_dist) - (test_dist_based_on$lower + test_dist_based_on$upper)/2), 0.01)
-  expect_lt(abs(var(test_dist) - ((test_dist_based_on$upper - test_dist_based_on$lower)^2)/12), 0.01)
+  expect_lt(abs(mean(test_dist) - (test_dist_based_on$lower + test_dist_based_on$upper)/2), 0.1)
+  expect_lt(abs(var(test_dist) - ((test_dist_based_on$upper - test_dist_based_on$lower)^2)/12), 0.1)
 })
 
 

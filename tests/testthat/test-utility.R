@@ -1,4 +1,162 @@
 
+
+test_that("standardize_adj_matrices works", {
+  test_adj_matrix_1 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(1, 0)
+  )
+  test_adj_matrix_2 <- data.frame(
+    "A" = c(0, 0, 0),
+    "B" = c(0.25, 0, 1),
+    "C" = c(0, 0.7, 0)
+  )
+  test_adj_matrix_3 <- data.frame(
+    "B" = c(0, 0),
+    "D" = c(0.75, 0)
+  )
+  test_adj_matrix_4 <- data.frame(
+    "A" = c(0, 0, 0.3, 0),
+    "B" = c(0.5, 0, 0, 0.6),
+    "E" = c(0, 0, 0, 0),
+    "F" = c(1, 0, 1, 0)
+  )
+  test_fcms <- list(test_adj_matrix_1, test_adj_matrix_2, test_adj_matrix_3, test_adj_matrix_4)
+  standardized_adj_matrices <- standardize_adj_matrices(test_fcms)
+
+  expect_equal(unique(lapply(standardized_adj_matrices, colnames)), list(c("A", "B", "C", "D", "E", "F")))
+
+  expected_adj_matrix_4 <- data.frame(
+    "A" = c(0, 0, 0, 0, 0.3, 0),
+    "B" = c(0.5, 0, 0, 0, 0, 0.6),
+    "C" = c(0, 0, 0, 0, 0, 0),
+    "D" = c(0, 0, 0, 0, 0, 0),
+    "E" = c(0, 0, 0, 0, 0, 0),
+    "F" = c(1, 0, 0, 0, 1, 0)
+  )
+  expect_equal(standardized_adj_matrices[[4]], expected_adj_matrix_4)
+
+
+  lower_adj_matrix_1 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.4, 0)
+  )
+  upper_adj_matrix_1 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.6, 0)
+  )
+  adj_matrix_1 <- make_adj_matrix_w_ivfns(lower_adj_matrix_1, upper_adj_matrix_1)
+  lower_adj_matrix_2 <- data.frame(
+    "A" = c(0, 0, 0),
+    "B" = c(0.25, 0, 0.8),
+    "C" = c(0, 0.7, 0)
+  )
+  upper_adj_matrix_2 <- data.frame(
+    "A" = c(0, 0, 0),
+    "B" = c(0.45, 0, 1),
+    "C" = c(0, 0.9, 0)
+  )
+  adj_matrix_2 <- make_adj_matrix_w_ivfns(lower_adj_matrix_2, upper_adj_matrix_2)
+  lower_adj_matrix_3 <- data.frame(
+    "B" = c(0, 0),
+    "D" = c(0.75, 0)
+  )
+  upper_adj_matrix_3 <- data.frame(
+    "B" = c(0, 0),
+    "D" = c(0.8, 0)
+  )
+  adj_matrix_3 <- make_adj_matrix_w_ivfns(lower_adj_matrix_3, upper_adj_matrix_3)
+  lower_adj_matrix_4 <- data.frame(
+    "A" = c(0, 0, 0.3, 0),
+    "B" = c(0.5, 0, 0, 0.6),
+    "E" = c(0, 0, 0, 0),
+    "F" = c(0.8, 0, 0.8, 0)
+  )
+  upper_adj_matrix_4 <- data.frame(
+    "A" = c(0, 0, 0.4, 0),
+    "B" = c(0.7, 0, 0, 0.8),
+    "E" = c(0, 0, 0, 0),
+    "F" = c(1, 0, 1, 0)
+  )
+  adj_matrix_4 <- make_adj_matrix_w_ivfns(lower_adj_matrix_4, upper_adj_matrix_4)
+  test_fcms_w_ivfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
+  standardized_adj_matrices <- standardize_adj_matrices(test_fcms_w_ivfns)
+
+  expect_equal(standardized_adj_matrices[[3]][2, 4][[1]], ivfn(0.75, 0.8))
+
+
+  lower_adj_matrix_1 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.4, 0)
+  )
+  mode_adj_matrix_1 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.5, 0)
+  )
+  upper_adj_matrix_1 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.6, 0)
+  )
+  adj_matrix_1 <- make_adj_matrix_w_tfns(lower_adj_matrix_1, mode_adj_matrix_1, upper_adj_matrix_1)
+  lower_adj_matrix_2 <- data.frame(
+    "A" = c(0, 0, 0),
+    "B" = c(0.25, 0, 0.8),
+    "C" = c(0, 0.7, 0)
+  )
+  mode_adj_matrix_2 <- data.frame(
+    "A" = c(0, 0, 0),
+    "B" = c(0.3, 0, 0.9),
+    "C" = c(0, 0.8, 0)
+  )
+  upper_adj_matrix_2 <- data.frame(
+    "A" = c(0, 0, 0),
+    "B" = c(0.45, 0, 1),
+    "C" = c(0, 0.9, 0)
+  )
+  adj_matrix_2 <- make_adj_matrix_w_tfns(lower_adj_matrix_2, mode_adj_matrix_2, upper_adj_matrix_2)
+  lower_adj_matrix_3 <- data.frame(
+    "B" = c(0, 0),
+    "D" = c(0.75, 0)
+  )
+  mode_adj_matrix_3 <- data.frame(
+    "B" = c(0, 0),
+    "D" = c(0.77, 0)
+  )
+  upper_adj_matrix_3 <- data.frame(
+    "B" = c(0, 0),
+    "D" = c(0.8, 0)
+  )
+  adj_matrix_3 <- make_adj_matrix_w_tfns(lower_adj_matrix_3, mode_adj_matrix_3, upper_adj_matrix_3)
+  lower_adj_matrix_4 <- data.frame(
+    "A" = c(0, 0, 0.3, 0),
+    "B" = c(0.5, 0, 0, 0.6),
+    "E" = c(0, 0, 0, 0),
+    "F" = c(0.8, 0, 0.8, 0)
+  )
+  mode_adj_matrix_4 <- data.frame(
+    "A" = c(0, 0, 0.35, 0),
+    "B" = c(0.6, 0, 0, 0.7),
+    "E" = c(0, 0, 0, 0),
+    "F" = c(0.9, 0, 0.9, 0)
+  )
+  upper_adj_matrix_4 <- data.frame(
+    "A" = c(0, 0, 0.4, 0),
+    "B" = c(0.7, 0, 0, 0.8),
+    "E" = c(0, 0, 0, 0),
+    "F" = c(1, 0, 1, 0)
+  )
+  adj_matrix_4 <- make_adj_matrix_w_tfns(lower_adj_matrix_4, mode_adj_matrix_4, upper_adj_matrix_4)
+
+  test_fcms_w_tfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
+
+  standardized_adj_matrices <- standardize_adj_matrices(test_fcms_w_tfns)
+
+  expect_equal(standardized_adj_matrices[[3]][2, 4][[1]], tfn(0.75, 0.77, 0.8))
+
+})
+
+
+
+
 test_that("get_edgelist_from_adj_matrix works", {
   test_adj_matrix <- data.frame(
     "C1" = c(0, 0.36, 0.45, -0.90, 0),
