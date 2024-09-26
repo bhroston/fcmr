@@ -90,7 +90,8 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   #browser()
   adj_matrices_dims <- lapply(adj_matrices, dim)
   if (length(unique(unlist(adj_matrices_dims))) > 1) {
-    stop("Input Validation Error: Input adj. matrices are either different sizes or contain non-square matrices")
+    stop("Input Validation Error: Input adj. matrices are either different sizes or contain non-square matrices
+       !! Call standardize_adj_matrices() to standardize the size of the list of adj. matrices")
   }
   n_nodes <- unique(unlist(adj_matrices_dims))
 
