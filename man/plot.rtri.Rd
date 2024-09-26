@@ -6,6 +6,11 @@
 \usage{
 \method{plot}{rtri}(x, ...)
 }
+\arguments{
+\item{x}{an rtri object}
+
+\item{...}{additional inputs (leave empty)}
+}
 \description{
 Plot rtri distribution similar to how runif is plotted with the base plot function
 }
