@@ -78,6 +78,59 @@ shiny_ui <- function() {
         )
       ),#####
       bslib::nav_panel(
+        title = "Aggregation and Monte Carlo Options", icon = shiny::icon("layer-group"), #####
+        shiny::fluidRow(
+          shiny::column(width = 12, div(style = "height:20px"))
+        ),
+        p("User selects if they want to Aggregate via Traditional Aggregation or Estimate Sample Space w/ Monte Carlo"),
+        bslib::navset_underline(
+          bslib::nav_panel(
+            title = "Aggregation Options", icon = shiny::icon("user-group"),
+            shiny::column(
+              width = 12,
+              shiny::fluidRow(
+                shiny::column(
+                  width = 5, align = "right",
+                  shiny::h5("Aggregation Function", style = "padding: 35px;")
+                ),
+                shiny::column(
+                  width = 7, align = "left",
+                  shinyWidgets::radioGroupButtons("aggregation_fun", "", choices = c("Mean", "Median"), selected = "Mean"),
+                )
+              )
+            )
+          ),
+          bslib::nav_panel(
+            title = "Monte Carlo Sampling Options", icon = shiny::icon("seedling"),
+            shiny::column(
+              width = 12,
+              shiny::fluidRow(
+                shiny::column(
+                  width = 5, align = "right",
+                  shiny::h5("# Sample Maps To Generate", style = "padding: 35px;")
+                ),
+                shiny::column(
+                  width = 7, align = "left",
+                  shiny::numericInput("monte_carlo_samples", "", value = 1000, min = 1, step = 500)
+                )
+              )
+            )
+          )
+        ),
+        shiny::fluidRow(
+          shiny::column(
+            width = 12, align = "center",
+            shiny::h5("Include 0-weighted Edges in Aggregation and Monte Carlo Sampling?")
+          )
+        ),
+        shiny::fluidRow(
+          shiny::column(
+            width = 12, align = "center",
+            shinyWidgets::radioGroupButtons("include_zero_weighted_edges_in_aggregation_and_mc_sampling", "", choiceNames = c("Yes", "No"), choiceValues = c(TRUE, FALSE), selected = TRUE)
+          )
+        )
+      ), #####
+      bslib::nav_panel(
         title = "Simulation Options", icon = shiny::icon("calculator"), #####
         shiny::fluidRow(
           shiny::column(width = 12, div(style = "height:20px"))
@@ -131,68 +184,8 @@ shiny_ui <- function() {
             width = 3, align = "left",
             shiny::numericInput("min_error", "", 1e-5, min = 0, max = 1)
           )
-        )
-      ), #####
-      bslib::nav_panel(
-        title = "Aggregation/Monte Carlo Options", icon = shiny::icon("layer-group"), #####
-        shiny::fluidRow(
-          shiny::column(width = 12, div(style = "height:20px"))
         ),
-        p("User selects if they want to Aggregate via Traditional Aggregation or Estimate Sample Space w/ Monte Carlo"),
-        bslib::navset_underline(
-          bslib::nav_panel(
-            title = "Monte Carlo Sampling Options", icon = shiny::icon("seedling"),
-            shiny::column(
-              width = 12,
-              shiny::fluidRow(
-                shiny::column(
-                  width = 5, align = "right",
-                  shiny::h5("# Sample Maps To Generate", style = "padding: 35px;")
-                ),
-                shiny::column(
-                  width = 7, align = "left",
-                  shiny::numericInput("monte_carlo_samples", "", value = 1000, min = 1, step = 500)
-                )
-              ),
-              shiny::fluidRow(
-                shiny::column(
-                  width = 5, align = "right",
-                  shiny::h5("Include 0's in MC Sampling", style = "padding: 35px;")
-                ),
-                shiny::column(
-                  width = 7, align = "left",
-                  shinyWidgets::radioGroupButtons("include_zeroes_in_mc_sampling", "", choices = c("Yes", "No"), selected = "No")
-                )
-              )
-            )
-          ),
-          bslib::nav_panel(
-            title = "Aggregation Options", icon = shiny::icon("user-group"),
-            shiny::column(
-              width = 12,
-              shiny::fluidRow(
-                shiny::column(
-                  width = 5, align = "right",
-                  shiny::h5("Aggregation Function", style = "padding: 35px;")
-                ),
-                shiny::column(
-                  width = 7, align = "left",
-                  shinyWidgets::radioGroupButtons("aggregation_fun", "", choices = c("Mean", "Median"), selected = "Mean"),
-                )
-              ),
-              shiny::fluidRow(
-                shiny::column(
-                  width = 5, align = "right",
-                  shiny::h5("Include 0's in Aggregation", style = "padding: 35px;")
-                ),
-                shiny::column(
-                  width = 7, align = "left",
-                  shinyWidgets::radioGroupButtons("include_zeroes_in_aggregation", "", choices = c("Yes", "No"), selected = "No")
-                )
-              )
-            )
-          )
-        )
+        shiny::uiOutput("fuzzy_set_samples_ui")
       ), #####
       bslib::nav_panel(
         title = "Bootstrap Options", icon = shiny::icon("chart-simple"), #####
@@ -207,11 +200,11 @@ shiny_ui <- function() {
           ),
           shiny::column(
             width = 2, align = "left",
-            shinyWidgets::radioGroupButtons("bootstrap_inference_means_samples", "", choices = c("Yes", "No"), selected = "Yes", size = "sm")
+            shinyWidgets::radioGroupButtons("bootstrap_inference_means_samples", "", choiceNames = c("Yes", "No"), choiceValues = c(TRUE, FALSE), selected = TRUE, size = "sm")
           )
         ),
         shiny::conditionalPanel(
-          condition = "input.bootstrap_inference_means_samples == 'Yes'",
+          condition = "input.bootstrap_inference_means_samples == TRUE",
           shiny::fluidRow(
             shiny::column(
               width = 5, align = "right",
@@ -257,11 +250,11 @@ shiny_ui <- function() {
           ),
           shiny::column(
             width = 7, align = "left",
-            shinyWidgets::radioGroupButtons("parallel", "", choices = c("Yes", "No"), selected = "No")
+            shinyWidgets::radioGroupButtons("parallel", "", choiceNames = c("Yes", "No"), choiceValues = c(TRUE, FALSE), selected = TRUE)
           )
         ),
         shiny::conditionalPanel(
-          condition  = "input.parallel == 'Yes'",
+          condition  = "input.parallel == TRUE",
           shiny::fluidRow(
             shiny::column(
               width = 5, align = "right",
@@ -280,7 +273,7 @@ shiny_ui <- function() {
           ),
           shiny::column(
             width = 7, align = "left",
-            shinyWidgets::radioGroupButtons("show_progress", "", choices = c("Yes", "No"), selected = "Yes")
+            shinyWidgets::radioGroupButtons("show_progress", "", choiceNames = c("Yes", "No"), choiceValues = c(TRUE, FALSE), selected = TRUE)
           )
         )
       ), #####

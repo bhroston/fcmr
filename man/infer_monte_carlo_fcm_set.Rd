@@ -44,6 +44,9 @@ squashing function when tanh or sigmoid are applied}
 vector minus the previous state vector) at which no more iterations are necessary
 and the simulation will stop}
 
+\item{fuzzy_set_samples}{The size (n) of the distributions represented by IVFNs or TFNs (only
+used when IVFNs or TFNs in adj_matrices input)}
+
 \item{parallel}{TRUE/FALSE Whether to utilize parallel processing}
 
 \item{n_cores}{Number of cores to use in parallel processing. If no input given,

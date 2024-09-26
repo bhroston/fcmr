@@ -28,7 +28,8 @@
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
 #' and the simulation will stop
-#' @param fuzzy_set_samples
+#' @param fuzzy_set_samples The size (n) of the distributions represented by IVFNs or TFNs (only
+#' used when IVFNs or TFNs in adj_matrices input)
 #' @param parallel TRUE/FALSE Whether to utilize parallel processing
 #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 #' from the pbapply package as the underlying function.

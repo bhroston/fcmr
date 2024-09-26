@@ -27,14 +27,14 @@ shiny_server <- function(input, output, session) {
     }
 
     adj_matrix_list_input_type <- get_adj_matrices_input_type(adj_matrix_list_input)
-    if (adj_matrix_list_input_type$adj_matrices_input_is_list & adj_matrix_list_input_type$object_types_in_list == "unavailable") {
+    if (adj_matrix_list_input_type$adj_matrices_input_is_list & adj_matrix_list_input_type$object_types_in_list[1] == "unavailable") {
       checked_adj_matrix_list <- list(data.frame())
       note <- "non_list_or_matrix_input"
     } else if (!adj_matrix_list_input_type$adj_matrices_input_is_list) {
       checked_adj_matrix_list <- list(adj_matrix_list_input)
-    } else if (adj_matrix_list_input_type$adj_matrices_input_is_list & adj_matrix_list_input_type$object_types_in_list %in% c("data.frame", "matrix", "sparseMatrix", "data.table", "tibble")) {
+    } else if (adj_matrix_list_input_type$adj_matrices_input_is_list & adj_matrix_list_input_type$object_types_in_list[1] == "conventional") {
       checked_adj_matrix_list <- adj_matrix_list_input
-    } else if (adj_matrix_list_input_type$adj_matrices_input_is_list & adj_matrix_list_input_type$object_types_in_list == "unavailable") {
+    } else if (adj_matrix_list_input_type$adj_matrices_input_is_list & adj_matrix_list_input_type$object_types_in_list[1] == "unavailable") {
       checked_adj_matrix_list <- list(data.frame())
       note <- "list_of_nonmatrices_input"
     } else {
@@ -124,6 +124,13 @@ shiny_server <- function(input, output, session) {
       concepts <- NULL
     }
   })
+  fcm_class <- shiny::reactive({
+    if (accepted_adj_matrix_list()) {
+      get_adj_matrices_input_type(adj_matrix_list_checks()$adj_matrix)$object_types_in_list[1]
+    } else {
+      NULL
+    }
+  })
 
   output$initial_state_vector_numeric_inputs <- shiny::renderUI({
     lapply(concepts(), function(i) {
@@ -172,6 +179,23 @@ shiny_server <- function(input, output, session) {
   shiny::observeEvent(input$reset_clamping_vectors, {
     lapply(paste0("clamping_", concepts()), function(i) shiny::updateNumericInput(session, i, value = 0))
   })
+
+  output$fuzzy_set_samples_ui <- shiny::renderUI(
+    if (fcm_class() %in% c("ivfn", "tfn")) {
+      shiny::fluidRow(
+        shiny::column(
+          width = 5, align = "right",
+          shiny::h5(paste0("Size of Distributions Representing IVFNs or TFNs"), style = "padding: 28px;")
+        ),
+        shiny::column(
+          width = 3, align = "left",
+          shiny::numericInput("fuzzy_set_samples", "", 1, min = 10, step = 10)
+        )
+      )
+    } else {
+      NULL
+    }
+  )
   #####
 
   form_data <- shiny::reactive({

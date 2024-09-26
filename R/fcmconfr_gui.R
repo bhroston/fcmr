@@ -16,16 +16,13 @@ fcmconfr_gui <- function() {
     session_variables$clamping_vector <- rep(0, length(session_variables$initial_state_vector))
   }
 
+  if (!exists("session_variables$fuzzy_set_samples")) {
+    session_variables$fuzzy_set_samples <- NA
+  }
+
   session_variables$initial_state_vector <- paste0("c(", paste(session_variables$initial_state_vector, collapse = ", "), ")")
   session_variables$clamping_vector <- paste0("c(", paste(session_variables$clamping_vector, collapse = ", "), ")")
   session_variables$concepts <- paste0("c('", paste(session_variables$concepts, collapse = "', '"), "')")
-
-  session_variables$include_zeroes_in_mc_sampling <- ifelse(session_variables$include_zeroes_in_mc_sampling == "Yes", TRUE, FALSE)
-  session_variables$include_zeroes_in_aggregation <- ifelse(session_variables$include_zeroes_in_aggregation == "Yes", TRUE, FALSE)
-  session_variables$aggregation_fun <- tolower(session_variables$aggregation_fun)
-  session_variables$bootstrap_inference_means_samples <- ifelse(session_variables$bootstrap_inference_means_samples == "Yes", TRUE, FALSE)
-  session_variables$show_progress <- ifelse(session_variables$show_progress == "Yes", TRUE, FALSE)
-  session_variables$paralell = session_variables$parallel <- ifelse(session_variables$parallel == "Yes", TRUE, FALSE)
 
   cat(
     "user_input <- list(", "\n",
@@ -41,6 +38,7 @@ fcmconfr_gui <- function() {
     "  lambda = ", session_variables$lambda, ",\n",
     "  max_iter = ", session_variables$max_iter, ",\n",
     "  min_error = ", session_variables$min_error, ",\n",
+    "  fuzzy_set_samples = ", session_variables$fuzzy_set_samples, ",\n",
     "  # Inference Estimation (bootstrap)", "\n",
     "  inference_estimation_CI = ", session_variables$bootstrap_CI, ",\n",
     "  inference_estimation_bootstrap_reps = ", session_variables$bootstrap_reps, ",\n",
@@ -50,7 +48,7 @@ fcmconfr_gui <- function() {
     "  parallel = ", session_variables$parallel, ",\n",
     "  n_cores = ", session_variables$n_cores, ",\n",
     "  # Additional Options", "\n",
-    "  include_zero_weighted_edges_in_aggregation_and_mc_sampling = ", session_variables$include_zeroes_in_mc_sampling, ",\n",
+    "  include_zero_weighted_edges_in_aggregation_and_mc_sampling = ", session_variables$include_zero_weighted_edges_in_aggregation_and_mc_sampling, ",\n",
     "  include_monte_carlo_FCM_simulations_in_output = TRUE", ",\n",
     "  estimate_inference_CI_w_bootstrap = ", session_variables$bootstrap_inference_means_samples, "\n",
     ")", sep = ""

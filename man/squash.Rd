@@ -4,7 +4,11 @@
 \alias{squash}
 \title{squash}
 \usage{
-squash(value = numeric(), squashing = "sigmoid", lambda = 1)
+squash(
+  value = numeric(),
+  squashing = c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"),
+  lambda = 1
+)
 }
 \arguments{
 \item{value}{A numeric value to 'squash'}

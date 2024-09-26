@@ -2,7 +2,7 @@
 % Please edit documentation in R/utility.R
 \name{check_if_local_machine_has_access_to_show_progress_functionalities}
 \alias{check_if_local_machine_has_access_to_show_progress_functionalities}
-\title{}
+\title{check_if_local_machine_has_access_to_show_progress_functionalities}
 \usage{
 check_if_local_machine_has_access_to_show_progress_functionalities(
   use_parallel,
@@ -20,5 +20,8 @@ run code in parallel and/or using a progress bar. Specifically, checks for
 the doSNOW, foreach, and pbapply packages.
 }
 \details{
-
+Confirms that a local machine can access the required packages for
+displaying progress bars at runtime. Will revise inputs
+if particular packages are unavailable and warn the user of such changes, but will
+not halt a run.
 }

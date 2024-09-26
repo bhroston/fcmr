@@ -31,7 +31,8 @@
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
 #' and the simulation will stop
-#' @param fuzzy_set_samples
+#' @param fuzzy_set_samples The size (n) of the distributions represented by IVFNs or TFNs (only
+#' used when IVFNs or TFNs in adj_matrices input)
 #' @param inference_estimation_CI The confidence interval to estimate for the inferences
 #' of each concept across all monte carlo FCMs (via bootstrap)
 #' @param inference_estimation_bootstrap_reps The number of bootstraps to perform in
