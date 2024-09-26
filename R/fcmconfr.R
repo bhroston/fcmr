@@ -87,7 +87,13 @@ fcmconfr <- function(adj_matrices = list(matrix()),
                      estimate_mc_inference_CI_w_bootstrap = TRUE) {
 
   # Perform Checks ----
-  # browser()
+  #browser()
+  adj_matrices_dims <- lapply(adj_matrices, dim)
+  if (length(unique(unlist(adj_matrices_dims))) > 1) {
+    stop("Input Validation Error: Input adj. matrices are either different sizes or contain non-square matrices")
+  }
+  n_nodes <- unique(unlist(adj_matrices_dims))
+
   adj_matrices_input_type <- get_adj_matrices_input_type(adj_matrices)
   fcm_class <- adj_matrices_input_type$object_types_in_list[1]
   if (!adj_matrices_input_type$adj_matrices_input_is_list) {
@@ -96,11 +102,11 @@ fcmconfr <- function(adj_matrices = list(matrix()),
 
   if (identical(initial_state_vector, c())) {
     warning("No initial_state_vector input given. Assuming all nodes have an initial state of 1.")
-    initial_state_vector <- rep(1, nrow(adj_matrix))
+    initial_state_vector <- rep(1, n_nodes)
   }
   if (identical(clamping_vector, c())) {
     warning("No clamping_vector input given. Assuming no values are clamped.")
-    clamping_vector <- rep(0, length(initial_state_vector))
+    clamping_vector <- rep(0, n_nodes)
   }
 
   # Perform checks

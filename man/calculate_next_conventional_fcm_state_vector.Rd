@@ -7,8 +7,7 @@
 calculate_next_conventional_fcm_state_vector(
   adj_matrix = matrix(),
   state_vector = c(),
-  activation = c("kosko", "modified-kosko", "rescale"),
-  squashing = c("sigmoid", "tanh")
+  activation = c("kosko", "modified-kosko", "rescale")
 )
 }
 \arguments{
@@ -18,9 +17,6 @@ calculate_next_conventional_fcm_state_vector(
 
 \item{activation}{The activation function to be applied. Must be one of the following:
 'kosko', 'modified-kosko', or 'rescale'.}
-
-\item{squashing}{A squashing function to apply. Must be one of the following:
-'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.}
 }
 \description{
 This calculates the next iteration of a state vector in an fcm simulation

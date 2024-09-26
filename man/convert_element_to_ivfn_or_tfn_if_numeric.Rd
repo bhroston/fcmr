@@ -11,6 +11,8 @@ convert_element_to_ivfn_or_tfn_if_numeric(
 }
 \arguments{
 \item{element}{An element in a matrix}
+
+\item{desired_class}{Transform the element into an 'ivfn' or 'tfn'}
 }
 \description{
 This checks whether the input element is an ordinary number or a triangular number.

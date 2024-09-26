@@ -28,7 +28,7 @@
 #'
 #' @export
 #' @examples
-#' make_adj_matrix_w_IVFNs(
+#' make_adj_matrix_w_ivfns(
 #'  lower = matrix(data = c(0, 0.2, 0, 0.5), nrow = 2, ncol = 2),
 #'  upper = matrix(data = c(0, 0.4, 0, 0.7), nrow = 2, ncol = 2)
 #' )

@@ -39,7 +39,9 @@ test_that("ivfn works", {
 
 
 test_that("print.ivfn works", {
-  expect_no_error(print(ivfn(-1, 1)))
+  invisible(capture.output(
+    expect_no_error(print(ivfn(-1, 1)))
+  ))
 })
 
 
@@ -96,7 +98,9 @@ test_that("tfn works", {
 
 
 test_that("print.ivfn works", {
-  expect_no_error(print(tfn(-1, 0, 1)))
+  invisible(capture.output(
+    expect_no_error(print(tfn(-1, 0, 1)))
+  ))
 })
 
 

@@ -9,6 +9,7 @@
 #' @importFrom foreach %dopar%
 NULL
 
+
 #' get_edgelist_from_adj_matrix
 #'
 #' @description
@@ -31,10 +32,23 @@ NULL
 #' @examples
 #' get_edgelist_from_adj_matrix(matrix(data = c(0, 1, 1, 0), nrow = 2, ncol = 2))
 get_edgelist_from_adj_matrix <- function(adj_matrix = matrix(), IDs = c()) {
-  confirm_adj_matrix_is_square(adj_matrix)
-  confirm_only_numeric_data_in_adj_matrix(adj_matrix)
+  # Check adj matrix
+  rows <- nrow(adj_matrix)
+  cols <- ncol(adj_matrix)
+  if (rows != cols) {
+    stop("Failed Input Validation: Input adjacency matrix must be a square (n x n) matrix")
+  }
+  data_types_in_adj_matrix <- unique(do.call(list, (apply(adj_matrix, c(1, 2), function(x) list(methods::is(x[[1]]))))))
+  if (length(data_types_in_adj_matrix) > 1) {
+    stop("Failed Input Validation: Input adjacency matrix must contain objects of the same type. Either numerics, ivfns, or tfns.")
+  }
 
-  IDs <- get_node_IDs_from_input(adj_matrix, IDs)
+  empty_colnames <- identical(colnames(adj_matrix), NULL)
+  if (empty_colnames) {
+    IDs <- paste0("C", 1:nrow(adj_matrix))
+  } else if (!empty_colnames) {
+    IDs <- colnames(adj_matrix)
+  }
 
   edge_locs <- data.table::data.table(which(adj_matrix != 0, arr.ind = TRUE))
   edge_weights <- mapply(function(row, col) adj_matrix[row, col], row = edge_locs$row, col = edge_locs$col)
@@ -129,6 +143,7 @@ get_adj_matrix_from_edgelist <- function(edgelist = matrix(),
 
 
 
+
 #' get_node_IDs_from_input
 #'
 #' @description
@@ -144,7 +159,6 @@ get_adj_matrix_from_edgelist <- function(edgelist = matrix(),
 #' Intended for developer use only to improve package readability.
 #'
 #' @param adj_matrix An n x n adjacency matrix that represents an FCM
-#' @param IDs A list of names for each node (must have n items)
 get_node_IDs_from_input <- function(adj_matrix = matrix()) {
   empty_colnames <- identical(colnames(adj_matrix), NULL)
   if (empty_colnames) {
@@ -272,7 +286,7 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
     } else if (!shiny::isRunning() & num_object_types_in_input_list != 1) {
       stop("All objects in adj matrix list must be of the same type.")
     }
-    object_types_in_input_list <- unique(lapply(adj_matrix_list_input, is))[[1]]
+    object_types_in_input_list <- unique(lapply(adj_matrix_list_input, methods::is))[[1]]
   } else {
     object_types_in_input_list <- methods::is(adj_matrix_list_input)
   }
@@ -303,31 +317,3 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
   )
 }
 
-
-#' get_class_of_adj_matrix
-#'
-#' @description
-#' Get the class of map from the input adj matrix
-#'
-#' @details
-#' This returns the class of fcm represented by the input adjacency matrices i.e.
-#' fcm, fgcm, fcm_w_tfn, etc.
-#'
-#' Intended for developer use only to improve package readability.
-#'
-#' @param adj_matrix An n x n adjacency matrix that represents an FCM, FGCM, or fcm_w_tfn
-get_class_of_adj_matrix <- function(adj_matrix = matrix()) {
-  object_classes_in_adj_matrix <- unique(as.vector(apply(adj_matrix, c(1, 2), function(element) class(element[[1]]))))
-
-  if (all(object_classes_in_adj_matrix %in% "numeric")) {
-    adj_matrix_class <- "fcm"
-  } else if (all(object_classes_in_adj_matrix %in% c("numeric", "grey_number"))) {
-    adj_matrix_class <- "fgcm"
-  } else if (all(object_classes_in_adj_matrix %in% c("numeric", "tfn"))) {
-    adj_matrix_class <- "fcm_w_tfn"
-  } else {
-    stop(paste0("Incompatible collection of data types found in input adj_matrix: '", paste0(object_classes_in_adj_matrix, collapse = '', "'")))
-  }
-
-  adj_matrix_class
-}

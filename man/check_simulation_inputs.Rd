@@ -39,6 +39,8 @@ squashing function when tanh or sigmoid are applied}
 \item{min_error}{The lowest error (sum of the absolute value of the current state
 vector minus the previous state vector) at which no more iterations are necessary
 and the simulation will stop}
+
+\item{fuzzy_set_samples}{The number of samples to represent ivfn or tfn as. Use to create finer scale results.s}
 }
 \description{
 Confirm that all inputs will work with the simulation function and return

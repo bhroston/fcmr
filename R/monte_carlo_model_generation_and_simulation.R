@@ -83,8 +83,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
       "calculate_next_conventional_fcm_state_vector", "calculate_next_fuzzy_set_fcm_state_vector",
       "check_simulation_inputs", "get_adj_matrices_input_type", "squash", "defuzz",
       "convert_element_to_ivfn_or_tfn_if_numeric", "clean_simulation_output",
-      "check_simulation_inputs", "confirm_adj_matrix_is_square",
-      "confirm_input_vector_is_compatible_with_adj_matrix",
+      "check_simulation_inputs",
       "mc_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
       "squashing", "lambda", "max_iter", "min_error", "fuzzy_set_samples"
     )
@@ -136,8 +135,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
       "calculate_next_conventional_fcm_state_vector", "calculate_next_fuzzy_set_fcm_state_vector",
       "check_simulation_inputs", "get_adj_matrices_input_type", "squash", "defuzz",
       "convert_element_to_ivfn_or_tfn_if_numeric", "clean_simulation_output",
-      "check_simulation_inputs", "confirm_adj_matrix_is_square",
-      "confirm_input_vector_is_compatible_with_adj_matrix",
+      "check_simulation_inputs",
       "mc_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
       "squashing", "lambda", "max_iter", "min_error", "fuzzy_set_samples"
     )
@@ -239,42 +237,6 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
 }
 
 
-#' get_quantile_of_fmcm_state_vectors_at_iter
-#'
-#' @description
-#' This gets the user-input quantile of the distribution of simulated values
-#' across a given iter, or all iters
-#'
-#' @details
-#' This function is designed to streamline the process of getting the custom quantiles
-#' of a distribution of simulated values across an individual iteration.
-#'
-#' Use vignette("fmcm-class") for more information.
-#'
-#' @param mc_simulations_inference_df Output of get_simulated_values_across_iters
-#' @param quantile The quantile to return. see ?quantile() for more
-#'
-#' @export
-get_quantile_of_mc_simulations_inference_df <- function(mc_simulations_inference_df = data.frame(), quantile = 0.5) {
-  mc_in_inferences_rownames <- identical("mc", unique(unlist(lapply(strsplit(rownames(mc_simulations_inference_df), "_"), function(x) x[[1]]))))
-  if (!mc_in_inferences_rownames | !identical(class(mc_simulations_inference_df), "data.frame")) {
-    stop("Input must be a data frame of values observed for each node across
-    numerous simulations. They are produced by the infer_fmcm_with_clamping")
-  }
-  node_quantile_values <- data.frame(t(apply(mc_simulations_inference_df, 2, function(node_sims) stats::quantile(node_sims, quantile))))
-  node_quantile_values
-  #node_names <- rownames(node_quantile_values)
-  #colnames(node_quantile_values) <- node_names
-  # node_quantiles = data.frame(
-  #  "node" = node_names,
-  #  "value" = node_quantile_values
-  #)
-  #colnames(node_quantiles)[2] <- paste0(quantile, "%_quantile")
-  #rownames(node_quantiles) <- NULL
-  #node_quantiles
-}
-
-
 #' get_mc_simulations_inference_CIs_w_bootstrap
 #'
 #' @description
@@ -288,12 +250,10 @@ get_quantile_of_mc_simulations_inference_df <- function(mc_simulations_inference
 #' to estimate the confidence intervals for the mean value across simulations.
 #'
 #' @param mc_simulations_inference_df The final values of a set of fcm simulations; also the inference of a infer_fmcm object
-#' @param get_bootstrapped_means TRUE/FALSE Whether to perform bootstrap sampling to obtain
-#' confidence intervals for the estimation of the mean value across simulations
 #' @param confidence_interval What are of the distribution should be bounded by the
 #' confidence intervals? (e.g. 0.95)
 #' @param bootstrap_reps Repetitions for bootstrap process, if chosen
-#' @param bootstrap_samples_per_rep Number of samples to draw (with replacement) from
+#' @param bootstrap_draws_per_rep Number of samples to draw (with replacement) from
 #' the data per bootstrap_rep
 #' @param parallel TRUE/FALSE Whether to perform the function using parallel processing
 #' @param n_cores Number of cores to use in parallel processing. If no input given,
@@ -484,13 +444,14 @@ build_monte_carlo_fcms <- function(adj_matrix_list = list(matrix()),
                                    include_zeroes = TRUE,
                                    show_progress = TRUE) {
 
-  #browser()
-  adj_matrix_list_class <- get_adj_matrices_input_type(adj_matrix_list)$object_types_in_list
+  # browser()
+  adj_matrix_list_class <- get_adj_matrices_input_type(adj_matrix_list)$object_types_in_list[1]
 
-  if (adj_matrix_list_class == "fcm") {
+  if (adj_matrix_list_class == "conventional") {
     sampled_adj_matrices <- build_monte_carlo_fcms_from_conventional_adj_matrices(adj_matrix_list, N_samples, include_zeroes, show_progress)
   } else {
     sampled_adj_matrices <- build_monte_carlo_fcms_from_fuzzy_set_adj_matrices(adj_matrix_list, adj_matrix_list_class, N_samples, include_zeroes, show_progress)
+
   }
 
   sampled_adj_matrices

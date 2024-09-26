@@ -22,6 +22,9 @@ confidence intervals? (e.g. 0.95)}
 
 \item{bootstrap_reps}{Repetitions for bootstrap process, if chosen}
 
+\item{bootstrap_draws_per_rep}{Number of samples to draw (with replacement) from
+the data per bootstrap_rep}
+
 \item{parallel}{TRUE/FALSE Whether to perform the function using parallel processing}
 
 \item{n_cores}{Number of cores to use in parallel processing. If no input given,
@@ -29,12 +32,6 @@ will use all available cores in the machine.}
 
 \item{show_progress}{TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 from the pbapply package as the underlying function.}
-
-\item{get_bootstrapped_means}{TRUE/FALSE Whether to perform bootstrap sampling to obtain
-confidence intervals for the estimation of the mean value across simulations}
-
-\item{bootstrap_samples_per_rep}{Number of samples to draw (with replacement) from
-the data per bootstrap_rep}
 }
 \description{
 This gets the mean of the distribution of simulated values

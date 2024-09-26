@@ -114,6 +114,8 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
                                    max_iter = 100,
                                    min_error = 1e-5) {
 
+  iter <- NULL # for R CMD Check, does not impact logic
+
   check_simulation_inputs(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
   fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
   if (!(fcm_class %in% c("conventional"))) {
@@ -313,85 +315,6 @@ infer_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
 
 
 
-# if (fcm_class == "ivfn") {
-#   inference_CI_state_vectors <- data.frame(
-#     apply(inference_state_vectors_as_distributions, c(1, 2),
-#           function(element) {
-#             ivfn(
-#               lower = stats::quantile(element[[1]], 0.5 - CI/2),
-#               upper = stats::quantile(element[[1]], 0.5 + CI/2)
-#             )
-#           })
-#   )
-# } else if (fcm_class == "tfn") {
-#   inference_CI_state_vectors <- data.frame(
-#     apply(inference_state_vectors_as_distributions, c(1, 2),
-#           function(element) {
-#             tfn(
-#               lower = stats::quantile(element[[1]], 0.5 - CI/2),
-#               mode = mean(element[[1]]),
-#               upper = stats::quantile(element[[1]], 0.5 + CI/2)
-#             )
-#           })
-#   )
-# }
-
-
-#' convert_fuzzy_set_elements_in_matrix_to_distributions
-#'
-#' @description
-#' Given a list of adjacency matrices which include either grey_numbers or
-#' tfns, convert those objects to their corresponding
-#' distributions representative of those values.
-#'
-#' @details
-#' [ADD DETAILS HERE!!!!]
-#'
-#' Use vignette("fcmconfr-class") for more information.
-#'
-#' @param fuzzy_set_matrix A matrix that contains fuzzy sets as elements
-#' @param object_class Values are represented either as ivfns or tfns. Options: 'ivfn' or 'tfn'
-#' @param N_samples The number of samples to draw from the corresponding distribution
-#'
-#' @export
-convert_fuzzy_set_elements_in_matrix_to_distributions <- function(fuzzy_set_matrix = matrix(),
-                                                                  object_class = c("ivfn", "tfn"),
-                                                                  N_samples = integer()) {
-
-  if (!(object_class %in% c("ivfn", "tfn"))) {
-    stop("Input object_class must be either 'ivfn' or 'tfn'")
-  }
-
-  if (object_class == "ivfn") {
-    fuzzy_set_matrix_w_distributions <- apply(
-      fuzzy_set_matrix, c(1, 2),
-      function(element) {
-        if (identical(methods::is(element[[1]]), "ivfn")) {
-          element <- list(stats::runif(N_samples, element[[1]]$lower, element[[1]]$upper))
-        } else {
-          element[[1]]
-        }
-      }
-    )
-  } else if (object_class == "tfn") {
-    fuzzy_set_matrix_w_distributions <- apply(
-      fuzzy_set_matrix, c(1, 2),
-      function(element) {
-        if (identical(methods::is(element[[1]]), "tfn")) {
-          element <- list(rtri(N_samples, lower = element[[1]]$lower, mode = element[[1]]$mode, upper = element[[1]]$upper))
-        } else {
-          element[[1]]
-        }
-      }
-    )
-  }
-
-  fuzzy_set_matrix_w_distributions
-}
-
-
-
-
 #' equalize_baseline_and_scenario_outputs
 #'
 #' @description
@@ -519,7 +442,7 @@ simulate_conventional_fcm <- function(adj_matrix = matrix(),
 
   for (i in 2:(max_iter + 1)) {
     state_vector <- state_vectors[i - 1, ]
-    next_state_vector <- calculate_next_conventional_fcm_state_vector(adj_matrix, state_vector, activation, squashing)
+    next_state_vector <- calculate_next_conventional_fcm_state_vector(adj_matrix, state_vector, activation)
     normalized_state_vector <- squash(next_state_vector, squashing = squashing, lambda = lambda)
     normalized_state_vector[clamping_vector != 0] <- clamping_vector[clamping_vector != 0]
     state_vectors[i, ] <- normalized_state_vector
@@ -716,14 +639,11 @@ simulate_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
 #' @param state_vector A list state values at a particular iteration in an fcm simulation
 #' @param activation The activation function to be applied. Must be one of the following:
 #' 'kosko', 'modified-kosko', or 'rescale'.
-#' @param squashing A squashing function to apply. Must be one of the following:
-#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
 #'
 #' @export
 calculate_next_conventional_fcm_state_vector <- function(adj_matrix = matrix(),
                                                          state_vector = c(),
-                                                         activation = c("kosko", "modified-kosko", "rescale"),
-                                                         squashing = c("sigmoid", "tanh")) {
+                                                         activation = c("kosko", "modified-kosko", "rescale")) {
   adj_matrix <- as.matrix(adj_matrix)
   state_vector <- as.matrix(state_vector)
 
@@ -736,18 +656,6 @@ calculate_next_conventional_fcm_state_vector <- function(adj_matrix = matrix(),
   } else if (activation == "modified-kosko") {
     next_state_vector <- state_vector %*% adj_matrix + state_vector
   } else if (activation == "rescale") {
-    if (squashing != "sigmoid") {
-      stop(
-        paste0(
-          "     !!!Please use the sigmoid squashing function with the rescale activation function!!!
-
-          The rescale activation function is designed to optimize performance
-          with the sigmoid squashing function. Results are unreliable if
-          using a different squashing function.\n",
-
-          "\n          Input squashing function: ", squashing)
-      )
-    }
     next_state_vector <- (2*state_vector - 1) %*% adj_matrix + (2*state_vector - 1)
   }
   next_state_vector
@@ -945,6 +853,7 @@ defuzz <- function(fuzzy_number) {
 #' object (ordinary number), it will convert that number into an ivfn or tfn
 #'
 #' @param element An element in a matrix
+#' @param desired_class Transform the element into an 'ivfn' or 'tfn'
 #'
 #' @export
 convert_element_to_ivfn_or_tfn_if_numeric <- function(element, desired_class = c("ivfn", "tfn")) {
@@ -957,6 +866,58 @@ convert_element_to_ivfn_or_tfn_if_numeric <- function(element, desired_class = c
   converted_element
 }
 
+
+#' convert_fuzzy_set_elements_in_matrix_to_distributions
+#'
+#' @description
+#' Given a list of adjacency matrices which include either grey_numbers or
+#' tfns, convert those objects to their corresponding
+#' distributions representative of those values.
+#'
+#' @details
+#' [ADD DETAILS HERE!!!!]
+#'
+#' Use vignette("fcmconfr-class") for more information.
+#'
+#' @param fuzzy_set_matrix A matrix that contains fuzzy sets as elements
+#' @param object_class Values are represented either as ivfns or tfns. Options: 'ivfn' or 'tfn'
+#' @param N_samples The number of samples to draw from the corresponding distribution
+#'
+#' @export
+convert_fuzzy_set_elements_in_matrix_to_distributions <- function(fuzzy_set_matrix = matrix(),
+                                                                  object_class = c("ivfn", "tfn"),
+                                                                  N_samples = integer()) {
+
+  if (!(object_class %in% c("ivfn", "tfn"))) {
+    stop("Input object_class must be either 'ivfn' or 'tfn'")
+  }
+
+  if (object_class == "ivfn") {
+    fuzzy_set_matrix_w_distributions <- apply(
+      fuzzy_set_matrix, c(1, 2),
+      function(element) {
+        if (identical(methods::is(element[[1]]), "ivfn")) {
+          element <- list(stats::runif(N_samples, element[[1]]$lower, element[[1]]$upper))
+        } else {
+          element[[1]]
+        }
+      }
+    )
+  } else if (object_class == "tfn") {
+    fuzzy_set_matrix_w_distributions <- apply(
+      fuzzy_set_matrix, c(1, 2),
+      function(element) {
+        if (identical(methods::is(element[[1]]), "tfn")) {
+          element <- list(rtri(N_samples, lower = element[[1]]$lower, mode = element[[1]]$mode, upper = element[[1]]$upper))
+        } else {
+          element[[1]]
+        }
+      }
+    )
+  }
+
+  fuzzy_set_matrix_w_distributions
+}
 
 
 #' clean_simulation_output
@@ -1017,6 +978,7 @@ clean_simulation_output <- function(output_obj, concepts) {
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
 #' and the simulation will stop
+#' @param fuzzy_set_samples The number of samples to represent ivfn or tfn as. Use to create finer scale results.s
 #'
 #' @export
 check_simulation_inputs <- function(adj_matrix = matrix(),

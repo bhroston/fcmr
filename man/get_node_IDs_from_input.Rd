@@ -8,8 +8,6 @@ get_node_IDs_from_input(adj_matrix = matrix())
 }
 \arguments{
 \item{adj_matrix}{An n x n adjacency matrix that represents an FCM}
-
-\item{IDs}{A list of names for each node (must have n items)}
 }
 \description{
 Determine node/concept IDs vector depending on the input adjacency matrix and

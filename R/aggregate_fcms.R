@@ -1,6 +1,13 @@
 
 #' aggregate_fcms
 #'
+#' @param adj_matrices A list type object of fcms. Must have a length greater
+#' than 1.
+#' @param aggregation_function "mean" or "median"
+#' @param include_zeroes TRUE/FALSE Whether to include zeroes in the mean/median
+#' calculations. (i.e. if edges not included in a map should count as a zero-weighted
+#' edge or not at all)
+#'
 #' @export
 aggregate_fcms <- function(adj_matrices = list(matrix()),
                            aggregation_function = c("mean", "median"),
@@ -49,7 +56,7 @@ aggregate_fcms <- function(adj_matrices = list(matrix()),
 #'
 #' @param adj_matrices A list type object of fcms. Must have a length greater
 #' than 1.
-#' @param aggregation_fun "mean" or "median"
+#' @param aggregation_function "mean" or "median"
 #' @param include_zeroes TRUE/FALSE Whether to include zeroes in the mean/median
 #' calculations. (i.e. if edges not included in a map should count as a zero-weighted
 #' edge or not at all)
@@ -108,7 +115,7 @@ aggregate_conventional_fcms <- function(adj_matrices = list(matrix()),
 #'
 #' @param adj_matrices A list type object of fcms. Must have a length greater
 #' than 1.
-#' @param aggregation_fun "mean" or "median"
+#' @param aggregation_function "mean" or "median"
 #' @param include_zeroes TRUE/FALSE Whether to include zeroes in the mean/median
 #' calculations. (i.e. if edges not included in a map should count as a zero-weighted
 #' edge or not at all)
@@ -161,7 +168,7 @@ aggregate_fcms_w_ivfns <- function(adj_matrices = list(matrix()),
 #'
 #' @param adj_matrices A list type object of fcms. Must have a length greater
 #' than 1.
-#' @param aggregation_fun "mean" or "median"
+#' @param aggregation_function "mean" or "median"
 #' @param include_zeroes TRUE/FALSE Whether to include zeroes in the mean/median
 #' calculations. (i.e. if edges not included in a map should count as a zero-weighted
 #' edge or not at all)
