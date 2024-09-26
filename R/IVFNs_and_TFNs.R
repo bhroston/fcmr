@@ -399,5 +399,24 @@ rtri <- function(n = integer(), lower = double(), mode = double(), upper = doubl
   }
   values_distribution <- inv_cdf
 
-  values_distribution
+  structure(
+    .Data = values_distribution,
+    .label = paste0("rtri(", n, ", ", lower, ", ", mode, ", ", upper, ")"),
+    class = "rtri"
+  )
+}
+
+
+#' plot.rtri
+#'
+#' @description
+#' Plot rtri distribution similar to how runif is plotted with the base plot function
+#'
+#' @param x an rtri object
+#' @param ... additional inputs (leave empty)
+#'
+#' @export
+plot.rtri <- function(x, ...) {
+  index <- sample(1:length(x), length(x), replace = FALSE)
+  plot(x = index, y = x, xlab = "Index", ylab = attr(x, ".label"))
 }
