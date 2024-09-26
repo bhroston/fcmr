@@ -9,6 +9,7 @@
 #' @importFrom foreach %dopar%
 NULL
 
+
 #' get_edgelist_from_adj_matrix
 #'
 #' @description
@@ -31,10 +32,23 @@ NULL
 #' @examples
 #' get_edgelist_from_adj_matrix(matrix(data = c(0, 1, 1, 0), nrow = 2, ncol = 2))
 get_edgelist_from_adj_matrix <- function(adj_matrix = matrix(), IDs = c()) {
-  confirm_adj_matrix_is_square(adj_matrix)
-  confirm_only_numeric_data_in_adj_matrix(adj_matrix)
+  # Check adj matrix
+  rows <- nrow(adj_matrix)
+  cols <- ncol(adj_matrix)
+  if (rows != cols) {
+    stop("Failed Input Validation: Input adjacency matrix must be a square (n x n) matrix")
+  }
+  data_types_in_adj_matrix <- unique(do.call(list, (apply(adj_matrix, c(1, 2), function(x) list(methods::is(x[[1]]))))))
+  if (length(data_types_in_adj_matrix) > 1) {
+    stop("Failed Input Validation: Input adjacency matrix must contain objects of the same type. Either numerics, ivfns, or tfns.")
+  }
 
-  IDs <- get_node_IDs_from_input(adj_matrix, IDs)
+  empty_colnames <- identical(colnames(adj_matrix), NULL)
+  if (empty_colnames) {
+    IDs <- paste0("C", 1:nrow(adj_matrix))
+  } else if (!empty_colnames) {
+    IDs <- colnames(adj_matrix)
+  }
 
   edge_locs <- data.table::data.table(which(adj_matrix != 0, arr.ind = TRUE))
   edge_weights <- mapply(function(row, col) adj_matrix[row, col], row = edge_locs$row, col = edge_locs$col)
@@ -129,102 +143,6 @@ get_adj_matrix_from_edgelist <- function(edgelist = matrix(),
 
 
 
-#' confirm_adj_matrix_is_square
-#'
-#' @description
-#' Confirm that an adjacency matrix is square (n x n)
-#'
-#' @details
-#' Boolean. TRUE if the dimensions of an adjacency matrix are equivalent (n x n).
-#' FALSE if not.
-#'
-#' Intended for developer use only to improve package readability.
-#'
-#' @param adj_matrix An n x n adjacency matrix that represents an FCM
-confirm_adj_matrix_is_square <- function(adj_matrix = matrix()) {
-  rows <- nrow(adj_matrix)
-  cols <- ncol(adj_matrix)
-  if (rows != cols) {
-    stop("Failed Validation: Input adjacency matrix must be a square (n x n) matrix")
-  } else {
-    TRUE
-  }
-}
-
-
-
-#' confirm_adj_matrices_have_same_concepts
-#'
-#' @description
-#' This checks a list of lists of column names of adjacency matrices and
-#' confirms that each list is identical.
-#'
-#' @details
-#' Note: This function does NOT take the raw adjacency matrices as an input. Rather,
-#' it takes a list of lists of column names of adjacency matrices.
-#'
-#'
-#' @param list_of_concepts_by_adj_matrix A list of lists of column names of adjacency matrices
-#'
-#' @export
-confirm_adj_matrices_have_same_concepts <- function(list_of_concepts_by_adj_matrix = list()) {
-  all_adj_matrices_have_same_concepts <- length(unique(list_of_concepts_by_adj_matrix)) == 1
-  if (!all_adj_matrices_have_same_concepts) {
-    stop("All input adjacency matrices must have the same concepts.")
-  }
-}
-
-
-
-#' confirm_adj_matrices_have_same_dimensions
-#'
-#' @description
-#' This checks that all adjacency matrices in a list have the same dimensions
-#' (i.e. all are n x n)
-#'
-#' @details
-#' Note: This function DOES take the raw adjacency matrices as an input.
-#'
-#' @param adj_matrices A list of n x n adjacency matrices
-#'
-#' @export
-confirm_adj_matrices_have_same_dimensions <- function(adj_matrices = list(matrix())) {
-  dimensions_of_input_adj_matrices <- lapply(adj_matrices, dim)
-  all_adj_matrices_have_same_dimensions <- length(unique(dimensions_of_input_adj_matrices)) == 1
-  if (!all_adj_matrices_have_same_dimensions) {
-    stop("All input adjacency matrices must have the same dimensions (n x n) throughout the entire list")
-  }
-}
-
-
-
-
-#' confirm_unique_datatype_in_object
-#'
-#' @description
-#' Confirm that an object contains data of a single class
-#'
-#' @details
-#' Boolean. TRUE if an object contains only data of a single class (e.g. "numeric"),
-#' FALSE if multiple classes detected
-#'
-#' Intended for developer use only to improve package readability.
-#'
-#' @param object A list-like object (matrix, data.frame, list, etc.)
-#' @param datatype The datatype of which the class of every value within the object should match
-confirm_unique_datatype_in_object <- function(object, datatype = "numeric") {
-  data_types <- unique(vapply(object, class, character(1)))
-  only_numeric_data_types <- identical(data_types, datatype)
-  if (!only_numeric_data_types) {
-    stop(paste(
-      "Input object must only containt", datatype, "objects, and all objects must be", datatype
-    ))
-  } else {
-    TRUE
-  }
-}
-
-
 
 #' get_node_IDs_from_input
 #'
@@ -241,241 +159,15 @@ confirm_unique_datatype_in_object <- function(object, datatype = "numeric") {
 #' Intended for developer use only to improve package readability.
 #'
 #' @param adj_matrix An n x n adjacency matrix that represents an FCM
-#' @param IDs A list of names for each node (must have n items)
-get_node_IDs_from_input <- function(adj_matrix = matrix(), IDs = c()) {
+get_node_IDs_from_input <- function(adj_matrix = matrix()) {
   empty_colnames <- identical(colnames(adj_matrix), NULL)
-  no_IDs_given <- identical(IDs, c())
-  colnames_same_as_IDs <- identical(colnames(adj_matrix), IDs)
-  if (empty_colnames & no_IDs_given) {
+  if (empty_colnames) {
     IDs <- paste0("C", 1:nrow(adj_matrix))
-  } else if (empty_colnames & length(IDs) != nrow(adj_matrix)) {
-    stop("Input IDs must be the same length as matrix dimensions. i.e. if matrix
-         is n x n, length of IDs must be n.")
-  } else if (!empty_colnames & no_IDs_given) {
+  } else if (!empty_colnames) {
     IDs <- colnames(adj_matrix)
-  } else if (!colnames_same_as_IDs) {
-    warning("Input adjacency matrix has different column names that input IDs.
-            Using input IDs for node/concept names.")
-  } else if (colnames_same_as_IDs) {
-    NULL
-  } else {
-    stop("Unable to interpret input adjacency matrix and IDs objects")
   }
 
   IDs
-}
-
-
-#' confirm_only_numeric_data_in_adj_matrix
-#'
-#' @description
-#' Confirm all values in an adj_matrix object are of type numeric
-#'
-#' @details
-#' Check that all values in an adjacency matrix are of type numeric (i.e. int,
-#' double, etc.)
-#'
-#' Intended for developer use only to improve package readability.
-#'
-#' @param adj_matrix An n x n adjacency matrix that represents an FCM
-confirm_only_numeric_data_in_adj_matrix <- function(adj_matrix = matrix()) {
-  if (sum(dim(adj_matrix)) == 2) {
-    warning("Input adj_matrix object is an empty 1 x 1 matrix")
-  } else {
-    adj_matrix_data_types <- unique(vapply(adj_matrix, class, character(1)))
-    only_numeric_data_types_in_adj_matrix <- identical(adj_matrix_data_types, "numeric")
-    if (!only_numeric_data_types_in_adj_matrix) {
-      stop("Input adj_matrix must only contain numeric objects, and all
-         objects must be numeric")
-    }
-  }
-  only_numeric_data_types_in_adj_matrix
-}
-
-
-#' check_adj_matrix_list_is_list
-#'
-#' @description
-#' Check that the input adj_matrix_list is either a list of adj. matrices or if
-#' only one adj. matrix is given, abstract that matrix within a list (this is to
-#' comply with lapply functionalities within the codebase)
-#'
-#' @details
-#' This is just in case the function isn't passed an actual list of adj. matrices.
-#' In R, both matrix and list are of class "list" so you have to do some odd checks
-#' to check if the input is just a singular matrix or a list of matrices
-#'
-#' Intended for developer use only to improve package readability.
-#'
-#' @param adj_matrix_list A list of n x n adjacency matrix that represents an FCM
-check_adj_matrix_list_is_list <- function(adj_matrix_list = list(matrix())) {
-  if (!is.null(dim(adj_matrix_list)) & (length(unique(dim(adj_matrix_list))) == 1)) {
-    adj_matrix_list <- list(adj_matrix_list)
-  }
-  adj_matrix_list
-}
-
-
-
-#' get_class_of_adj_matrix
-#'
-#' @description
-#' Get the class of map from the input adj matrix
-#'
-#' @details
-#' This returns the class of fcm represented by the input adjacency matrices i.e.
-#' fcm, fgcm, ftcm, etc.
-#'
-#' Intended for developer use only to improve package readability.
-#'
-#' @param adj_matrix An n x n adjacency matrix that represents an FCM, FGCM, or FTCM
-get_class_of_adj_matrix <- function(adj_matrix = matrix()) {
-  object_classes_in_adj_matrix <- unique(as.vector(apply(adj_matrix, c(1, 2), function(element) class(element[[1]]))))
-
-  if (all(object_classes_in_adj_matrix %in% "numeric")) {
-    adj_matrix_class <- "fcm"
-  } else if (all(object_classes_in_adj_matrix %in% c("numeric", "grey_number"))) {
-    adj_matrix_class <- "fgcm"
-  } else if (all(object_classes_in_adj_matrix %in% c("numeric", "triangular_number"))) {
-    adj_matrix_class <- "ftcm"
-  } else {
-    stop(paste0("Incompatible collection of data types found in input adj_matrix: '", paste0(object_classes_in_adj_matrix, collapse = '', "'")))
-  }
-
-  adj_matrix_class
-}
-
-
-
-#' confirm_input_vector_is_compatible_with_adj_matrices
-#'
-#' @description
-#' Check whether an input vector (initial_state_vector or clamping_vector) is
-#' compatible with the data types present in the representative_adj_matrix.
-#'
-#' @details
-#' [ADD DETAILS HERE!!!]
-#'
-#' Intended for developer use only to improve package readability.
-#'
-#' @param representative_adj_matrix An adjacency matrix whose format (i.e. dims and data.types)
-#' are representative of a larger list of adjacency matrices
-#' @param input_vector An input vector, either the initial_state_vector input or
-#' the clamping_vector input
-#' @param fcm_class The class of fcm represented by the representative_adj_matrix
-confirm_input_vector_is_compatible_with_adj_matrices <- function(representative_adj_matrix = matrix(),
-                                                                 input_vector = c(),
-                                                                 fcm_class = c("fcm", "fgcm", "ftcm")) {
-
-  if (fcm_class == "fcm") {
-    confirm_input_vector_is_compatible_with_adj_matrix(representative_adj_matrix, input_vector)
-  } else if (fcm_class == "fgcm") {
-    confirm_input_vector_is_compatible_with_grey_adj_matrix(representative_adj_matrix, input_vector)
-  } else if (fcm_class == "ftcm") {
-    confirm_input_vector_is_compatible_with_triangular_adj_matrix(representative_adj_matrix, input_vector)
-  }
-}
-
-
-#' squash
-#'
-#' @description
-#' Calculate squashing function output of an input value and lambda values
-#'
-#' @details
-#' This function calculates the 'squashed' value of a state based upon five
-#' available squashing functions typical in the literature (as identified in
-#' Gonzales et al. 2018 - https://doi.org/10.1142/S0218213018600102)
-#'
-#' @param value A numeric value to 'squash'
-#' @param squashing A squashing function to apply. Must be one of the following: 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'
-#' @param lambda A numeric value that defines the steepness of the slope of the squashing function when tanh or sigmoid are applied
-squash <- function(value = numeric(), squashing = "sigmoid", lambda = 1) {
-  if (lambda <= 0) {
-    stop("Input lambda must be greater than zero")
-  }
-
-  # Use full names here instead of abbreviations to improve readability even
-  # though developers will need to type more characters.
-  if (squashing == "bivalent") {
-    if (value > 0) {
-      squashed_value <- 1
-    } else if (value <= 0) {
-      squashed_value <- 0
-    }
-  } else if (squashing == "saturation") {
-    if (value <= 0) {
-      squashed_value <- 0
-    } else if (value > 0 & value < 1) {
-      squashed_value <- value
-    } else if (value >= 1) {
-      squashed_value <- 1
-    }
-  } else if (squashing == "trivalent") {
-    if (value < 0) {
-      squashed_value <- -1
-    } else if (value == 0) {
-      squashed_value <- 0
-    } else if (value > 0) {
-      squashed_value <- 1
-    }
-  } else if (squashing == "tanh") {
-    squashed_value <- (exp(2*lambda*value) - 1)/(exp(2*lambda*value) + 1)
-  } else if (squashing == "sigmoid") {
-    squashed_value <- 1/(1 + exp(-lambda*value))
-  } else {
-    stop("squashing value must be one of the following:
-      'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'")
-  }
-
-  squashed_value
-}
-
-
-
-#' match_state_vector_df_shapes
-#'
-#' @description
-#' Given two data frames of state vectors, extend the one with the least number of rows
-#' by repeating its final iteration value until the data frames are the same shape (i.e.
-#' have the same number of rows)
-#'
-#' @details
-#' Ensure that both input data frames are the same shape
-#'
-#' Intended for developer use only to improve package readability.
-#'
-#' @param baseline_state_vectors A state vectors dataframe for the baseline simulation
-#' @param scenario_state_vectors A state vectors dataframe for the scenario simulation
-match_state_vector_df_shapes <- function(baseline_state_vectors, scenario_state_vectors) {
-  n_rows_baseline <- nrow(baseline_state_vectors)
-  n_rows_scenario <- nrow(scenario_state_vectors)
-
-  if (n_rows_baseline == n_rows_scenario) {
-    new_baseline_state_vectors <- baseline_state_vectors
-    new_scenario_state_vectors <- scenario_state_vectors
-  } else if (n_rows_baseline < n_rows_scenario) {
-    extended_baseline_state_vectors <- data.frame(apply(
-      baseline_state_vectors, 2, function(sim) {
-        c(sim, rep(sim[n_rows_baseline], n_rows_scenario - n_rows_baseline))
-      }
-    ))
-    new_baseline_state_vectors <- extended_baseline_state_vectors
-    new_scenario_state_vectors <- scenario_state_vectors
-  } else if (n_rows_scenario < n_rows_baseline) {
-    extended_scenario_state_vectors <- data.frame(apply(
-      scenario_state_vectors, 2, function(sim) {
-        c(sim, rep(sim[n_rows_scenario], n_rows_baseline - n_rows_scenario))
-      }
-    ))
-    new_baseline_state_vectors <- baseline_state_vectors
-    new_scenario_state_vectors <- extended_scenario_state_vectors
-  }
-
-  list(
-    baseline = data.frame(new_baseline_state_vectors),
-    scenario = data.frame(new_scenario_state_vectors)
-  )
 }
 
 
@@ -563,3 +255,65 @@ check_if_local_machine_has_access_to_parallel_processing_functionalities <- func
   }
   parallel_check
 }
+
+
+#' get_adj_matrices_input_type
+#'
+#' @description
+#' This function identifies whether input is a list of adjacency matrices or
+#' an individual adj matrix (input_type). If input is a list of adj matrices,
+#' checks what data types the adj matrices are (list_objects) (e.g. tibble, matrix, etc.)
+#'
+#' @param adj_matrix_list_input A list of adj matrices or an individual adj matrix
+get_adj_matrices_input_type <- function(adj_matrix_list_input) {
+  classes_in_list_objects <- methods::is(list())
+  classes_in_dataframe_objects <- methods::is(data.frame())
+  classes_in_matrix_objects <- methods::is(matrix())
+  classes_in_datatable_objects <- methods::is(data.table::data.table())
+  classes_in_tibble_objects <- methods::is(tibble::tibble())
+
+  classes_in_adj_matrix_list_input <- methods::is(adj_matrix_list_input)
+  if (identical(classes_in_adj_matrix_list_input, classes_in_list_objects)) {
+    adj_matrices_input_is_list <- TRUE
+  } else {
+    adj_matrices_input_is_list <- FALSE
+  }
+
+  if (adj_matrices_input_is_list) {
+    num_object_types_in_input_list <- length(unique(lapply(adj_matrix_list_input, methods::is)))
+    if (shiny::isRunning() & num_object_types_in_input_list != 1) {
+      object_types_in_list = "unavailable"
+    } else if (!shiny::isRunning() & num_object_types_in_input_list != 1) {
+      stop("All objects in adj matrix list must be of the same type.")
+    }
+    object_types_in_input_list <- unique(lapply(adj_matrix_list_input, methods::is))[[1]]
+  } else {
+    object_types_in_input_list <- methods::is(adj_matrix_list_input)
+  }
+
+  if (identical(object_types_in_input_list, classes_in_dataframe_objects)) {
+    object_types_in_list <- c("conventional", "data.frame")
+  } else if (identical(object_types_in_input_list, classes_in_matrix_objects)) {
+    object_types_in_list <- c("conventional", "matrix")
+  } else if (identical(object_types_in_input_list, classes_in_datatable_objects)) {
+    object_types_in_list <- c("conventional", "data.table")
+  } else if (identical(object_types_in_input_list, classes_in_tibble_objects)) {
+    object_types_in_list <- c("conventional", "tibble")
+  } else if (identical(object_types_in_input_list, "adj_matrix_w_ivfns")) {
+    object_types_in_list <- "ivfn"
+  } else if (identical(object_types_in_input_list, "adj_matrix_w_tfns")) {
+    object_types_in_list <- "tfn"
+  } else {
+    if (shiny::isRunning()) {
+      object_types_in_list <- "unavailable"
+    } else {
+      stop("The list of objects in adj. matrix list must be one of the following: 'data.frame' 'matrix' 'sparseMatrix' 'data,table' 'tibble'")
+    }
+  }
+
+  list(
+    adj_matrices_input_is_list = adj_matrices_input_is_list,
+    object_types_in_list = object_types_in_list
+  )
+}
+

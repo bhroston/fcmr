@@ -5,10 +5,9 @@
 \title{fcmconfr}
 \usage{
 fcmconfr(
-  adj_matrix_list = list(matrix()),
-  samples = 1000,
-  include_zeroes_in_aggregation = TRUE,
-  aggregation_fun = c("mean", "median"),
+  adj_matrices = list(matrix()),
+  aggregation_function = c("mean", "median"),
+  monte_carlo_sampling_draws = 1000,
   initial_state_vector = c(),
   clamping_vector = c(),
   activation = c("kosko", "modified-kosko", "rescale"),
@@ -16,27 +15,29 @@ fcmconfr(
   lambda = 1,
   max_iter = 100,
   min_error = 1e-05,
-  bootstrap_inference_means = TRUE,
-  bootstrap_CI = 0.95,
-  bootstrap_reps = 5000,
-  bootstrap_draws_per_rep = 5000,
+  fuzzy_set_samples = 1000,
+  inference_estimation_CI = 0.95,
+  inference_estimation_bootstrap_reps = 5000,
+  inference_estimation_bootstrap_draws_per_rep = 5000,
   show_progress = TRUE,
   parallel = TRUE,
   n_cores = integer(),
-  IDs = c(),
-  include_simulations_in_output = FALSE
+  include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+  include_monte_carlo_FCM_simulations_in_output = TRUE,
+  estimate_mc_inference_CI_w_bootstrap = TRUE
 )
 }
 \arguments{
-\item{adj_matrix_list}{A list of n x n adjacencey matrices representing fcms, fgcms, or ftcms.}
+\item{adj_matrices}{A list of adjacency matrices (n x n) representing FCMs. This
+can also be an individual adjacency matrix.Adj. Matrices can be conventional FCMs,
+FCMs with edge weights as Interval Value Fuzzy Numbers (IVFNs) or FCMs with edge
+weights as Triangular Fuzzy Numbers (TFNs)}
 
-\item{samples}{The number of samples to draw with the selected sampling method. Also,
-the number of sampled models to generate}
+\item{aggregation_function}{Aggregate the adj. matrices into a single FCM by taking
+either the mean or median of the edge weights for edges included in multiple maps}
 
-\item{include_zeroes_in_aggregation}{TRUE/FALSE Whether to incorporate zeroes as intentionally-defined
-edge weights or ignore them in aggregation}
-
-\item{aggregation_fun}{The aggregation function, either mean or median}
+\item{monte_carlo_sampling_draws}{The number of FCMs to generate via monte carlo
+sampling from the input adj. matrices}
 
 \item{initial_state_vector}{A list state values at the start of an fcm simulation}
 
@@ -59,16 +60,19 @@ squashing function when tanh or sigmoid are applied}
 vector minus the previous state vector) at which no more iterations are necessary
 and the simulation will stop}
 
-\item{bootstrap_inference_means}{TRUE/FALSE Whether to estimate a CI about the mean
-inferences}
+\item{fuzzy_set_samples}{The size (n) of the distributions represented by IVFNs or TFNs (only
+used when IVFNs or TFNs in adj_matrices input)}
 
-\item{bootstrap_CI}{What are of the distribution should be bounded by the
-confidence intervals? (e.g. 0.95)}
+\item{inference_estimation_CI}{The confidence interval to estimate for the inferences
+of each concept across all monte carlo FCMs (via bootstrap)}
 
-\item{bootstrap_reps}{Repetitions for bootstrap process, if chosen}
+\item{inference_estimation_bootstrap_reps}{The number of bootstraps to perform in
+estimating the confidence interval for the inferences of each concept across all monte
+carlo FCMs}
 
-\item{bootstrap_draws_per_rep}{Number of samples to draw (with replacement) from
-the data per bootstrap_rep}
+\item{inference_estimation_bootstrap_draws_per_rep}{The number of draws to sample
+(with replacement) from the estimates for the inferences of each concept across
+all monte carlo FCMs per bootstrap}
 
 \item{show_progress}{TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 from the pbapply package as the underlying function.}
@@ -78,11 +82,18 @@ from the pbapply package as the underlying function.}
 \item{n_cores}{Number of cores to use in parallel processing. If no input given,
 will use all available cores in the machine.}
 
-\item{IDs}{A list of names for each node (must have n items). If empty, will use
-column names of adjacancy matrix (if given).}
+\item{include_zero_weighted_edges_in_aggregation_and_mc_sampling}{TRUE/FALSE
+Whether to incorporate zeroes as intentionally-defined edge weights or ignore
+them when aggregating adj. matrices and sampling for monte carlo FCMs}
 
-\item{include_simulations_in_output}{TRUE/FALSE whether to include simulations of monte-carlo-generated
-FCM. Will dramatically increase size of output if TRUE.}
+\item{include_monte_carlo_FCM_simulations_in_output}{TRUE/FALSE
+Whether to include simulations of monte carlo FCMs. Switch to FALSE if concerned
+about the size of the output of fcmconfr (simulations are necessary and will run regardless)}
+
+\item{estimate_mc_inference_CI_w_bootstrap}{TRUE/FALSE
+Whether to estimate confidence intervals for the inferences of each concept across
+all monte carlo FCMs via bootstrap. Switch to FALSE if concerned about runtime
+and/or want to perform bootstrapping manually.}
 }
 \description{
 [ADD DETAILS HERE!!!]
@@ -90,5 +101,5 @@ FCM. Will dramatically increase size of output if TRUE.}
 \details{
 [ADD DETAILS HERE!!!]
 
-Use vignette("fmcm-class") for more information.
+Use vignette("fcmconfr") for more information.
 }

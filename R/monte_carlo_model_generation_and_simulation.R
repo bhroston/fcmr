@@ -1,7 +1,7 @@
 
 
 
-#' infer_fmcm_with_clamping
+#' infer_monte_carlo_fcm_set
 #'
 #' @description
 #' This calculates a sequence of iterations of a simulation over every item in
@@ -11,11 +11,9 @@
 #' column names, and lambda optimization.
 #'
 #' @details
-#' [ADD DETAILS HERE!!!]
+#' [ADD DETAILS HERE!!!].
 #'
-#' Use vignette("fmcm-class") for more information.
-#'
-#' @param simulated_adj_matrices A list of adjecency matrices generated from simulation using build_fmcm_models.
+#' @param mc_adj_matrices A list of adjecency matrices generated from simulation using build_fmcm_models.
 #' @param initial_state_vector A list state values at the start of an fcm simulation
 #' @param clamping_vector A list of values representing specific actions taken to
 #' control the behavior of an FCM. Specifically, non-zero values defined in this vector
@@ -30,8 +28,8 @@
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
 #' and the simulation will stop
-#' @param IDs A list of names for each node (must have n items). If empty, will use
-#' column names of adjacancy matrix (if given).
+#' @param fuzzy_set_samples The size (n) of the distributions represented by IVFNs or TFNs (only
+#' used when IVFNs or TFNs in adj_matrices input)
 #' @param parallel TRUE/FALSE Whether to utilize parallel processing
 #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 #' from the pbapply package as the underlying function.
@@ -41,55 +39,29 @@
 #' FCM. Will dramatically increase size of output if TRUE.
 #'
 #' @export
-infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
-                                     initial_state_vector = c(),
-                                     clamping_vector = c(),
-                                     activation = c("kosko", "modified-kosko", "rescale"),
-                                     squashing = c("sigmoid", "tanh"),
-                                     lambda = 1,
-                                     max_iter = 100,
-                                     min_error = 1e-5,
-                                     IDs = c(),
-                                     parallel = TRUE,
-                                     n_cores = integer(),
-                                     show_progress = TRUE,
-                                     include_simulations_in_output = FALSE) {
+infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
+                                      initial_state_vector = c(),
+                                      clamping_vector = c(),
+                                      activation = c("kosko", "modified-kosko", "rescale"),
+                                      squashing = c("sigmoid", "tanh"),
+                                      lambda = 1,
+                                      max_iter = 100,
+                                      min_error = 1e-5,
+                                      fuzzy_set_samples = 1000,
+                                      parallel = TRUE,
+                                      n_cores = integer(),
+                                      show_progress = TRUE,
+                                      include_simulations_in_output = FALSE) {
 
   # Adding for R CMD check. Does not impact logic.
   # iter <- NULL
   i <- NULL
 
-  if (identical(activation, c("kosko", "modified-kosko", "rescale"))) {
-    activation <- "kosko"
-    warning("No activation input declared. Assuming activation = 'kosko'")
-  }
-  if (!(activation %in% c("kosko", "modified-kosko", "rescale"))) {
-    stop("Activation input must be one of the following: 'kosko', 'modified-kosko', 'rescale'")
-  }
-
-  if (identical(squashing, c("sigmoid", "tanh"))) {
-    activation <- "sigmoid"
-    warning("No squashing input declared. Assuming squashing = 'sigmoid'")
-  }
-  if (!(squashing %in% c("sigmoid", "tanh"))) {
-    stop("Squashing input must be one of the following: 'sigmoid', 'tanh'")
-  }
+  checks <- lapply(mc_adj_matrices, check_simulation_inputs, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
 
   # Confirm necessary packages are available. If not, warn user and change run options
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
   parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
-
-  lapply(simulated_adj_matrices, confirm_adj_matrix_is_square)
-
-  if (identical(initial_state_vector, c())) {
-    warning("No initial_state_vector input given. Assuming all nodes have an initial state of 1.")
-    initial_state_vector <- rep(1, nrow(simulated_adj_matrices[[1]]))
-  }
-
-  if (identical(clamping_vector, c())) {
-    warning("No clamping_vector input given. Assuming no values are clamped.")
-    clamping_vector <- rep(0, length(initial_state_vector))
-  }
 
   if (parallel & show_progress) {
     print("Initializing cluster", quote = FALSE)
@@ -105,26 +77,30 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
     # Have to store variables in new env that can be accessed by parLapply. There
     # is surely a better way to do this, but this way works
     # start <- Sys.time()
-    vars <- list("simulated_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
-                 "squashing", "lambda", "max_iter", "min_error", "IDs",
-                 "infer_fcm_with_clamping", "simulate_fcm_with_pulse",  "confirm_adj_matrix_is_square",
-                 "confirm_input_vector_is_compatible_with_adj_matrix",
-                 "get_node_IDs_from_input", "optimize_fcm_lambda",
-                 "calculate_next_fcm_state_vector", "squash")
+    vars <- list(
+      "infer_fcm",  "infer_conventional_fcm", "infer_ivfn_or_tfn_fcm", "equalize_baseline_and_scenario_outputs",
+      "simulate_fcm", "simulate_conventional_fcm",  "simulate_ivfn_or_tfn_fcm",
+      "calculate_next_conventional_fcm_state_vector", "calculate_next_fuzzy_set_fcm_state_vector",
+      "check_simulation_inputs", "get_adj_matrices_input_type", "squash", "defuzz",
+      "convert_element_to_ivfn_or_tfn_if_numeric", "clean_simulation_output",
+      "check_simulation_inputs",
+      "mc_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
+      "squashing", "lambda", "max_iter", "min_error", "fuzzy_set_samples"
+    )
 
     parallel::clusterExport(cl, varlist = vars, envir = environment())
 
     doSNOW::registerDoSNOW(cl)
     # pb <- utils::txtProgressBar(min = 0, max = length(simulated_adj_matrices)/n_cores, style = 3)
-    invisible(utils::capture.output(pb <- utils::txtProgressBar(min = 0, max = length(simulated_adj_matrices)/n_cores, style = 3)))
+    invisible(utils::capture.output(pb <- utils::txtProgressBar(min = 0, max = length(mc_adj_matrices)/n_cores, style = 3)))
     progress <- function(n) utils::setTxtProgressBar(pb, n)
     # cat("\n")
     print("Running simulations. There may be an additional wait for larger sets.", quote = FALSE)
     opts <- list(progress = progress)
-    fmcm_confer_results <- foreach::foreach(
-      i = 1:length(simulated_adj_matrices), .options.snow = opts) %dopar% {
-        infer_fcm_with_clamping(
-          adj_matrix = simulated_adj_matrices[[i]],
+    inferences_for_mc_adj_matrices <- foreach::foreach(
+      i = 1:length(mc_adj_matrices), .options.snow = opts) %dopar% {
+        infer_fcm(
+          adj_matrix = mc_adj_matrices[[i]],
           initial_state_vector = initial_state_vector,
           clamping_vector = clamping_vector,
           activation = activation,
@@ -132,12 +108,11 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
           lambda = lambda,
           max_iter = max_iter,
           min_error = min_error,
-          lambda_optimization = 'none',
-          IDs = IDs
+          fuzzy_set_samples = fuzzy_set_samples
         )
       }
     close(pb)
-    names(fmcm_confer_results) <- paste0("mc_", 1:length(fmcm_confer_results))
+    names(inferences_for_mc_adj_matrices) <- paste0("mc_", 1:length(inferences_for_mc_adj_matrices))
     parallel::stopCluster(cl)
 
   } else if (parallel & !show_progress) {
@@ -154,24 +129,27 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
     # Have to store variables in new env that can be accessed by parLapply. There
     # is surely a better way to do this, but this way works
     # start <- Sys.time()
-    vars <- list("simulated_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
-                 "squashing", "lambda", "max_iter", "min_error",
-                 "lambda_optimization", "IDs",
-                 "infer_fcm_with_clamping", "simulate_fcm_with_pulse",  "confirm_adj_matrix_is_square",
-                 "confirm_input_vector_is_compatible_with_adj_matrix",
-                 "get_node_IDs_from_input", "optimize_fcm_lambda",
-                 "calculate_next_fcm_state_vector", "squash")
+    vars <- list(
+      "infer_fcm",  "infer_conventional_fcm", "infer_ivfn_or_tfn_fcm", "equalize_baseline_and_scenario_outputs",
+      "simulate_fcm", "simulate_conventional_fcm",  "simulate_ivfn_or_tfn_fcm",
+      "calculate_next_conventional_fcm_state_vector", "calculate_next_fuzzy_set_fcm_state_vector",
+      "check_simulation_inputs", "get_adj_matrices_input_type", "squash", "defuzz",
+      "convert_element_to_ivfn_or_tfn_if_numeric", "clean_simulation_output",
+      "check_simulation_inputs",
+      "mc_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
+      "squashing", "lambda", "max_iter", "min_error", "fuzzy_set_samples"
+    )
 
     parallel::clusterExport(cl, varlist = vars, envir = environment())
 
     cat("\n")
     print("Running simulations", quote = FALSE)
-    fmcm_confer_results <- parallel::parLapply(
+    inferences_for_mc_adj_matrices <- parallel::parLapply(
       cl,
-      simulated_adj_matrices,
-      function(simulated_adj_matrix) {
-        infer_fcm_with_clamping(
-          adj_matrix = simulated_adj_matrix,
+      mc_adj_matrices,
+      function(mc_adj_matrix) {
+        infer_fcm(
+          adj_matrix = mc_adj_matrix,
           initial_state_vector = initial_state_vector,
           clamping_vector = clamping_vector,
           activation = activation,
@@ -179,8 +157,7 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
           lambda = lambda,
           max_iter = max_iter,
           min_error = min_error,
-          lambda_optimization = 'none',
-          IDs = IDs
+          fuzzy_set_samples = fuzzy_set_samples
         )
       }
     )
@@ -189,11 +166,11 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
   } else if (!parallel & show_progress) {
     cat("\n")
     print("Running simulations", quote = FALSE)
-    fmcm_confer_results <- pbapply::pblapply(
-      simulated_adj_matrices,
-      function(simulated_adj_matrix) {
-        infer_fcm_with_clamping(
-          adj_matrix = simulated_adj_matrix,
+    inferences_for_mc_adj_matrices <- pbapply::pblapply(
+      mc_adj_matrices,
+      function(mc_adj_matrix) {
+        infer_fcm(
+          adj_matrix = mc_adj_matrix,
           initial_state_vector = initial_state_vector,
           clamping_vector = clamping_vector,
           activation = activation,
@@ -201,8 +178,7 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
           lambda = lambda,
           max_iter = max_iter,
           min_error = min_error,
-          lambda_optimization = 'none',
-          IDs = IDs
+          fuzzy_set_samples = fuzzy_set_samples
         )
       }
     )
@@ -210,11 +186,11 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
   } else if (!parallel & !show_progress) {
     cat("\n")
     print("Running simulations", quote = FALSE)
-    fmcm_confer_results <- lapply(
-      simulated_adj_matrices,
-      function(simulated_adj_matrix) {
-        infer_fcm_with_clamping(
-          adj_matrix = simulated_adj_matrix,
+    inferences_for_mc_adj_matrices <- lapply(
+      mc_adj_matrices,
+      function(mc_adj_matrix) {
+        infer_fcm(
+          adj_matrix = mc_adj_matrix,
           initial_state_vector = initial_state_vector,
           clamping_vector = clamping_vector,
           activation = activation,
@@ -222,8 +198,7 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
           lambda = lambda,
           max_iter = max_iter,
           min_error = min_error,
-          lambda_optimization = 'none',
-          IDs = IDs
+          fuzzy_set_samples = fuzzy_set_samples
         )
       }
     )
@@ -233,7 +208,7 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
   # print("Organizing Output", quote = FALSE)
   # cat("\n")
 
-  inference_values_by_sim <- lapply(fmcm_confer_results, function(sim) sim$inference)
+  inference_values_by_sim <- lapply(inferences_for_mc_adj_matrices, function(sim) sim$inference)
   inference_values_by_sim <- data.frame(do.call(rbind, inference_values_by_sim))
 
   inference_plot_data <- data.frame(
@@ -246,9 +221,9 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
       .Data = list(
         inference = inference_values_by_sim,
         inference_for_plotting = inference_plot_data,
-        sims = fmcm_confer_results
+        sims = inferences_for_mc_adj_matrices
       ),
-      class = "fmcmconfer"
+      class = "inference_of_monte_carlo_fcm_set"
     )
   } else {
     structure(
@@ -256,49 +231,13 @@ infer_fmcm_with_clamping <- function(simulated_adj_matrices = list(matrix()),
         inference = inference_values_by_sim,
         inference_for_plotting = inference_plot_data
       ),
-      class = "fmcmconfer"
+      class = "inference_of_monte_carlo_fcm_set"
     )
   }
 }
 
 
-#' get_quantile_of_fmcm_state_vectors_at_iter
-#'
-#' @description
-#' This gets the user-input quantile of the distribution of simulated values
-#' across a given iter, or all iters
-#'
-#' @details
-#' This function is designed to streamline the process of getting the custom quantiles
-#' of a distribution of simulated values across an individual iteration.
-#'
-#' Use vignette("fmcm-class") for more information.
-#'
-#' @param fmcm_inference Output of get_simulated_values_across_iters
-#' @param quantile The quantile to return. see ?quantile() for more
-#'
-#' @export
-get_quantile_of_fmcm_inference <- function(fmcm_inference = data.frame(), quantile = 0.5) {
-  mc_in_inferences_rownames <- identical("mc", unique(unlist(lapply(strsplit(rownames(fmcm_inference), "_"), function(x) x[[1]]))))
-  if (!mc_in_inferences_rownames | !identical(class(fmcm_inference), "data.frame")) {
-    stop("Input must be a data frame of values observed for each node across
-    numerous simulations. They are produced by the infer_fmcm_with_clamping")
-  }
-  node_quantile_values <- data.frame(t(apply(fmcm_inference, 2, function(node_sims) stats::quantile(node_sims, quantile))))
-  node_quantile_values
-  #node_names <- rownames(node_quantile_values)
-  #colnames(node_quantile_values) <- node_names
-  # node_quantiles = data.frame(
-  #  "node" = node_names,
-  #  "value" = node_quantile_values
-  #)
-  #colnames(node_quantiles)[2] <- paste0(quantile, "%_quantile")
-  #rownames(node_quantiles) <- NULL
-  #node_quantiles
-}
-
-
-#' get_means_of_fmcm_inference
+#' get_mc_simulations_inference_CIs_w_bootstrap
 #'
 #' @description
 #' This gets the mean of the distribution of simulated values
@@ -310,15 +249,11 @@ get_quantile_of_fmcm_inference <- function(fmcm_inference = data.frame(), quanti
 #' mean of means of a distribution of simulated values across individual iterations. Use get_bootstrapped_means
 #' to estimate the confidence intervals for the mean value across simulations.
 #'
-#' Use vignette("fmcm-class") for more information.
-#'
-#' @param fmcm_inference The final values of a set of fcm simulations; also the inference of a infer_fmcm object
-#' @param get_bootstrapped_means TRUE/FALSE Whether to perform bootstrap sampling to obtain
-#' confidence intervals for the estimation of the mean value across simulations
+#' @param mc_simulations_inference_df The final values of a set of fcm simulations; also the inference of a infer_fmcm object
 #' @param confidence_interval What are of the distribution should be bounded by the
 #' confidence intervals? (e.g. 0.95)
 #' @param bootstrap_reps Repetitions for bootstrap process, if chosen
-#' @param bootstrap_samples_per_rep Number of samples to draw (with replacement) from
+#' @param bootstrap_draws_per_rep Number of samples to draw (with replacement) from
 #' the data per bootstrap_rep
 #' @param parallel TRUE/FALSE Whether to perform the function using parallel processing
 #' @param n_cores Number of cores to use in parallel processing. If no input given,
@@ -327,21 +262,20 @@ get_quantile_of_fmcm_inference <- function(fmcm_inference = data.frame(), quanti
 #' from the pbapply package as the underlying function.
 #'
 #' @export
-get_means_of_fmcm_inference <- function(fmcm_inference = list(),
-                                        get_bootstrapped_means = TRUE,
-                                        confidence_interval = 0.95,
-                                        bootstrap_reps = 1000,
-                                        bootstrap_samples_per_rep = 1000,
-                                        parallel = TRUE,
-                                        n_cores = integer(),
-                                        show_progress = TRUE) {
+get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inference_df = data.frame(),
+                                                         confidence_interval = 0.95,
+                                                         bootstrap_reps = 1000,
+                                                         bootstrap_draws_per_rep = 1000,
+                                                         parallel = TRUE,
+                                                         n_cores = integer(),
+                                                         show_progress = TRUE) {
   # Adding for R CMD Check. Does not impact logic.
   iter <- NULL
 
-  # Write checks to confirm fmcm_inference object is correct... Also write a better name
+  # Write checks to confirm mc_simulations_inference_df object is correct... Also write a better name
   # so it is understood that it works for simulate_fmcm objects too
-  if (!identical(class(fmcm_inference), "data.frame")) {
-    stop("Input fmcm_inference must be a data.frame object from the
+  if (!identical(class(mc_simulations_inference_df), "data.frame")) {
+    stop("Input mc_simulations_inference_df must be a data.frame object from the
          output of simulate_fmcm_models (final_states_across_sims) or infer_fmcm
          (inference)")
   }
@@ -350,11 +284,7 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
   parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
 
-  if (!get_bootstrapped_means) {
-    means_of_inference_by_node <- data.frame(apply(fmcm_inference, 2, mean, simplify = FALSE)) # the simplify is purely for data cleaning reasons
-    return(means_of_inference_by_node)
-
-  } else if (get_bootstrapped_means & parallel & show_progress) {
+  if (parallel & show_progress) {
     print("Performing bootstrap simulations", quote = FALSE)
     print("Initializing cluster", quote = FALSE)
     if (identical(n_cores, integer())) {
@@ -364,9 +294,9 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
     # Have to store variables in new env that can be accessed by parLapply. There
     # is surely a better way to do this, but this way works
     # start <- Sys.time()
-    vars <- list("fmcm_inference",
+    vars <- list("mc_simulations_inference_df",
                  "bootstrap_reps",
-                 "bootstrap_samples_per_rep"
+                 "bootstrap_draws_per_rep"
     )
     parallel::clusterExport(cl, varlist = vars, envir = environment())
     print("Sampling means", quote = FALSE)
@@ -377,9 +307,9 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
     bootstrapped_means_of_inference_by_node <- foreach::foreach(
       i = 1:bootstrap_reps, .options.snow = opts) %dopar% {
         data.frame(apply(
-          fmcm_inference, 2,
+          mc_simulations_inference_df, 2,
           function(inference) {
-            random_draws <- sample(inference, bootstrap_samples_per_rep, replace = TRUE)
+            random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
             mean(random_draws)
           },
           simplify = FALSE
@@ -388,7 +318,7 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
     close(pb)
     parallel::stopCluster(cl)
 
-  } else if (get_bootstrapped_means & parallel & !show_progress) {
+  } else if (parallel & !show_progress) {
     print("Performing bootstrap simulations", quote = FALSE)
     print("Initializing cluster", quote = FALSE)
     if (identical(n_cores, integer())) {
@@ -398,14 +328,14 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
     # Have to store variables in new env that can be accessed by parLapply. There
     # is surely a better way to do this, but this way works
     # start <- Sys.time()
-    vars <- list("fmcm_inference",
+    vars <- list("mc_simulations_inference_df",
                  "bootstrap_reps",
-                 "bootstrap_samples_per_rep"
+                 "bootstrap_draws_per_rep"
     )
     parallel::clusterExport(cl, varlist = vars, envir = environment())
     print("Sampling means", quote = FALSE)
     rep_inference_by_node <- vector(mode = "list", length = bootstrap_reps)
-    rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- fmcm_inference)
+    rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- mc_simulations_inference_df)
     bootstrapped_means_of_inference_by_node <- parallel::parLapply(
       cl,
       rep_inference_by_node,
@@ -413,7 +343,7 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
         apply(
           inference_by_node_duplicate, 2,
           function(inference) {
-            random_draws <- sample(inference, bootstrap_samples_per_rep, replace = TRUE)
+            random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
             mean(random_draws)
           }
         )
@@ -421,33 +351,33 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
     )
     parallel::stopCluster(cl)
 
-  } else if (get_bootstrapped_means & !parallel & show_progress) {
+  } else if (!parallel & show_progress) {
     bootstrapped_means_of_inference_by_node <- vector(mode = "list", length = bootstrap_reps)
     rep_inference_by_node <- vector(mode = "list", length = bootstrap_reps)
-    rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- fmcm_inference)
+    rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- mc_simulations_inference_df)
     bootstrapped_means_of_inference_by_node <- pbapply::pblapply(
       rep_inference_by_node,
       function(inference_by_node_duplicate) {
         apply(
           inference_by_node_duplicate, 2,
           function(inference) {
-            random_draws <- sample(inference, bootstrap_samples_per_rep, replace = TRUE)
+            random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
             mean(random_draws)
           }
         )
       }
     )
 
-  } else if (get_bootstrapped_means & !parallel & !show_progress) {
+  } else if (!parallel & !show_progress) {
     rep_inference_by_node <- vector(mode = "list", length = bootstrap_reps)
-    rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- fmcm_inference)
+    rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- mc_simulations_inference_df)
     bootstrapped_means_of_inference_by_node <- lapply(
       rep_inference_by_node,
       function(inference_by_node_duplicate) {
         apply(
           inference_by_node_duplicate, 2,
           function(inference) {
-            random_draws <- sample(inference, bootstrap_samples_per_rep, replace = TRUE)
+            random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
             mean(random_draws)
           }
         )
@@ -464,7 +394,6 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
   upper_quantiles_by_node <- data.frame(apply(bootstrapped_means_of_inference_by_node, 2, function(bootstrapped_means) stats::quantile(bootstrapped_means, upper_quantile), simplify = FALSE))
 
   nodes <- ifelse(colnames(lower_quantiles_by_node) == colnames(upper_quantiles_by_node), colnames(lower_quantiles_by_node), stop("Error with quantiles calculation"))
-  quantiles_by_node <- vector(mode = "list", length = length(nodes))
 
   quantiles_by_node <- data.frame(
     node = nodes,
@@ -480,7 +409,7 @@ get_means_of_fmcm_inference <- function(fmcm_inference = list(),
 
   structure(
     .Data = list(
-      mean_CI_by_node = quantiles_by_node,
+      CI_by_node = quantiles_by_node,
       bootstrap_means = bootstrapped_means_of_inference_by_node
     )
   )
@@ -514,15 +443,15 @@ build_monte_carlo_fcms <- function(adj_matrix_list = list(matrix()),
                                    N_samples = integer(),
                                    include_zeroes = TRUE,
                                    show_progress = TRUE) {
-  adj_matrix_list_class <- unique(vapply(adj_matrix_list, get_class_of_adj_matrix, character(1)))
-  if (length(adj_matrix_list_class) != 1) {
-    stop("All adj. matrices in input adj_matrix_list must be of the same class (i.e. fcm, fgcm, or ftcm")
-  }
 
-  if (adj_matrix_list_class == "fcm") {
+  # browser()
+  adj_matrix_list_class <- get_adj_matrices_input_type(adj_matrix_list)$object_types_in_list[1]
+
+  if (adj_matrix_list_class == "conventional") {
     sampled_adj_matrices <- build_monte_carlo_fcms_from_conventional_adj_matrices(adj_matrix_list, N_samples, include_zeroes, show_progress)
   } else {
-    sampled_adj_matrices <- build_monte_carlo_fcms_from_fuzzy_adj_matrices(adj_matrix_list, adj_matrix_list_class, N_samples, include_zeroes, show_progress)
+    sampled_adj_matrices <- build_monte_carlo_fcms_from_fuzzy_set_adj_matrices(adj_matrix_list, adj_matrix_list_class, N_samples, include_zeroes, show_progress)
+
   }
 
   sampled_adj_matrices
@@ -592,7 +521,7 @@ build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_lis
 
 
 
-#' build_monte_carlo_fcms_from_fuzzy_adj_matrices
+#' build_monte_carlo_fcms_from_fuzzy_set_adj_matrices
 #'
 #' @description
 #' This function generates n fcm adjacency matrices whose edge weights are sampled
@@ -605,8 +534,8 @@ build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_lis
 #'
 #' Use vignette("fcmconfr-class") for more information.
 #'
-#' @param fuzzy_adj_matrix_list A list of n x n fuzzy adjacencey matrices representing fcms
-#' @param fuzzy_adj_matrix_list_class "fgcm" or "ftcm" - the class of elements in the fuzzy_adj_matrix_list
+#' @param fuzzy_set_adj_matrix_list A list of n x n fuzzy adjacencey matrices representing fcms
+#' @param fuzzy_set_adj_matrix_list_class "fgcm" or "fcm_w_tfn" - the class of elements in the fuzzy_set_adj_matrix_list
 #' @param N_samples The number of samples to draw from the corresponding distribution
 #' @param include_zeroes TRUE/FALSE Whether to incorporate zeroes as intentionally-defined
 #' edge weights or ignore them in aggregation
@@ -614,45 +543,45 @@ build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_lis
 #' from the pbapply package as the underlying function.
 #'
 #' @export
-build_monte_carlo_fcms_from_fuzzy_adj_matrices <- function(fuzzy_adj_matrix_list = list(data.frame()),
-                                                           fuzzy_adj_matrix_list_class = c("fcm", "fgcm", "ftcm"),
-                                                           N_samples = integer(),
-                                                           include_zeroes = FALSE,
-                                                           show_progress = TRUE) {
+build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_matrix_list = list(data.frame()),
+                                                               fuzzy_set_adj_matrix_list_class = c("conventional", "ivfn", "tfn"),
+                                                               N_samples = integer(),
+                                                               include_zeroes = FALSE,
+                                                               show_progress = TRUE) {
 
-  if (!(fuzzy_adj_matrix_list_class %in% c("fcm", "fgcm", "ftcm"))) {
-    stop("Input fuzzy_adj_matrix_list_class must be one of the following: 'fcm', 'fgcm', or 'ftcm'")
+  #browser()
+  if (!(fuzzy_set_adj_matrix_list_class %in% c("conventional", "ivfn", "tfn"))) {
+    stop("Input fuzzy_set_adj_matrix_list_class must be one of the following: 'conventional', 'ivfn', or 'tfn'")
   }
 
-  n_nodes <- unique(unlist(lapply(fuzzy_adj_matrix_list, dim)))
+  n_nodes <- unique(unlist(lapply(fuzzy_set_adj_matrix_list, dim)))
 
   flatten_fuzzy_adj_matrix <- function(fuzzy_adj_matrix) do.call(cbind, lapply(as.vector(fuzzy_adj_matrix), rbind))
-  flattened_fuzzy_adj_matrix_list <- do.call(rbind, lapply(fuzzy_adj_matrix_list, flatten_fuzzy_adj_matrix))
-  flattened_fuzzy_adj_matrix_list_w_distributions <- convert_fuzzy_elements_in_matrix_to_distributions(flattened_fuzzy_adj_matrix_list, fuzzy_adj_matrix_list_class, N_samples)
+  flattened_fuzzy_set_adj_matrix_list <- do.call(rbind, lapply(fuzzy_set_adj_matrix_list, flatten_fuzzy_adj_matrix))
+  flattened_fuzzy_set_adj_matrix_list_w_distributions <- convert_fuzzy_set_elements_in_matrix_to_distributions(flattened_fuzzy_set_adj_matrix_list, fuzzy_set_adj_matrix_list_class, N_samples)
 
   if (!include_zeroes) {
-    flattened_fuzzy_adj_matrix_list_w_distributions <- apply(
-      flattened_fuzzy_adj_matrix_list_w_distributions, c(1, 2),
-      function(element) {
-        ifelse(identical(element[[1]], 0), NA, element)
-      })
+    flattened_fuzzy_set_adj_matrix_list_w_distributions <- apply(flattened_fuzzy_set_adj_matrix_list_w_distributions, c(1, 2), function(element) ifelse(element[[1]][[1]] == 0, NA, element[[1]][[1]]), simplify = FALSE)
   }
 
   if (show_progress) {
     cat(print("Sampling from column vectors", quote = FALSE))
-    column_samples <- pbapply::pbapply(flattened_fuzzy_adj_matrix_list_w_distributions, 2, function(column_vec) {
-      # sample_list_of_vectors_ignoring_NAs
-      na_omit_column_vec <- stats::na.omit(do.call(c, column_vec))
-      if (length(na_omit_column_vec) != 0) {
-        column_vec_with_numerics_replicated <- lapply(
-          column_vec,
-          function(value) {
-            if (is.numeric(value) & length(value) == 1) {
-              rep(value, N_samples)
-            } else {
-              value
-            }
-          })
+    column_samples <- pbapply::pbapply(
+      flattened_fuzzy_set_adj_matrix_list_w_distributions, 2,
+      function(column_vec) {
+        #browser()
+        # sample_list_of_vectors_ignoring_NAs
+        na_omit_column_vec <- stats::na.omit(do.call(c, column_vec))
+        if (length(na_omit_column_vec) != 0) {
+          column_vec_with_numerics_replicated <- lapply(
+            column_vec,
+            function(value) {
+              if (is.numeric(value) & length(value) == 1) {
+                rep(value, N_samples)
+              } else {
+                value
+              }
+            })
         na_omit_column_vec <- stats::na.omit(do.call(c, column_vec_with_numerics_replicated))
         sample(na_omit_column_vec, N_samples, replace = TRUE)
       } else {
@@ -662,7 +591,7 @@ build_monte_carlo_fcms_from_fuzzy_adj_matrices <- function(fuzzy_adj_matrix_list
     cat(print("Constructing monte carlo fcms from samples", quote = FALSE))
     sampled_adj_matrices <- pbapply::pbapply(column_samples, 1, function(row_vec) matrix(row_vec, nrow = n_nodes, ncol = n_nodes), simplify = FALSE)
   } else {
-    column_samples <- apply(flattened_fuzzy_adj_matrix_list_w_distributions, 2, function(column_vec) {
+    column_samples <- apply(flattened_fuzzy_set_adj_matrix_list_w_distributions, 2, function(column_vec) {
       # sample_list_of_vectors_ignoring_NAs
       na_omit_column_vec <- stats::na.omit(do.call(c, column_vec))
       if (length(na_omit_column_vec) != 0) {
@@ -685,62 +614,6 @@ build_monte_carlo_fcms_from_fuzzy_adj_matrices <- function(fuzzy_adj_matrix_list
   }
 
   sampled_adj_matrices
-}
-
-
-
-
-#' convert_fuzzy_elements_in_matrix_to_distributions
-#'
-#' @description
-#' Given a list of adjacency matrices which include either grey_numbers or
-#' triangular_numbers, convert those objects to their corresponding
-#' distributions representative of those values.
-#'
-#' @details
-#' [ADD DETAILS HERE!!!!]
-#'
-#' Use vignette("fcmconfr-class") for more information.
-#'
-#' @param fuzzy_matrix A matrix that can contain fuzzy sets as elements
-#' @param fuzzy_element_class "fgcm" or "ftcm" - the class of elements in the fuzzy_matrix
-#' @param N_samples The number of samples to draw from the corresponding distribution
-#'
-#' @export
-convert_fuzzy_elements_in_matrix_to_distributions <- function(fuzzy_matrix = data.table::data.table(),
-                                                              fuzzy_element_class = c("fgcm", "ftcm"),
-                                                              N_samples = integer()) {
-  if (!(fuzzy_element_class %in% c("fgcm", "ftcm"))) {
-    stop("Input fuzzy_element_class must be either fgcm or ftcm")
-  } else if (identical(fuzzy_element_class, c("fgcm", "ftcm"))) {
-    fuzzy_element_class <- get_class_of_adj_matrix(fuzzy_matrix)
-  }
-
-  if (fuzzy_element_class == "fgcm") {
-    fuzzy_matrix_w_distributions <- apply(
-      fuzzy_matrix, c(1, 2),
-      function(element) {
-        if (identical(methods::is(element[[1]]), "grey_number")) {
-          element <- stats::runif(N_samples, element[[1]]$lower, element[[1]]$upper)
-        } else {
-          element[[1]]
-        }
-      }
-    )
-  } else if (fuzzy_element_class == "ftcm") {
-    fuzzy_matrix_w_distributions <- apply(
-      fuzzy_matrix, c(1, 2),
-      function(element) {
-        if (identical(methods::is(element[[1]]), "triangular_number")) {
-          element <- rtri(N_samples, lower = element[[1]]$lower, mode = element[[1]]$mode, upper = element[[1]]$upper)
-        } else {
-          element[[1]]
-        }
-      }
-    )
-  }
-
-  fuzzy_matrix_w_distributions
 }
 
 
