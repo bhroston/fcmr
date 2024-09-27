@@ -140,7 +140,7 @@ test_that("streamlined fcmconfr works", {
         parallel = FALSE,
         n_cores = 10,
         # Additional Options
-        perform_aggregate_analysis = FALSE,
+        perform_aggregate_analysis = TRUE,
         perform_monte_carlo_analysis = TRUE,
         include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
         include_monte_carlo_FCM_simulations_in_output = TRUE,
@@ -148,6 +148,41 @@ test_that("streamlined fcmconfr works", {
       )
     ))
   )
+
+  expect_no_error(
+    invisible(capture.output(
+      test <- fcmconfr(
+        adj_matrices = adj_matrix_w_tfns_1,
+        # Aggregation and Monte Carlo Sampling
+        aggregation_function = 'mean',
+        monte_carlo_sampling_draws = 100,
+        # Simulation
+        initial_state_vector = c(1, 1),
+        clamping_vector = c(0, 1),
+        activation = 'kosko',
+        squashing = 'sigmoid',
+        lambda = 1,
+        max_iter = 100,
+        min_error = 1e-05,
+        fuzzy_set_samples = 100,
+        # Inference Estimation (bootstrap)
+        inference_estimation_CI = 0.95,
+        inference_estimation_bootstrap_reps = 1000,
+        inference_estimation_bootstrap_draws_per_rep = 1000,
+        # Runtime Options
+        show_progress = TRUE,
+        parallel = FALSE,
+        n_cores = 10,
+        # Additional Options
+        perform_aggregate_analysis = FALSE,
+        perform_monte_carlo_analysis = FALSE,
+        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+        include_monte_carlo_FCM_simulations_in_output = FALSE,
+        estimate_mc_inference_CI_w_bootstrap = FALSE
+      )
+    ))
+  )
+
 
 
   # adj_matrices = test_fcms
@@ -175,33 +210,6 @@ test_that("streamlined fcmconfr works", {
   # include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE
   # include_monte_carlo_FCM_simulations_in_output = TRUE
   # estimate_inference_CI_w_bootstrap = TRUE
-
-  adj_matrices = test_fcms
-  # Aggregation and Monte Carlo Sampling
-  aggregation_function = 'mean'
-  monte_carlo_sampling_draws = 100
-  # Simulation
-  initial_state_vector = c(1, 1, 1, 1)
-  clamping_vector = c(0, 1, 0, 0)
-  activation = 'kosko'
-  squashing = 'sigmoid'
-  lambda = 1
-  max_iter = 100
-  min_error = 1e-05
-  fuzzy_set_samples = 100
-  # Inference Estimation (bootstrap)
-  inference_estimation_CI = 0.95
-  inference_estimation_bootstrap_reps = 1000
-  inference_estimation_bootstrap_draws_per_rep = 1000
-  # Runtime Options
-  show_progress = TRUE
-  parallel = FALSE
-  n_cores = 10
-  # Additional Options
-  include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE
-  include_monte_carlo_FCM_simulations_in_output = TRUE
-  estimate_mc_inference_CI_w_bootstrap = TRUE
-
 
   # ggplot() +
   #   geom_jitter(data = test$inference_for_plotting, aes(x = node, y = value)) +

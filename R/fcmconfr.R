@@ -148,7 +148,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   }
 
   if (!perform_monte_carlo_analysis & estimate_mc_inference_CI_w_bootstrap) {
-    warning(". Cannot estimate CIs of monte carlo inferences if monte carlo analysis is not being beformed.
+    warning(". Cannot estimate CIs of monte carlo inferences if monte carlo analysis is not being performed.
     Skipping CI bound estimation.")
     estimate_mc_inference_CI_w_bootstrap <- FALSE
   }
@@ -189,7 +189,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
 
     if (estimate_mc_inference_CI_w_bootstrap) {
       CIs_of_means_of_mc_simulation_inferences <- get_mc_simulations_inference_CIs_w_bootstrap(mc_inferences$inference, inference_estimation_CI, inference_estimation_bootstrap_reps, inference_estimation_bootstrap_draws_per_rep, parallel, n_cores, show_progress)
-      quantiles_of_mc_simulation_inferences <- data.frame(t(apply(mc_inferences$inference, 2, quantile)))
+      quantiles_of_mc_simulation_inferences <- data.frame(t(apply(mc_inferences$inference, 2, stats::quantile)))
       mc_inference_distributions_df <- cbind(CIs_of_means_of_mc_simulation_inferences$CI_by_node, quantiles_of_mc_simulation_inferences)
       colnames(mc_inference_distributions_df) <- c("node", "lower_0.025_CI_about_mean", "upper_0.975_CI_about_mean", "min", "lower_quantile_0.25", "median", "upper_quantile_0.75", "max")
     }
