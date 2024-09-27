@@ -137,6 +137,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     individual_adj_matrices_inferences_df <- lapply(individual_adj_matrices_inferences, function(inference) inference$inference_df)
     names(individual_adj_matrices_inferences_df) <- paste0("adj_matrix_", 1:length(adj_matrices))
   }
+  names(individual_adj_matrices_inferences) <- paste0("adj_matrix_", 1:length(adj_matrices))
 
   # Aggregation and Monte Carlo Simulations ----
 
