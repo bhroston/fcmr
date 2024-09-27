@@ -81,6 +81,8 @@ test_that("streamlined fcmconfr works", {
   adj_matrix_w_ivfns_2 <- make_adj_matrix_w_ivfns(lower_adj_matrix_2, upper_adj_matrix_2)
   test_fcms <- list(adj_matrix_w_ivfns_1, adj_matrix_w_ivfns_2)
 
+
+
   lower_adj_matrix_1 <- data.frame(
     "A" = c(0, 0),
     "B" = c(0.25, 0)
@@ -138,6 +140,8 @@ test_that("streamlined fcmconfr works", {
         parallel = FALSE,
         n_cores = 10,
         # Additional Options
+        perform_aggregate_analysis = FALSE,
+        perform_monte_carlo_analysis = TRUE,
         include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
         include_monte_carlo_FCM_simulations_in_output = TRUE,
         estimate_mc_inference_CI_w_bootstrap = TRUE
@@ -171,6 +175,32 @@ test_that("streamlined fcmconfr works", {
   # include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE
   # include_monte_carlo_FCM_simulations_in_output = TRUE
   # estimate_inference_CI_w_bootstrap = TRUE
+
+  adj_matrices = test_fcms
+  # Aggregation and Monte Carlo Sampling
+  aggregation_function = 'mean'
+  monte_carlo_sampling_draws = 100
+  # Simulation
+  initial_state_vector = c(1, 1, 1, 1)
+  clamping_vector = c(0, 1, 0, 0)
+  activation = 'kosko'
+  squashing = 'sigmoid'
+  lambda = 1
+  max_iter = 100
+  min_error = 1e-05
+  fuzzy_set_samples = 100
+  # Inference Estimation (bootstrap)
+  inference_estimation_CI = 0.95
+  inference_estimation_bootstrap_reps = 1000
+  inference_estimation_bootstrap_draws_per_rep = 1000
+  # Runtime Options
+  show_progress = TRUE
+  parallel = FALSE
+  n_cores = 10
+  # Additional Options
+  include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE
+  include_monte_carlo_FCM_simulations_in_output = TRUE
+  estimate_mc_inference_CI_w_bootstrap = TRUE
 
 
   # ggplot() +
