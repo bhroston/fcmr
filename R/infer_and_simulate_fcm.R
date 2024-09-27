@@ -1108,6 +1108,8 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
 
 #' Print method for infer_conventional_fcm objects
 #'
+#' @param x an infer_conventional_fcm object
+#' @param ... additional inputs
 #' @export
 print.infer_conventional_fcm <- function(x, ...) {
   cat(paste0("fcmconfr: ", "conventional"),
@@ -1124,6 +1126,9 @@ print.infer_conventional_fcm <- function(x, ...) {
 
 
 #' Print method for infer_ivfn_or_tfn_fcm objects
+#'
+#' @param x an infer_ivfn_or_tfn_fcm object
+#' @param ... additional inputs
 #'
 #' @export
 print.infer_ivfn_or_tfn_fcm <- function(x, ...) {

@@ -216,6 +216,8 @@ aggregate_fcms_w_tfns <- function(adj_matrices = list(matrix()),
 
 #' Print method for aggregate
 #'
+#' @param x an aggregate object
+#' @param ... additional inputs
 #' @export
 print.aggregate <- function(x, ...) {
   print(x$adj_matrix)
