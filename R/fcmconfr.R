@@ -316,9 +316,7 @@ organize_fcmconfr_output <- function(...) {
 #' as $bootstrap if present in output. Additionally, this prints descriptions/summaries
 #' of objects within each sub-list like inference_opts, bootstrap_input_opts, etc.
 #'
-#' Use vignette("fcm-class") for more information.
-#'
-#' @param x an fgcm_simulation object
+#' @param x an fcmconfr object
 #' @param ... additional inputs
 #'
 #' @export
