@@ -1,11 +1,11 @@
 Package: fcmconfr
 Type: Package
 Title: Fuzzy Cognitive Map Analysis in R
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: person(
   "Ben", "Roston",
   email = "bhroston@vt.edu",
-  role = c("aut", "cre"),
+  role = c("aut", "cre", "cph"),
   comment = c(ORCID = "0000-0001-9201-7579"))
 Description: Create and analyse fuzzy cognitive maps.
 License: GPL (>= 3) + file LICENSE
