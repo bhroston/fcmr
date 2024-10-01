@@ -6,6 +6,11 @@
 \usage{
 \method{print}{infer_ivfn_or_tfn_fcm}(x, ...)
 }
+\arguments{
+\item{x}{an infer_ivfn_or_tfn_fcm object}
+
+\item{...}{additional inputs}
+}
 \description{
 Print method for infer_ivfn_or_tfn_fcm objects
 }

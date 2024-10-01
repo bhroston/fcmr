@@ -6,6 +6,11 @@
 \usage{
 \method{print}{infer_conventional_fcm}(x, ...)
 }
+\arguments{
+\item{x}{an infer_conventional_fcm object}
+
+\item{...}{additional inputs}
+}
 \description{
 Print method for infer_conventional_fcm objects
 }

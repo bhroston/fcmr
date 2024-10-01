@@ -6,6 +6,11 @@
 \usage{
 \method{print}{aggregate}(x, ...)
 }
+\arguments{
+\item{x}{an aggregate object}
+
+\item{...}{additional inputs}
+}
 \description{
 Print method for aggregate
 }
