@@ -145,6 +145,7 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
   inference_values <- subset(inference_values, select = -c(iter))
   rownames(inference_values) <- 1
 
+
   inference_plot_data <- data.frame(
     node = colnames(inference_values),
     value = unlist(inference_values)
@@ -1101,5 +1102,46 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
   list(
     initial_state_vector = initial_state_vector,
     clamping_vector = clamping_vector
+  )
+}
+
+
+#' Print method for infer_conventional_fcm objects
+#'
+#' @param x an infer_conventional_fcm object
+#' @param ... additional inputs
+#' @export
+print.infer_conventional_fcm <- function(x, ...) {
+  cat(paste0("fcmconfr: ", "conventional"),
+      "\n $inference\n",
+      paste0("  ", colnames(x$inference), ": ", round(x$inference, digits = 2), sep = "\n"),
+      "$inference_for_plotting\n",
+      paste0("  - inference data transformed to streamline plotting with ggplot"),
+      "\n $inference_state_vectors\n",
+      paste0("  - inferences across all iterations of the simulation"),
+      "\n $scenario_simulation\n",
+      "$baseline_simulation"
+  )
+}
+
+
+#' Print method for infer_ivfn_or_tfn_fcm objects
+#'
+#' @param x an infer_ivfn_or_tfn_fcm object
+#' @param ... additional inputs
+#'
+#' @export
+print.infer_ivfn_or_tfn_fcm <- function(x, ...) {
+  cat(paste0("fcmconfr: ", "ivfn or tfn"),
+      "\n $inference_df\n",
+      paste0("  ", x$inference_df$concept, ": [", round(x$inference_df$lower, 2), ", ", round(x$inference_df$upper, 2), "] (", round(x$inference_df$crisp, 2), ")", sep = "\n"),
+      "$inference_for_plotting\n",
+      paste0("  - inference data transformed to streamline plotting with ggplot"),
+      "\n $inference_state_vectors\n",
+      paste0("  - inferences as fuzzy sets across all iterations of the simulation"),
+      "\n $crisp_inference_state_vectors\n",
+      paste0("  - inferences as crisp_values across all iterations of the simulation"),
+      "\n $scenario_simulation\n",
+      "$baseline_simulation"
   )
 }

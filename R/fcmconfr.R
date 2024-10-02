@@ -137,6 +137,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     individual_adj_matrices_inferences_df <- lapply(individual_adj_matrices_inferences, function(inference) inference$inference_df)
     names(individual_adj_matrices_inferences_df) <- paste0("adj_matrix_", 1:length(adj_matrices))
   }
+  names(individual_adj_matrices_inferences) <- paste0("adj_matrix_", 1:length(adj_matrices))
 
   # Aggregation and Monte Carlo Simulations ----
 
@@ -315,9 +316,7 @@ organize_fcmconfr_output <- function(...) {
 #' as $bootstrap if present in output. Additionally, this prints descriptions/summaries
 #' of objects within each sub-list like inference_opts, bootstrap_input_opts, etc.
 #'
-#' Use vignette("fcm-class") for more information.
-#'
-#' @param x an fgcm_simulation object
+#' @param x an fcmconfr object
 #' @param ... additional inputs
 #'
 #' @export
