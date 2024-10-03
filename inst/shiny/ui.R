@@ -72,6 +72,10 @@ shiny_ui <- function() {
             shiny::column(
               width = 8, align = "left",
               shiny::HTML('<p><i class="fa-solid fa-seedling"></i>       Monte Carlo Inference Bootstrapping Options</p>')
+            ),
+            shiny::column(
+              width = 4, align = "right",
+              shiny::checkboxInput("perform_inference_bootstrap", "Inference Bootstrap Analysis", value = TRUE)
             )
           ),
           shiny::uiOutput("monte_carlo_inference_bootstrap_options_ui")

@@ -344,6 +344,16 @@ shiny_server <- function(input, output, session) {
             width = 6, align = "left",
             shiny::numericInput("monte_carlo_samples", "", value = 1000, min = 1, step = 500)
           )
+        ),
+        shiny::fluidRow(
+          shiny::column(
+            width = 6, align = "right",
+            shiny::h5("Include MC Sims in Output?")
+          ),
+          shiny::column(
+            width = 6, align = "left",
+            shiny::checkboxInput("include_monte_carlo_FCM_simulations_in_output", "", value = TRUE)
+          )
         )
       )
     } else if (!can_perform_monte_carlo_analysis()) {
@@ -373,8 +383,26 @@ shiny_server <- function(input, output, session) {
     }
   })
 
+
+  # Inference Bootstrap Card ----
+  can_perform_inference_bootstrap_analysis <- shiny::reactive({
+    if (perform_monte_carlo_analysis()) {
+      TRUE
+    } else {
+      FALSE
+    }
+  })
+
+  perform_inference_bootstrap_analysis <- shiny::reactive({
+    if (is.null(input$perform_inference_bootstrap)) {
+      FALSE
+    } else {
+      input$perform_inference_bootstrap
+    }
+  })
+
   output$monte_carlo_inference_bootstrap_options_ui <- shiny::renderUI({
-    if ((can_perform_monte_carlo_analysis() & perform_monte_carlo_analysis()) | !adj_matrices_selected()) {
+    if ((can_perform_inference_bootstrap_analysis() & perform_inference_bootstrap_analysis()) | !adj_matrices_selected()) {
       shiny::fluidPage(
         shiny::fluidRow(
           shiny::column(
@@ -415,6 +443,25 @@ shiny_server <- function(input, output, session) {
       NULL
     }
   })
+
+  shiny::observe({
+    if (!can_perform_inference_bootstrap_analysis()) {
+      shiny::updateCheckboxInput(session, "perform_inference_bootstrap", value = FALSE)
+    }
+  })
+
+  shiny::observeEvent(input$perform_inference_bootstrap, {
+    if (!can_perform_inference_bootstrap_analysis()) {
+      shiny::updateCheckboxInput(session, "perform_inference_bootstrap", value = FALSE)
+    }
+  })
+
+  shiny::observeEvent(can_perform_inference_bootstrap_analysis(), {
+    if (can_perform_inference_bootstrap_analysis()) {
+      shiny::updateCheckboxInput(session, "perform_inference_bootstrap", value = TRUE)
+    }
+  })
+
   # ----
 
   # Include 0's Option
@@ -472,7 +519,32 @@ shiny_server <- function(input, output, session) {
     }
   })
 
-  observe({
-    print(can_perform_aggregation_analysis())
+
+  # Form Data
+  form_data <- shiny::reactive({
+    inputs <- shiny::reactiveValuesToList(input)
+    inputs$initial_state_vector <- initial_state_vector()
+    inputs$clamping_vector <- clamping_vector()
+    inputs$concepts = concepts()
+    inputs
   })
+
+  shiny::observeEvent(input$submit, {
+    assign(
+      x = "session_variables",
+      value = form_data(),
+      envir = .GlobalEnv
+    )
+    shiny::stopApp()
+  })
+
+  shiny::onStop(
+    function() {
+      assign(
+        x = "session_variables",
+        value = shiny::isolate(form_data()),
+        envir = .GlobalEnv
+      )
+    }
+  )
 }
