@@ -6,6 +6,17 @@
 #'
 #' @export
 fcmconfr_gui <- function() {
+
+  assignInNamespace(
+    "collapse_icon",
+    function() {
+      bsicons::bs_icon(
+        "info-circle-fill", class = "collapse-icon", size = NULL
+      )
+    },
+    ns = "bslib"
+  )
+
   shiny::runApp(appDir = system.file('shiny', package = 'fcmconfr'))
 
   if (identical(session_variables$adj_matrix_list, "")) {
