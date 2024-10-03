@@ -7,15 +7,15 @@
 #' @export
 fcmconfr_gui <- function() {
 
-  assignInNamespace(
-    "collapse_icon",
-    function() {
-      bsicons::bs_icon(
-        "info-circle-fill", class = "collapse-icon", size = NULL
-      )
-    },
-    ns = "bslib"
-  )
+  # assignInNamespace(
+  #   "collapse_icon",
+  #   function() {
+  #     bsicons::bs_icon(
+  #       "info-circle-fill", class = "collapse-icon", size = NULL
+  #     )
+  #   },
+  #   ns = "bslib"
+  # )
 
   shiny::runApp(appDir = system.file('shiny', package = 'fcmconfr'))
 
@@ -58,11 +58,11 @@ fcmconfr_gui <- function() {
   }
 
   if (!exists("session_variables$include_zero_weighted_edges_in_aggregation_and_mc_sampling")) {
-    session_variables$include_zero_weighted_edges_in_aggregation_and_mc_sampling <- TRUE
+    session_variables$include_zero_weighted_edges_in_aggregation_and_mc_sampling <- FALSE
   }
 
   if (!exists("session_variables$include_monte_carlo_FCM_simulations_in_output")) {
-    session_variables$include_monte_carlo_FCM_simulations_in_output <- TRUE
+    session_variables$include_monte_carlo_FCM_simulations_in_output <- FALSE
   }
 
   session_variables$initial_state_vector <- paste0("c(", paste(session_variables$initial_state_vector, collapse = ", "), ")")

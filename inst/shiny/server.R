@@ -315,9 +315,7 @@ shiny_server <- function(input, output, session) {
   can_perform_monte_carlo_analysis <- shiny::reactive({
     if (!accepted_adj_matrices_input()) {
       FALSE
-    } else if (accepted_adj_matrices_input() & length(adj_matrices()) == 1 & !identical(fcm_class(), "conventional")) {
-      TRUE
-    } else if (accepted_adj_matrices_input() & length(adj_matrices()) == 1 & identical(fcm_class(), "conventional")) {
+    } else if (accepted_adj_matrices_input() & length(adj_matrices()) == 1) {
       FALSE
     } else {
       TRUE

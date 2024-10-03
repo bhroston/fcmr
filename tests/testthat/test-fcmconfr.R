@@ -54,9 +54,11 @@ test_that("streamlined fcmconfr works", {
         parallel = FALSE,
         n_cores = 10,
         # Additional Options
+        perform_aggregate_analysis = TRUE,
+        perform_monte_carlo_analysis = TRUE,
+        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
         include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE,
-        estimate_mc_inference_CI_w_bootstrap = TRUE
+        include_monte_carlo_FCM_simulations_in_output = TRUE
       )
     ))
   )
@@ -142,9 +144,9 @@ test_that("streamlined fcmconfr works", {
         # Additional Options
         perform_aggregate_analysis = TRUE,
         perform_monte_carlo_analysis = TRUE,
+        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
         include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE,
-        estimate_mc_inference_CI_w_bootstrap = TRUE
+        include_monte_carlo_FCM_simulations_in_output = TRUE
       )
     ))
   )
@@ -176,9 +178,9 @@ test_that("streamlined fcmconfr works", {
         # Additional Options
         perform_aggregate_analysis = FALSE,
         perform_monte_carlo_analysis = FALSE,
+        perform_monte_carlo_inference_bootstrap_analysis = FALSE,
         include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = FALSE,
-        estimate_mc_inference_CI_w_bootstrap = FALSE
+        include_monte_carlo_FCM_simulations_in_output = FALSE
       )
     ))
   )
