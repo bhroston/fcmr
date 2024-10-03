@@ -130,45 +130,6 @@ shiny_server <- function(input, output, session) {
   })
   # ====
 
-  # Select Analyses to Perform ====
-  output$select_analyses_to_perform_ui <- shiny::renderUI({
-    if (!accepted_adj_matrices_input()) {
-      NULL
-    } else if (accepted_adj_matrices_input() & length(adj_matrices()) == 1 & !identical(fcm_class(), "conventional")) {
-      shiny::fluidRow(
-        p("Cannot perform Aggregation Analysis for an individual adj. matrix."),
-        shiny::checkboxInput("perform_monte_carlo", "Monte Carlo Analysis", value = TRUE)
-      )
-    } else if (accepted_adj_matrices_input() & length(adj_matrices()) == 1 & identical(fcm_class(), "conventional")) {
-      shiny::fluidRow(
-        p("Cannot perform Aggregation Analysis for an individual adj. matrix."),
-        p("Cannot perform Monte Carlo Analysis for an individual, conventional adj. matrix.")
-      )
-    } else {
-      shiny::fluidRow(
-        shiny::checkboxInput("perform_aggregation", "Aggregation Analaysis", value = TRUE),
-        shiny::checkboxInput("perform_monte_carlo", "Monte Carlo Analysis", value = TRUE)
-      )
-    }
-  })
-
-  perform_aggregation_analysis <- shiny::reactive({
-    if (is.null(input$perform_aggregation)) {
-      FALSE
-    } else {
-      input$perform_aggregation
-    }
-  })
-
-  perform_monte_carlo_analysis <- shiny::reactive({
-    if (is.null(input$perform_monte_carlo)) {
-      FALSE
-    } else {
-      input$perform_monte_carlo
-    }
-  })
-  # ====
-
   # Initial State Vector ====
   output$initial_state_vector_numeric_inputs <- shiny::renderUI({
     lapply(concepts(), function(i) {
@@ -283,22 +244,151 @@ shiny_server <- function(input, output, session) {
   })
   # ====
 
-
-  # Aggregation Panel
-  shiny::observe({
-    if (perform_aggregation_analysis() | !adj_matrices_selected()) {
-      bslib::nav_show("nav_panel", "Aggregation Options")
+  # Aggregation and Monte Carlo Panel
+  # Aggregation Card ----
+  can_perform_aggregation_analysis <- shiny::reactive({
+    if (!accepted_adj_matrices_input()) {
+      FALSE
+    } else if (accepted_adj_matrices_input() & length(adj_matrices()) == 1 & !identical(fcm_class(), "conventional")) {
+      FALSE
+    } else if (accepted_adj_matrices_input() & length(adj_matrices()) == 1 & identical(fcm_class(), "conventional")) {
+      FALSE
     } else {
-      bslib::nav_hide("nav_panel", "Aggregation Options")
+      TRUE
     }
   })
 
-  # Monte Carlo Panel
-  shiny::observe({
-    if (perform_monte_carlo_analysis() | !adj_matrices_selected()) {
-      bslib::nav_show("nav_panel", "Monte Carlo Sampling Options")
+  perform_aggregation_analysis <- shiny::reactive({
+    if (is.null(input$perform_aggregation)) {
+      FALSE
     } else {
-      bslib::nav_hide("nav_panel", "Monte Carlo Sampling Options")
+      input$perform_aggregation
+    }
+  })
+
+  output$aggregation_options_ui <- shiny::renderUI({
+    if ((can_perform_aggregation_analysis() & perform_aggregation_analysis()) | !adj_matrices_selected()) {
+      shiny::fluidPage(
+        shiny::fluidRow(
+          shiny::fluidRow(
+            shiny::column(
+              width = 6, align = "right",
+              shiny::h5("Aggregation Function", style = "padding: 35px;")
+            ),
+            shiny::column(
+              width = 6, align = "left",
+              #shinyWidgets::radioGroupButtons("aggregation_fun", "", choices = c("Mean", "Median"), selected = "Mean"),
+              shiny::radioButtons("aggregation_fun", "", choiceNames = c("Mean", "Median"), choiceValues = c("mean", "median"))
+            )
+          )
+        )
+      )
+    } else if (!can_perform_aggregation_analysis()) {
+      shiny::fluidRow(
+        shiny::p("Aggregation analysis unavailable")
+      )
+    } else {
+      NULL
+    }
+  })
+
+  shiny::observe({
+    if (!can_perform_aggregation_analysis()) {
+      shiny::updateCheckboxInput(session, "perform_aggregation", value = FALSE)
+    }
+  })
+
+  shiny::observeEvent(input$perform_aggregation, {
+    if (!can_perform_aggregation_analysis()) {
+      shiny::updateCheckboxInput(session, "perform_aggregation", value = FALSE)
+    }
+  })
+
+  shiny::observeEvent(can_perform_aggregation_analysis(), {
+    if (can_perform_aggregation_analysis()) {
+      shiny::updateCheckboxInput(session, "perform_aggregation", value = TRUE)
+    }
+  })
+  # ----
+
+  # Monte Carlo Card ----
+  can_perform_monte_carlo_analysis <- shiny::reactive({
+    if (!accepted_adj_matrices_input()) {
+      FALSE
+    } else if (accepted_adj_matrices_input() & length(adj_matrices()) == 1 & !identical(fcm_class(), "conventional")) {
+      TRUE
+    } else if (accepted_adj_matrices_input() & length(adj_matrices()) == 1 & identical(fcm_class(), "conventional")) {
+      FALSE
+    } else {
+      TRUE
+    }
+  })
+
+  perform_monte_carlo_analysis <- shiny::reactive({
+    if (is.null(input$perform_monte_carlo)) {
+      FALSE
+    } else {
+      input$perform_monte_carlo
+    }
+  })
+
+  output$monte_carlo_options_ui <- shiny::renderUI({
+    if ((can_perform_monte_carlo_analysis() & perform_monte_carlo_analysis()) | !adj_matrices_selected()) {
+      shiny::fluidPage(
+        shiny::fluidRow(
+          shiny::column(
+            width = 6, align = "right",
+            shiny::h5("# Sample Maps To Generate", style = "padding: 35px;")
+          ),
+          shiny::column(
+            width = 6, align = "left",
+            shiny::numericInput("monte_carlo_samples", "", value = 1000, min = 1, step = 500)
+          )
+        )
+      )
+    } else if (!can_perform_aggregation_analysis()) {
+      shiny::fluidRow(
+        shiny::p("Monte Carlo analysis unavailable")
+      )
+    } else {
+      NULL
+    }
+  })
+
+  shiny::observe({
+    if (!can_perform_monte_carlo_analysis()) {
+      shiny::updateCheckboxInput(session, "perform_monte_carlo", value = FALSE)
+    }
+  })
+
+  shiny::observeEvent(input$perform_monte_carlo, {
+    if (!can_perform_monte_carlo_analysis()) {
+      shiny::updateCheckboxInput(session, "perform_monte_carlo", value = FALSE)
+    }
+  })
+
+  shiny::observeEvent(can_perform_monte_carlo_analysis(), {
+    if (can_perform_monte_carlo_analysis()) {
+      shiny::updateCheckboxInput(session, "perform_monte_carlo", value = TRUE)
+    }
+  })
+  # ----
+
+  # Include 0's Option
+  output$include_zero_edges_ui <- shiny::renderUI({
+    if ((perform_monte_carlo_analysis() | perform_aggregation_analysis()) | (!adj_matrices_selected())) {
+      bslib::card(
+        shiny::fluidRow(
+          shiny::column(
+            width = 2, align = "center",
+            shiny::checkboxInput("include_zero_weighted_edges_in_aggregation_and_mc_sampling", "", value = TRUE)
+          ),
+          shiny::column(
+            width = 10, align = "left",
+            shiny::h5("Include 0-weighted Edges in Aggregation and Monte Carlo Sampling?")
+          )
+        )
+      )
     }
   })
 
@@ -306,6 +396,6 @@ shiny_server <- function(input, output, session) {
 
 
   observe({
-    print(perform_aggregation_analysis())
+    print(can_perform_aggregation_analysis())
   })
 }

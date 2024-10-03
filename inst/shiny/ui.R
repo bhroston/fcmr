@@ -18,14 +18,7 @@ shiny_ui <- function() {
           shiny::column(width = 12, div(style = "height:20px"))
         ),
         shiny::fluidRow(
-          shiny::column(
-            width = 6, align = "center",
-            shiny::selectInput("adj_matrices", "Adj. Matrix or List of Adj. Matrices", choices = c(names(as.list(.GlobalEnv)), ""), selected = "")
-          ),
-          shiny::column(
-            width = 6,
-            shiny::uiOutput("select_analyses_to_perform_ui")
-          )
+          shiny::selectInput("adj_matrices", "Adj. Matrix or List of Adj. Matrices", choices = c(names(as.list(.GlobalEnv)), ""), selected = "")
         ),
         shiny::uiOutput("rejected_adj_matrices_note"),
         bslib::navset_underline(
@@ -40,10 +33,36 @@ shiny_ui <- function() {
         )
       ), # ----
       bslib::nav_panel(
-        title = "Aggregation Options", icon = shiny::icon("user-group")
-      ),
-      bslib::nav_panel(
-        title = "Monte Carlo Sampling Options", icon = shiny::icon("seedling")
+        title = "Agg. and Monte Carlo Options", icon = shiny::icon("layer-group"),
+        bslib::card(
+          id = "aggregation_options",
+          shiny::fluidRow(
+            shiny::column(
+              width = 8, align = "left",
+              shiny::HTML('<p><i class="fas fa-user-group" role="presentation" aria-label="user-group icon"></i>       Aggregation Options</p>')
+            ),
+            shiny::column(
+              width = 4, align = "right",
+              shiny::checkboxInput("perform_aggregation", "Aggregation Analaysis", value = TRUE),
+            )
+          ),
+          shiny::uiOutput("aggregation_options_ui")
+        ),
+        bslib::card(
+          id = "monte_carlo_options",
+          shiny::fluidRow(
+            shiny::column(
+              width = 8, align = "left",
+              shiny::HTML('<p><i class="fa-solid fa-seedling"></i>       Monte Carlo Options</p>')
+            ),
+            shiny::column(
+              width = 4, align = "right",
+              shiny::checkboxInput("perform_monte_carlo", "Monte Carlo Analysis", value = TRUE)
+            )
+          ),
+          shiny::uiOutput("monte_carlo_options_ui")
+        ),
+        shiny::uiOutput("include_zero_edges_ui")
       ),
       bslib::nav_panel(
         title = "Simulation Options", icon = shiny::icon("calculator")
