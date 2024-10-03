@@ -97,7 +97,7 @@ shiny_server <- function(input, output, session) {
     if (accepted_adj_matrices_input()) {
       get_adj_matrices_input_type(adj_matrices())$object_types_in_list[1]
     } else {
-      NULL
+      "unavailable"
     }
   })
 
@@ -346,7 +346,7 @@ shiny_server <- function(input, output, session) {
           )
         )
       )
-    } else if (!can_perform_aggregation_analysis()) {
+    } else if (!can_perform_monte_carlo_analysis()) {
       shiny::fluidRow(
         shiny::p("Monte Carlo analysis unavailable")
       )
@@ -372,6 +372,49 @@ shiny_server <- function(input, output, session) {
       shiny::updateCheckboxInput(session, "perform_monte_carlo", value = TRUE)
     }
   })
+
+  output$monte_carlo_inference_bootstrap_options_ui <- shiny::renderUI({
+    if ((can_perform_monte_carlo_analysis() & perform_monte_carlo_analysis()) | !adj_matrices_selected()) {
+      shiny::fluidPage(
+        shiny::fluidRow(
+          shiny::column(
+            width = 6, align = "right",
+            shiny::h5("Confidence Interval about the Means of Inferences", style = "padding: 35px;")
+          ),
+          shiny::column(
+            width = 6, align = "left",
+            shiny::numericInput("mc_inference_estimation_CI", "", value = 0.95, min = 1e-10, max = 1)
+          )
+        ),
+        shiny::fluidRow(
+          shiny::column(
+            width = 6, align = "right",
+            shiny::h5("# Bootstraps (Repetitions)", style = "padding: 35px;")
+          ),
+          shiny::column(
+            width = 6, align = "left",
+            shiny::numericInput("mc_inference_bootstrap_reps", "", value = 1000, min = 100, step = 100)
+          )
+        ),
+        shiny::fluidRow(
+          shiny::column(
+            width = 6, align = "right",
+            shiny::h5("# Draws per Bootstrap (Repetition)", style = "padding: 35px;")
+          ),
+          shiny::column(
+            width = 6, align = "left",
+            shiny::numericInput("mc_inference_bootstrap_draws_per_rep", "", value = 1000, min = 100, step = 100)
+          )
+        )
+      )
+    } else if (!can_perform_monte_carlo_analysis()) {
+      shiny::fluidRow(
+        shiny::p("Monte Carlo Inference Bootstrap analysis unavailable")
+      )
+    } else {
+      NULL
+    }
+  })
   # ----
 
   # Include 0's Option
@@ -385,15 +428,49 @@ shiny_server <- function(input, output, session) {
           ),
           shiny::column(
             width = 10, align = "left",
-            shiny::h5("Include 0-weighted Edges in Aggregation and Monte Carlo Sampling?")
+            shiny::p("Include 0-weighted Edges in Aggregation and Monte Carlo Sampling?")
           )
         )
       )
     }
   })
-
   # ----
 
+  # Fuzzy Set Samples
+  output$fuzzy_set_samples_ui <- shiny::renderUI({
+    if (fcm_class() %in% c("ivfn", "tfn") | !adj_matrices_selected()) {
+      shiny::fluidRow(
+        shiny::column(
+          width = 5, align = "right",
+          shiny::h5(paste0("Fuzzy Set Samples"), style = "padding: 28px;")
+        ),
+        shiny::column(
+          width = 3, align = "left",
+          shiny::numericInput("fuzzy_set_samples", "", 1, min = 10, step = 10)
+        )
+      )
+    } else {
+      NULL
+    }
+  })
+
+  # Num Cores in Parallel
+  output$num_cores_in_paralell <- shiny::renderUI({
+    if (input$parallel) {
+      shiny::fluidRow(
+        shiny::column(
+          width = 5, align = "right",
+          shiny::h5("# Cores to Use in Parallel", style = "padding: 35px;")
+        ),
+        shiny::column(
+          width = 7, align = "left",
+          shiny::numericInput("n_cores", "", value = parallel::detectCores(), min = 2, max = parallel::detectCores(), step = 1)
+        )
+      )
+    } else {
+      NULL
+    }
+  })
 
   observe({
     print(can_perform_aggregation_analysis())

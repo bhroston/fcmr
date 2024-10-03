@@ -33,7 +33,11 @@ shiny_ui <- function() {
         )
       ), # ----
       bslib::nav_panel(
-        title = "Agg. and Monte Carlo Options", icon = shiny::icon("layer-group"),
+        title = "Agg. and Monte Carlo Options", icon = shiny::icon("layer-group"), # ----
+        shiny::fluidRow(
+          shiny::column(width = 12, div(style = "height:20px"))
+        ),
+        shiny::uiOutput("include_zero_edges_ui"),
         bslib::card(
           id = "aggregation_options",
           shiny::fluidRow(
@@ -62,14 +66,112 @@ shiny_ui <- function() {
           ),
           shiny::uiOutput("monte_carlo_options_ui")
         ),
-        shiny::uiOutput("include_zero_edges_ui")
-      ),
+        bslib::card(
+          id = "inference_bootstrap_options",
+          shiny::fluidRow(
+            shiny::column(
+              width = 8, align = "left",
+              shiny::HTML('<p><i class="fa-solid fa-seedling"></i>       Monte Carlo Inference Bootstrapping Options</p>')
+            )
+          ),
+          shiny::uiOutput("monte_carlo_inference_bootstrap_options_ui")
+        )
+      ), # ----
       bslib::nav_panel(
-        title = "Simulation Options", icon = shiny::icon("calculator")
-      ),
+        title = "Simulation Options", icon = shiny::icon("calculator"), # ----
+        shiny::fluidRow(
+          shiny::column(width = 12, div(style = "height:20px"))
+        ),
+        shiny::fluidRow(
+          shiny::column(
+            width = 5, align = "right",
+            shiny::h5("Activation Function", style = "padding: 35px;")
+          ),
+          shiny::column(
+            width = 7, align = "left",
+            shinyWidgets::radioGroupButtons("activation", "", choiceValues = c("kosko", "modified-kosko", "rescale"), choiceNames = c("Kosko", "Modified-Kosko", "Rescale"))
+          )
+        ),
+        shiny::fluidRow(
+          shiny::column(
+            width = 5, align = "right",
+            shiny::h5("Squashing Function", style = "padding: 35px;")
+          ),
+          shiny::column(
+            width = 7, align = "left",
+            shinyWidgets::radioGroupButtons("squashing", "", choices = c("sigmoid", "tanh"))
+          )
+        ),
+        shiny::fluidRow(
+          shiny::column(
+            width = 5, align = "right",
+            shiny::h5(paste0("Lambda (", "\U03BB", ")"), style = "padding: 28px;")
+          ),
+          shiny::column(
+            width = 3, align = "left",
+            shiny::numericInput("lambda", "", 1, min = 1, max = 10, step = 0.05)
+          )
+        ),
+        shiny::fluidRow(
+          shiny::column(
+            width = 5, align = "right",
+            shiny::h5(paste0("Max # of Iterations per Sim"), style = "padding: 28px;")
+          ),
+          shiny::column(
+            width = 3, align = "left",
+            shiny::numericInput("max_iter", "", 100, min = 1, step = 1)
+          )
+        ),
+        shiny::fluidRow(
+          shiny::column(
+            width = 5, align = "right",
+            shiny::h5(paste0("Min Acceptable Error per Step"), style = "padding: 28px;")
+          ),
+          shiny::column(
+            width = 3, align = "left",
+            shiny::numericInput("min_error", "", 1e-5, min = 0, max = 1)
+          )
+        ),
+        shiny::uiOutput("fuzzy_set_samples_ui")
+      ), # ----
       bslib::nav_panel(
-        title = "Runtime Options", icon = shiny::icon("clock")
-      ),
+        title = "Runtime Options", icon = shiny::icon("clock"), # ----
+        shiny::fluidRow(
+          shiny::column(width = 12, div(style = "height:20px"))
+        ),shiny::fluidRow(
+          shiny::column(
+            width = 5, align = "right",
+            shiny::h5("Use Parallel Processing", style = "padding: 35px;")
+          ),
+          shiny::column(
+            width = 7, align = "left",
+            shinyWidgets::radioGroupButtons("parallel", "", choiceNames = c("Yes", "No"), choiceValues = c(TRUE, FALSE))
+          )
+        ),
+        shiny::uiOutput("num_cores_in_paralell"),
+        shiny::fluidRow(
+          shiny::column(
+            width = 5, align = "right",
+            shiny::h5("Show Progress at Runtime", style = "padding: 35px;")
+          ),
+          shiny::column(
+            width = 7, align = "left",
+            shinyWidgets::radioGroupButtons("show_progress", "", choiceNames = c("Yes", "No"), choiceValues = c(TRUE, FALSE), selected = TRUE)
+          )
+        )
+      ), # ----
+      footer = shiny::fluidPage(
+        shiny::fluidRow(
+          shiny::column(width = 12, div(style = "height:20px"))
+        ),
+        bslib::card(
+          shiny::fluidRow(
+            shiny::actionButton(
+              "submit", "Submit", icon = shiny::icon("arrow-right-to-bracket")
+            )
+          )
+        )
+      )
     )
   )
 }
