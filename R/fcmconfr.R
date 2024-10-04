@@ -464,6 +464,46 @@ print.fcmconfr <- function(x, ...) {
 #'
 #'   fcmconfr_plot
 #'
+#' #'
+#' #'  if (x$fcm_class == "conventional") {
+#' input_fcms_inferences_longer <- tidyr::pivot_longer(x$inferences$input_fcms$inferences, cols = 2:ncol(x$inferences$input_fcms$inferences))
+#' input_fcms_inferences_longer$analysis_source <- "input"
+#' mc_inferences_longer <- tidyr::pivot_longer(x$inferences$monte_carlo_fcms$all_inferences, cols = 1:ncol(x$inferences$monte_carlo_fcms$all_inferences))
+#' mc_inferences_longer$analysis_source <- "mc"
+#' aggregate_inferences_longer <- tidyr::pivot_longer(x$inferences$aggregate_fcm$inferences, cols = 1:ncol(x$inferences$aggregate_fcm$inferences))
+#' aggregate_inferences_longer$analysis_source <- "aggregate"
+#' results <- rbind(input_fcms_inferences_longer[, -1], mc_inferences_longer)
+#' results$analysis_source <- factor(results$analysis_source, levels = c("mc", "input"))
+#' fcmconfr_plot <- ggplot() +
+#'   geom_boxplot(data = input_fcms_inferences_longer, aes(x = value, y = name, color = analysis_source), position = position_nudge(y = 0.18), width = 0.1) +
+#'   geom_boxplot(data = mc_inferences_longer, aes(x = value, y = name, color = analysis_source), position = position_nudge(y = -0.18), width = 0.4, fill = "lightgrey") +
+#'   geom_point(data = aggregate_inferences_longer, aes(x = value, y = name, shape = analysis_source), position = position_nudge(y = -0.18), size = 2, fill = "darkgray") +
+#'   geom_point(data = results, aes(x = value, y = name, alpha = analysis_source), position = position_jitterdodge(jitter.width = 0.3), stroke = NA) +
+#'   ggtitle("FCMconfR Inferences", subtitle = fcm_class_subtitle) +
+#'   scale_x_continuous(breaks = seq(domain_min, domain_max, by = 0.2), limits = c(domain_min, domain_max), expand = c(0, 0)) +
+#'   #scale_fill_manual(values = c(input = "white", mc = "lightgrey"), labels = c(input = "Input", mc = "Monte Carlo")) +
+#'   scale_color_manual(values = c(input = "darkgrey", mc = "black"), labels = c(input = "Input", mc = "Monte Carlo")) +
+#'   scale_shape_manual(values = c("triangle"), labels = c("Aggregate")) +
+#'   scale_alpha_manual(values = c(input = 0.5, mc = 0.1)) +
+#'   guides(alpha = "none", color = guide_legend(order = 1), shape = guide_legend(order = 2)) +
+#'   xlab("Inference Value") +
+#'   ylab("Concept (Node)") +
+#'   theme_classic() +
+#'   theme(
+#'     plot.margin = margin(t = 20, r = 40, b = 20, l = 20),
+#'     plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+#'     plot.subtitle = element_text(hjust = 0.5, margin = margin(b = 10)),
+#'     axis.title = element_text(size = 12),
+#'     axis.title.x = element_text(margin = margin(t = 10)),
+#'     axis.title.y = element_text(margin = margin(r = 10)),
+#'     axis.text = element_text(size = 12),
+#'     legend.position = "bottom",
+#'     legend.title = element_blank(),
+#'     legend.spacing = unit(0.001, 'cm'),
+#'     legend.text = element_text(size = 10)
+#'   )
+#' }
+#' fcmconfr_plot
 #'
 #'   # ggplot() +
 #'   #   geom_boxplot(data = input_fcms_inferences_longer, aes(x = value, y = name), width = 0.5, fill = "white") +
