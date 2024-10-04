@@ -210,6 +210,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
 
   inference_values_by_sim <- lapply(inferences_for_mc_adj_matrices, function(sim) sim$inference)
   inference_values_by_sim <- data.frame(do.call(rbind, inference_values_by_sim))
+  rownames(inference_values_by_sim) <- 1:nrow(inference_values_by_sim)
 
   inference_plot_data <- data.frame(
     node = rep(colnames(inference_values_by_sim), nrow(inference_values_by_sim)),

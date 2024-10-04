@@ -42,6 +42,8 @@ aggregate_fcms <- function(adj_matrices = list(matrix()),
     aggregate_adj_matrix <- aggregate_fcms_w_tfns(adj_matrices, aggregation_function, include_zeroes)
   }
 
+  class(aggregate_adj_matrix) <- "aggregate"
+
   aggregate_adj_matrix
 }
 
@@ -210,4 +212,17 @@ aggregate_fcms_w_tfns <- function(adj_matrices = list(matrix()),
     class = "aggregate_of_fcms_w_tfns"
   )
 }
+
+
+#' Print method for aggregate
+#'
+#' @param x an aggregate object
+#' @param ... additional inputs
+#' @export
+print.aggregate <- function(x, ...) {
+  print(x$adj_matrix)
+  cat(paste0("\nAggregate (", x$params$aggregation_fun, ") of ", length(x$params$input_adj_matrices), " adj. matrices"))
+}
+
+
 

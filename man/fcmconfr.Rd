@@ -22,9 +22,11 @@ fcmconfr(
   show_progress = TRUE,
   parallel = TRUE,
   n_cores = integer(),
+  perform_aggregate_analysis = TRUE,
+  perform_monte_carlo_analysis = TRUE,
+  perform_monte_carlo_inference_bootstrap_analysis = TRUE,
   include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-  include_monte_carlo_FCM_simulations_in_output = TRUE,
-  estimate_mc_inference_CI_w_bootstrap = TRUE
+  include_monte_carlo_FCM_simulations_in_output = TRUE
 )
 }
 \arguments{
@@ -82,18 +84,17 @@ from the pbapply package as the underlying function.}
 \item{n_cores}{Number of cores to use in parallel processing. If no input given,
 will use all available cores in the machine.}
 
-\item{include_zero_weighted_edges_in_aggregation_and_mc_sampling}{TRUE/FALSE
-Whether to incorporate zeroes as intentionally-defined edge weights or ignore
+\item{perform_aggregate_analysis}{TRUE/FALSE Run the code to generate and simulate an aggregate FCM generated from the input adj_matrices}
+
+\item{perform_monte_carlo_analysis}{TRUE/FALSE Run the code to generate and simulate monte carlo-generated FCM sampled from the input adj_matrices}
+
+\item{perform_monte_carlo_inference_bootstrap_analysis}{TRUE/FALSE Run the code to estimate the 95 percent CI bounds about the means of the inferences of the monte carlo adj matrices}
+
+\item{include_zero_weighted_edges_in_aggregation_and_mc_sampling}{TRUE/FALSE Whether to incorporate zeroes as intentionally-defined edge weights or ignore
 them when aggregating adj. matrices and sampling for monte carlo FCMs}
 
-\item{include_monte_carlo_FCM_simulations_in_output}{TRUE/FALSE
-Whether to include simulations of monte carlo FCMs. Switch to FALSE if concerned
+\item{include_monte_carlo_FCM_simulations_in_output}{TRUE/FALSE Whether to include simulations of monte carlo FCMs. Switch to FALSE if concerned
 about the size of the output of fcmconfr (simulations are necessary and will run regardless)}
-
-\item{estimate_mc_inference_CI_w_bootstrap}{TRUE/FALSE
-Whether to estimate confidence intervals for the inferences of each concept across
-all monte carlo FCMs via bootstrap. Switch to FALSE if concerned about runtime
-and/or want to perform bootstrapping manually.}
 }
 \description{
 [ADD DETAILS HERE!!!]

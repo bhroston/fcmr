@@ -1,137 +1,88 @@
-
 #' shiny_ui
 #'
 #' @description
 #' [ADD DETAILS HERE!!!]
 #'
 shiny_ui <- function() {
-  bslib::page_fillable(
+
+  bslib::page_sidebar(
+    title = "FCMconfR GUI",
+    sidebar = bslib::sidebar(
+      title = "Definitions", position = "right", open = FALSE
+    ),
     bslib::navset_underline(
+      id = "nav_panel",
       bslib::nav_panel(
-        title = "Data", icon = shiny::icon("laptop-file"), #####
+        title = "Data", icon = shiny::icon("laptop-file"), # ----
         shiny::fluidRow(
           shiny::column(width = 12, div(style = "height:20px"))
         ),
-        shiny::selectInput("adj_matrix_list", "Adj. Matrix or List of Adj. Matrices", choices = c(names(as.list(.GlobalEnv)), ""), selected = ""),
-        shiny::uiOutput("rejected_adj_matrix_list_note"),
-        #shiny::conditionalPanel(
-        #  condition = "!output.accepted_adj_matrix_list",
-        #  shiny::uiOutput("rejected_adj_matrix_list_note")
-        #),
+        shiny::fluidRow(
+          shiny::selectInput("adj_matrices", "Adj. Matrix or List of Adj. Matrices", choices = c(names(as.list(.GlobalEnv)), ""), selected = "")
+        ),
+        shiny::uiOutput("rejected_adj_matrices_note"),
         bslib::navset_underline(
           bslib::nav_panel(
             title = "Initial State (Pulse) Vector", icon = shiny::icon("wave-square"),
-            shiny::fluidRow(
-              shiny::column(
-                width = 12, div(style = "height:15px"),
-                shiny::p("\nThe Initial State (Pulse) Vector represents the starting 'activation' levels of each concept.")
-              )
-            ),
-            shiny::conditionalPanel(
-              condition = "output.accepted_adj_matrix_list",
-              shiny::fluidRow(
-                shiny::column(
-                  width = 12, div(style = "height:20px"),
-                )
-              ),
-              shiny::fluidRow(
-                shiny::column(
-                  width = 6, align = "center",
-                  shiny::uiOutput("initial_state_vector_numeric_inputs")
-                ),
-                shiny::column(
-                  width = 6, align = "center",
-                  shiny::tableOutput("initial_state_vector_table"),
-                  shiny::actionButton("reset_initial_state_vectors", "Reset", icon = shiny::icon("rotate-right"))
-                )
-              )
-            )
+            shiny::uiOutput("initial_state_vector_input_ui")
           ),
           bslib::nav_panel(
             title = "Clamping Vector", icon = shiny::icon("grip-lines"),
-            shiny::fluidRow(
-              shiny::column(
-                width = 12, div(style = "height:15px"),
-                shiny::p("\nThe Clamping Vector represents the steady 'activation' level or clamped 'activation' level for each concept throughout the simulation.")
-              )
-            ),
-            shiny::conditionalPanel(
-              condition = "output.accepted_adj_matrix_list",
-              shiny::fluidRow(
-                shiny::column(
-                  width = 12, div(style = "height:20px"),
-                )
-              ),
-              shiny::fluidRow(
-                shiny::column(
-                  width = 6, align = "center",
-                  shiny::uiOutput("clamping_vector_numeric_inputs")
-                ),
-                shiny::column(
-                  width = 6, align = "center",
-                  shiny::tableOutput("clamping_vector_table"),
-                  shiny::actionButton("reset_initial_state_vectors", "Reset", icon = shiny::icon("rotate-right"))
-                )
-              )
-            )
+            shiny::uiOutput("clamping_vector_input_ui")
           )
         )
-      ),#####
+      ), # ----
       bslib::nav_panel(
-        title = "Aggregation and Monte Carlo Options", icon = shiny::icon("layer-group"), #####
+        title = "Agg. and Monte Carlo Options", icon = shiny::icon("layer-group"), # ----
         shiny::fluidRow(
           shiny::column(width = 12, div(style = "height:20px"))
         ),
-        p("User selects if they want to Aggregate via Traditional Aggregation or Estimate Sample Space w/ Monte Carlo"),
-        bslib::navset_underline(
-          bslib::nav_panel(
-            title = "Aggregation Options", icon = shiny::icon("user-group"),
+        shiny::uiOutput("include_zero_edges_ui"),
+        bslib::card(
+          id = "aggregation_options",
+          shiny::fluidRow(
             shiny::column(
-              width = 12,
-              shiny::fluidRow(
-                shiny::column(
-                  width = 5, align = "right",
-                  shiny::h5("Aggregation Function", style = "padding: 35px;")
-                ),
-                shiny::column(
-                  width = 7, align = "left",
-                  shinyWidgets::radioGroupButtons("aggregation_fun", "", choices = c("Mean", "Median"), selected = "Mean"),
-                )
-              )
+              width = 8, align = "left",
+              shiny::HTML('<p><i class="fas fa-user-group" role="presentation" aria-label="user-group icon"></i>       Aggregation Options</p>')
+            ),
+            shiny::column(
+              width = 4, align = "right",
+              shiny::checkboxInput("perform_aggregation", "Aggregation Analaysis", value = TRUE),
             )
           ),
-          bslib::nav_panel(
-            title = "Monte Carlo Sampling Options", icon = shiny::icon("seedling"),
+          shiny::uiOutput("aggregation_options_ui")
+        ),
+        bslib::card(
+          id = "monte_carlo_options",
+          shiny::fluidRow(
             shiny::column(
-              width = 12,
-              shiny::fluidRow(
-                shiny::column(
-                  width = 5, align = "right",
-                  shiny::h5("# Sample Maps To Generate", style = "padding: 35px;")
-                ),
-                shiny::column(
-                  width = 7, align = "left",
-                  shiny::numericInput("monte_carlo_samples", "", value = 1000, min = 1, step = 500)
-                )
-              )
+              width = 8, align = "left",
+              shiny::HTML('<p><i class="fa-solid fa-seedling"></i>       Monte Carlo Options</p>')
+            ),
+            shiny::column(
+              width = 4, align = "right",
+              shiny::checkboxInput("perform_monte_carlo", "Monte Carlo Analysis", value = TRUE)
             )
-          )
+          ),
+          shiny::uiOutput("monte_carlo_options_ui")
         ),
-        shiny::fluidRow(
-          shiny::column(
-            width = 12, align = "center",
-            shiny::h5("Include 0-weighted Edges in Aggregation and Monte Carlo Sampling?")
-          )
-        ),
-        shiny::fluidRow(
-          shiny::column(
-            width = 12, align = "center",
-            shinyWidgets::radioGroupButtons("include_zero_weighted_edges_in_aggregation_and_mc_sampling", "", choiceNames = c("Yes", "No"), choiceValues = c(TRUE, FALSE), selected = TRUE)
-          )
+        bslib::card(
+          id = "inference_bootstrap_options",
+          shiny::fluidRow(
+            shiny::column(
+              width = 8, align = "left",
+              shiny::HTML('<p><i class="fa-solid fa-seedling"></i>       Monte Carlo Inference Bootstrapping Options</p>')
+            ),
+            shiny::column(
+              width = 4, align = "right",
+              shiny::checkboxInput("perform_inference_bootstrap", "Inference Bootstrap Analysis", value = TRUE)
+            )
+          ),
+          shiny::uiOutput("monte_carlo_inference_bootstrap_options_ui")
         )
-      ), #####
+      ), # ----
       bslib::nav_panel(
-        title = "Simulation Options", icon = shiny::icon("calculator"), #####
+        title = "Simulation Options", icon = shiny::icon("calculator"), # ----
         shiny::fluidRow(
           shiny::column(width = 12, div(style = "height:20px"))
         ),
@@ -186,86 +137,22 @@ shiny_ui <- function() {
           )
         ),
         shiny::uiOutput("fuzzy_set_samples_ui")
-      ), #####
+      ), # ----
       bslib::nav_panel(
-        title = "Bootstrap Options", icon = shiny::icon("chart-simple"), #####
+        title = "Runtime Options", icon = shiny::icon("clock"), # ----
         shiny::fluidRow(
           shiny::column(width = 12, div(style = "height:20px"))
-        ),
-        p("Bootstrap tab content"),
-        shiny::fluidRow(
-          shiny::column(
-            width = 10, align = "center",
-            shiny::h5("Estimate Confidence Interval Bounds about Monte Carlo Inferences?", style = "padding: 27px;")
-          ),
-          shiny::column(
-            width = 2, align = "left",
-            shinyWidgets::radioGroupButtons("bootstrap_inference_means_samples", "", choiceNames = c("Yes", "No"), choiceValues = c(TRUE, FALSE), selected = TRUE, size = "sm")
-          )
-        ),
-        shiny::conditionalPanel(
-          condition = "input.bootstrap_inference_means_samples == TRUE",
-          shiny::fluidRow(
-            shiny::column(
-              width = 5, align = "right",
-              shiny::h5("Confidence Interval (CI)", style = "padding: 30px;")
-            ),
-            shiny::column(
-              width = 7, align = "left",
-              shiny::numericInput("bootstrap_CI", "", value = 0.95, min = 0, max = 1, step = 0.01)
-            )
-          ),
-          shiny::fluidRow(
-            shiny::column(
-              width = 5, align = "right",
-              shiny::h5("# Draws per Bootstrap Rep.", style = "padding: 30px;")
-            ),
-            shiny::column(
-              width = 7, align = "left",
-              shiny::numericInput("bootstrap_draws_per_rep", "", value = 1000, min = 10, step = 100)
-            )
-          ),
-          shiny::fluidRow(
-            shiny::column(
-              width = 5, align = "right",
-              shiny::h5("# Bootstrap Reps", style = "padding: 30px;")
-            ),
-            shiny::column(
-              width = 7, align = "left",
-              shiny::numericInput("bootstrap_reps", "", value = 1000, min = 10, step = 100)
-            )
-          )
-        )
-      ), #####
-      bslib::nav_panel(
-        title = "Runtime Options", icon = shiny::icon("clock"), #####
-        shiny::fluidRow(
-          shiny::column(width = 12, div(style = "height:20px"))
-        ),
-        p("Bootstrap tab content"),
-        shiny::fluidRow(
+        ),shiny::fluidRow(
           shiny::column(
             width = 5, align = "right",
-            shiny::h5("Run using Parallel Processing", style = "padding: 35px;")
+            shiny::h5("Use Parallel Processing", style = "padding: 35px;")
           ),
           shiny::column(
             width = 7, align = "left",
-            shinyWidgets::radioGroupButtons("parallel", "", choiceNames = c("Yes", "No"), choiceValues = c(TRUE, FALSE), selected = TRUE)
+            shinyWidgets::radioGroupButtons("parallel", "", choiceNames = c("Yes", "No"), choiceValues = c(TRUE, FALSE))
           )
         ),
-        shiny::conditionalPanel(
-          condition  = "input.parallel == TRUE",
-          shiny::fluidRow(
-            shiny::column(
-              width = 5, align = "right",
-              shiny::h5("# Cores to Use in Parallel", style = "padding: 35px;")
-            ),
-            shiny::column(
-              width = 7, align = "left",
-              shiny::numericInput("n_cores", "", value = parallel::detectCores(), min = 2, max = parallel::detectCores(), step = 1)
-            )
-          )
-        ),
+        shiny::uiOutput("num_cores_in_paralell"),
         shiny::fluidRow(
           shiny::column(
             width = 5, align = "right",
@@ -276,10 +163,17 @@ shiny_ui <- function() {
             shinyWidgets::radioGroupButtons("show_progress", "", choiceNames = c("Yes", "No"), choiceValues = c(TRUE, FALSE), selected = TRUE)
           )
         )
-      ), #####
-      footer = shiny::fluidRow(
-        shiny::actionButton(
-          "submit", "Submit", icon = shiny::icon("arrow-right-to-bracket")
+      ), # ----
+      footer = shiny::fluidPage(
+        shiny::fluidRow(
+          shiny::column(width = 12, div(style = "height:20px"))
+        ),
+        bslib::card(
+          shiny::fluidRow(
+            shiny::actionButton(
+              "submit", "Submit", icon = shiny::icon("arrow-right-to-bracket")
+            )
+          )
         )
       )
     )
