@@ -55,11 +55,21 @@ test_that("streamlined fcmconfr works", {
         n_cores = 10,
         # Additional Options
         include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE,
-        estimate_mc_inference_CI_w_bootstrap = TRUE
+        include_monte_carlo_FCM_simulations_in_output = TRUE
       )
     ))
   )
+
+
+  ggplot() +
+    geom_jitter(data = test$inferences$input_fcms$inferences, aes(x = node, y = value)) +
+    geom_crossbar(data = bootstrapped_means, aes(x = node, y = lower_0.025, ymin = lower_0.025, ymax = upper_0.975), fill = "red", color = "red", size = 0.1)
+
+
+
+
+
+
 
   lower_adj_matrix_1 <- data.frame(
     "A" = c(0, 0),
