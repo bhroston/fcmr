@@ -47,17 +47,12 @@
 #' @param n_cores Number of cores to use in parallel processing. If no input given,
 #' will use all available cores in the machine.
 #' @param perform_aggregate_analysis TRUE/FALSE Run the code to generate and simulate an aggregate FCM generated from the input adj_matrices
-#' @param perform_monte_carlo_analysis TRUE/FALS Run the code to generate and simulate monte carlo-generated FCM sampled from the input adj_matrices
-#' @param include_zero_weighted_edges_in_aggregation_and_mc_sampling TRUE/FALSE
-#' Whether to incorporate zeroes as intentionally-defined edge weights or ignore
+#' @param perform_monte_carlo_analysis TRUE/FALSE Run the code to generate and simulate monte carlo-generated FCM sampled from the input adj_matrices
+#' @param perform_monte_carlo_inference_bootstrap_analysis TRUE/FALSE Run the code to estimate the 95 percent CI bounds about the means of the inferences of the monte carlo adj matrices
+#' @param include_zero_weighted_edges_in_aggregation_and_mc_sampling TRUE/FALSE Whether to incorporate zeroes as intentionally-defined edge weights or ignore
 #' them when aggregating adj. matrices and sampling for monte carlo FCMs
-#' @param include_monte_carlo_FCM_simulations_in_output TRUE/FALSE
-#' Whether to include simulations of monte carlo FCMs. Switch to FALSE if concerned
+#' @param include_monte_carlo_FCM_simulations_in_output TRUE/FALSE Whether to include simulations of monte carlo FCMs. Switch to FALSE if concerned
 #' about the size of the output of fcmconfr (simulations are necessary and will run regardless)
-#' @param estimate_mc_inference_CI_w_bootstrap TRUE/FALSE
-#' Whether to estimate confidence intervals for the inferences of each concept across
-#' all monte carlo FCMs via bootstrap. Switch to FALSE if concerned about runtime
-#' and/or want to perform bootstrapping manually.
 #'
 #' @export
 fcmconfr <- function(adj_matrices = list(matrix()),
@@ -84,12 +79,18 @@ fcmconfr <- function(adj_matrices = list(matrix()),
                      # Additional Options
                      perform_aggregate_analysis = TRUE,
                      perform_monte_carlo_analysis = TRUE,
+                     perform_monte_carlo_inference_bootstrap_analysis = TRUE,
                      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-                     include_monte_carlo_FCM_simulations_in_output = TRUE,
-                     estimate_mc_inference_CI_w_bootstrap = TRUE) {
+                     include_monte_carlo_FCM_simulations_in_output = TRUE) {
 
   # Perform Checks ----
   # browser()
+
+  adj_matrices_input_type <- get_adj_matrices_input_type(adj_matrices)
+  fcm_class <- adj_matrices_input_type$object_types_in_list[1]
+  if (!adj_matrices_input_type$adj_matrices_input_is_list) {
+    adj_matrices <- list(adj_matrices)
+  }
 
   adj_matrices_dims <- lapply(adj_matrices, dim)
   if (length(unique(unlist(adj_matrices_dims))) > 1) {
@@ -98,11 +99,6 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   }
   n_nodes <- unique(unlist(adj_matrices_dims))
 
-  adj_matrices_input_type <- get_adj_matrices_input_type(adj_matrices)
-  fcm_class <- adj_matrices_input_type$object_types_in_list[1]
-  if (!adj_matrices_input_type$adj_matrices_input_is_list) {
-    adj_matrices <- list(adj_matrices)
-  }
 
   if (identical(initial_state_vector, c())) {
     warning("No initial_state_vector input given. Assuming all nodes have an initial state of 1.")
@@ -148,10 +144,10 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     Skipping aggregation and monte carlo analyses.")
   }
 
-  if (!perform_monte_carlo_analysis & estimate_mc_inference_CI_w_bootstrap) {
+  if (!perform_monte_carlo_analysis & perform_monte_carlo_inference_bootstrap_analysis) {
     warning(". Cannot estimate CIs of monte carlo inferences if monte carlo analysis is not being performed.
     Skipping CI bound estimation.")
-    estimate_mc_inference_CI_w_bootstrap <- FALSE
+    perform_monte_carlo_inference_bootstrap_analysis <- FALSE
   }
 
   if (perform_aggregate_analysis) {
@@ -188,7 +184,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
       include_simulations_in_output = include_monte_carlo_FCM_simulations_in_output
     )
 
-    if (estimate_mc_inference_CI_w_bootstrap) {
+    if (perform_monte_carlo_inference_bootstrap_analysis) {
       CIs_of_means_of_mc_simulation_inferences <- get_mc_simulations_inference_CIs_w_bootstrap(mc_inferences$inference, inference_estimation_CI, inference_estimation_bootstrap_reps, inference_estimation_bootstrap_draws_per_rep, parallel, n_cores, show_progress)
       quantiles_of_mc_simulation_inferences <- data.frame(t(apply(mc_inferences$inference, 2, stats::quantile)))
       mc_inference_distributions_df <- cbind(CIs_of_means_of_mc_simulation_inferences$CI_by_node, quantiles_of_mc_simulation_inferences)
@@ -245,7 +241,7 @@ organize_fcmconfr_output <- function(...) {
                                max_iter = variables$max_iter,
                                min_error = variables$min_error,
                                fuzzy_set_samples = variables$fuzzy_set_samples),
-        additional_opts = list(estimate_mc_inference_CI_w_bootstrap = variables$estimate_mc_inference_CI_w_bootstrap,
+        additional_opts = list(perform_monte_carlo_inference_bootstrap_analysis = variables$perform_monte_carlo_inference_bootstrap_analysis,
                                perform_aggregate_analysis = variables$perform_aggregate_analysis,
                                perform_monte_carlo_analysis = variables$perform_monte_carlo_analysis)
       )
@@ -262,7 +258,7 @@ organize_fcmconfr_output <- function(...) {
     fcmconfr_output$params$aggregation_function = variables$aggregation_function
     fcmconfr_output$params$additional_opts <- list(
       include_zero_weighted_edges_in_aggregation_and_mc_sampling = variables$include_zero_weighted_edges_in_aggregation_and_mc_sampling,
-      estimate_mc_inference_CI_w_bootstrap = variables$estimate_mc_inference_CI_w_bootstrap,
+      perform_monte_carlo_inference_bootstrap_analysis = variables$perform_monte_carlo_inference_bootstrap_analysis,
       perform_aggregate_analysis = variables$perform_aggregate_analysis,
       perform_monte_carlo_analysis = variables$perform_monte_carlo_analysis
     )
@@ -282,14 +278,14 @@ organize_fcmconfr_output <- function(...) {
     fcmconfr_output$params$additional_opts = list(
       include_zero_weighted_edges_in_aggregation_and_mc_sampling = variables$include_zero_weighted_edges_in_aggregation_and_mc_sampling,
       include_monte_carlo_FCM_simulations_in_output = variables$include_monte_carlo_FCM_simulations_in_output,
-      estimate_mc_inference_CI_w_bootstrap = variables$estimate_mc_inference_CI_w_bootstrap,
+      perform_monte_carlo_inference_bootstrap_analysis = variables$perform_monte_carlo_inference_bootstrap_analysis,
       perform_aggregate_analysis = variables$perform_aggregate_analysis,
       perform_monte_carlo_analysis = variables$perform_monte_carlo_analysis
     )
   }
 
 
-  if (variables$perform_monte_carlo_analysis & variables$estimate_mc_inference_CI_w_bootstrap) {
+  if (variables$perform_monte_carlo_analysis & variables$perform_monte_carlo_inference_bootstrap_analysis) {
     fcmconfr_output$bootstrap = list(
       CIs_about_means_and_quantiles_of_mc_inferences = variables$mc_inference_distributions_df,
       bootstrapped_means = variables$CIs_of_means_of_mc_simulation_inferences$bootstrap_means
@@ -323,7 +319,7 @@ organize_fcmconfr_output <- function(...) {
 print.fcmconfr <- function(x, ...) {
   performed_aggregate <- x$params$additional_opts$perform_aggregate_analysis
   performed_mc <- x$params$additional_opts$perform_monte_carlo_analysis
-  performed_bootstrap <- x$params$additional_opts$estimate_mc_inference_CI_w_bootstrap
+  performed_bootstrap <- x$params$additional_opts$perform_monte_carlo_inference_bootstrap_analysis
 
   n_input_fcm <- length(x$params$adj_matrices)
 
