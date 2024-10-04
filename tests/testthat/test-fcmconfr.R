@@ -187,6 +187,7 @@ test_that("streamlined fcmconfr works", {
 
 
 
+
   # adj_matrices = test_fcms
   # # Aggregation and Monte Carlo Sampling
   # aggregation_function = 'mean'
