@@ -137,11 +137,16 @@ fcmconfr <- function(adj_matrices = list(matrix()),
 
   # Aggregation and Monte Carlo Simulations ----
 
-  if (length(adj_matrices) == 1 & (perform_monte_carlo_analysis | perform_aggregate_analysis)) {
+  if (fcm_class == "conventional" & length(adj_matrices) == 1 & (perform_monte_carlo_analysis | perform_aggregate_analysis)) {
     perform_monte_carlo_analysis = FALSE
     perform_aggregate_analysis = FALSE
     warning("  Cannot aggregate or generate monte carlo samples from a single adj. matrix.
     Skipping aggregation and monte carlo analyses.")
+  }
+  else if ((fcm_class %in% c("ivfn", "tfn")) & length(adj_matrices) == 1 & (perform_aggregate_analysis)) {
+    perform_aggregate_analysis = FALSE
+    warning("  Cannot aggregate from a single adj. matrix.
+    Skipping aggregation analysis.")
   }
 
   if (!perform_monte_carlo_analysis & perform_monte_carlo_inference_bootstrap_analysis) {
@@ -156,6 +161,8 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     # Infer aggregate adj_matrix
     aggregate_fcm_inference <- infer_fcm(aggregate_adj_matrix$adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error, fuzzy_set_samples)
   }
+
+  browser()
 
   if (perform_monte_carlo_analysis) {
     # Build monte carlo models

@@ -315,7 +315,7 @@ shiny_server <- function(input, output, session) {
   can_perform_monte_carlo_analysis <- shiny::reactive({
     if (!accepted_adj_matrices_input()) {
       FALSE
-    } else if (accepted_adj_matrices_input() & length(adj_matrices()) == 1) {
+    } else if (accepted_adj_matrices_input() & length(adj_matrices()) == 1 & fcm_class() == "conventional") {
       FALSE
     } else {
       TRUE
@@ -529,8 +529,8 @@ shiny_server <- function(input, output, session) {
 
   shiny::observeEvent(input$submit, {
     assign(
-      x = "session_variables",
-      value = form_data(),
+      x = "fcmconfr_input",
+      value = structure(.Data = form_data(), class = "fcmconfr_input"),
       envir = .GlobalEnv
     )
     shiny::stopApp()
@@ -539,8 +539,8 @@ shiny_server <- function(input, output, session) {
   shiny::onStop(
     function() {
       assign(
-        x = "session_variables",
-        value = shiny::isolate(form_data()),
+        x = "fcmconfr_input",
+        value = structure(.Data = shiny::isolate(form_data()), class = "fcmconfr_input"),
         envir = .GlobalEnv
       )
     }
