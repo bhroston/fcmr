@@ -33,6 +33,8 @@
 #' and the simulation will stop
 #' @param fuzzy_set_samples The size (n) of the distributions represented by IVFNs or TFNs (only
 #' used when IVFNs or TFNs in adj_matrices input)
+#' @param inference_estimation_function Estimate confidence intervals about the "mean" or "median" of
+#' inferences from the monte carlo simulations
 #' @param inference_estimation_CI The confidence interval to estimate for the inferences
 #' of each concept across all monte carlo FCMs (via bootstrap)
 #' @param inference_estimation_bootstrap_reps The number of bootstraps to perform in
@@ -69,6 +71,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
                      min_error = 1e-5,
                      fuzzy_set_samples = 1000,
                      # Inference Estimation (bootstrap)
+                     inference_estimation_function = c("mean", "median"),
                      inference_estimation_CI = 0.95,
                      inference_estimation_bootstrap_reps = 5000,
                      inference_estimation_bootstrap_draws_per_rep = 5000,
@@ -162,7 +165,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     aggregate_fcm_inference <- infer_fcm(aggregate_adj_matrix$adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error, fuzzy_set_samples)
   }
 
-  browser()
+  # browser()
 
   if (perform_monte_carlo_analysis) {
     # Build monte carlo models
@@ -192,7 +195,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     )
 
     if (perform_monte_carlo_inference_bootstrap_analysis) {
-      CIs_of_means_of_mc_simulation_inferences <- get_mc_simulations_inference_CIs_w_bootstrap(mc_inferences$inference, inference_estimation_CI, inference_estimation_bootstrap_reps, inference_estimation_bootstrap_draws_per_rep, parallel, n_cores, show_progress)
+      CIs_of_means_of_mc_simulation_inferences <- get_mc_simulations_inference_CIs_w_bootstrap(mc_inferences$inference, inference_estimation_function, inference_estimation_CI, inference_estimation_bootstrap_reps, inference_estimation_bootstrap_draws_per_rep, parallel, n_cores, show_progress)
       quantiles_of_mc_simulation_inferences <- data.frame(t(apply(mc_inferences$inference, 2, stats::quantile)))
       mc_inference_distributions_df <- cbind(CIs_of_means_of_mc_simulation_inferences$CI_by_node, quantiles_of_mc_simulation_inferences)
       colnames(mc_inference_distributions_df) <- c("node", "lower_0.025_CI_about_mean", "upper_0.975_CI_about_mean", "min", "lower_quantile_0.25", "median", "upper_quantile_0.75", "max")
@@ -293,9 +296,9 @@ organize_fcmconfr_output <- function(...) {
 
 
   if (variables$perform_monte_carlo_analysis & variables$perform_monte_carlo_inference_bootstrap_analysis) {
-    fcmconfr_output$bootstrap = list(
-      CIs_about_means_and_quantiles_of_mc_inferences = variables$mc_inference_distributions_df,
-      bootstrapped_means = variables$CIs_of_means_of_mc_simulation_inferences$bootstrap_means
+    fcmconfr_output$inferences$monte_carlo_fcms$bootstrap = list(
+      CIs_about_expected_values_and_quantiles_of_mc_inferences = variables$mc_inference_distributions_df,
+      bootstrapped_expected_values = variables$CIs_of_expectations_of_mc_simulation_inferences$bootstrap_means
     )
     fcmconfr_output$params$mc_confidence_intervals_opts = list(
       inference_estimation_CI = variables$inference_estimation_CI,

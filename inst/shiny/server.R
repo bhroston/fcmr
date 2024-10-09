@@ -405,7 +405,17 @@ shiny_server <- function(input, output, session) {
         shiny::fluidRow(
           shiny::column(
             width = 6, align = "right",
-            shiny::h5("Confidence Interval about the Means of Inferences", style = "padding: 35px;")
+            shiny::h5("Estimate Confidence Interval about the Mean or Median of MC Inferences?", style = "padding: 15px;")
+          ),
+          shiny::column(
+            width = 6, align = "left",
+            shiny::radioButtons("mc_inference_estimation_function", "", choiceNames = c("Mean", "Median"), choiceValues = c("mean", "median"))
+          )
+        ),
+        shiny::fluidRow(
+          shiny::column(
+            width = 6, align = "right",
+            shiny::h5("Confidence Interval about the Mean/Median of Inferences", style = "padding: 20px;")
           ),
           shiny::column(
             width = 6, align = "left",
@@ -415,7 +425,7 @@ shiny_server <- function(input, output, session) {
         shiny::fluidRow(
           shiny::column(
             width = 6, align = "right",
-            shiny::h5("# Bootstraps (Repetitions)", style = "padding: 35px;")
+            shiny::h5("# Bootstraps (Repetitions)", style = "padding: 25px;")
           ),
           shiny::column(
             width = 6, align = "left",
@@ -425,7 +435,7 @@ shiny_server <- function(input, output, session) {
         shiny::fluidRow(
           shiny::column(
             width = 6, align = "right",
-            shiny::h5("# Draws per Bootstrap (Repetition)", style = "padding: 35px;")
+            shiny::h5("# Draws per Bootstrap (Repetition)", style = "padding: 25px;")
           ),
           shiny::column(
             width = 6, align = "left",
@@ -531,7 +541,7 @@ shiny_server <- function(input, output, session) {
     assign(
       x = "fcmconfr_input",
       value = structure(.Data = form_data(), class = "fcmconfr_input"),
-      envir = .GlobalEnv
+      envir = sys.frames()[[1]]
     )
     shiny::stopApp()
   })
@@ -541,7 +551,7 @@ shiny_server <- function(input, output, session) {
       assign(
         x = "fcmconfr_input",
         value = structure(.Data = shiny::isolate(form_data()), class = "fcmconfr_input"),
-        envir = .GlobalEnv
+        envir = sys.frames()[[1]]
       )
     }
   )

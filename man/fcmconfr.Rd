@@ -16,6 +16,7 @@ fcmconfr(
   max_iter = 100,
   min_error = 1e-05,
   fuzzy_set_samples = 1000,
+  inference_estimation_function = c("mean", "median"),
   inference_estimation_CI = 0.95,
   inference_estimation_bootstrap_reps = 5000,
   inference_estimation_bootstrap_draws_per_rep = 5000,
@@ -64,6 +65,9 @@ and the simulation will stop}
 
 \item{fuzzy_set_samples}{The size (n) of the distributions represented by IVFNs or TFNs (only
 used when IVFNs or TFNs in adj_matrices input)}
+
+\item{inference_estimation_function}{Estimate confidence intervals about the "mean" or "median" of
+inferences from the monte carlo simulations}
 
 \item{inference_estimation_CI}{The confidence interval to estimate for the inferences
 of each concept across all monte carlo FCMs (via bootstrap)}

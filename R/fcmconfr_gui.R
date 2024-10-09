@@ -7,6 +7,7 @@
 #' @export
 fcmconfr_gui <- function() {
 
+  #browser()
   # assignInNamespace(
   #   "collapse_icon",
   #   function() {
@@ -17,13 +18,13 @@ fcmconfr_gui <- function() {
   #   ns = "bslib"
   # )
 
-  if (exists("fcmconfr_input")) {
-    fcmconfr_input <<- NULL
-  }
+  # if (exists("fcmconfr_input")) {
+  #   fcmconfr_input <<- NULL
+  # }
+
+  # shiny_env <- environment()
 
   shiny::runApp(appDir = system.file('shiny', package = 'fcmconfr'))
-
-  # browser()
 
   if (identical(fcmconfr_input$adj_matrices, "")) {
     stop("No adj matrix list was selected. Please call gui again for selection.")
@@ -43,6 +44,10 @@ fcmconfr_gui <- function() {
 
   if (!exists("fcmconfr_input$fuzzy_set_samples")) {
     fcmconfr_input$fuzzy_set_samples <- 1000
+  }
+
+  if (!exists("fcmconfr_input$mc_inference_estimation_function")) {
+    fcmconfr_input$mc_inference_estimation_function <- "mean"
   }
 
   if (!exists("fcmconfr_input$mc_inference_estimation_CI")) {
@@ -89,6 +94,7 @@ fcmconfr_gui <- function() {
     "  min_error = ", fcmconfr_input$min_error, ",\n",
     "  fuzzy_set_samples = ", fcmconfr_input$fuzzy_set_samples, ",\n",
     "  # Inference Estimation (bootstrap)", "\n",
+    "  inference_estimation_function = ", fcmconfr_input$mc_inference_estimation_function, ",\n",
     "  inference_estimation_CI = ", fcmconfr_input$mc_inference_estimation_CI, ",\n",
     "  inference_estimation_bootstrap_reps = ", fcmconfr_input$mc_inference_bootstrap_reps, ",\n",
     "  inference_estimation_bootstrap_draws_per_rep = ", fcmconfr_input$mc_inference_bootstrap_draws_per_rep, ",\n",
@@ -104,10 +110,14 @@ fcmconfr_gui <- function() {
     "  include_monte_carlo_FCM_simulations_in_output = ",  fcmconfr_input$include_monte_carlo_FCM_simulations_in_output, "\n",
     ")", sep = ""
   )
+
 }
 
 
 #' Print fcmconfr_input
+#'
+#' @param x an fcmconfr object
+#' @param ... additional inputs
 #'
 #' @export
 print.fcmconfr_input <- function(x, ...) {
@@ -127,6 +137,7 @@ print.fcmconfr_input <- function(x, ...) {
     "  min_error = ", x$min_error, ",\n",
     "  fuzzy_set_samples = ", x$fuzzy_set_samples, ",\n",
     "  # Inference Estimation (bootstrap)", "\n",
+    "  inference_estimation_function = ", fcmconfr_input$mc_inference_estimation_function, ",\n",
     "  inference_estimation_CI = ", x$mc_inference_estimation_CI, ",\n",
     "  inference_estimation_bootstrap_reps = ", x$mc_inference_bootstrap_reps, ",\n",
     "  inference_estimation_bootstrap_draws_per_rep = ", x$mc_inference_bootstrap_draws_per_rep, ",\n",

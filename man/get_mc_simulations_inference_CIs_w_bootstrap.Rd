@@ -6,6 +6,7 @@
 \usage{
 get_mc_simulations_inference_CIs_w_bootstrap(
   mc_simulations_inference_df = data.frame(),
+  inference_function = "mean",
   confidence_interval = 0.95,
   bootstrap_reps = 1000,
   bootstrap_draws_per_rep = 1000,
@@ -16,6 +17,9 @@ get_mc_simulations_inference_CIs_w_bootstrap(
 }
 \arguments{
 \item{mc_simulations_inference_df}{The final values of a set of fcm simulations; also the inference of a infer_fmcm object}
+
+\item{inference_function}{Estimate confidence intervals about the "mean" or "median" of
+inferences from the monte carlo simulations}
 
 \item{confidence_interval}{What are of the distribution should be bounded by the
 confidence intervals? (e.g. 0.95)}

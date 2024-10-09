@@ -6,6 +6,11 @@
 \usage{
 \method{print}{fcmconfr_input}(x, ...)
 }
+\arguments{
+\item{x}{an fcmconfr object}
+
+\item{...}{additional inputs}
+}
 \description{
 Print fcmconfr_input
 }
