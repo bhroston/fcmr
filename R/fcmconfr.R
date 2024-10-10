@@ -216,10 +216,11 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     )
 
     if (perform_monte_carlo_inference_bootstrap_analysis) {
-      CIs_of_means_of_mc_simulation_inferences <- get_mc_simulations_inference_CIs_w_bootstrap(mc_inferences$inference, inference_estimation_function, inference_estimation_CI, inference_estimation_bootstrap_reps, inference_estimation_bootstrap_draws_per_rep, parallel, n_cores, show_progress)
+      # browser()
+      CIs_of_expected_values_of_mc_simulation_inferences <- get_mc_simulations_inference_CIs_w_bootstrap(mc_inferences$inference, inference_estimation_function, inference_estimation_CI, inference_estimation_bootstrap_reps, inference_estimation_bootstrap_draws_per_rep, parallel, n_cores, show_progress)
       quantiles_of_mc_simulation_inferences <- data.frame(t(apply(mc_inferences$inference, 2, stats::quantile)))
-      mc_inference_distributions_df <- cbind(CIs_of_means_of_mc_simulation_inferences$CI_by_node, quantiles_of_mc_simulation_inferences)
-      colnames(mc_inference_distributions_df) <- c("node", "lower_0.025_CI_about_mean", "upper_0.975_CI_about_mean", "min", "lower_quantile_0.25", "median", "upper_quantile_0.75", "max")
+      mc_inference_distributions_df <- cbind(CIs_of_expected_values_of_mc_simulation_inferences$CI_by_node, quantiles_of_mc_simulation_inferences)
+      colnames(mc_inference_distributions_df) <- c("node", "lower_0.025_CI", "upper_0.975_CI", "min", "lower_quantile_0.25", "median", "upper_quantile_0.75", "max")
     }
   }
 
@@ -282,8 +283,10 @@ organize_fcmconfr_output <- function(...) {
 
 
   if (variables$perform_aggregate_analysis) {
+    #browser()
+    fcmconfr_output$aggregate_adj_matrix <- variables$aggregate_adj_matrix
     fcmconfr_output$inferences$aggregate_fcm = list(
-      inferences = variables$aggregate_fcm_inference$inference,
+      inferences = variables$aggregate_fcm_inference$inference_df,
       simulation = variables$aggregate_fcm_inference
     )
     fcmconfr_output$params$aggregation_function = variables$aggregation_function
@@ -317,9 +320,12 @@ organize_fcmconfr_output <- function(...) {
 
 
   if (variables$perform_monte_carlo_analysis & variables$perform_monte_carlo_inference_bootstrap_analysis) {
+    #browser()
     fcmconfr_output$inferences$monte_carlo_fcms$bootstrap = list(
-      CIs_about_expected_values_and_quantiles_of_mc_inferences = variables$mc_inference_distributions_df,
-      bootstrapped_expected_values = variables$CIs_of_expectations_of_mc_simulation_inferences$bootstrap_means
+      CI_estimation_function = variables$inference_estimation_function,
+      CIs_by_node = variables$CIs_of_expected_values_of_mc_simulation_inferences$CI_by_node,
+      CIs_and_quantiles_by_node = variables$mc_inference_distributions_df,
+      bootstrapped_expected_values = variables$CIs_of_expected_values_of_mc_simulation_inferences$bootstrap_expected_values
     )
     fcmconfr_output$params$mc_confidence_intervals_opts = list(
       inference_estimation_CI = variables$inference_estimation_CI,
