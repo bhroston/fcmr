@@ -315,7 +315,7 @@ shiny_server <- function(input, output, session) {
   can_perform_monte_carlo_analysis <- shiny::reactive({
     if (!accepted_adj_matrices_input()) {
       FALSE
-    } else if (accepted_adj_matrices_input() & length(adj_matrices()) == 1) {
+    } else if (accepted_adj_matrices_input() & length(adj_matrices()) == 1 & fcm_class() == "conventional") {
       FALSE
     } else {
       TRUE
@@ -405,7 +405,17 @@ shiny_server <- function(input, output, session) {
         shiny::fluidRow(
           shiny::column(
             width = 6, align = "right",
-            shiny::h5("Confidence Interval about the Means of Inferences", style = "padding: 35px;")
+            shiny::h5("Estimate Confidence Interval about the Mean or Median of MC Inferences?", style = "padding: 15px;")
+          ),
+          shiny::column(
+            width = 6, align = "left",
+            shiny::radioButtons("mc_inference_estimation_function", "", choiceNames = c("Mean", "Median"), choiceValues = c("mean", "median"))
+          )
+        ),
+        shiny::fluidRow(
+          shiny::column(
+            width = 6, align = "right",
+            shiny::h5("Confidence Interval about the Mean/Median of Inferences", style = "padding: 20px;")
           ),
           shiny::column(
             width = 6, align = "left",
@@ -415,7 +425,7 @@ shiny_server <- function(input, output, session) {
         shiny::fluidRow(
           shiny::column(
             width = 6, align = "right",
-            shiny::h5("# Bootstraps (Repetitions)", style = "padding: 35px;")
+            shiny::h5("# Bootstraps (Repetitions)", style = "padding: 25px;")
           ),
           shiny::column(
             width = 6, align = "left",
@@ -425,7 +435,7 @@ shiny_server <- function(input, output, session) {
         shiny::fluidRow(
           shiny::column(
             width = 6, align = "right",
-            shiny::h5("# Draws per Bootstrap (Repetition)", style = "padding: 35px;")
+            shiny::h5("# Draws per Bootstrap (Repetition)", style = "padding: 25px;")
           ),
           shiny::column(
             width = 6, align = "left",
@@ -528,20 +538,24 @@ shiny_server <- function(input, output, session) {
   })
 
   shiny::observeEvent(input$submit, {
+    #browser()
+    env_frame_index <- which(unlist(lapply(sys.frames(), function(frame) frame$shiny_env_check)) == 1)
     assign(
-      x = "session_variables",
-      value = form_data(),
-      envir = .GlobalEnv
+      x = "fcmconfr_input",
+      value = structure(.Data = form_data(), class = "fcmconfr_input"),
+      envir = sys.frames()[[env_frame_index]]
     )
     shiny::stopApp()
   })
 
   shiny::onStop(
     function() {
+      #browser()
+      #env_frame_index <- which(unlist(lapply(sys.frames(), function(frame) frame$shiny_env_check)) == 1)
       assign(
-        x = "session_variables",
-        value = shiny::isolate(form_data()),
-        envir = .GlobalEnv
+        x = "fcmconfr_input",
+        value = structure(.Data = shiny::isolate(form_data()), class = "fcmconfr_input"),
+        envir = sys.frame()
       )
     }
   )
