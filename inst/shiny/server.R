@@ -538,20 +538,24 @@ shiny_server <- function(input, output, session) {
   })
 
   shiny::observeEvent(input$submit, {
+    #browser()
+    env_frame_index <- which(unlist(lapply(sys.frames(), function(frame) frame$shiny_env_check)) == 1)
     assign(
       x = "fcmconfr_input",
       value = structure(.Data = form_data(), class = "fcmconfr_input"),
-      envir = sys.frames()[[1]]
+      envir = sys.frames()[[env_frame_index]]
     )
     shiny::stopApp()
   })
 
   shiny::onStop(
     function() {
+      #browser()
+      #env_frame_index <- which(unlist(lapply(sys.frames(), function(frame) frame$shiny_env_check)) == 1)
       assign(
         x = "fcmconfr_input",
         value = structure(.Data = shiny::isolate(form_data()), class = "fcmconfr_input"),
-        envir = sys.frames()[[1]]
+        envir = sys.frame()
       )
     }
   )

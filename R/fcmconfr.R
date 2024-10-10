@@ -112,6 +112,15 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     clamping_vector <- rep(0, n_nodes)
   }
 
+  if (identical(activation, c("kosko", "modified-kosko", "rescale"))) {
+    warning("No activation function given, assuming activation = 'kosko'")
+    activation <- "kosko"
+  }
+  if (identical(squashing, c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"))) {
+    warning("No squashing function given, assuming squashing = 'sigmoid'")
+    squashing <- "sigmoid"
+  }
+
   # Perform checks
   checks <- lapply(adj_matrices, check_simulation_inputs, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
   identified_concepts <- unique(lapply(adj_matrices, colnames))
@@ -153,9 +162,21 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   }
 
   if (!perform_monte_carlo_analysis & perform_monte_carlo_inference_bootstrap_analysis) {
-    warning(". Cannot estimate CIs of monte carlo inferences if monte carlo analysis is not being performed.
+    warning("  Cannot estimate CIs of monte carlo inferences if monte carlo analysis is not being performed.
     Skipping CI bound estimation.")
     perform_monte_carlo_inference_bootstrap_analysis <- FALSE
+  }
+
+  if (perform_aggregate_analysis & identical(aggregation_function, c("mean", "median"))) {
+    warning("No aggregation_function given, assuming aggregation_function = 'mean'")
+    aggregation_function <- 'mean'
+  }
+
+  if (perform_monte_carlo_analysis & perform_monte_carlo_inference_bootstrap_analysis) {
+    if (identical(inference_estimation_function, c("mean", "median"))) {
+      warning("No inference_estimation_function given, assuming inference_estimation_function = 'mean'")
+    }
+    inference_estimation_function <- 'mean'
   }
 
   if (perform_aggregate_analysis) {

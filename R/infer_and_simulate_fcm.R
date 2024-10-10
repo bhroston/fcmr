@@ -1039,6 +1039,7 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
   if (!(activation %in% c("kosko", "modified-kosko", "rescale"))) {
     stop("Failed Input Validation: Input activation must be one of the following: 'kosko', 'modified-kosko', or 'rescale'")
   }
+
   if (!(squashing %in% c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"))) {
     stop('Failed Input Validation: Input squashing must be one of the following: "sigmoid", "tanh", "bivalent", "saturation", "trivalent"')
   }

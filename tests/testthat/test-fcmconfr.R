@@ -46,6 +46,7 @@ test_that("streamlined fcmconfr works", {
         min_error = 1e-05,
         fuzzy_set_samples = 100,
         # Inference Estimation (bootstrap)
+        inference_estimation_function = "mean",
         inference_estimation_CI = 0.95,
         inference_estimation_bootstrap_reps = 1000,
         inference_estimation_bootstrap_draws_per_rep = 1000,
@@ -134,6 +135,7 @@ test_that("streamlined fcmconfr works", {
         min_error = 1e-05,
         fuzzy_set_samples = 100,
         # Inference Estimation (bootstrap)
+        inference_estimation_function = "mean",
         inference_estimation_CI = 0.95,
         inference_estimation_bootstrap_reps = 1000,
         inference_estimation_bootstrap_draws_per_rep = 1000,

@@ -7,22 +7,13 @@
 #' @export
 fcmconfr_gui <- function() {
 
-  #browser()
-  # assignInNamespace(
-  #   "collapse_icon",
-  #   function() {
-  #     bsicons::bs_icon(
-  #       "info-circle-fill", class = "collapse-icon", size = NULL
-  #     )
-  #   },
-  #   ns = "bslib"
-  # )
+  # These bslib and shinyWidgets calls are only here to be acknowledged in
+  # R CMD Check, they have no impact on the rest of the function and can be
+  # ignored.
+  bslib::versions()
+  shinyWidgets::animations
 
-  # if (exists("fcmconfr_input")) {
-  #   fcmconfr_input <<- NULL
-  # }
-
-  # shiny_env <- environment()
+  shiny_env_check <- 1
 
   shiny::runApp(appDir = system.file('shiny', package = 'fcmconfr'))
 
@@ -137,7 +128,7 @@ print.fcmconfr_input <- function(x, ...) {
     "  min_error = ", x$min_error, ",\n",
     "  fuzzy_set_samples = ", x$fuzzy_set_samples, ",\n",
     "  # Inference Estimation (bootstrap)", "\n",
-    "  inference_estimation_function = ", fcmconfr_input$mc_inference_estimation_function, ",\n",
+    "  inference_estimation_function = ", x$mc_inference_estimation_function, ",\n",
     "  inference_estimation_CI = ", x$mc_inference_estimation_CI, ",\n",
     "  inference_estimation_bootstrap_reps = ", x$mc_inference_bootstrap_reps, ",\n",
     "  inference_estimation_bootstrap_draws_per_rep = ", x$mc_inference_bootstrap_draws_per_rep, ",\n",

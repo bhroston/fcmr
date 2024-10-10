@@ -327,7 +327,7 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
             mc_simulations_inference_df, 2,
             function(inference) {
               random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
-              median(random_draws)
+              stats::median(random_draws)
             },
             simplify = FALSE
           ))
@@ -377,7 +377,7 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
             inference_by_node_duplicate, 2,
             function(inference) {
               random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
-              median(random_draws)
+              stats::median(random_draws)
             }
           )
         }
@@ -411,7 +411,7 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
             inference_by_node_duplicate, 2,
             function(inference) {
               random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
-              median(random_draws)
+              stats::median(random_draws)
             }
           )
         }
@@ -441,7 +441,7 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
             inference_by_node_duplicate, 2,
             function(inference) {
               random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
-              median(random_draws)
+              stats::median(random_draws)
             }
           )
         }
@@ -726,7 +726,7 @@ monte_carlo_bootstrap_checks <- function(inference_function,
     stop("Input Validation Error: ootstrap_draws_per_rep must be a positive integer")
   }
 
-  if (ootstrap_draws_per_rep %% 2 != 0) {
+  if (bootstrap_draws_per_rep %% 2 != 0) {
     stop("Input Validation Error: ootstrap_draws_per_rep must be a positive integer")
   }
 }
