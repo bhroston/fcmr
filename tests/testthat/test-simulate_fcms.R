@@ -1,5 +1,7 @@
 
 test_that("infer_fcm works", {
+
+
   adj_matrix <- data.frame(
     C1 = c(0, 0, 0, 0, 0, 0),
     C2 = c(-0.85, 0, 0, 0.35, 0, 0),

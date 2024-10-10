@@ -366,6 +366,7 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
     object_types_in_input_list <- unique(lapply(adj_matrix_list_input, methods::is))[[1]]
   } else {
     object_types_in_input_list <- methods::is(adj_matrix_list_input)
+    adj_matrix_list_input <- list(adj_matrix_list_input)
   }
 
   if (identical(object_types_in_input_list, classes_in_dataframe_objects)) {
@@ -385,6 +386,23 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
       object_types_in_list <- "unavailable"
     } else {
       stop("The list of objects in adj. matrix list must be one of the following: 'data.frame' 'matrix' 'sparseMatrix' 'data,table' 'tibble'")
+    }
+  }
+
+  # browser()
+
+  if (identical(object_types_in_list[1], "conventional")) {
+    adj_matrices_have_numeric_inputs <- all(
+      unlist(lapply(adj_matrix_list_input, function(adj_matrix) {
+        all(apply(adj_matrix, c(1, 2), function(x) "numeric" %in% methods::is(x)))
+      }))
+    )
+    if (!adj_matrices_have_numeric_inputs) {
+      if (shiny::isRunning()) {
+        object_types_in_list <- "unavailable"
+      } else {
+        stop("Object types in adj. matrices must be either Numerics, IVFNs, or TFNs")
+      }
     }
   }
 
