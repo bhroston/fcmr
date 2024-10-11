@@ -90,7 +90,7 @@ test_that("get_mc_simulations_inference_CIs_w_bootstrap", {
 
   expect_no_error(
     invisible(capture.output(
-      mc_CIs <- get_mc_simulations_inference_CIs_w_bootstrap(test_mc_fcms_inferences$inference, 0.95, parallel = FALSE)
+      mc_CIs <- get_mc_simulations_inference_CIs_w_bootstrap(test_mc_fcms_inferences$inference, "median", 0.95, parallel = FALSE)
     ))
   )
 

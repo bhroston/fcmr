@@ -303,7 +303,7 @@ infer_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
 
   structure(
     .Data = list(
-      inference_df = final_inference_df,
+      inference = final_inference_df,
       inference_for_plotting = final_inference_plot_data,
       inference_state_vectors = inference_state_vectors,
       crisp_inference_state_vectors = crisp_inference_state_vectors,
@@ -1039,6 +1039,7 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
   if (!(activation %in% c("kosko", "modified-kosko", "rescale"))) {
     stop("Failed Input Validation: Input activation must be one of the following: 'kosko', 'modified-kosko', or 'rescale'")
   }
+
   if (!(squashing %in% c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"))) {
     stop('Failed Input Validation: Input squashing must be one of the following: "sigmoid", "tanh", "bivalent", "saturation", "trivalent"')
   }

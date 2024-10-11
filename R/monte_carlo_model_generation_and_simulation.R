@@ -251,6 +251,8 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
 #' to estimate the confidence intervals for the mean value across simulations.
 #'
 #' @param mc_simulations_inference_df The final values of a set of fcm simulations; also the inference of a infer_fmcm object
+#' @param inference_function Estimate confidence intervals about the "mean" or "median" of
+#' inferences from the monte carlo simulations
 #' @param confidence_interval What are of the distribution should be bounded by the
 #' confidence intervals? (e.g. 0.95)
 #' @param bootstrap_reps Repetitions for bootstrap process, if chosen
@@ -264,6 +266,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
 #'
 #' @export
 get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inference_df = data.frame(),
+                                                         inference_function = "mean",
                                                          confidence_interval = 0.95,
                                                          bootstrap_reps = 1000,
                                                          bootstrap_draws_per_rep = 1000,
@@ -285,6 +288,8 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
   parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
 
+  # browser()
+
   if (parallel & show_progress) {
     print("Performing bootstrap simulations", quote = FALSE)
     print("Initializing cluster", quote = FALSE)
@@ -305,17 +310,31 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
     invisible(utils::capture.output(pb <- utils::txtProgressBar(min = 0, max = ceiling(bootstrap_reps/n_cores), width = 50, style = 3)))
     progress <- function(n) utils::setTxtProgressBar(pb, n)
     opts <- list(progress = progress)
-    bootstrapped_means_of_inference_by_node <- foreach::foreach(
-      i = 1:bootstrap_reps, .options.snow = opts) %dopar% {
-        data.frame(apply(
-          mc_simulations_inference_df, 2,
-          function(inference) {
-            random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
-            mean(random_draws)
-          },
-          simplify = FALSE
-        ))
-      }
+    if (inference_function == "mean") {
+      bootstrapped_means_of_inference_by_node <- foreach::foreach(
+        i = 1:bootstrap_reps, .options.snow = opts) %dopar% {
+          data.frame(apply(
+            mc_simulations_inference_df, 2,
+            function(inference) {
+              random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
+              mean(random_draws)
+            },
+            simplify = FALSE
+          ))
+        }
+    } else if (inference_function == "median") {
+      bootstrapped_medians_of_inference_by_node <- foreach::foreach(
+        i = 1:bootstrap_reps, .options.snow = opts) %dopar% {
+          data.frame(apply(
+            mc_simulations_inference_df, 2,
+            function(inference) {
+              random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
+              stats::median(random_draws)
+            },
+            simplify = FALSE
+          ))
+        }
+    }
     close(pb)
     parallel::stopCluster(cl)
 
@@ -337,67 +356,121 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
     print("Sampling means", quote = FALSE)
     rep_inference_by_node <- vector(mode = "list", length = bootstrap_reps)
     rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- mc_simulations_inference_df)
-    bootstrapped_means_of_inference_by_node <- parallel::parLapply(
-      cl,
-      rep_inference_by_node,
-      function(inference_by_node_duplicate) {
-        apply(
-          inference_by_node_duplicate, 2,
-          function(inference) {
-            random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
-            mean(random_draws)
-          }
-        )
-      }
-    )
+    if (inference_function == "mean") {
+      bootstrapped_means_of_inference_by_node <- parallel::parLapply(
+        cl,
+        rep_inference_by_node,
+        function(inference_by_node_duplicate) {
+          apply(
+            inference_by_node_duplicate, 2,
+            function(inference) {
+              random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
+              mean(random_draws)
+            }
+          )
+        }
+      )
+    } else if (inference_function == "median") {
+      bootstrapped_medians_of_inference_by_node <- parallel::parLapply(
+        cl,
+        rep_inference_by_node,
+        function(inference_by_node_duplicate) {
+          apply(
+            inference_by_node_duplicate, 2,
+            function(inference) {
+              random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
+              stats::median(random_draws)
+            }
+          )
+        }
+      )
+    }
     parallel::stopCluster(cl)
 
   } else if (!parallel & show_progress) {
     bootstrapped_means_of_inference_by_node <- vector(mode = "list", length = bootstrap_reps)
     rep_inference_by_node <- vector(mode = "list", length = bootstrap_reps)
     rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- mc_simulations_inference_df)
-    bootstrapped_means_of_inference_by_node <- pbapply::pblapply(
-      rep_inference_by_node,
-      function(inference_by_node_duplicate) {
-        apply(
-          inference_by_node_duplicate, 2,
-          function(inference) {
-            random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
-            mean(random_draws)
-          }
-        )
-      }
-    )
 
+    if (inference_function == "mean") {
+      bootstrapped_means_of_inference_by_node <- pbapply::pblapply(
+        rep_inference_by_node,
+        function(inference_by_node_duplicate) {
+          apply(
+            inference_by_node_duplicate, 2,
+            function(inference) {
+              random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
+              mean(random_draws)
+            }
+          )
+        }
+      )
+    } else if (inference_function == "median") {
+      bootstrapped_medians_of_inference_by_node <- pbapply::pblapply(
+        rep_inference_by_node,
+        function(inference_by_node_duplicate) {
+          apply(
+            inference_by_node_duplicate, 2,
+            function(inference) {
+              random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
+              stats::median(random_draws)
+            }
+          )
+        }
+      )
+    }
   } else if (!parallel & !show_progress) {
     rep_inference_by_node <- vector(mode = "list", length = bootstrap_reps)
     rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- mc_simulations_inference_df)
-    bootstrapped_means_of_inference_by_node <- lapply(
-      rep_inference_by_node,
-      function(inference_by_node_duplicate) {
-        apply(
-          inference_by_node_duplicate, 2,
-          function(inference) {
-            random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
-            mean(random_draws)
-          }
-        )
-      }
-    )
+    if (inference_function == "mean") {
+      bootstrapped_means_of_inference_by_node <- lapply(
+        rep_inference_by_node,
+        function(inference_by_node_duplicate) {
+          apply(
+            inference_by_node_duplicate, 2,
+            function(inference) {
+              random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
+              mean(random_draws)
+            }
+          )
+        }
+      )
+    } else if (inference_function == "median") {
+      bootstrapped_medians_of_inference_by_node <- lapply(
+        rep_inference_by_node,
+        function(inference_by_node_duplicate) {
+          apply(
+            inference_by_node_duplicate, 2,
+            function(inference) {
+              random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
+              stats::median(random_draws)
+            }
+          )
+        }
+      )
+    }
   }
 
-  bootstrapped_means_of_inference_by_node <- data.frame(do.call(rbind, bootstrapped_means_of_inference_by_node))
+  if (inference_function == "mean") {
+    bootstrapped_expectations_of_inference_by_node <- data.frame(do.call(rbind, bootstrapped_means_of_inference_by_node))
+  } else if (inference_function == "median") {
+    bootstrapped_expectations_of_inference_by_node <- data.frame(do.call(rbind, bootstrapped_medians_of_inference_by_node))
+  }
+  expected_value_of_inference_by_node <- apply(bootstrapped_expectations_of_inference_by_node, 2, mean)
+
+  #browser()
 
   # print("Getting upper and lower quantile estimates of mean", quote = FALSE)
   lower_quantile <- (1 - confidence_interval)/2
   upper_quantile <- (1 + confidence_interval)/2
-  lower_quantiles_by_node <- data.frame(apply(bootstrapped_means_of_inference_by_node, 2, function(bootstrapped_means) stats::quantile(bootstrapped_means, lower_quantile), simplify = FALSE))
-  upper_quantiles_by_node <- data.frame(apply(bootstrapped_means_of_inference_by_node, 2, function(bootstrapped_means) stats::quantile(bootstrapped_means, upper_quantile), simplify = FALSE))
+  lower_quantiles_by_node <- data.frame(apply(bootstrapped_expectations_of_inference_by_node, 2, function(bootstrapped_expectations) stats::quantile(bootstrapped_expectations, lower_quantile), simplify = FALSE))
+  upper_quantiles_by_node <- data.frame(apply(bootstrapped_expectations_of_inference_by_node, 2, function(bootstrapped_expectations) stats::quantile(bootstrapped_expectations, upper_quantile), simplify = FALSE))
 
   nodes <- ifelse(colnames(lower_quantiles_by_node) == colnames(upper_quantiles_by_node), colnames(lower_quantiles_by_node), stop("Error with quantiles calculation"))
 
   quantiles_by_node <- data.frame(
     node = nodes,
+    expected_value = expected_value_of_inference_by_node,
     lower_quantile = vector(mode = "numeric", length = length(nodes)),
     upper_quantile = vector(mode = "numeric", length = length(nodes))
   )
@@ -405,13 +478,15 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
     quantiles_by_node$lower_quantile[i] <- lower_quantiles_by_node[i][[1]] # not sure why this [[1]] is necessary but it is
     quantiles_by_node$upper_quantile[i] <- upper_quantiles_by_node[i][[1]] # not sure why this [[1]] is necessary but it is
   }
-  colnames(quantiles_by_node) <- c("node", paste0("lower_", lower_quantile), paste0("upper_", upper_quantile))
+  colnames(quantiles_by_node) <- c("node", "expected_value", paste0("lower_", lower_quantile), paste0("upper_", upper_quantile))
+
+  # browser()
   print("Done", quote = FALSE)
 
   structure(
     .Data = list(
       CI_by_node = quantiles_by_node,
-      bootstrap_means = bootstrapped_means_of_inference_by_node
+      bootstrap_expected_values = bootstrapped_expectations_of_inference_by_node
     )
   )
 }
@@ -615,6 +690,51 @@ build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_mat
   }
 
   sampled_adj_matrices
+}
+
+
+#' Check inputs for monte carlo bootstrap analysis
+#'
+#' @param inference_function Estimate confidence intervals about the "mean" or "median" of
+#' inferences from the monte carlo simulations
+#' @param confidence_interval What are of the distribution should be bounded by the
+#' confidence intervals? (e.g. 0.95)
+#' @param bootstrap_reps Repetitions for bootstrap process, if chosen
+#' @param bootstrap_draws_per_rep Number of samples to draw (with replacement) from
+#' the data per bootstrap_rep
+#'
+#' @export
+monte_carlo_bootstrap_checks <- function(inference_function,
+                                         confidence_interval,
+                                         bootstrap_reps,
+                                         bootstrap_draws_per_rep) {
+  if (inference_function %in% c("mean", "median")) {
+    stop("Input Validation Error: inference_function must be either 'mean' or 'median'")
+  }
+
+  if (!is.numeric(confidence_interval)) {
+    stop("Input Validation Error: confidence_interval must be a number between 0 and 1")
+  }
+
+  if (confidence_interval < 0 | !(confidence_interval < 1)) {
+    stop("Input Validation Error: confidence_interval must be a number between 0 and 1")
+  }
+
+  if (!is.numeric(bootstrap_reps)) {
+    stop("Input Validation Error: bootstrap_reps must be a positive integer")
+  }
+
+  if (bootstrap_reps %% 2 != 0) {
+    stop("Input Validation Error: bootstrap_reps must be a positive integer")
+  }
+
+  if (!is.numeric(bootstrap_draws_per_rep)) {
+    stop("Input Validation Error: ootstrap_draws_per_rep must be a positive integer")
+  }
+
+  if (bootstrap_draws_per_rep %% 2 != 0) {
+    stop("Input Validation Error: ootstrap_draws_per_rep must be a positive integer")
+  }
 }
 
 
