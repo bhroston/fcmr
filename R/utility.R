@@ -331,6 +331,8 @@ check_if_local_machine_has_access_to_parallel_processing_functionalities <- func
 #' checks what data types the adj matrices are (list_objects) (e.g. tibble, matrix, etc.)
 #'
 #' @param adj_matrix_list_input A list of adj matrices or an individual adj matrix
+#'
+#' @export
 get_adj_matrices_input_type <- function(adj_matrix_list_input) {
   classes_in_list_objects <- methods::is(list())
   classes_in_dataframe_objects <- methods::is(data.frame())
