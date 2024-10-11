@@ -455,9 +455,10 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
     bootstrapped_expectations_of_inference_by_node <- data.frame(do.call(rbind, bootstrapped_means_of_inference_by_node))
   } else if (inference_function == "median") {
     bootstrapped_expectations_of_inference_by_node <- data.frame(do.call(rbind, bootstrapped_medians_of_inference_by_node))
-
   }
+  expected_value_of_inference_by_node <- apply(bootstrapped_expectations_of_inference_by_node, 2, mean)
 
+  #browser()
 
   # print("Getting upper and lower quantile estimates of mean", quote = FALSE)
   lower_quantile <- (1 - confidence_interval)/2
@@ -469,6 +470,7 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
 
   quantiles_by_node <- data.frame(
     node = nodes,
+    expected_value = expected_value_of_inference_by_node,
     lower_quantile = vector(mode = "numeric", length = length(nodes)),
     upper_quantile = vector(mode = "numeric", length = length(nodes))
   )
@@ -476,7 +478,9 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
     quantiles_by_node$lower_quantile[i] <- lower_quantiles_by_node[i][[1]] # not sure why this [[1]] is necessary but it is
     quantiles_by_node$upper_quantile[i] <- upper_quantiles_by_node[i][[1]] # not sure why this [[1]] is necessary but it is
   }
-  colnames(quantiles_by_node) <- c("node", paste0("lower_", lower_quantile), paste0("upper_", upper_quantile))
+  colnames(quantiles_by_node) <- c("node", "expected_value", paste0("lower_", lower_quantile), paste0("upper_", upper_quantile))
+
+  # browser()
   print("Done", quote = FALSE)
 
   structure(
