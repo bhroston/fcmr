@@ -303,7 +303,7 @@ infer_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
 
   structure(
     .Data = list(
-      inference_df = final_inference_df,
+      inference = final_inference_df,
       inference_for_plotting = final_inference_plot_data,
       inference_state_vectors = inference_state_vectors,
       crisp_inference_state_vectors = crisp_inference_state_vectors,

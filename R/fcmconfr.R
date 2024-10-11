@@ -216,10 +216,11 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     )
 
     if (perform_monte_carlo_inference_bootstrap_analysis) {
-      CIs_of_means_of_mc_simulation_inferences <- get_mc_simulations_inference_CIs_w_bootstrap(mc_inferences$inference, inference_estimation_function, inference_estimation_CI, inference_estimation_bootstrap_reps, inference_estimation_bootstrap_draws_per_rep, parallel, n_cores, show_progress)
+      # browser()
+      CIs_of_expected_values_of_mc_simulation_inferences <- get_mc_simulations_inference_CIs_w_bootstrap(mc_inferences$inference, inference_estimation_function, inference_estimation_CI, inference_estimation_bootstrap_reps, inference_estimation_bootstrap_draws_per_rep, parallel, n_cores, show_progress)
       quantiles_of_mc_simulation_inferences <- data.frame(t(apply(mc_inferences$inference, 2, stats::quantile)))
-      mc_inference_distributions_df <- cbind(CIs_of_means_of_mc_simulation_inferences$CI_by_node, quantiles_of_mc_simulation_inferences)
-      colnames(mc_inference_distributions_df) <- c("node", "lower_0.025_CI_about_mean", "upper_0.975_CI_about_mean", "min", "lower_quantile_0.25", "median", "upper_quantile_0.75", "max")
+      mc_inference_distributions_df <- cbind(CIs_of_expected_values_of_mc_simulation_inferences$CI_by_node, quantiles_of_mc_simulation_inferences)
+      colnames(mc_inference_distributions_df) <- c("node", "lower_0.025_CI", "upper_0.975_CI", "min", "lower_quantile_0.25", "median", "upper_quantile_0.75", "max")
     }
   }
 
@@ -282,6 +283,8 @@ organize_fcmconfr_output <- function(...) {
 
 
   if (variables$perform_aggregate_analysis) {
+    #browser()
+    fcmconfr_output$aggregate_adj_matrix <- variables$aggregate_adj_matrix
     fcmconfr_output$inferences$aggregate_fcm = list(
       inferences = variables$aggregate_fcm_inference$inference,
       simulation = variables$aggregate_fcm_inference
@@ -317,9 +320,12 @@ organize_fcmconfr_output <- function(...) {
 
 
   if (variables$perform_monte_carlo_analysis & variables$perform_monte_carlo_inference_bootstrap_analysis) {
+    #browser()
     fcmconfr_output$inferences$monte_carlo_fcms$bootstrap = list(
-      CIs_about_expected_values_and_quantiles_of_mc_inferences = variables$mc_inference_distributions_df,
-      bootstrapped_expected_values = variables$CIs_of_expectations_of_mc_simulation_inferences$bootstrap_means
+      CI_estimation_function = variables$inference_estimation_function,
+      CIs_by_node = variables$CIs_of_expected_values_of_mc_simulation_inferences$CI_by_node,
+      CIs_and_quantiles_by_node = variables$mc_inference_distributions_df,
+      bootstrapped_expected_values = variables$CIs_of_expected_values_of_mc_simulation_inferences$bootstrap_expected_values
     )
     fcmconfr_output$params$mc_confidence_intervals_opts = list(
       inference_estimation_CI = variables$inference_estimation_CI,
@@ -327,6 +333,8 @@ organize_fcmconfr_output <- function(...) {
       inference_estimation_bootstrap_draws_per_rep = variables$inference_estimation_bootstrap_draws_per_rep
     )
   }
+
+  # browser()
 
   fcmconfr_output
 }
@@ -431,6 +439,311 @@ print.fcmconfr <- function(x, ...) {
     )
   }
 }
+
+
+#' fcmconfr_plot
+#'
+#' @param fcmconfr_output Output directly from fcmconfr
+#' @param swap_axes Switch x and y axes. Preferable when concepts have longer names
+#' @param aggregate_point_fill Hex code value for the aggregate point fill
+#' @param monte_carlo_col_fill Hex code value for the columns/bars representing monte carlo data
+#' @param monte_carlo_col_alpha Between 0 and 1, the opacity of the monte_carlo_col_fill
+#'
+#' @export
+fcmconfr_plot <- function(fcmconfr_output,
+                          swap_axes = FALSE,
+                          aggregate_point_fill = "#fb0009",
+                          monte_carlo_col_fill = "#fcdbd0",
+                          monte_carlo_col_alpha = 0.6) {
+
+  if (fcmconfr_output$fcm_class == "conventional") {
+    fcmconfr_plot <- plot_conventional_fcmconfr(fcmconfr_output, swap_axes, aggregate_point_fill, monte_carlo_col_fill, monte_carlo_col_alpha)
+  } else if (fcmconfr_output$fcm_class == "ivfn" | fcmconfr_output$fcm_class == "tfn") {
+    fcmconfr_plot <- plot_ivfn_or_tfn_fcmconfr(fcmconfr_output, swap_axes, aggregate_point_fill, monte_carlo_col_fill, monte_carlo_col_alpha)
+  }
+
+  fcmconfr_plot
+}
+
+
+#' Plot function for fcmconfr from conventional FCM
+#'
+#' @param conventional_fcmconfr_output Output directly from fcmconfr (for conventional fcms as inputs)
+#' @param swap_axes Switch x and y axes. Preferable when concepts have longer names
+#' @param aggregate_point_fill Hex code value for the aggregate point fill
+#' @param monte_carlo_col_fill Hex code value for the columns/bars representing monte carlo data
+#' @param monte_carlo_col_alpha Between 0 and 1, the opacity of the monte_carlo_col_fill
+#'
+#' @importFrom ggplot2 aes ggplot geom_col geom_segment geom_errorbar geom_point
+#' scale_fill_manual scale_color_manual scale_y_continuous guides guide_legend
+#' expand_limits ggtitle labs xlab ylab theme_classic theme margin element_text
+#' element_blank unit scale_x_discrete coord_flip
+#'
+#' @export
+plot_conventional_fcmconfr <- function(conventional_fcmconfr_output,
+                                       swap_axes = FALSE,
+                                       aggregate_point_fill = "#fb0009",
+                                       monte_carlo_col_fill = "#fcdbd0",
+                                       monte_carlo_col_alpha = 0.6) {
+  #browser()
+
+  # Pre-defining values for R CMD Check. Does no effect logic.
+  node <- NULL
+  name <- NULL
+  value <- NULL
+  expected_value <- NULL
+  analysis_source <- NULL
+  concept <- NULL
+  lower <- NULL
+  upper <- NULL
+  lower_0.025 <- NULL
+  upper_0.975 <- NULL
+  #
+
+  fcm_class_subtitle <- "Conventional FCMs"
+
+  agg_function <- conventional_fcmconfr_output$params$aggregation_function
+  if (agg_function == "mean") {
+    fcm_agg_function_subtitle <- "Aggregate and Monte Carlo Generated from MEAN of Input FCMs"
+  } else if (agg_function == "median") {
+    fcm_agg_function_subtitle <- "Aggregate and Monte Carlo Generated from MEDIAN of Input FCMs"
+  }
+
+  aggregate_inferences_longer <- tidyr::pivot_longer(conventional_fcmconfr_output$inferences$aggregate_fcm$inferences, cols = 1:ncol(conventional_fcmconfr_output$inferences$aggregate_fcm$inferences))
+  aggregate_inferences_longer$analysis_source <- "aggregate"
+  mc_CIs <- conventional_fcmconfr_output$inferences$monte_carlo_fcms$bootstrap$CIs_by_node
+  mc_CIs$analysis_source <- "mc"
+
+  max_y <- max(max(mc_CIs$upper_0.975), max(aggregate_inferences_longer$value))
+
+  fcmconfr_plot <- ggplot() +
+    geom_col(data = mc_CIs, aes(x = node, y = expected_value, fill = analysis_source, color = monte_carlo_col_fill), width = 0.5, alpha = monte_carlo_col_alpha, linewidth = 0.3) +
+    geom_errorbar(data = mc_CIs, aes(x = node, ymin = lower_0.025, ymax = upper_0.975, color = analysis_source), width = 0.5, linewidth = 0.5) +
+    geom_point(data = aggregate_inferences_longer, aes(x = name, y = value, fill = analysis_source), color = "black", shape = 21, size = 3, stroke = 0.5) +
+    scale_fill_manual(values = c(mc = monte_carlo_col_fill, aggregate = aggregate_point_fill), labels = c(mc = "Monte Carlo Average", aggregate = "Aggregate")) +
+    scale_color_manual(values = c(mc = "black"), labels = c(mc = "Monte Carlo CIs")) +
+    scale_y_continuous(expand = c(0, 0), limits = c(0, max_y + 0.05)) +
+    guides(alpha = "none", color = guide_legend(order = 1), shape = guide_legend(order = 2)) +
+    expand_limits(y = 0) +
+    ggtitle("FCMconfR Inferences", subtitle = paste(fcm_class_subtitle)) +
+    labs(caption = fcm_agg_function_subtitle) +
+    xlab("Inference Value") +
+    ylab("Concept (Node)") +
+    theme_classic() +
+    theme(
+      plot.margin = margin(t = 20, r = 40, b = 20, l = 20),
+      plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+      plot.subtitle = element_text(hjust = 0.5, margin = margin(b = 10)),
+      plot.caption = element_text(hjust = 0.5, margin = margin(t = 15)),
+      axis.title = element_text(size = 12),
+      axis.title.x = element_text(margin = margin(t = 10)),
+      axis.title.y = element_text(margin = margin(r = 10)),
+      axis.text = element_text(size = 12),
+      legend.position = "bottom",
+      legend.title = element_blank(),
+      legend.spacing = unit(0.001, 'cm'),
+      legend.text = element_text(size = 10)
+    )
+
+  if (swap_axes) {
+    fcmconfr_plot <- fcmconfr_plot + scale_x_discrete(limits = rev) + coord_flip()
+  }
+
+  fcmconfr_plot
+}
+
+
+#' Plot function for fcmconfr from ivfn or tfn FCM
+#'
+#' @param ivfn_or_tfn_fcmconfr_output Output directly from fcmconfr (for ivfn or tfn fcms as inputs)
+#' @param swap_axes Switch x and y axes. Preferable when concepts have longer names
+#' @param aggregate_point_fill Hex code value for the aggregate point fill
+#' @param monte_carlo_col_fill Hex code value for the columns/bars representing monte carlo data
+#' @param monte_carlo_col_alpha Between 0 and 1, the opacity of the monte_carlo_col_fill
+#'
+#' @importFrom ggplot2 aes ggplot geom_col geom_segment geom_errorbar geom_point
+#' scale_fill_manual scale_color_manual scale_y_continuous guides guide_legend
+#' expand_limits ggtitle labs xlab ylab theme_classic theme margin element_text
+#' element_blank unit scale_x_discrete coord_flip
+#'
+#' @export
+plot_ivfn_or_tfn_fcmconfr <- function(ivfn_or_tfn_fcmconfr_output,
+                                      swap_axes = FALSE,
+                                      aggregate_point_fill = "#fb0009",
+                                      monte_carlo_col_fill = "#fcdbd0",
+                                      monte_carlo_col_alpha = 0.6) {
+  # browser()
+  # Pre-defining values for R CMD Check. Does no effect logic.
+  node <- NULL
+  name <- NULL
+  value <- NULL
+  expected_value <- NULL
+  analysis_source <- NULL
+  concept <- NULL
+  lower <- NULL
+  upper <- NULL
+  lower_0.025 <- NULL
+  upper_0.975 <- NULL
+  #
+
+  fcm_class <- ivfn_or_tfn_fcmconfr_output$fcm_class
+  if (fcm_class == "ivfn") {
+    fcm_class_subtitle <- "Interval-Value Fuzzy Number FCMs"
+  } else if (fcm_class == "tfn") {
+    fcm_class_subtitle <- "Triangular Fuzzy Number FCMs"
+  }
+
+  agg_function <- ivfn_or_tfn_fcmconfr_output$params$aggregation_function
+  if (agg_function == "mean") {
+    fcm_agg_function_subtitle <- "Aggregate and Monte Carlo Generated from MEAN of Input FCMs"
+  } else if (agg_function == "median") {
+    fcm_agg_function_subtitle <- "Aggregate and Monte Carlo Generated from MEDIAN of Input FCMs"
+  }
+
+  #aggregate_inferences_longer <- tidyr::pivot_longer(ivfn_or_tfn_fcmconfr_output$inferences$aggregate_fcm$inferences, cols = 3:ncol(ivfn_or_tfn_fcmconfr_output$inferences$aggregate_fcm$inferences))
+  aggregate_inferences <- ivfn_or_tfn_fcmconfr_output$inferences$aggregate_fcm$inferences
+  aggregate_inferences$analysis_source <- "aggregate"
+  mc_CIs <- ivfn_or_tfn_fcmconfr_output$inferences$monte_carlo_fcms$bootstrap$CIs_by_node
+  mc_CIs$analysis_source <- "mc"
+
+  max_y <- max(max(mc_CIs$upper_0.975), max(aggregate_inferences$upper))
+
+  fcmconfr_plot <- ggplot() +
+    geom_col(data = mc_CIs, aes(x = node, y = expected_value, fill = analysis_source, color = monte_carlo_col_fill), width = 0.5, alpha = monte_carlo_col_alpha, linewidth = 0.3) +
+    geom_segment(data = aggregate_inferences, aes(x = concept, y = lower, yend = upper, color = analysis_source), lineend = "round", linewidth = 2) +
+    geom_errorbar(data = mc_CIs, aes(x = node, ymin = lower_0.025, ymax = upper_0.975, color = analysis_source), width = 0.5, linewidth = 0.5) +
+    scale_fill_manual(values = c(mc = monte_carlo_col_fill, aggregate = aggregate_point_fill), labels = c(mc = "Monte Carlo Average", aggregate = "Aggregate")) +
+    scale_color_manual(values = c(mc = "black", aggregate = aggregate_point_fill), labels = c(mc = "Monte Carlo CIs", aggregate = "Aggregate")) +
+    scale_y_continuous(expand = c(0, 0), limits = c(0, max_y + 0.05)) +
+    guides(alpha = "none", color = guide_legend(order = 1), shape = guide_legend(order = 2)) +
+    expand_limits(y = 0) +
+    ggtitle("FCMconfR Inferences", subtitle = paste(fcm_class_subtitle)) +
+    labs(caption = fcm_agg_function_subtitle) +
+    xlab("Inference Value") +
+    ylab("Concept (Node)") +
+    theme_classic() +
+    theme(
+      plot.margin = margin(t = 20, r = 40, b = 20, l = 20),
+      plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+      plot.subtitle = element_text(hjust = 0.5, margin = margin(b = 10)),
+      plot.caption = element_text(hjust = 0.5, margin = margin(t = 15)),
+      axis.title = element_text(size = 12),
+      axis.title.x = element_text(margin = margin(t = 10)),
+      axis.title.y = element_text(margin = margin(r = 10)),
+      axis.text = element_text(size = 12),
+      legend.position = "bottom",
+      legend.title = element_blank(),
+      legend.spacing = unit(0.001, 'cm'),
+      legend.text = element_text(size = 10)
+    )
+
+  if (swap_axes) {
+    fcmconfr_plot <- fcmconfr_plot + scale_x_discrete(limits = rev) + coord_flip()
+  }
+
+  fcmconfr_plot
+}
+
+
+
+
+
+
+
+#
+#
+#   if (x$params$simulation_opts$squashing == "tanh" | x$params$simulation_opts$squashing == "trivalent") {
+#     domain_min <- -1
+#     domain_max <- 1
+#   } else {
+#     domain_min <- 0
+#     domain_max <- 1
+#   }
+#
+#   if (x$fcm_class == "conventional") {
+#     input_fcms_inferences_longer <- tidyr::pivot_longer(x$inferences$input_fcms$inferences, cols = 2:ncol(x$inferences$input_fcms$inferences))
+#     input_fcms_inferences_longer$analysis_source <- "input"
+#     mc_inferences_longer <- tidyr::pivot_longer(x$inferences$monte_carlo_fcms$all_inferences, cols = 1:ncol(x$inferences$monte_carlo_fcms$all_inferences))
+#     mc_inferences_longer$analysis_source <- "mc"
+#     aggregate_inferences_longer <- tidyr::pivot_longer(x$inferences$aggregate_fcm$inferences, cols = 1:ncol(x$inferences$aggregate_fcm$inferences))
+#     aggregate_inferences_longer$analysis_source <- "aggregate"
+#
+#     results <- rbind(input_fcms_inferences_longer[, -1], mc_inferences_longer)
+#     results$analysis_source <- factor(results$analysis_source, levels = c("mc", "input"))
+#
+#     fcmconfr_plot <- ggplot() +
+#       geom_boxplot(data = input_fcms_inferences_longer, aes(x = value, y = name, color = analysis_source), position = position_nudge(y = 0.18), width = 0.1) +
+#       geom_boxplot(data = mc_inferences_longer, aes(x = value, y = name, color = analysis_source), position = position_nudge(y = -0.18), width = 0.4, fill = "lightgrey") +
+#       geom_point(data = aggregate_inferences_longer, aes(x = value, y = name, shape = analysis_source), position = position_nudge(y = -0.18), size = 2, fill = "darkgray") +
+#       geom_point(data = results, aes(x = value, y = name, alpha = analysis_source), position = position_jitterdodge(jitter.width = 0.3), stroke = NA) +
+#       ggtitle("FCMconfR Inferences", subtitle = fcm_class_subtitle) +
+#       scale_x_continuous(breaks = seq(domain_min, domain_max, by = 0.2), limits = c(domain_min, domain_max), expand = c(0, 0)) +
+#       #scale_fill_manual(values = c(input = "white", mc = "lightgrey"), labels = c(input = "Input", mc = "Monte Carlo")) +
+#       scale_color_manual(values = c(input = "darkgrey", mc = "black"), labels = c(input = "Input", mc = "Monte Carlo")) +
+#       scale_shape_manual(values = c("triangle"), labels = c("Aggregate")) +
+#       scale_alpha_manual(values = c(input = 0.5, mc = 0.1)) +
+#       guides(alpha = "none", color = guide_legend(order = 1), shape = guide_legend(order = 2)) +
+#       xlab("Inference Value") +
+#       ylab("Concept (Node)") +
+#       theme_classic() +
+#       theme(
+#         plot.margin = margin(t = 20, r = 40, b = 20, l = 20),
+#         plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+#         plot.subtitle = element_text(hjust = 0.5, margin = margin(b = 10)),
+#         axis.title = element_text(size = 12),
+#         axis.title.x = element_text(margin = margin(t = 10)),
+#         axis.title.y = element_text(margin = margin(r = 10)),
+#         axis.text = element_text(size = 12),
+#         legend.position = "bottom",
+#         legend.title = element_blank(),
+#         legend.spacing = unit(0.001, 'cm'),
+#         legend.text = element_text(size = 10)
+#       )
+#   }
+#
+#   fcmconfr_plot
+#
+#
+
+
+
+  # ggplot() +
+  #   geom_boxplot(data = input_fcms_inferences_longer, aes(x = value, y = name), width = 0.5, fill = "white") +
+  #   geom_jitter(data = input_fcms_inferences_longer, aes(x = value, y = name), height = 0.1, alpha = 0.1) +
+  #   ggtitle("Title") +
+  #   scale_x_continuous(breaks = seq(domain_min, domain_max, by = 0.2), limits = c(domain_min, domain_max), expand = c(0, 0)) +
+  #   xlab("Inference Value") +
+  #   ylab("Concept (Node)") +
+  #   theme_classic() +
+  #   theme(
+  #     plot.margin = margin(t = 20, r = 40, b = 20, l = 20),
+  #     plot.title = element_text(face = "bold", size = 14, hjust = 0.5, margin = margin(b = 10)),
+  #     axis.title = element_text(size = 12),
+  #     axis.title.x = element_text(margin = margin(t = 10)),
+  #     axis.title.y = element_text(margin = margin(r = 10)),
+  #     axis.text = element_text(size = 12)
+  #   )
+
+
+
+  # # barplot_fig <- barplot(
+  # #   apply(x$inferences$input_fcms$inferences[,2:ncol(x$inferences$input_fcms$inferences)], 2, median)
+  # # )
+  # boxplot(
+  #   x$inferences$input_fcms$inferences[,2:ncol(x$inferences$input_fcms$inferences)],
+  #   ylim = c(domain_min, domain_max),
+  #   col = NULL,
+  #   las = 1,
+  #   horizontal = TRUE
+  # )
+  # points(y = factor(input_fcms_inferences_longer$name), x = input_fcms_inferences_longer$value)
+  # ggplot() +
+  #   geom_col(data = input_fcms_inferences_longer, aes(x = name, y = value))
+  #
+  # ggplot() +
+  #   geom_jitter(data = input_fcms_inferences_longer, aes(x = name, y = value)) +
+  #   geom_crossbar(data = bootstrapped_means, aes(x = node, y = lower_0.025, ymin = lower_0.025, ymax = upper_0.975), fill = "red", color = "red", size = 0.1)
+
 
 
 #' #' plot.fcmconfr
