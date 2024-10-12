@@ -1,5 +1,266 @@
 
 
+################################################################################
+# test-utility.R
+#
+# Unit tests for functions in utility.R, ordered as they appear in the source
+# file.
+#
+# These functions do not facilitate a specific analysis, but are rather tools
+# to navigate throughout the package
+#
+#   - check_if_local_machine_has_access_to_parallel_processing_functionalities
+#   - check_if_local_machine_has_access_to_show_progress_functionalities
+#   - get_adj_matrices_input_type
+#   - get_adj_matrix_from_edgelist
+#   - get_edgelist_from_adj_matrix
+#   - get_node_IDs_from_input
+#   - standardize_adj_matrices
+#
+################################################################################
+
+
+test_that("check_if_local_machine_has_access_to_parallel_processing_functionalities works", {
+  NULL
+})
+
+
+
+test_that("check_if_local_machine_has_access_to_show_progress_functionalities works", {
+  NULL
+})
+
+
+
+test_that("get_adj_matrices_input_type works", {
+  # Individual Conventional Adj. Matrix ----
+  adj_matrix_1 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(1, 0)
+  )
+  input_type <- get_adj_matrices_input_type(adj_matrix_1)
+  expect_false(input_type$adj_matrices_input_is_list)
+  expect_identical(input_type$object_types_in_list, c("conventional", "data.frame"))
+
+
+  # List of Multiple Conventional FCM Adj. Matrices ----
+  adj_matrix_1 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(1, 0)
+  )
+  adj_matrix_2 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.25, 0)
+  )
+  adj_matrix_3 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.75, 0)
+  )
+  adj_matrix_4 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.5, 0)
+  )
+  fcms <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
+  input_type <- get_adj_matrices_input_type(fcms)
+  expect_true(input_type$adj_matrices_input_is_list)
+  expect_identical(input_type$object_types_in_list, c("conventional", "data.frame"))
+
+
+  # List of Multiple IVFN FCM Adj. Matrices ----
+  lower_adj_matrix_1 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.4, 0)
+  )
+  upper_adj_matrix_1 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.6, 0)
+  )
+  adj_matrix_1 <- make_adj_matrix_w_ivfns(lower_adj_matrix_1, upper_adj_matrix_1)
+  lower_adj_matrix_2 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.6, 0)
+  )
+  upper_adj_matrix_2 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(1, 0)
+  )
+  adj_matrix_2 <- make_adj_matrix_w_ivfns(lower_adj_matrix_2, upper_adj_matrix_2)
+  lower_adj_matrix_3 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.2, 0)
+  )
+  upper_adj_matrix_3 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.6, 0)
+  )
+  adj_matrix_3 <- make_adj_matrix_w_ivfns(lower_adj_matrix_3, upper_adj_matrix_3)
+  lower_adj_matrix_4 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.0, 0)
+  )
+  upper_adj_matrix_4 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.4, 0)
+  )
+  adj_matrix_4 <- make_adj_matrix_w_ivfns(lower_adj_matrix_4, upper_adj_matrix_4)
+  fcms_w_ivfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
+  input_type <- get_adj_matrices_input_type(fcms_w_ivfns)
+  expect_true(input_type$adj_matrices_input_is_list)
+  expect_identical(input_type$object_types_in_list, "ivfn")
+
+
+  # List of Multiple TFN FCM Adj. Matrices ----
+  lower_adj_matrix_1 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.4, 0)
+  )
+  mode_adj_matrix_1 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.4, 0)
+  )
+  upper_adj_matrix_1 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.6, 0)
+  )
+  adj_matrix_1 <- make_adj_matrix_w_tfns(lower_adj_matrix_1, mode_adj_matrix_1, upper_adj_matrix_1)
+  lower_adj_matrix_2 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.6, 0)
+  )
+  mode_adj_matrix_2 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.7, 0)
+  )
+  upper_adj_matrix_2 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(1, 0)
+  )
+  adj_matrix_2 <- make_adj_matrix_w_tfns(lower_adj_matrix_2, mode_adj_matrix_2, upper_adj_matrix_2)
+  lower_adj_matrix_3 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.2, 0)
+  )
+  mode_adj_matrix_3 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.4, 0)
+  )
+  upper_adj_matrix_3 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.6, 0)
+  )
+  adj_matrix_3 <- make_adj_matrix_w_tfns(lower_adj_matrix_3, mode_adj_matrix_3, upper_adj_matrix_3)
+  lower_adj_matrix_4 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.0, 0)
+  )
+  mode_adj_matrix_4 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0, 0)
+  )
+  upper_adj_matrix_4 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.4, 0)
+  )
+  adj_matrix_4 <- make_adj_matrix_w_tfns(lower_adj_matrix_4, mode_adj_matrix_4, upper_adj_matrix_4)
+  fcms_w_tfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
+  input_type <- get_adj_matrices_input_type(fcms_w_tfns)
+  expect_true(input_type$adj_matrices_input_is_list)
+  expect_identical(input_type$object_types_in_list, "tfn")
+})
+
+
+
+test_that("get_adj_matrix_from_edgelist works", {
+  test_edgelist <- data.frame(
+    from = c("A"),
+    to = c("B"),
+    weight = c(0.55)
+  )
+  test_adj_matrix <- get_adj_matrix_from_edgelist(test_edgelist, source_colname = "from", target_colname = "to")
+  expected_adj_matrix <- data.frame(A = c(0, 0), B = c(0.55, 0))
+  rownames(expected_adj_matrix) <- c("A", "B")
+  ### Check this test case for error or function pass with "to" and "from" instead of "source" and "target"
+  expect_equal(test_adj_matrix, expected_adj_matrix)
+
+  # Test from Koutsellis et al. 2022 - https://doi.org/10.1007/s12351-022-00717-x
+  # Confirmed to reproduce results
+  test_source_nodes <- c(
+    "C1", "C1", "C1", "C2", "C2", "C3", "C3", "C3", "C4", "C4",
+    "C4", "C5", "C6", "C7", "C8", "C8", "C9", "C10", "C10", "C11",
+    "C12", "C13", "C14", "C14", "C15", "C15", "C15", "C15", "C16", "C16",
+    "C17", "C17", "C18", "C19", "C20", "C20", "C21", "C22", "C23", "C23",
+    "C24", "C25", "C28", "C29"
+  )
+  test_target_nodes <- c(
+    "C15", "C20", "C23", "C12", "C25", "C14", "C16", "C23", "C15", "C20",
+    "C23", "C16", "C15", "C15", "C10", "C12", "C23", "C11", "C13", "C26",
+    "C14", "C28", "C13", "C23", "C17", "C18", "C24", "C30", "C15", "C28",
+    "C21", "C22", "C19", "C20", "C26", "C28", "C27", "C29", "C19", "C24",
+    "C29", "C15", "C27", "C27"
+  )
+  test_edge_weights <- c(
+    -0.442, -0.375, -0.348, 0.549, 0.706, -0.421, -0.132, -0.245, -0.52, 0.261,
+    -0.29, 0.651, 0.487, 0.229, 0.776, 0.319, 0.792, 0.319, 0.391, -0.402,
+    -0.381, 0.481, 0.097, 0.11, -0.852, 0.902, 0.226, -0.852, -0.719, -0.274,
+    0.722, 0.888, -0.521, -0.311, -0.932, -0.419, 0.322, 0.21, 0.9, 0.189,
+    0.196, -0.311, 0.481, 0.378
+  )
+
+  edgelist <- data.frame(
+    "source" = test_source_nodes,
+    "target" = test_target_nodes,
+    "weight" = test_edge_weights
+  )
+
+  # Confirm return the same output as igraph
+  # g <- igraph::graph_from_data_frame(edgelist, directed = TRUE)
+  # igraph_adj_matrix <- data.frame(igraph::as_adjacency_matrix(g, attr = "weight", sparse = FALSE))
+  # test_adj_matrix <- get_adj_matrix_from_edgelist(edgelist)
+  # expect_equal(igraph_adj_matrix, test_adj_matrix)
+  expect_no_error(get_adj_matrix_from_edgelist(edgelist))
+})
+
+
+
+test_that("get_edgelist_from_adj_matrix works", {
+  test_adj_matrix <- data.frame(
+    "C1" = c(0, 0.36, 0.45, -0.90, 0),
+    "C2" = c(-0.4, 0, 0, 0, 0.6),
+    "C3" = c(-0.25, 0, 0, 0, 0),
+    "C4" = c(0, 0, 0, 0, 0.3),
+    "C5" = c(0.3, 0, 0, 0, 0)
+  )
+
+  goal_edgelist <- data.frame(
+    "source" = c("C2", "C3", "C4", "C1", "C5", "C1", "C5", "C1"),
+    "target" = c("C1", "C1", "C1", "C2", "C2", "C3", "C4", "C5"),
+    "weight" = c(0.36, 0.45, -0.90, -0.40, 0.60, -0.25, 0.30, 0.30)
+  )
+
+  expect_identical(get_edgelist_from_adj_matrix(test_adj_matrix), goal_edgelist)
+})
+
+
+
+test_that("get_node_IDs_from_input works", {
+  test_adj_matrix <- data.frame(
+    "A" = c(0, 0.36, 0.45, -0.90, 0),
+    "B" = c(-0.4, 0, 0, 0, 0.6),
+    "C" = c(-0.25, 0, 0, 0, 0),
+    "D" = c(0, 0, 0, 0, 0.3),
+    "E" = c(0.3, 0, 0, 0, 0)
+  )
+
+  nodes <- get_node_IDs_from_input(test_adj_matrix)
+  expect_identical(nodes, c("A", "B", "C", "D", "E"))
+
+  colnames(test_adj_matrix) <- NULL
+  nodes <- get_node_IDs_from_input(test_adj_matrix)
+  expect_identical(nodes, c("C1", "C2", "C3", "C4", "C5"))
+})
+
+
+
 test_that("standardize_adj_matrices works", {
   test_adj_matrix_1 <- data.frame(
     "A" = c(0, 0),
@@ -157,220 +418,7 @@ test_that("standardize_adj_matrices works", {
 
 
 
-test_that("get_edgelist_from_adj_matrix works", {
-  test_adj_matrix <- data.frame(
-    "C1" = c(0, 0.36, 0.45, -0.90, 0),
-    "C2" = c(-0.4, 0, 0, 0, 0.6),
-    "C3" = c(-0.25, 0, 0, 0, 0),
-    "C4" = c(0, 0, 0, 0, 0.3),
-    "C5" = c(0.3, 0, 0, 0, 0)
-  )
+#######
 
-  goal_edgelist <- data.frame(
-    "source" = c("C2", "C3", "C4", "C1", "C5", "C1", "C5", "C1"),
-    "target" = c("C1", "C1", "C1", "C2", "C2", "C3", "C4", "C5"),
-    "weight" = c(0.36, 0.45, -0.90, -0.40, 0.60, -0.25, 0.30, 0.30)
-  )
-
-  expect_identical(get_edgelist_from_adj_matrix(test_adj_matrix), goal_edgelist)
-})
-
-
-test_that("get_adj_matrix_from_edgelist works", {
-  test_edgelist <- data.frame(
-    from = c("A"),
-    to = c("B"),
-    weight = c(0.55)
-  )
-  test_adj_matrix <- get_adj_matrix_from_edgelist(test_edgelist, source_colname = "from", target_colname = "to")
-  expected_adj_matrix <- data.frame(A = c(0, 0), B = c(0.55, 0))
-  rownames(expected_adj_matrix) <- c("A", "B")
-  ### Check this test case for error or function pass with "to" and "from" instead of "source" and "target"
-  expect_equal(test_adj_matrix, expected_adj_matrix)
-
-  # Test from Koutsellis et al. 2022 - https://doi.org/10.1007/s12351-022-00717-x
-  # Confirmed to reproduce results
-  test_source_nodes <- c(
-    "C1", "C1", "C1", "C2", "C2", "C3", "C3", "C3", "C4", "C4",
-    "C4", "C5", "C6", "C7", "C8", "C8", "C9", "C10", "C10", "C11",
-    "C12", "C13", "C14", "C14", "C15", "C15", "C15", "C15", "C16", "C16",
-    "C17", "C17", "C18", "C19", "C20", "C20", "C21", "C22", "C23", "C23",
-    "C24", "C25", "C28", "C29"
-  )
-  test_target_nodes <- c(
-    "C15", "C20", "C23", "C12", "C25", "C14", "C16", "C23", "C15", "C20",
-    "C23", "C16", "C15", "C15", "C10", "C12", "C23", "C11", "C13", "C26",
-    "C14", "C28", "C13", "C23", "C17", "C18", "C24", "C30", "C15", "C28",
-    "C21", "C22", "C19", "C20", "C26", "C28", "C27", "C29", "C19", "C24",
-    "C29", "C15", "C27", "C27"
-  )
-  test_edge_weights <- c(
-    -0.442, -0.375, -0.348, 0.549, 0.706, -0.421, -0.132, -0.245, -0.52, 0.261,
-    -0.29, 0.651, 0.487, 0.229, 0.776, 0.319, 0.792, 0.319, 0.391, -0.402,
-    -0.381, 0.481, 0.097, 0.11, -0.852, 0.902, 0.226, -0.852, -0.719, -0.274,
-    0.722, 0.888, -0.521, -0.311, -0.932, -0.419, 0.322, 0.21, 0.9, 0.189,
-    0.196, -0.311, 0.481, 0.378
-  )
-
-  edgelist <- data.frame(
-    "source" = test_source_nodes,
-    "target" = test_target_nodes,
-    "weight" = test_edge_weights
-  )
-
-  # Confirm return the same output as igraph
-  # g <- igraph::graph_from_data_frame(edgelist, directed = TRUE)
-  # igraph_adj_matrix <- data.frame(igraph::as_adjacency_matrix(g, attr = "weight", sparse = FALSE))
-  # test_adj_matrix <- get_adj_matrix_from_edgelist(edgelist)
-  # expect_equal(igraph_adj_matrix, test_adj_matrix)
-  expect_no_error(get_adj_matrix_from_edgelist(edgelist))
-})
-
-
-test_that("check_if_local_machine_has_access_to_show_progress_functionalities works", {
-  NULL
-})
-
-
-test_that("check_if_local_machine_has_access_to_parallel_processing_functionalities works", {
-  NULL
-})
-
-
-test_that("get_adj_matrices_input_type works", {
-  # Individual Conventional Adj. Matrix ----
-  adj_matrix_1 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(1, 0)
-  )
-  input_type <- get_adj_matrices_input_type(adj_matrix_1)
-  expect_false(input_type$adj_matrices_input_is_list)
-  expect_identical(input_type$object_types_in_list, c("conventional", "data.frame"))
-
-
-  # List of Multiple Conventional FCM Adj. Matrices ----
-  adj_matrix_1 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(1, 0)
-  )
-  adj_matrix_2 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.25, 0)
-  )
-  adj_matrix_3 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.75, 0)
-  )
-  adj_matrix_4 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.5, 0)
-  )
-  fcms <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
-  input_type <- get_adj_matrices_input_type(fcms)
-  expect_true(input_type$adj_matrices_input_is_list)
-  expect_identical(input_type$object_types_in_list, c("conventional", "data.frame"))
-
-
-  # List of Multiple IVFN FCM Adj. Matrices ----
-  lower_adj_matrix_1 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.4, 0)
-  )
-  upper_adj_matrix_1 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.6, 0)
-  )
-  adj_matrix_1 <- make_adj_matrix_w_ivfns(lower_adj_matrix_1, upper_adj_matrix_1)
-  lower_adj_matrix_2 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.6, 0)
-  )
-  upper_adj_matrix_2 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(1, 0)
-  )
-  adj_matrix_2 <- make_adj_matrix_w_ivfns(lower_adj_matrix_2, upper_adj_matrix_2)
-  lower_adj_matrix_3 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.2, 0)
-  )
-  upper_adj_matrix_3 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.6, 0)
-  )
-  adj_matrix_3 <- make_adj_matrix_w_ivfns(lower_adj_matrix_3, upper_adj_matrix_3)
-  lower_adj_matrix_4 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.0, 0)
-  )
-  upper_adj_matrix_4 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.4, 0)
-  )
-  adj_matrix_4 <- make_adj_matrix_w_ivfns(lower_adj_matrix_4, upper_adj_matrix_4)
-  fcms_w_ivfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
-  input_type <- get_adj_matrices_input_type(fcms_w_ivfns)
-  expect_true(input_type$adj_matrices_input_is_list)
-  expect_identical(input_type$object_types_in_list, "ivfn")
-
-
-  # List of Multiple TFN FCM Adj. Matrices ----
-  lower_adj_matrix_1 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.4, 0)
-  )
-  mode_adj_matrix_1 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.4, 0)
-  )
-  upper_adj_matrix_1 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.6, 0)
-  )
-  adj_matrix_1 <- make_adj_matrix_w_tfns(lower_adj_matrix_1, mode_adj_matrix_1, upper_adj_matrix_1)
-  lower_adj_matrix_2 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.6, 0)
-  )
-  mode_adj_matrix_2 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.7, 0)
-  )
-  upper_adj_matrix_2 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(1, 0)
-  )
-  adj_matrix_2 <- make_adj_matrix_w_tfns(lower_adj_matrix_2, mode_adj_matrix_2, upper_adj_matrix_2)
-  lower_adj_matrix_3 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.2, 0)
-  )
-  mode_adj_matrix_3 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.4, 0)
-  )
-  upper_adj_matrix_3 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.6, 0)
-  )
-  adj_matrix_3 <- make_adj_matrix_w_tfns(lower_adj_matrix_3, mode_adj_matrix_3, upper_adj_matrix_3)
-  lower_adj_matrix_4 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.0, 0)
-  )
-  mode_adj_matrix_4 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0, 0)
-  )
-  upper_adj_matrix_4 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.4, 0)
-  )
-  adj_matrix_4 <- make_adj_matrix_w_tfns(lower_adj_matrix_4, mode_adj_matrix_4, upper_adj_matrix_4)
-  fcms_w_tfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
-  input_type <- get_adj_matrices_input_type(fcms_w_tfns)
-  expect_true(input_type$adj_matrices_input_is_list)
-  expect_identical(input_type$object_types_in_list, "tfn")
-})
 
 
