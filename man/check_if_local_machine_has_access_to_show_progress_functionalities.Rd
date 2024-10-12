@@ -2,7 +2,7 @@
 % Please edit documentation in R/utility.R
 \name{check_if_local_machine_has_access_to_show_progress_functionalities}
 \alias{check_if_local_machine_has_access_to_show_progress_functionalities}
-\title{check_if_local_machine_has_access_to_show_progress_functionalities}
+\title{Check if the local machine can access internal 'show_progress' functionalities}
 \usage{
 check_if_local_machine_has_access_to_show_progress_functionalities(
   use_parallel,
@@ -14,6 +14,10 @@ check_if_local_machine_has_access_to_show_progress_functionalities(
 
 \item{use_show_progress}{TRUE/FALSE The user intends to display progress bars}
 }
+\value{
+TRUE/FALSE Whether the machine has access to the dependencies to
+access internal 'show_progress' functionalities
+}
 \description{
 Check whether the local machine has access to the necessary packages to
 run code in parallel and/or using a progress bar. Specifically, checks for
@@ -24,4 +28,7 @@ Confirms that a local machine can access the required packages for
 displaying progress bars at runtime. Will revise inputs
 if particular packages are unavailable and warn the user of such changes, but will
 not halt a run.
+}
+\examples{
+check_if_local_machine_has_access_to_show_progress_functionalities(use_parallel = TRUE, use_show_progress = TRUE)
 }

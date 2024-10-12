@@ -1,244 +1,71 @@
 
+################################################################################
+# utility.R
+#
+# These functions do not facilitate a specific analysis, but are rather tools
+# to navigate throughout the package
+#
+#   - check_if_local_machine_has_access_to_parallel_processing_functionalities
+#   - check_if_local_machine_has_access_to_show_progress_functionalities
+#   - get_adj_matrices_input_type
+#   - get_adj_matrix_from_edgelist
+#   - get_edgelist_from_adj_matrix
+#   - get_node_IDs_from_input
+#   - standardize_adj_matrices
+#
+################################################################################
 
-#' standardize_adj_matrices
+
+#' Check if the local machine can access internal parallel processing functionalities
 #'
 #' @description
-#' Given a list of adj. matrices of different sizes, transforms the inputs into
-#' adj. matrices of the same size with 0 values added where edges are undefined
-#' or not included in maps.
+#' Check whether the local machine has access to the necessary packages to
+#' run code in parallel and/or using a progress bar. Specifically, checks for
+#' the parallel, doSNOW, foreach, and pbapply packages.
 #'
-#' Solves the problem where Map 1 has nodes A and B but Map 2 has nodes B and C
-#' and need to analyse them both together.
+#' @details
+#' Confirms that a local machine can access the required packages for parallel
+#' processing and/or displaying progress bars at runtime. Will revise inputs
+#' if particular packages are unavailable and warn the user of such changes, but will
+#' not halt a run.
 #'
-#' @param adj_matrices A list of adj. matrix objects
+#' @param use_parallel TRUE/FALSE The user intends to use parallel processing
+#' @param use_show_progress TRUE/FALSE The user intends to display progress bars
+#'
+#' @returns TRUE/FALSE Whether the machine has access to the dependencies to
+#' access internal parallel processing functionalities
 #'
 #' @export
-standardize_adj_matrices <- function(adj_matrices = list(matrix())) {
-  adj_matrices_dims <- lapply(adj_matrices, function(x) unique(dim(x)))
-  all_adj_matrices_are_square <- all(unlist(lapply(adj_matrices_dims, function(x) length(x) == 1)))
-  if (!all_adj_matrices_are_square) {
-    stop("Failed in standardize_size_of_adj_matrices
-       All matrices must be square (n x n)")
-  }
+#' @example man/examples/examples-utility/examples-utility-check_if_local_machine_has_access_to_parallel_processing_functionalities.R
+check_if_local_machine_has_access_to_parallel_processing_functionalities <- function(use_parallel, use_show_progress) {
+  # Confirm packages necessary packages are available. If not, change run options
+  parallel_check <- use_parallel
+  show_progress_check <- use_show_progress
 
-  nodes_by_adj_matrix <- lapply(adj_matrices, colnames)
-  nodes_in_adj_matrices <- unique(unlist(nodes_by_adj_matrix))
-  n_total_nodes <- length(nodes_in_adj_matrices)
-  adj_matrices_already_standardized <- all(unlist(lapply(nodes_by_adj_matrix, function(nodes) all(nodes_in_adj_matrices %in% nodes))))
-  if (adj_matrices_already_standardized) {
-    return(adj_matrices)
-  }
-
-  adj_matrices_input_type <- get_adj_matrices_input_type(adj_matrices)
-  fcm_class <- adj_matrices_input_type$object_types_in_list[1]
-
-
-  standardized_adj_matrices <- vector(mode = "list", length = length(adj_matrices))
-
-  if (fcm_class == "conventional") {
-    for (i in seq_along(standardized_adj_matrices)) {
-      # browser()
-      standardized_adj_matrix <- data.frame(matrix(data = 0, nrow = n_total_nodes, ncol = n_total_nodes))
-      colnames(standardized_adj_matrix) <- nodes_in_adj_matrices
-      standardized_weight_locs <- which(nodes_in_adj_matrices %in% nodes_by_adj_matrix[[i]])
-      n_nodes_in_input_matrix <- length(nodes_by_adj_matrix[[i]])
-      weight_locs_df <- cbind(expand.grid(c(1:n_nodes_in_input_matrix), c(1:n_nodes_in_input_matrix)), expand.grid(standardized_weight_locs, standardized_weight_locs))
-      colnames(weight_locs_df) <- c("input_row", "input_col", "output_row", "output_col")
-      weight_locs_df$weight <- apply(weight_locs_df, 1, function(row_vec) adj_matrices[[i]][row_vec[1], row_vec[2]])
-      for (row_index in 1:nrow(weight_locs_df)) {
-        standardized_adj_matrix[weight_locs_df$output_row[row_index], weight_locs_df$output_col[row_index]] <- weight_locs_df$weight[row_index]
+  if (use_parallel) {
+    if (use_show_progress) {
+      local_machine_has_access_to_doSNOW <- requireNamespace("doSNOW")
+      local_machine_has_access_to_foreach <- requireNamespace("foreach")
+      if (!local_machine_has_access_to_doSNOW | !local_machine_has_access_to_foreach) {
+        parallel_check <- FALSE
+        warning("\tShowing progress with parallel processing requires the 'doSNOW' and 'foreach' packages which are
+        currently not installed. Running in parallel but without showing progress.")
       }
-      standardized_adj_matrices[[i]] <- standardized_adj_matrix
-    }
-  } else if (fcm_class %in% c("ivfn", "tfn")) {
-    if (fcm_class == "ivfn") {
-      empty_standardized_adj_matrix <- data.frame(matrix(data = list(ivfn(0, 0)), nrow = n_total_nodes, ncol = n_total_nodes))
-    } else if (fcm_class == "tfn") {
-      empty_standardized_adj_matrix <- data.frame(matrix(data = list(tfn(0, 0, 0)), nrow = n_total_nodes, ncol = n_total_nodes))
-    }
-    for (i in seq_along(standardized_adj_matrices)) {
-      # browser()
-      standardized_adj_matrix <- empty_standardized_adj_matrix
-      colnames(standardized_adj_matrix) <- nodes_in_adj_matrices
-      standardized_weight_locs <- which(nodes_in_adj_matrices %in% nodes_by_adj_matrix[[i]])
-      n_nodes_in_input_matrix <- length(nodes_by_adj_matrix[[i]])
-      weight_locs_df <- cbind(expand.grid(c(1:n_nodes_in_input_matrix), c(1:n_nodes_in_input_matrix)), expand.grid(standardized_weight_locs, standardized_weight_locs))
-      colnames(weight_locs_df) <- c("input_row", "input_col", "output_row", "output_col")
-      weight_locs_df$weight <- apply(weight_locs_df, 1, function(row_vec) adj_matrices[[i]][row_vec[1], row_vec[2]][[1]])
-      for (row_index in 1:nrow(weight_locs_df)) {
-        standardized_adj_matrix[weight_locs_df$output_row[row_index], weight_locs_df$output_col[row_index]][[1]] <- weight_locs_df$weight[row_index]
+    } else {
+      local_machine_has_access_to_parallel <- requireNamespace("parallel")
+      if (!local_machine_has_access_to_parallel) {
+        parallel_check <- FALSE
+        warning("\tParallel processing requires the 'parallel' package which is
+        currently not installed. Running without parallel processing.")
       }
-      standardized_adj_matrices[[i]] <- standardized_adj_matrix
     }
   }
-
-  standardized_adj_matrices
-}
-
-
-#' get_edgelist_from_adj_matrix
-#'
-#' @description
-#' This "gets" an edgelist representing a graph described by the input adjacency
-#' matrix.
-#'
-#' @details
-#' The input adjacency matrix must be a square n x n matrix. It can be either
-#' a matrix, data.frame, tibble, or data.table type object.
-#'
-#' If the input matrix has named columns, those names will be used as node IDs
-#' in the edgelist. Otherwise, generic node IDs will be used (1, 2, ... n)
-#'
-#' The edgelist returns the following columns: source, target, weight
-#'
-#' @param adj_matrix An n x n adjacency matrix that represents an FCM
-#' @param IDs A list of names for each node (must have n items)
-#'
-#' @export
-#' @examples
-#' get_edgelist_from_adj_matrix(matrix(data = c(0, 1, 1, 0), nrow = 2, ncol = 2))
-get_edgelist_from_adj_matrix <- function(adj_matrix = matrix(), IDs = c()) {
-  # Check adj matrix
-  rows <- nrow(adj_matrix)
-  cols <- ncol(adj_matrix)
-  if (rows != cols) {
-    stop("Failed Input Validation: Input adjacency matrix must be a square (n x n) matrix")
-  }
-  data_types_in_adj_matrix <- unique(do.call(list, (apply(adj_matrix, c(1, 2), function(x) list(methods::is(x[[1]]))))))
-  if (length(data_types_in_adj_matrix) > 1) {
-    stop("Failed Input Validation: Input adjacency matrix must contain objects of the same type. Either numerics, ivfns, or tfns.")
-  }
-
-  empty_colnames <- identical(colnames(adj_matrix), NULL)
-  if (empty_colnames) {
-    IDs <- paste0("C", 1:nrow(adj_matrix))
-  } else if (!empty_colnames) {
-    IDs <- colnames(adj_matrix)
-  }
-
-  edge_locs <- data.table::data.table(which(adj_matrix != 0, arr.ind = TRUE))
-  edge_weights <- mapply(function(row, col) adj_matrix[row, col], row = edge_locs$row, col = edge_locs$col)
-
-  source_IDs <- IDs[edge_locs$row]
-  target_IDs <- IDs[edge_locs$col]
-
-  edgelist <- data.frame(
-    source = source_IDs,
-    target = target_IDs,
-    weight = edge_weights
-  )
-
-  edgelist
-}
-
-
-#' get_adj_matrix_from_edgelist
-#'
-#' @description
-#' This "gets" an adjacency matrix representing a graph described by the input
-#' edgelist.
-#'
-#' @details
-#' The input edgelist must have the following column names: 'source' or 'from',
-#' 'target' or 'to'. The user must manually note if different names are used
-#' for the edgelist. An additional column may be selected to describe a value
-#' attributed to a given edge.
-#'
-#' The input edgelist can be either a matrix, data.frame, tibble, or
-#' data.table type object.
-#'
-#' @param edgelist An edgelist representing an fcm. Default column names are
-#' "source", "target", and "weight", but these may be defined explicitly.
-#' @param source_colname Column name in the input eddgelist that represents
-#' edge source nodes
-#' @param target_colname Column name in the input edgelist that represents
-#' edge target nodes
-#' @param value_colname Column name in the input edgelist that represents represents
-#' the values displayed in the adjacency matrix (i.e. weight, standard_deviation)
-#' @param node_order The order in which concepts should be arranged in the output
-#' adjacency matrix. If no input given, concepts will be arranged alphabetically.
-#'
-#' @export
-get_adj_matrix_from_edgelist <- function(edgelist = matrix(),
-                                         source_colname = "source",
-                                         target_colname = "target",
-                                         value_colname = "weight",
-                                         node_order = c()) {
-
-  edgelist_column_inputs <- c(source_colname, target_colname, value_colname)
-  edgelist_columns_match_inputs <- identical(colnames(edgelist), edgelist_column_inputs)
-
-  if (!edgelist_columns_match_inputs) {
-    stop("Edgelist column names do not match inputs source_colname, target_colname
-         or value_colname. The default values for these are 'sourrce', 'target',
-         and 'weight'. Check to make sure that these match the actual column
-         names of the input edgelist.")
-  }
-
-  source_nodes <- edgelist[[source_colname]]
-  target_nodes <- edgelist[[target_colname]]
-  edge_values <- edgelist[[value_colname]]
-
-  nodes <- unique(c(source_nodes, target_nodes))
-
-  adj_matrix <- data.frame(matrix(data = 0, nrow = length(nodes), ncol = length(nodes)))
-  colnames(adj_matrix) <- nodes
-  rownames(adj_matrix) <- nodes
-
-  for (i in seq_along(edge_values)) {
-    edge <- edgelist[i, ]
-    edge_row_loc <- which(nodes == edge[[source_colname]])
-    edge_col_loc <- which(nodes == edge[[target_colname]])
-    adj_matrix[edge_row_loc, edge_col_loc] <- edge_values[i]
-  }
-
-  node_order_given <- !identical(node_order, c())
-  node_order_is_not_correct_length <- length(node_order) != length(nodes)
-  node_order_input_is_not_type_character <- !identical(unique(typeof(node_order)), "character")
-  if (!node_order_given) {
-    adj_matrix <- adj_matrix
-  } else if (node_order_given & (node_order_is_not_correct_length | node_order_input_is_not_type_character)) {
-    stop("Input node_order must only contain character strings and must contain
-         as many values as their are unique nodes depicted in the input edgelist.")
-  } else {
-    adj_matrix <- adj_matrix[node_order, node_order]
-  }
-
-  adj_matrix
+  parallel_check
 }
 
 
 
-
-#' get_node_IDs_from_input
-#'
-#' @description
-#' Determine node/concept IDs vector depending on the input adjacency matrix and
-#' IDs
-#'
-#' @details
-#' Node/concept IDs can come from two sources: the column names of the input
-#' adjacency matrix or an explicitly-defined IDs vector. If an IDs vector is
-#' given, confirm that it is applicable to the input adjacency matrix. If no
-#' IDs are available, use C1, C2, ..., Cn for IDs.
-#'
-#' Intended for developer use only to improve package readability.
-#'
-#' @param adj_matrix An n x n adjacency matrix that represents an FCM
-get_node_IDs_from_input <- function(adj_matrix = matrix()) {
-  empty_colnames <- identical(colnames(adj_matrix), NULL)
-  if (empty_colnames) {
-    IDs <- paste0("C", 1:nrow(adj_matrix))
-  } else if (!empty_colnames) {
-    IDs <- colnames(adj_matrix)
-  }
-
-  IDs
-}
-
-
-
-#' check_if_local_machine_has_access_to_show_progress_functionalities
+#' Check if the local machine can access internal 'show_progress' functionalities
 #'
 #' @description
 #' Check whether the local machine has access to the necessary packages to
@@ -253,6 +80,12 @@ get_node_IDs_from_input <- function(adj_matrix = matrix()) {
 #'
 #' @param use_parallel TRUE/FALSE The user intends to use parallel processing
 #' @param use_show_progress TRUE/FALSE The user intends to display progress bars
+#'
+#' @returns TRUE/FALSE Whether the machine has access to the dependencies to
+#' access internal 'show_progress' functionalities
+#'
+#' @export
+#' @example man/examples/examples-utility/examples-utility-check_if_local_machine_has_access_to_show_progress_functionalities.R
 check_if_local_machine_has_access_to_show_progress_functionalities <- function(use_parallel, use_show_progress) {
   # Confirm packages necessary packages are available. If not, change run options
   parallel_check <- use_parallel
@@ -281,56 +114,42 @@ check_if_local_machine_has_access_to_show_progress_functionalities <- function(u
 }
 
 
-#' check_if_local_machine_has_access_to_parallel_processing_functionalities
+
+#' Get the data types of adjacency matrices in a list
 #'
 #' @description
-#' Check whether the local machine has access to the necessary packages to
-#' run code in parallel and/or using a progress bar. Specifically, checks for
-#' the parallel, doSNOW, foreach, and pbapply packages.
+#' This function performs two actions:
 #'
-#' @details
-#' Confirms that a local machine can access the required packages for parallel
-#' processing and/or displaying progress bars at runtime. Will revise inputs
-#' if particular packages are unavailable and warn the user of such changes, but will
-#' not halt a run.
+#'  1. This function identifies whether the input is a list of adjacency matrices
+#'     or is an individual adj matrix (input_type)
 #'
-#' @param use_parallel TRUE/FALSE The user intends to use parallel processing
-#' @param use_show_progress TRUE/FALSE The user intends to display progress bars
-check_if_local_machine_has_access_to_parallel_processing_functionalities <- function(use_parallel, use_show_progress) {
-  # Confirm packages necessary packages are available. If not, change run options
-  parallel_check <- use_parallel
-  show_progress_check <- use_show_progress
-
-  if (use_parallel) {
-    if (use_show_progress) {
-      local_machine_has_access_to_doSNOW <- requireNamespace("doSNOW")
-      local_machine_has_access_to_foreach <- requireNamespace("foreach")
-      if (!local_machine_has_access_to_doSNOW | !local_machine_has_access_to_foreach) {
-        parallel_check <- FALSE
-        warning("\tShowing progress with parallel processing requires the 'doSNOW' and 'foreach' packages which are
-        currently not installed. Running in parallel but without showing progress.")
-      }
-    } else {
-      local_machine_has_access_to_parallel <- requireNamespace("parallel")
-      if (!local_machine_has_access_to_parallel) {
-        parallel_check <- FALSE
-        warning("\tParallel processing requires the 'parallel' package which is
-        currently not installed. Running without parallel processing.")
-      }
-    }
-  }
-  parallel_check
-}
-
-
-#' get_adj_matrices_input_type
+#'  2. This function identifies the 'class' of the input adj. matrices from the
+#'     following options: 'conventional' 'ivfn' 'tfn' or 'unavailable'
 #'
-#' @description
-#' This function identifies whether input is a list of adjacency matrices or
-#' an individual adj matrix (input_type). If input is a list of adj matrices,
-#' checks what data types the adj matrices are (list_objects) (e.g. tibble, matrix, etc.)
+#'
+#'      - 'conventional' means that the adj. matrices contain only numeric objects
+#'
+#'
+#'      - 'ivfn' means that the adj. matrices contain only 'ivfn' objects (interval-
+#'        valued fuzzy number) NOTE: also returns the matrix class type (i.e.
+#'        data.frame, tibble, etc.)
+#'
+#'
+#'      - 'tfn' means that the adj. matrices contain only 'tfn' objects (triangular
+#'        fuzzy number)
+#'
+#'
+#'      - 'unavailable' means that the adj. matrices contain non-numeric data that
+#'        are not of types 'ivfn' or 'tfn'
 #'
 #' @param adj_matrix_list_input A list of adj matrices or an individual adj matrix
+#'
+#' @returns a named list with two variables:
+#'  adj_matrices_input_is_list: TRUE/FALSE Whether the input is a list of adj. matrices
+#'  object_types_in_list: The 'class' of the input adj. matrices
+#'
+#' @export
+#' @example man/examples/examples-utility/examples-utility-get_adj_matrices_input_type.R
 get_adj_matrices_input_type <- function(adj_matrix_list_input) {
   classes_in_list_objects <- methods::is(list())
   classes_in_dataframe_objects <- methods::is(data.frame())
@@ -401,3 +220,245 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
   )
 }
 
+
+
+#' Create an Adjacency Matrix from an Edgelist
+#'
+#' @description
+#' Creates an adjacency matrix from an edgelist
+#'
+#' @details
+#' The input edgelist must have the following column names: 'source' or 'from',
+#' 'target' or 'to'. The user must manually note if different names are used
+#' for the edgelist. An additional column may be selected to describe a value
+#' attributed to a given edge (default value column name is 'weight').
+#'
+#' The input edgelist can be either a matrix, data.frame, tibble, or
+#' data.table type object.
+#'
+#' @param edgelist An edgelist representing an fcm. Default column names are
+#' "source", "target", and "weight", but these may be defined explicitly.
+#' @param source_colname Column name in the input eddgelist that represents
+#' edge source nodes
+#' @param target_colname Column name in the input edgelist that represents
+#' edge target nodes
+#' @param value_colname Column name in the input edgelist that represents represents
+#' the values displayed in the adjacency matrix (i.e. weight, standard_deviation)
+#' @param node_order The order in which concepts should be arranged in the output
+#' adjacency matrix. If no input given, concepts will be arranged alphabetically.
+#'
+#' @returns An adjacency matrix (data.frame)
+#'
+#' @export
+#' @example man/examples/examples-utility/examples-utility-get_adj_matrix_from_edgelist.R
+get_adj_matrix_from_edgelist <- function(edgelist = matrix(),
+                                         source_colname = "source",
+                                         target_colname = "target",
+                                         value_colname = "weight",
+                                         node_order = c()) {
+
+  edgelist_column_inputs <- c(source_colname, target_colname, value_colname)
+  edgelist_columns_match_inputs <- identical(colnames(edgelist), edgelist_column_inputs)
+
+  if (!edgelist_columns_match_inputs) {
+    stop("Edgelist column names do not match inputs source_colname, target_colname
+         or value_colname. The default values for these are 'sourrce', 'target',
+         and 'weight'. Check to make sure that these match the actual column
+         names of the input edgelist.")
+  }
+
+  source_nodes <- edgelist[[source_colname]]
+  target_nodes <- edgelist[[target_colname]]
+  edge_values <- edgelist[[value_colname]]
+
+  nodes <- unique(c(source_nodes, target_nodes))
+
+  adj_matrix <- data.frame(matrix(data = 0, nrow = length(nodes), ncol = length(nodes)))
+  colnames(adj_matrix) <- nodes
+  rownames(adj_matrix) <- nodes
+
+  for (i in seq_along(edge_values)) {
+    edge <- edgelist[i, ]
+    edge_row_loc <- which(nodes == edge[[source_colname]])
+    edge_col_loc <- which(nodes == edge[[target_colname]])
+    adj_matrix[edge_row_loc, edge_col_loc] <- edge_values[i]
+  }
+
+  node_order_given <- !identical(node_order, c())
+  node_order_is_not_correct_length <- length(node_order) != length(nodes)
+  node_order_input_is_not_type_character <- !identical(unique(typeof(node_order)), "character")
+  if (!node_order_given) {
+    adj_matrix <- adj_matrix
+  } else if (node_order_given & (node_order_is_not_correct_length | node_order_input_is_not_type_character)) {
+    stop("Input node_order must only contain character strings and must contain
+         as many values as their are unique nodes depicted in the input edgelist.")
+  } else {
+    adj_matrix <- adj_matrix[node_order, node_order]
+  }
+
+  adj_matrix
+}
+
+
+
+#' Convert an Adjacency Matrix to an Edgelist
+#'
+#' @description
+#' Converts an adjacency matrix into an edgelist
+#'
+#' @details
+#' The input adjacency matrix must be a square n x n matrix. It can be either
+#' a matrix, data.frame, tibble, or data.table type object.
+#'
+#' If the input matrix has named columns, those names will be used as concepts
+#' in the edgelist. Otherwise, generic node IDs will be used (C1, C2, ... Cn)
+#'
+#' @param adj_matrix An n x n adjacency matrix that represents an FCM
+#'
+#' @returns An edgelist with the following columns: source, target, weight
+#'
+#' @export
+#' @example man/examples/examples-utility/examples-utility-get_edgelist_from_adj_matrix.R
+get_edgelist_from_adj_matrix <- function(adj_matrix = matrix()) {
+  # Check adj matrix
+  rows <- nrow(adj_matrix)
+  cols <- ncol(adj_matrix)
+  if (rows != cols) {
+    stop("Failed Input Validation: Input adjacency matrix must be a square (n x n) matrix")
+  }
+  data_types_in_adj_matrix <- unique(do.call(list, (apply(adj_matrix, c(1, 2), function(x) list(methods::is(x[[1]]))))))
+  if (length(data_types_in_adj_matrix) > 1) {
+    stop("Failed Input Validation: Input adjacency matrix must contain objects of the same type. Either numerics, ivfns, or tfns.")
+  }
+
+  empty_colnames <- identical(colnames(adj_matrix), NULL)
+  if (empty_colnames) {
+    IDs <- paste0("C", 1:nrow(adj_matrix))
+  } else if (!empty_colnames) {
+    IDs <- colnames(adj_matrix)
+  }
+
+  edge_locs <- data.table::data.table(which(adj_matrix != 0, arr.ind = TRUE))
+  edge_weights <- mapply(function(row, col) adj_matrix[row, col], row = edge_locs$row, col = edge_locs$col)
+
+  source_IDs <- IDs[edge_locs$row]
+  target_IDs <- IDs[edge_locs$col]
+
+  edgelist <- data.frame(
+    source = source_IDs,
+    target = target_IDs,
+    weight = edge_weights
+  )
+
+  edgelist
+}
+
+
+
+
+#' Get Node IDs (Concepts) from Adj. Matrix
+#'
+#' @description
+#' Get the column names of an adjacency matrix as the names of concepts. If no
+#' column names are given, use generic column names (C1, C2, ..., Cn)
+#'
+#' Intended for developer use only to improve package readability.
+#'
+#' @param adj_matrix An n x n adjacency matrix that represents an FCM
+#'
+#' @returns A vector of concept names
+#'
+#' @export
+#' @example man/examples/examples-utility/examples-utility-get_node_IDs_from_input.R
+get_node_IDs_from_input <- function(adj_matrix = matrix()) {
+  empty_colnames <- identical(colnames(adj_matrix), NULL)
+  if (empty_colnames) {
+    IDs <- paste0("C", 1:nrow(adj_matrix))
+  } else if (!empty_colnames) {
+    IDs <- colnames(adj_matrix)
+  }
+
+  IDs
+}
+
+
+
+#' Standardize a List of Adjacency Matrices
+#'
+#' @description
+#' Given a list of adj. matrices of different sizes, transforms the inputs into
+#' adj. matrices of the same size with 0 values added where edges are undefined
+#' or not included in maps.
+#'
+#' Solves the problem where Map 1 has nodes A and B but Map 2 has nodes B and C
+#' and need to analyse them both together.
+#'
+#' @param adj_matrices A list of adj. matrix objects
+#'
+#' @returns A list of adj. matrices constructed from the input adj. matrices,
+#' that contain the same concepts (and dimensions). Rows/Columns of added
+#' concepts are all 0's.
+#'
+#' @export
+#' @example man/examples/examples-utility/examples-utility-standardize_adj_matrices.R
+standardize_adj_matrices <- function(adj_matrices = list(matrix())) {
+  adj_matrices_dims <- lapply(adj_matrices, function(x) unique(dim(x)))
+  all_adj_matrices_are_square <- all(unlist(lapply(adj_matrices_dims, function(x) length(x) == 1)))
+  if (!all_adj_matrices_are_square) {
+    stop("Failed in standardize_size_of_adj_matrices
+       All matrices must be square (n x n)")
+  }
+
+  nodes_by_adj_matrix <- lapply(adj_matrices, colnames)
+  nodes_in_adj_matrices <- unique(unlist(nodes_by_adj_matrix))
+  n_total_nodes <- length(nodes_in_adj_matrices)
+  adj_matrices_already_standardized <- all(unlist(lapply(nodes_by_adj_matrix, function(nodes) all(nodes_in_adj_matrices %in% nodes))))
+  if (adj_matrices_already_standardized) {
+    return(adj_matrices)
+  }
+
+  adj_matrices_input_type <- get_adj_matrices_input_type(adj_matrices)
+  fcm_class <- adj_matrices_input_type$object_types_in_list[1]
+
+
+  standardized_adj_matrices <- vector(mode = "list", length = length(adj_matrices))
+
+  if (fcm_class == "conventional") {
+    for (i in seq_along(standardized_adj_matrices)) {
+      # browser()
+      standardized_adj_matrix <- data.frame(matrix(data = 0, nrow = n_total_nodes, ncol = n_total_nodes))
+      colnames(standardized_adj_matrix) <- nodes_in_adj_matrices
+      standardized_weight_locs <- which(nodes_in_adj_matrices %in% nodes_by_adj_matrix[[i]])
+      n_nodes_in_input_matrix <- length(nodes_by_adj_matrix[[i]])
+      weight_locs_df <- cbind(expand.grid(c(1:n_nodes_in_input_matrix), c(1:n_nodes_in_input_matrix)), expand.grid(standardized_weight_locs, standardized_weight_locs))
+      colnames(weight_locs_df) <- c("input_row", "input_col", "output_row", "output_col")
+      weight_locs_df$weight <- apply(weight_locs_df, 1, function(row_vec) adj_matrices[[i]][row_vec[1], row_vec[2]])
+      for (row_index in 1:nrow(weight_locs_df)) {
+        standardized_adj_matrix[weight_locs_df$output_row[row_index], weight_locs_df$output_col[row_index]] <- weight_locs_df$weight[row_index]
+      }
+      standardized_adj_matrices[[i]] <- standardized_adj_matrix
+    }
+  } else if (fcm_class %in% c("ivfn", "tfn")) {
+    if (fcm_class == "ivfn") {
+      empty_standardized_adj_matrix <- data.frame(matrix(data = list(ivfn(0, 0)), nrow = n_total_nodes, ncol = n_total_nodes))
+    } else if (fcm_class == "tfn") {
+      empty_standardized_adj_matrix <- data.frame(matrix(data = list(tfn(0, 0, 0)), nrow = n_total_nodes, ncol = n_total_nodes))
+    }
+    for (i in seq_along(standardized_adj_matrices)) {
+      # browser()
+      standardized_adj_matrix <- empty_standardized_adj_matrix
+      colnames(standardized_adj_matrix) <- nodes_in_adj_matrices
+      standardized_weight_locs <- which(nodes_in_adj_matrices %in% nodes_by_adj_matrix[[i]])
+      n_nodes_in_input_matrix <- length(nodes_by_adj_matrix[[i]])
+      weight_locs_df <- cbind(expand.grid(c(1:n_nodes_in_input_matrix), c(1:n_nodes_in_input_matrix)), expand.grid(standardized_weight_locs, standardized_weight_locs))
+      colnames(weight_locs_df) <- c("input_row", "input_col", "output_row", "output_col")
+      weight_locs_df$weight <- apply(weight_locs_df, 1, function(row_vec) adj_matrices[[i]][row_vec[1], row_vec[2]][[1]])
+      for (row_index in 1:nrow(weight_locs_df)) {
+        standardized_adj_matrix[weight_locs_df$output_row[row_index], weight_locs_df$output_col[row_index]][[1]] <- weight_locs_df$weight[row_index]
+      }
+      standardized_adj_matrices[[i]] <- standardized_adj_matrix
+    }
+  }
+
+  standardized_adj_matrices
+}

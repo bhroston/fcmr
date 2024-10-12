@@ -2,28 +2,32 @@
 % Please edit documentation in R/utility.R
 \name{get_edgelist_from_adj_matrix}
 \alias{get_edgelist_from_adj_matrix}
-\title{get_edgelist_from_adj_matrix}
+\title{Convert an Adjacency Matrix to an Edgelist}
 \usage{
-get_edgelist_from_adj_matrix(adj_matrix = matrix(), IDs = c())
+get_edgelist_from_adj_matrix(adj_matrix = matrix())
 }
 \arguments{
 \item{adj_matrix}{An n x n adjacency matrix that represents an FCM}
-
-\item{IDs}{A list of names for each node (must have n items)}
+}
+\value{
+An edgelist with the following columns: source, target, weight
 }
 \description{
-This "gets" an edgelist representing a graph described by the input adjacency
-matrix.
+Converts an adjacency matrix into an edgelist
 }
 \details{
 The input adjacency matrix must be a square n x n matrix. It can be either
 a matrix, data.frame, tibble, or data.table type object.
 
-If the input matrix has named columns, those names will be used as node IDs
-in the edgelist. Otherwise, generic node IDs will be used (1, 2, ... n)
-
-The edgelist returns the following columns: source, target, weight
+If the input matrix has named columns, those names will be used as concepts
+in the edgelist. Otherwise, generic node IDs will be used (C1, C2, ... Cn)
 }
 \examples{
-get_edgelist_from_adj_matrix(matrix(data = c(0, 1, 1, 0), nrow = 2, ncol = 2))
+adj_matrix <- data.frame(
+  "A" = c(0, 0, 0.3, 0),
+  "B" = c(0.5, 0, 0, 0.6),
+  "C" = c(0, 0, 0, 0),
+  "D" = c(1, 0, 1, 0)
+)
+get_edgelist_from_adj_matrix(adj_matrix)
 }
