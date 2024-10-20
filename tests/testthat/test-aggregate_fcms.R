@@ -76,7 +76,8 @@ test_that("aggregate_fcms works", {
 
   test_fcms_w_ivfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
   test_aggregate <- aggregate_fcms(test_fcms_w_ivfns, "mean", include_zeroes = FALSE)
-  expect_equal(test_aggregate$adj_matrix[1, 2][[1]], ivfn(0.4, 0.65))
+  # adj_matrix[[4]], loc[1, 2] = ivfn(0, 0.4) which is a false-zero edge
+  expect_equal(test_aggregate$adj_matrix[1, 2][[1]], ivfn(0.3, 0.65))
 
   test_aggregate <- aggregate_fcms(test_fcms_w_ivfns, "mean", include_zeroes = TRUE)
   expect_equal(test_aggregate$adj_matrix[1, 2][[1]], ivfn(0.3, 0.65))
@@ -85,55 +86,7 @@ test_that("aggregate_fcms works", {
   expect_equal(test_aggregate$adj_matrix[1, 2][[1]], ivfn(0.3, 0.6))
 
   test_aggregate <- aggregate_fcms(test_fcms_w_ivfns, "median", include_zeroes = FALSE)
-  expect_equal(test_aggregate$adj_matrix[1, 2][[1]], ivfn(0.4, 0.6))
-
-
-  # Check IVFN FCMs when lower bound of an edge = 0
-  # Aggregate IVFN FCMs
-  lower_adj_matrix_1 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.4, 0)
-  )
-  upper_adj_matrix_1 <- data.frame(
-    "A" = c(0, 0.2),
-    "B" = c(0.6, 0)
-  )
-  adj_matrix_1 <- make_adj_matrix_w_ivfns(lower_adj_matrix_1, upper_adj_matrix_1)
-  lower_adj_matrix_2 <- data.frame(
-    "A" = c(0, 0.3),
-    "B" = c(0.6, 0)
-  )
-  upper_adj_matrix_2 <- data.frame(
-    "A" = c(0, 0.4),
-    "B" = c(1, 0)
-  )
-  adj_matrix_2 <- make_adj_matrix_w_ivfns(lower_adj_matrix_2, upper_adj_matrix_2)
-  lower_adj_matrix_3 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.2, 0)
-  )
-  upper_adj_matrix_3 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.6, 0)
-  )
-  adj_matrix_3 <- make_adj_matrix_w_ivfns(lower_adj_matrix_3, upper_adj_matrix_3)
-  lower_adj_matrix_4 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.0, 0)
-  )
-  upper_adj_matrix_4 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.4, 0)
-  )
-  adj_matrix_4 <- make_adj_matrix_w_ivfns(lower_adj_matrix_4, upper_adj_matrix_4)
-
-  fcms_w_ivfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
-
-  # NOTE: If the lower bound of an edge weight is 0, but the upper bound is > 0,
-  # the assumption that a stakeholder simply did not include the edge is invalid.
-  # Thus, since the 0-lower bound is meaningful, it is included in mean/median
-  # calculations even if include_zeroes = FALSE
-  aggregate_fcms(fcms_w_ivfns, "mean", include_zeroes = FALSE)
+  expect_equal(test_aggregate$adj_matrix[1, 2][[1]], ivfn(0.3, 0.6))
 
   # ----
   # Check w/ tfn fcms ----
@@ -192,7 +145,7 @@ test_that("aggregate_fcms works", {
 
   test_fcms_w_tfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
   test_aggregate <- aggregate_fcms(test_fcms_w_tfns, "mean", include_zeroes = FALSE)
-  expect_equal(test_aggregate$adj_matrix[1, 2][[1]], tfn(0.4, 0.5, 0.65))
+  expect_equal(test_aggregate$adj_matrix[1, 2][[1]], tfn(0.3, 0.375, 0.65))
 
   test_aggregate <- aggregate_fcms(test_fcms_w_tfns, "mean", include_zeroes = TRUE)
   expect_equal(test_aggregate$adj_matrix[1, 2][[1]], tfn(0.3, 0.375, 0.65))
@@ -201,7 +154,7 @@ test_that("aggregate_fcms works", {
   expect_equal(test_aggregate$adj_matrix[1, 2][[1]], tfn(0.3, 0.4, 0.6))
 
   test_aggregate <- aggregate_fcms(test_fcms_w_tfns, "median", include_zeroes = FALSE)
-  expect_equal(test_aggregate$adj_matrix[1, 2][[1]], tfn(0.4, 0.4, 0.6))
+  expect_equal(test_aggregate$adj_matrix[1, 2][[1]], tfn(0.3, 0.4, 0.6))
 })
 
 
@@ -282,7 +235,7 @@ test_that("aggregate_fcms_w_ivfns works", {
 
   test_fcms_w_ivfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
   test_aggregate <- aggregate_fcms_w_ivfns(test_fcms_w_ivfns, "mean", include_zeroes = FALSE)
-  expect_equal(test_aggregate$adj_matrix[1, 2][[1]], ivfn(0.4, 0.65))
+  expect_equal(test_aggregate$adj_matrix[1, 2][[1]], ivfn(0.3, 0.65))
 
   test_aggregate <- aggregate_fcms_w_ivfns(test_fcms_w_ivfns, "mean", include_zeroes = TRUE)
   expect_equal(test_aggregate$adj_matrix[1, 2][[1]], ivfn(0.3, 0.65))
@@ -291,7 +244,7 @@ test_that("aggregate_fcms_w_ivfns works", {
   expect_equal(test_aggregate$adj_matrix[1, 2][[1]], ivfn(0.3, 0.6))
 
   test_aggregate <- aggregate_fcms_w_ivfns(test_fcms_w_ivfns, "median", include_zeroes = FALSE)
-  expect_equal(test_aggregate$adj_matrix[1, 2][[1]], ivfn(0.4, 0.6))
+  expect_equal(test_aggregate$adj_matrix[1, 2][[1]], ivfn(0.3, 0.6))
 })
 
 
@@ -351,7 +304,7 @@ test_that("fcm_w_tfn_aggregation works", {
 
   test_fcms_w_tfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
   test_aggregate <- aggregate_fcms_w_tfns(test_fcms_w_tfns, "mean", include_zeroes = FALSE)
-  expect_equal(test_aggregate$adj_matrix[1, 2][[1]], tfn(0.4, 0.5, 0.65))
+  expect_equal(test_aggregate$adj_matrix[1, 2][[1]], tfn(0.3, 0.375, 0.65))
 
   test_aggregate <- aggregate_fcms_w_tfns(test_fcms_w_tfns, "mean", include_zeroes = TRUE)
   expect_equal(test_aggregate$adj_matrix[1, 2][[1]], tfn(0.3, 0.375, 0.65))
@@ -360,5 +313,5 @@ test_that("fcm_w_tfn_aggregation works", {
   expect_equal(test_aggregate$adj_matrix[1, 2][[1]], tfn(0.3, 0.4, 0.6))
 
   test_aggregate <- aggregate_fcms_w_tfns(test_fcms_w_tfns, "median", include_zeroes = FALSE)
-  expect_equal(test_aggregate$adj_matrix[1, 2][[1]], tfn(0.4, 0.4, 0.6))
+  expect_equal(test_aggregate$adj_matrix[1, 2][[1]], tfn(0.3, 0.4, 0.6))
 })

@@ -23,8 +23,8 @@ calculations. (i.e. if edges not included in a map should count as a zero-weight
 edge or not at all)}
 }
 \value{
-An aggregate adj. matrix (of class 'aggregate') the has the same
-data types as the inputs (i.e. Numerics for conventional, IVFNs, or TFNs)
+An aggregate adj. matrix (of class 'aggregate') with edges represented
+as the same data types as the inputs (i.e. Numerics for conventional, IVFNs, or TFNs)
 }
 \description{
 Generate an aggregate adj. matrix from a list of adj. matrices. FCM
