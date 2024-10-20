@@ -1,4 +1,18 @@
 
+################################################################################
+# aggregate_fcms.R
+#
+# These functions are involved with FCM aggregation (conventional, ivfn, and tfn)
+#
+#   - aggregate_fcms
+#   - aggregate_conventional_fcms
+#   - aggregate_fcms_w_ivfns
+#   - aggregate_fcms_w_tfns
+#   - print.aggregate
+#
+################################################################################
+
+
 #' Aggregate FCMs
 #'
 #' @description
@@ -63,6 +77,8 @@ aggregate_fcms <- function(adj_matrices = list(matrix()),
 
   aggregate_adj_matrix
 }
+
+
 
 #' Aggregate (Conventional) FCMs
 #'

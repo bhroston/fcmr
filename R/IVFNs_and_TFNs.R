@@ -1,8 +1,23 @@
 
-
+################################################################################
+# IVFNs_and_TFNs.R
+#
+# These functions are with IVFN and TFN objects
+#
+#   Interval-Valued Fuzzy Numbers (IVFNs)
+#   - make_adj_matrix_w_ivfns
+#   - ivfn
+#   - print.ivfn
+#   - c.ivfn
+#
+#   Triangular Fuzzy Numbers (TFNs)
+#   - make_adj_matrix_w_tfns
+#   - tfn
+#   - print.tfn
+#   - c.tfn
+#
+################################################################################
 # INTERVAL-VALUED FUZZY NUMBERS ----
-
-
 #' Create Adj. Matrix w/ Edges Represented as IVFNs
 #'
 #' @description
