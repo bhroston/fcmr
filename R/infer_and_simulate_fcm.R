@@ -1,8 +1,8 @@
 
-#' infer_fcm
+#' Infer FCM
 #'
 #' @description
-#' This confers with a baseline simulation of an fcm and a scenario (scenario vector)
+#' This compares the baseline simulation of an fcm with the input scenario (scenario vector)
 #' to estimate how outputs change compared to the structural or expected behavior
 #' of the system.
 #'
@@ -37,7 +37,10 @@
 #' and the simulation will stop
 #' @param fuzzy_set_samples The number of samples to represent ivfn or tfn as. Use to create finer scale results.s
 #'
+#' @returns A list of fcm inference results (including baseline and simulation outputs)
+#'
 #' @export
+#' @examples man/examples/examples-infer_and_simulate_fcm/infer_fcm.R
 infer_fcm <- function(adj_matrix = matrix(),
                       initial_state_vector = c(),
                       clamping_vector = c(),
@@ -48,7 +51,6 @@ infer_fcm <- function(adj_matrix = matrix(),
                       min_error = 1e-5,
                       fuzzy_set_samples = 1000) {
 
-  # browser()
   check_simulation_inputs(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
 
   fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
@@ -67,10 +69,10 @@ infer_fcm <- function(adj_matrix = matrix(),
 }
 
 
-#' infer_conventional_fcm
+#' Infer (Conventional) FCM
 #'
 #' @description
-#' This confers with a baseline simulation of an fcm and a scenario (scenario vector)
+#' This compares the baseline simulation of an fcm with the input scenario (scenario vector)
 #' to estimate how outputs change compared to the structural or expected behavior
 #' of the system.
 #'
@@ -104,7 +106,11 @@ infer_fcm <- function(adj_matrix = matrix(),
 #' vector minus the previous state vector) at which no more iterations are necessary
 #' and the simulation will stop
 #'
+#' @returns A list of (conventional) fcm inference results (including baseline
+#' and simulation outputs)
+#'
 #' @export
+#' @examples man/examples/examples-infer_and_simulate_fcm/examples-infer_and_simulate_fcm-infer_conventional_fcm.R
 infer_conventional_fcm <- function(adj_matrix = matrix(),
                                    initial_state_vector = c(),
                                    clamping_vector = c(),
@@ -164,10 +170,10 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
 }
 
 
-#' infer_ivfn_or_tfn_fcm
+#' Infer (IVFN or TFN) FCM
 #'
 #' @description
-#' This confers with a baseline simulation of an fcm and a scenario (scenario vector)
+#' This compares the baseline simulation of an fcm with the input scenario (scenario vector)
 #' to estimate how outputs change compared to the structural or expected behavior
 #' of the system.
 #'
@@ -202,7 +208,11 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
 #' and the simulation will stop
 #' @param fuzzy_set_samples The number of samples to represent ivfn or tfn as. Use to create finer scale results.s
 #'
+#' @returns A list of (ivfn or tfn) fcm inference results (including baseline
+#' and simulation outputs)
+#'
 #' @export
+#' @examples man/examples/examples-infer_and_simulate_fcm/examples-infer_and_simulate_fcm-infer_ivfn_or_tfn_fcm.R
 infer_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
                                   initial_state_vector = c(),
                                   clamping_vector = c(),
@@ -316,7 +326,7 @@ infer_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
 
 
 
-#' equalize_baseline_and_scenario_outputs
+#' [INTENDED FOR DEVELOPER USE ONLY] Equalize Baseline Simulation and Scenario Simulation DataFrames
 #'
 #' @description
 #' Ensures that the data frames for the baseline and scenario state vectors have
@@ -324,10 +334,19 @@ infer_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
 #' with the lower number of rows (simulation iterations) until both data frames are
 #' the same size.
 #'
-#' @param baseline_state_vectors State vectors (normal or crisp) from a simulate_fcm object for a baseline simulation
-#' @param scenario_state_vectors State vectors (normal or crisp) from a simulate_fcm object for a scenario simulation
+#' @details
+#' INTENDED FOR DEVELOPER USE ONLY
+#'
+#' @param baseline_state_vectors State vectors (normal or crisp) from a
+#' simulate_fcm object for a baseline simulation
+#' @param scenario_state_vectors State vectors (normal or crisp) from a
+#' simulate_fcm object for a scenario simulation
+#'
+#' @returns A named list of dataframes (baseline and scenario) that have the
+#' same number of rows
 #'
 #' @export
+#' @examples NULL
 equalize_baseline_and_scenario_outputs <- function(baseline_state_vectors,
                                                    scenario_state_vectors) {
   n_iters_baseline <- nrow(baseline_state_vectors)
@@ -362,10 +381,10 @@ equalize_baseline_and_scenario_outputs <- function(baseline_state_vectors,
 
 
 
-#' simulate_fcm
+#' Simulate FCM
 #'
 #' @description
-#' This simulates an fcm based on its adjacency matrix.
+#' This simulates an fcm (conventional, ivfn, or tfn) based on its adjacency matrix.
 #'
 #' @details
 #' This function performs two fcm simulations and compares the output between the two.
@@ -397,7 +416,10 @@ equalize_baseline_and_scenario_outputs <- function(baseline_state_vectors,
 #' vector minus the previous state vector) at which no more iterations are necessary
 #' and the simulation will stop
 #'
+#' @returns (Conventional, IVFN, or TFN) FCM simulation results
+#'
 #' @export
+#' @examples man/examples/examples-infer_and_simulate_fcm/examples-infer_and_simulate_fcm-simulate_fcm.R
 simulate_fcm <- function(adj_matrix = matrix(),
                          initial_state_vector = c(),
                          clamping_vector = c(),
@@ -425,6 +447,46 @@ simulate_fcm <- function(adj_matrix = matrix(),
 }
 
 
+
+#' Simulate (Conventional) FCM
+#'
+#' @description
+#' This simulates a conventional fcm based on its adjacency matrix.
+#'
+#' @details
+#' This function performs two fcm simulations and compares the output between the two.
+#' The first simulation considers the baseline activity where no nodes are "clamped" and the
+#' system behaves without any outside inputs. The second simulation considers a scenario where
+#' one or multiple nodes are "clamped" so that the system is reactive to additional inputs.
+#' The function returns the difference in simulation results between the scenario and baseline
+#' activity to understand how system manipulations compare to structural expectations of the system.
+#'
+#' This function produces the same output as mental modeler for the following inputs:
+#'  - initial_state_vector = c(1, 1, ..., 1)
+#'  - activation = "kosko"
+#'  - squashing = either "sigmoid" or "tanh"
+#'  - lambda = 1
+#'
+#' @param adj_matrix An n x n adjacency matrix that represents an FCM
+#' @param initial_state_vector A list state values at the start of an fcm simulation
+#' @param clamping_vector A list of values representing specific actions taken to
+#' control the behavior of an FCM. Specifically, non-zero values defined in this vector
+#' will remain constant throughout the entire simulation as if they were "clamped" at those values.
+#' @param activation The activation function to be applied. Must be one of the following:
+#' 'kosko', 'modified-kosko', or 'rescale'.
+#' @param squashing A squashing function to apply. Must be one of the following:
+#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' @param lambda A numeric value that defines the steepness of the slope of the
+#' squashing function when tanh or sigmoid are applied
+#' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
+#' @param min_error The lowest error (sum of the absolute value of the current state
+#' vector minus the previous state vector) at which no more iterations are necessary
+#' and the simulation will stop
+#'
+#' @returns (Conventional) FCM simulation results
+#'
+#' @export
+#' @examples man/examples/examples-infer_and_simulate_fcm/examples-infer_and_simulate_fcm-simulate_conventional_fcm.R
 simulate_conventional_fcm <- function(adj_matrix = matrix(),
                                       initial_state_vector = c(),
                                       clamping_vector = c(),
@@ -491,6 +553,46 @@ simulate_conventional_fcm <- function(adj_matrix = matrix(),
 }
 
 
+
+#' Simulate (IVFN or TFN) FCM
+#'
+#' @description
+#' This simulates a (IVFN or TFN) fcm based on its adjacency matrix.
+#'
+#' @details
+#' This function performs two fcm simulations and compares the output between the two.
+#' The first simulation considers the baseline activity where no nodes are "clamped" and the
+#' system behaves without any outside inputs. The second simulation considers a scenario where
+#' one or multiple nodes are "clamped" so that the system is reactive to additional inputs.
+#' The function returns the difference in simulation results between the scenario and baseline
+#' activity to understand how system manipulations compare to structural expectations of the system.
+#'
+#' This function produces the same output as mental modeler for the following inputs:
+#'  - initial_state_vector = c(1, 1, ..., 1)
+#'  - activation = "kosko"
+#'  - squashing = either "sigmoid" or "tanh"
+#'  - lambda = 1
+#'
+#' @param adj_matrix An n x n adjacency matrix that represents an FCM
+#' @param initial_state_vector A list state values at the start of an fcm simulation
+#' @param clamping_vector A list of values representing specific actions taken to
+#' control the behavior of an FCM. Specifically, non-zero values defined in this vector
+#' will remain constant throughout the entire simulation as if they were "clamped" at those values.
+#' @param activation The activation function to be applied. Must be one of the following:
+#' 'kosko', 'modified-kosko', or 'rescale'.
+#' @param squashing A squashing function to apply. Must be one of the following:
+#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' @param lambda A numeric value that defines the steepness of the slope of the
+#' squashing function when tanh or sigmoid are applied
+#' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
+#' @param min_error The lowest error (sum of the absolute value of the current state
+#' vector minus the previous state vector) at which no more iterations are necessary
+#' and the simulation will stop
+#'
+#' @returns (IVFN or TFN) FCM simulation results
+#'
+#' @export
+#' @examples man/examples/examples-infer_and_simulate_fcm/examples-infer_and_simulate_fcm-simulate_ivfn_or_tfn_fcm.R
 simulate_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
                                      initial_state_vector = c(),
                                      clamping_vector = c(),
@@ -615,13 +717,16 @@ simulate_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
 }
 
 
-#' calculate_next_conventional_fcm_state_vector
+#' [INTENDED FOR DEVELOPER USE ONLY] Calculate Next (Conventional) FCM State
+#' Vector
 #'
 #' @description
 #' This calculates the next iteration of a state vector in an fcm simulation
 #' based on the kosko, modified-kosko, or rescale activation functions
 #'
 #' @details
+#' INTENDED FOR DEVELOPER USE ONLY
+#'
 #' The state of the art of fcm typically applies one of three activation functions
 #' in calculating iterative state vector values: kosko, modified-kosko, and
 #' rescale (as identified in Gonzales et al. 2018 - https://doi.org/10.1142/S0218213018600102).
@@ -636,10 +741,15 @@ simulate_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
 #'
 #' Use vignette("fcm-class") for more information.
 #'
+#' @references Kosko, 1986
+#'
 #' @param adj_matrix An n x n adjacency matrix that represents an FCM
 #' @param state_vector A list state values at a particular iteration in an fcm simulation
 #' @param activation The activation function to be applied. Must be one of the following:
 #' 'kosko', 'modified-kosko', or 'rescale'.
+#'
+#' @returns The (i + 1) iteration of the input state_vector based on the
+#' adj_matrix and activation function
 #'
 #' @export
 calculate_next_conventional_fcm_state_vector <- function(adj_matrix = matrix(),
@@ -663,13 +773,16 @@ calculate_next_conventional_fcm_state_vector <- function(adj_matrix = matrix(),
 }
 
 
-#' calculate_next_fuzzy_set_fcm_state_vector
+#' [INTENDED FOR DEVELOPER USE ONLY] Calculate Next (IVFN-FCM or TFN-FCM) State
+#' Vector
 #'
 #' @description
 #' This calculates the next iteration of a state vector in an fcm simulation
 #' based on the kosko, modified-kosko, or rescale activation functions
 #'
 #' @details
+#' INTENDED FOR DEVELOPER USE ONLY
+#'
 #' The state of the art of fcm typically applies one of three activation functions
 #' in calculating iterative state vector values: kosko, modified-kosko, and
 #' rescale (as identified in Gonzales et al. 2018 - https://doi.org/10.1142/S0218213018600102).
@@ -689,6 +802,9 @@ calculate_next_conventional_fcm_state_vector <- function(adj_matrix = matrix(),
 #' @param activation The activation function to be applied. Must be one of the following:
 #' 'kosko', 'modified-kosko', or 'rescale'.
 #' @param fcm_class Class of edges in fuzzy_set_adj_matrix. Either 'ivfn' or 'tfn'
+#'
+#' @returns The (i + 1) iteration of the input state_vector based on the
+#' adj_matrix and activation function
 #'
 #' @export
 calculate_next_fuzzy_set_fcm_state_vector <- function(fuzzy_set_adj_matrix = matrix(),
@@ -763,7 +879,7 @@ calculate_next_fuzzy_set_fcm_state_vector <- function(fuzzy_set_adj_matrix = mat
 }
 
 
-#' squash
+#' Squash
 #'
 #' @description
 #' Calculate squashing function output of an input value and lambda values
@@ -821,7 +937,7 @@ squash <- function(value = numeric(),
 
 
 
-#' defuzz
+#' Defuzz
 #'
 #' @description
 #' Convert a fuzzy number to a crisp value. For IVFNs, return the average of the
@@ -829,6 +945,8 @@ squash <- function(value = numeric(),
 #' mode, and the upper bound.
 #'
 #' @param fuzzy_number A fuzzy number object. Either an ivfn or tfn
+#'
+#' @returns A crisp value representative of the input IVFN or TFN
 #'
 #' @export
 defuzz <- function(fuzzy_number) {
@@ -846,7 +964,7 @@ defuzz <- function(fuzzy_number) {
 }
 
 
-#' convert_element_to_ivfn_or_tfn_if_numeric
+#' Convert Value to IVFN or TFN if Value is Numeric
 #'
 #' @description
 #' This checks whether the input element is an ordinary number or a triangular number.
@@ -855,6 +973,8 @@ defuzz <- function(fuzzy_number) {
 #'
 #' @param element An element in a matrix
 #' @param desired_class Transform the element into an 'ivfn' or 'tfn'
+#'
+#' @returns An IVFN or TFN representation of a crisp, numeric value
 #'
 #' @export
 convert_element_to_ivfn_or_tfn_if_numeric <- function(element, desired_class = c("ivfn", "tfn")) {
@@ -868,21 +988,23 @@ convert_element_to_ivfn_or_tfn_if_numeric <- function(element, desired_class = c
 }
 
 
-#' convert_fuzzy_set_elements_in_matrix_to_distributions
+#' Convert IVFN or TFN Elements in Adj. Matrix to Distributions (i.e. sets)
 #'
 #' @description
-#' Given a list of adjacency matrices which include either grey_numbers or
+#' Given a list of adjacency matrices which include either ivfns or
 #' tfns, convert those objects to their corresponding
 #' distributions representative of those values.
 #'
 #' @details
-#' [ADD DETAILS HERE!!!!]
-#'
-#' Use vignette("fcmconfr-class") for more information.
+#' This function assists with subtracting the baseline from the scenario
+#' simulation when calling infer_fcm with IVFN-FCMs or TFN-FCMs.
 #'
 #' @param fuzzy_set_matrix A matrix that contains fuzzy sets as elements
 #' @param object_class Values are represented either as ivfns or tfns. Options: 'ivfn' or 'tfn'
 #' @param N_samples The number of samples to draw from the corresponding distribution
+#'
+#' @returns An adj. matrix of IVFNs or TFNs represented as lists (sets) of their
+#' representative distributions
 #'
 #' @export
 convert_fuzzy_set_elements_in_matrix_to_distributions <- function(fuzzy_set_matrix = matrix(),
@@ -921,15 +1043,19 @@ convert_fuzzy_set_elements_in_matrix_to_distributions <- function(fuzzy_set_matr
 }
 
 
-#' clean_simulation_output
+#' [INTENDED FOR DEVELOPER USE ONLY] Clean Simulation Output
 #'
 #' @description
+#' INTENDED FOR DEVELOPER USE ONLY
+#'
 #' This adds quality-of-life improvements and detail to simulation output objects
 #' such as adding column names and an iter column
 #'
 #' @param output_obj An fcm_w_fcm_w_tfn simulation output object
 #' @param concepts A list of names for each node (must have n items). If empty, will use
 #' column names of adjacancy matrix (if given).
+#'
+#' @returns A cleaned up simulation output
 #'
 #' @export
 clean_simulation_output <- function(output_obj, concepts) {
@@ -953,13 +1079,15 @@ clean_simulation_output <- function(output_obj, concepts) {
 }
 
 
-#' check_simulation_inputs
+#' [INTENDED FOR DEVELOPER USE ONLY] Check Simulation Inputs
 #'
 #' @description
 #' Confirm that all inputs will work with the simulation function and return
 #' appropriate error messages where necessary
 #'
 #' @details
+#' INTENDED FOR DEVELOPER USE ONLY
+#'
 #' This checks that all inputs for a simulation function are of an appropriate
 #' format, and also fills in missing inputs for initial_state_vector, clamping_vector,
 #' and IDs when appropriate.
