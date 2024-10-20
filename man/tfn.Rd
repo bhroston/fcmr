@@ -2,30 +2,37 @@
 % Please edit documentation in R/IVFNs_and_TFNs.R
 \name{tfn}
 \alias{tfn}
-\title{tfn S3 class}
+\title{Triangular Fuzzy Number (TFN) - S3 Class}
 \usage{
 tfn(lower = double(), mode = double(), upper = double())
 }
 \arguments{
-\item{lower}{lower limit of a Triangular Number set (the lower value must be less than or equal to the upper value)}
+\item{lower}{lower limit of a Triangular Number set (the lower value must be
+less than or equal to the upper value)}
 
 \item{mode}{the most likely value of a Triangular Number set}
 
-\item{upper}{upper limit of a Triangular Number set (the upper value must be greater or equal to the lower value)}
+\item{upper}{upper limit of a Triangular Number set (the upper value must be
+greater or equal to the lower value)}
+}
+\value{
+A triangular fuzzy number (TFN)
 }
 \description{
-This class is an organization scheme for Triangular Numbers (See
-____, XXXX for example).
+This constructs an triangular fuzzy number (ivfn) that represents a
+continuous, triangular distribution of values within a given range
 }
 \details{
-Triangular Numbers represent intervals within a possibility space (typically
-[0, 1] or [-1, 1]) that contains the true value of an object.
+The TFN class does not perform any operations on its input, rather
+it checks whether the input follows the defining criteria of TFNs
 
-The tfn class does not perform any operations on its input, rather
-it checks whether the input follows the defining criteria of triangular numbers
-
-Use vignette("fcm_w_fcm_w_tfn-class") for more information.
+For TFNs, the lower bound must be less than or equal to the mode which must
+be less than or equal to the upper bound.
+If the lower bound, mode, and upper bound are equal, the TFN represents a
+"crisp" numeric value.
 }
 \examples{
-tfn(lower = 0, mode = 0.5, upper = 1)
+tfn(-1, 0, 1)
+tfn(0, 0, 1)
+tfn(1, 1, 1)
 }
