@@ -18,6 +18,8 @@
 
 #' Check if the local machine can access internal parallel processing functionalities
 #'
+#' @family utility
+#'
 #' @description
 #' Check whether the local machine has access to the necessary packages to
 #' run code in parallel and/or using a progress bar. Specifically, checks for
@@ -66,6 +68,8 @@ check_if_local_machine_has_access_to_parallel_processing_functionalities <- func
 
 
 #' Check if the local machine can access internal 'show_progress' functionalities
+#'
+#' @family utility
 #'
 #' @description
 #' Check whether the local machine has access to the necessary packages to
@@ -117,6 +121,8 @@ check_if_local_machine_has_access_to_show_progress_functionalities <- function(u
 
 #' Get the data types of adjacency matrices in a list
 #'
+#' @family utility
+#'
 #' @description
 #' This function performs two actions:
 #'
@@ -129,15 +135,12 @@ check_if_local_machine_has_access_to_show_progress_functionalities <- function(u
 #'
 #'      - 'conventional' means that the adj. matrices contain only numeric objects
 #'
-#'
 #'      - 'ivfn' means that the adj. matrices contain only 'ivfn' objects (interval-
 #'        valued fuzzy number) NOTE: also returns the matrix class type (i.e.
 #'        data.frame, tibble, etc.)
 #'
-#'
 #'      - 'tfn' means that the adj. matrices contain only 'tfn' objects (triangular
 #'        fuzzy number)
-#'
 #'
 #'      - 'unavailable' means that the adj. matrices contain non-numeric data that
 #'        are not of types 'ivfn' or 'tfn'
@@ -224,6 +227,7 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
 
 #' Create an Adjacency Matrix from an Edgelist
 #'
+#'
 #' @description
 #' Creates an adjacency matrix from an edgelist
 #'
@@ -303,6 +307,8 @@ get_adj_matrix_from_edgelist <- function(edgelist = matrix(),
 
 #' Convert an Adjacency Matrix to an Edgelist
 #'
+#' @family utility
+#'
 #' @description
 #' Converts an adjacency matrix into an edgelist
 #'
@@ -355,8 +361,9 @@ get_edgelist_from_adj_matrix <- function(adj_matrix = matrix()) {
 
 
 
-
 #' Get Node IDs (Concepts) from Adj. Matrix
+#'
+#' @family utility
 #'
 #' @description
 #' Get the column names of an adjacency matrix as the names of concepts. If no
@@ -384,6 +391,8 @@ get_node_IDs_from_input <- function(adj_matrix = matrix()) {
 
 
 #' Standardize a List of Adjacency Matrices
+#'
+#' @family utility
 #'
 #' @description
 #' Given a list of adj. matrices of different sizes, transforms the inputs into
