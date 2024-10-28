@@ -2,9 +2,9 @@
 % Please edit documentation in R/IVFNs_and_TFNs.R
 \name{rtri}
 \alias{rtri}
-\title{rtri}
+\title{The Triangular Distribution}
 \usage{
-rtri(n = integer(), lower = double(), mode = double(), upper = double())
+rtri(n, lower = 0, mode = 0.5, upper = 1)
 }
 \arguments{
 \item{n}{number of samples to draw from the triangular distribution}
@@ -15,10 +15,13 @@ rtri(n = integer(), lower = double(), mode = double(), upper = double())
 
 \item{upper}{upper limit or maximum of the sample space}
 }
+\value{
+a set c() of values representing a triangular distribution
+}
 \description{
-This pulls n samples from a triangular distribution described by shape parameters
-defined by a lower limit, upper limit, and mode
+This function generates a triangular distribution on the interval from lower
+to upper bounds with a a given mode,
 }
 \details{
-Use vignette("fcmcmr-class") for more information.
+Additional details...
 }

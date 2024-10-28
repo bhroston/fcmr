@@ -2,15 +2,166 @@
 % Please edit documentation in R/utility.R
 \name{get_adj_matrices_input_type}
 \alias{get_adj_matrices_input_type}
-\title{get_adj_matrices_input_type}
+\title{Get the data types of adjacency matrices in a list}
 \usage{
 get_adj_matrices_input_type(adj_matrix_list_input)
 }
 \arguments{
 \item{adj_matrix_list_input}{A list of adj matrices or an individual adj matrix}
 }
+\value{
+a named list with two variables:
+ adj_matrices_input_is_list: TRUE/FALSE Whether the input is a list of adj. matrices
+ object_types_in_list: The 'class' of the input adj. matrices
+}
 \description{
-This function identifies whether input is a list of adjacency matrices or
-an individual adj matrix (input_type). If input is a list of adj matrices,
-checks what data types the adj matrices are (list_objects) (e.g. tibble, matrix, etc.)
+This function performs two actions:
+
+ 1. This function identifies whether the input is a list of adjacency matrices
+    or is an individual adj matrix (input_type)
+
+ 2. This function identifies the 'class' of the input adj. matrices from the
+    following options: 'conventional' 'ivfn' 'tfn' or 'unavailable'
+
+
+     - 'conventional' means that the adj. matrices contain only numeric objects
+
+
+     - 'ivfn' means that the adj. matrices contain only 'ivfn' objects (interval-
+       valued fuzzy number) NOTE: also returns the matrix class type (i.e.
+       data.frame, tibble, etc.)
+
+
+     - 'tfn' means that the adj. matrices contain only 'tfn' objects (triangular
+       fuzzy number)
+
+
+     - 'unavailable' means that the adj. matrices contain non-numeric data that
+       are not of types 'ivfn' or 'tfn'
+}
+\examples{
+# Individual Conventional Adj. Matrix ----
+adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(1, 0)
+)
+get_adj_matrices_input_type(adj_matrix_1)
+
+
+# List of Multiple Conventional FCM Adj. Matrices ----
+adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(1, 0)
+)
+adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.25, 0)
+)
+adj_matrix_3 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.75, 0)
+)
+adj_matrix_4 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.5, 0)
+)
+fcms <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
+get_adj_matrices_input_type(fcms)
+
+# List of Multiple IVFN FCM Adj. Matrices ----
+lower_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+upper_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+adj_matrix_1 <- make_adj_matrix_w_ivfns(lower_adj_matrix_1, upper_adj_matrix_1)
+lower_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+upper_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(1, 0)
+)
+adj_matrix_2 <- make_adj_matrix_w_ivfns(lower_adj_matrix_2, upper_adj_matrix_2)
+lower_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.2, 0)
+)
+upper_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+adj_matrix_3 <- make_adj_matrix_w_ivfns(lower_adj_matrix_3, upper_adj_matrix_3)
+lower_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.0, 0)
+)
+upper_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+adj_matrix_4 <- make_adj_matrix_w_ivfns(lower_adj_matrix_4, upper_adj_matrix_4)
+fcms_w_ivfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
+get_adj_matrices_input_type(fcms_w_ivfns)
+
+
+# List of Multiple TFN FCM Adj. Matrices ----
+lower_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+mode_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+upper_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+adj_matrix_1 <- make_adj_matrix_w_tfns(lower_adj_matrix_1, mode_adj_matrix_1, upper_adj_matrix_1)
+lower_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+mode_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.7, 0)
+)
+upper_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(1, 0)
+)
+adj_matrix_2 <- make_adj_matrix_w_tfns(lower_adj_matrix_2, mode_adj_matrix_2, upper_adj_matrix_2)
+lower_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.2, 0)
+)
+mode_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+upper_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+adj_matrix_3 <- make_adj_matrix_w_tfns(lower_adj_matrix_3, mode_adj_matrix_3, upper_adj_matrix_3)
+lower_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.0, 0)
+)
+mode_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0, 0)
+)
+upper_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+adj_matrix_4 <- make_adj_matrix_w_tfns(lower_adj_matrix_4, mode_adj_matrix_4, upper_adj_matrix_4)
+fcms_w_tfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
+get_adj_matrices_input_type(fcms_w_tfns)
 }

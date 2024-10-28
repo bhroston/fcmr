@@ -2,7 +2,7 @@
 % Please edit documentation in R/infer_and_simulate_fcm.R
 \name{simulate_fcm}
 \alias{simulate_fcm}
-\title{simulate_fcm}
+\title{Simulate FCM}
 \usage{
 simulate_fcm(
   adj_matrix = matrix(),
@@ -39,8 +39,11 @@ squashing function when tanh or sigmoid are applied}
 vector minus the previous state vector) at which no more iterations are necessary
 and the simulation will stop}
 }
+\value{
+(Conventional, IVFN, or TFN) FCM simulation results
+}
 \description{
-This simulates an fcm based on its adjacency matrix.
+This simulates an fcm (conventional, ivfn, or tfn) based on its adjacency matrix.
 }
 \details{
 This function performs two fcm simulations and compares the output between the two.
@@ -55,4 +58,7 @@ This function produces the same output as mental modeler for the following input
  - activation = "kosko"
  - squashing = either "sigmoid" or "tanh"
  - lambda = 1
+}
+\examples{
+man/examples/examples-infer_and_simulate_fcm/examples-infer_and_simulate_fcm-simulate_fcm.R
 }

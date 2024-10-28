@@ -2,26 +2,33 @@
 % Please edit documentation in R/IVFNs_and_TFNs.R
 \name{ivfn}
 \alias{ivfn}
-\title{ivfn S3 class}
+\title{Interval-Valued Fuzzy Number (IVFN) - S3 Class}
 \usage{
 ivfn(lower = double(), upper = double())
 }
 \arguments{
-\item{lower}{lower limit of an IVFN (the lower value must be less than or equal to the upper value)}
+\item{lower}{An n x n adjacency matrix that represents the lower limits of
+edges in an FCM}
 
-\item{upper}{upper limit of an IVFN (the upper value must be greater or equal to the lower value)}
+\item{upper}{An n x n adjacency matrix that represents the upper limits of
+edges in an FCM}
+}
+\value{
+An interval-valued fuzzy number (IVFN)
 }
 \description{
-This class is an organization scheme for Grey Numbers (See
-____, XXXX for example).
+This constructs an interval-valued fuzzy number (ivfn) that represents a
+continuous, uniform distribution of values within a given range
 }
 \details{
-Interval Value Fuzzy Numbers (IVFNs) represent intervals within a possibility space (typically
-[0, 1] or [-1, 1]) that contains the true value of an object.
-
 The IVFN class does not perform any operations on its input, rather
 it checks whether the input follows the defining criteria of IVFNs
+
+For IVFNs, the lower bound must be less than or equal to the upper bound.
+If the lower bound and upper bound are equal, the IVFN represents a "crisp"
+numeric value.
 }
 \examples{
 ivfn(lower = 0, upper = 1)
+ivfn(-1, 1)
 }

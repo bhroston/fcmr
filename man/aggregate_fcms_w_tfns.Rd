@@ -2,7 +2,7 @@
 % Please edit documentation in R/aggregate_fcms.R
 \name{aggregate_fcms_w_tfns}
 \alias{aggregate_fcms_w_tfns}
-\title{aggregate_fcms_w_tfns}
+\title{Aggregate (TFN) FCMs}
 \usage{
 aggregate_fcms_w_tfns(
   adj_matrices = list(matrix()),
@@ -11,20 +11,92 @@ aggregate_fcms_w_tfns(
 )
 }
 \arguments{
-\item{adj_matrices}{A list type object of fcms. Must have a length greater
-than 1.}
+\item{adj_matrices}{A list of TFN FCM adj. matrix objects}
 
-\item{aggregation_function}{"mean" or "median"}
+\item{aggregation_function}{Calculate aggregate edge weights as either the
+"mean" or "median" of the input edge weights across inputs}
 
 \item{include_zeroes}{TRUE/FALSE Whether to include zeroes in the mean/median
 calculations. (i.e. if edges not included in a map should count as a zero-weighted
 edge or not at all)}
 }
 \value{
-A single fcm w/ edges represenetd as TFNs calculated as the aggregate
-of the input adjacency matrices
+An aggregate adj. matrix (of class 'aggregate') with edges represented
+as TFN data types
 }
 \description{
-Construct an aggregate fcm w/ edges represented as TFNs from a group (list)
-of fcms w/ edges represented as TFNs
+Generate an aggregate adj. matrix from a list of (TFN) adj. matrices.
+FCM aggregation works by calculating the mean/median edge weight for all edges
+across the input adj. matrices (i.e. the mean/median of the edge weight
+connecting A -> B across all maps, the mean/median of the edge weight
+connecting B -> C across all maps, and so on). The user may dictate whether
+to incorporate 0-valued edge weights in the mean/median calculations.
+}
+\details{
+All input adj. matrices must represent TFN FCMs
+All input adj. matrices must have the same dimensions and concept names to
+generate an aggregate.
+}
+\examples{
+lower_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+mode_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+upper_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+adj_matrix_1 <- make_adj_matrix_w_tfns(lower_adj_matrix_1, mode_adj_matrix_1, upper_adj_matrix_1)
+lower_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+mode_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.7, 0)
+)
+upper_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(1, 0)
+)
+adj_matrix_2 <- make_adj_matrix_w_tfns(lower_adj_matrix_2, mode_adj_matrix_2, upper_adj_matrix_2)
+lower_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.2, 0)
+)
+mode_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+upper_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+adj_matrix_3 <- make_adj_matrix_w_tfns(lower_adj_matrix_3, mode_adj_matrix_3, upper_adj_matrix_3)
+lower_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.0, 0)
+)
+mode_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0, 0)
+)
+upper_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+adj_matrix_4 <- make_adj_matrix_w_tfns(lower_adj_matrix_4, mode_adj_matrix_4, upper_adj_matrix_4)
+
+fcms_w_tfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
+
+# Note that Row (1), Column(2) of adj_matrix 3 has false-zero lower and mode
+# edge weights. See how the aggregate incorporates those values even though
+# include_zeroes = FALSE
+aggregate_fcms_w_tfns(fcms_w_tfns, "mean", include_zeroes = FALSE)
+aggregate_fcms_w_tfns(fcms_w_tfns, "mean", include_zeroes = TRUE)
+
 }

@@ -1,19 +1,50 @@
 
-#' aggregate_fcms
+################################################################################
+# aggregate_fcms.R
+#
+# These functions are involved with FCM aggregation (conventional, ivfn, and tfn)
+#
+#   - aggregate_fcms
+#   - aggregate_conventional_fcms
+#   - aggregate_fcms_w_ivfns
+#   - aggregate_fcms_w_tfns
+#   - print.aggregate
+#
+################################################################################
+
+
+#' Aggregate FCMs
 #'
-#' @param adj_matrices A list type object of fcms. Must have a length greater
-#' than 1.
-#' @param aggregation_function "mean" or "median"
+#' @description
+#' Generate an aggregate adj. matrix from a list of adj. matrices. FCM
+#' aggregation works by calculating the mean/median edge weight for all edges
+#' across the input adj. matrices (i.e. the mean/median of the edge weight
+#' connecting A -> B across all maps, the mean/median of the edge weight
+#' connecting B -> C across all maps, and so on). The user may dictate whether
+#' to incorporate 0-valued edge weights in the mean/median calculations.
+#'
+#' @details
+#' All input adj. matrices must have the same dimensions and concept names to
+#' generate an aggregate.
+#'
+#' @param adj_matrices A list of adj. matrix objects; these can represent
+#' conventional FCM, IVFN FCM, and TFN FCM, but all adj. matrices must be of
+#' the same type between the three options.
+#' @param aggregation_function Calculate aggregate edge weights as either the
+#' "mean" or "median" of the input edge weights across inputs
 #' @param include_zeroes TRUE/FALSE Whether to include zeroes in the mean/median
 #' calculations. (i.e. if edges not included in a map should count as a zero-weighted
 #' edge or not at all)
 #'
+#' @returns An aggregate adj. matrix (of class 'aggregate') with edges represented
+#' as the same data types as the inputs (i.e. Numerics for conventional, IVFNs, or TFNs)
+#'
 #' @export
+#' @example  man/examples/examples-aggregate_fcms/examples-aggregate_fcms-aggregate_fcms.R
 aggregate_fcms <- function(adj_matrices = list(matrix()),
                            aggregation_function = c("mean", "median"),
                            include_zeroes = FALSE) {
 
-  #browser()
   adj_matrices_input_type <- get_adj_matrices_input_type(adj_matrices)
   if (!adj_matrices_input_type$adj_matrices_input_is_list) {
     adj_matrices <- list(adj_matrices)
@@ -47,35 +78,66 @@ aggregate_fcms <- function(adj_matrices = list(matrix()),
   aggregate_adj_matrix
 }
 
-#' aggregate_conventional_fcms
+
+
+#' Aggregate (Conventional) FCMs
 #'
-#' Construct an aggregate fcm from a group (list) of fcms
+#' @description
+#' Generate an aggregate adj. matrix from a list of (Conventional) adj. matrices.
+#' FCM aggregation works by calculating the mean/median edge weight for all edges
+#' across the input adj. matrices (i.e. the mean/median of the edge weight
+#' connecting A -> B across all maps, the mean/median of the edge weight
+#' connecting B -> C across all maps, and so on). The user may dictate whether
+#' to incorporate 0-valued edge weights in the mean/median calculations.
 #'
-#' @description Construct the aggregate fcm from a group (list)
-#' of fcms. Via mean or median.
+#' @details
+#' All input adj. matrices must represent Conventional FCMs
+#' All input adj. matrices must have the same dimensions and concept names to
+#' generate an aggregate.
 #'
-#' @details Add details here
-#'
-#' @param adj_matrices A list type object of fcms. Must have a length greater
-#' than 1.
-#' @param aggregation_function "mean" or "median"
+#' @param adj_matrices A list of Conventional FCM adj. matrix objects
+#' @param aggregation_function Calculate aggregate edge weights as either the
+#' "mean" or "median" of the input edge weights across inputs
 #' @param include_zeroes TRUE/FALSE Whether to include zeroes in the mean/median
 #' calculations. (i.e. if edges not included in a map should count as a zero-weighted
 #' edge or not at all)
+#' @param false_zero_locs_by_adj_matrix !FOR DEVELOPER USE ONLY! A list of array
+#' indexes for IVFN and TFN matrices that contain false-zero edges (False-zero
+#' edges are those that contain zero as a lower bound for IVFNs and/or mode for
+#' TFNs but a non-zero value for the upper bound)
 #'
-#' @return A single fcm calculated as the aggregate of the input adjacency matrices
+#' @returns An aggregate adj. matrix (of class 'aggregate') with edges represented
+#' as numeric data types
+#'
 #' @export
+#' @example man/examples/examples-aggregate_fcms/examples-aggregate_fcms-aggregate_conventional_fcms.R
 aggregate_conventional_fcms <- function(adj_matrices = list(matrix()),
                                         aggregation_function = c("mean", "median"),
-                                        include_zeroes = TRUE) {
+                                        include_zeroes = TRUE,
+                                        false_zero_locs_by_adj_matrix = list()) {
 
   concepts_in_adj_matrices <- lapply(adj_matrices, function(x) get_node_IDs_from_input(x))
   node_names <- unlist(unique(concepts_in_adj_matrices))
   n_nodes <- length(node_names)
   n_maps <- length(adj_matrices)
 
-  if (!include_zeroes) {
+  # browser()
+
+  if (!include_zeroes & identical(false_zero_locs_by_adj_matrix, list())) {
     adj_matrices <- lapply(adj_matrices, function(x) replace(x, x == 0, NA))
+  } else if (!include_zeroes & !identical(false_zero_locs_by_adj_matrix, list())) {
+    # browser()
+    adj_matrices <- lapply(adj_matrices, function(x) replace(x, x == 0, NA))
+    adj_matrices <- mapply(
+      function(adj_matrix, false_zero_locs) {
+        #browser()
+        adj_matrix[false_zero_locs] <- 0
+        adj_matrix
+      },
+      adj_matrix = adj_matrices,
+      false_zero_locs = false_zero_locs_by_adj_matrix,
+      SIMPLIFY = FALSE
+    )
   }
 
   if (aggregation_function == "mean") {
@@ -110,26 +172,37 @@ aggregate_conventional_fcms <- function(adj_matrices = list(matrix()),
 }
 
 
-#' aggregate_fcms_w_ivfns
+#' Aggregate (IVFN) FCMs
 #'
-#' Construct an aggregate fcm w/ edges represented as IVFNs from a group (list)
-#' of fcms w/ edges represented as IVFNs
+#' @description
+#' Generate an aggregate adj. matrix from a list of (IVFN) adj. matrices.
+#' FCM aggregation works by calculating the mean/median edge weight for all edges
+#' across the input adj. matrices (i.e. the mean/median of the edge weight
+#' connecting A -> B across all maps, the mean/median of the edge weight
+#' connecting B -> C across all maps, and so on). The user may dictate whether
+#' to incorporate 0-valued edge weights in the mean/median calculations.
 #'
-#' @param adj_matrices A list type object of fcms. Must have a length greater
-#' than 1.
-#' @param aggregation_function "mean" or "median"
+#' @details
+#' All input adj. matrices must represent IVFN FCMs
+#' All input adj. matrices must have the same dimensions and concept names to
+#' generate an aggregate.
+#'
+#' @param adj_matrices A list of IVFN FCM adj. matrix objects
+#' @param aggregation_function Calculate aggregate edge weights as either the
+#' "mean" or "median" of the input edge weights across inputs
 #' @param include_zeroes TRUE/FALSE Whether to include zeroes in the mean/median
 #' calculations. (i.e. if edges not included in a map should count as a zero-weighted
 #' edge or not at all)
 #'
-#' @return A single fcm w/ edges represented as IVFNs calculated as the aggregate
-#' of the input adjacency matrices
+#' @returns An aggregate adj. matrix (of class 'aggregate') with edges represented
+#' as IVFN data types
+#'
 #' @export
+#' @example  man/examples/examples-aggregate_fcms/examples-aggregate_fcms-aggregate_fcms_w_ivfns.R
 aggregate_fcms_w_ivfns <- function(adj_matrices = list(matrix()),
                                    aggregation_function = c("mean", "median"),
                                    include_zeroes = TRUE) {
 
-  # browser()
   concepts_in_adj_matrices <- lapply(adj_matrices, function(x) get_node_IDs_from_input(x))
   node_names <- unlist(unique(concepts_in_adj_matrices))
   n_nodes <- length(node_names)
@@ -138,14 +211,18 @@ aggregate_fcms_w_ivfns <- function(adj_matrices = list(matrix()),
   lower_adj_matrices <- lapply(adj_matrices, function(adj_matrix) apply(adj_matrix, c(1, 2), function(x) x[[1]]$lower))
   upper_adj_matrices <- lapply(adj_matrices, function(adj_matrix) apply(adj_matrix, c(1, 2), function(x) x[[1]]$upper))
 
-  lower_aggregate_adj_matrix <- aggregate_conventional_fcms(lower_adj_matrices, aggregation_function, include_zeroes)
+  if (include_zeroes) {
+    lower_aggregate_adj_matrix <- aggregate_conventional_fcms(lower_adj_matrices, aggregation_function, include_zeroes)
+  } else {
+    # Do NOT count IVFNs with a 0-lower bound as 0-weighted edges!!!!!!
+    false_zero_ivfn_locs_across_adj_matrices <- lapply(adj_matrices, function(adj_matrix) {
+      which(apply(adj_matrix, c(1, 2), function(element) (element[[1]]$lower == 0 & element[[1]]$upper != 0)), arr.ind = TRUE)
+    })
+    lower_aggregate_adj_matrix <- aggregate_conventional_fcms(lower_adj_matrices, aggregation_function, include_zeroes, false_zero_ivfn_locs_across_adj_matrices)
+  }
   upper_aggregate_adj_matrix <- aggregate_conventional_fcms(upper_adj_matrices, aggregation_function, include_zeroes)
 
-  #lower_aggregate_adj_matrix$adj_matrix[is.na(lower_aggregate_adj_matrix$adj_matrix)] <- 0
-  #upper_aggregate_adj_matrix$adj_matrix[is.na(upper_aggregate_adj_matrix$adj_matrix)] <- 0
-
   aggregate_adj_matrix_w_ivfns <- make_adj_matrix_w_ivfns(lower_aggregate_adj_matrix$adj_matrix, upper_aggregate_adj_matrix$adj_matrix)
-
   colnames(aggregate_adj_matrix_w_ivfns) <- node_names
   rownames(aggregate_adj_matrix_w_ivfns) <- node_names
 
@@ -163,21 +240,33 @@ aggregate_fcms_w_ivfns <- function(adj_matrices = list(matrix()),
 }
 
 
-#' aggregate_fcms_w_tfns
+#' Aggregate (TFN) FCMs
 #'
-#' Construct an aggregate fcm w/ edges represented as TFNs from a group (list)
-#' of fcms w/ edges represented as TFNs
+#' @description
+#' Generate an aggregate adj. matrix from a list of (TFN) adj. matrices.
+#' FCM aggregation works by calculating the mean/median edge weight for all edges
+#' across the input adj. matrices (i.e. the mean/median of the edge weight
+#' connecting A -> B across all maps, the mean/median of the edge weight
+#' connecting B -> C across all maps, and so on). The user may dictate whether
+#' to incorporate 0-valued edge weights in the mean/median calculations.
 #'
-#' @param adj_matrices A list type object of fcms. Must have a length greater
-#' than 1.
-#' @param aggregation_function "mean" or "median"
+#' @details
+#' All input adj. matrices must represent TFN FCMs
+#' All input adj. matrices must have the same dimensions and concept names to
+#' generate an aggregate.
+#'
+#' @param adj_matrices A list of TFN FCM adj. matrix objects
+#' @param aggregation_function Calculate aggregate edge weights as either the
+#' "mean" or "median" of the input edge weights across inputs
 #' @param include_zeroes TRUE/FALSE Whether to include zeroes in the mean/median
 #' calculations. (i.e. if edges not included in a map should count as a zero-weighted
 #' edge or not at all)
 #'
-#' @return A single fcm w/ edges represenetd as TFNs calculated as the aggregate
-#' of the input adjacency matrices
+#' @returns An aggregate adj. matrix (of class 'aggregate') with edges represented
+#' as TFN data types
+#'
 #' @export
+#' @example  man/examples/examples-aggregate_fcms/examples-aggregate_fcms-aggregate_fcms_w_tfns.R
 aggregate_fcms_w_tfns <- function(adj_matrices = list(matrix()),
                                   aggregation_function = c("mean", "median"),
                                   include_zeroes = TRUE) {
@@ -191,8 +280,21 @@ aggregate_fcms_w_tfns <- function(adj_matrices = list(matrix()),
   mode_adj_matrices <- lapply(adj_matrices, function(adj_matrix) apply(adj_matrix, c(1, 2), function(x) x[[1]]$mode))
   upper_adj_matrices <- lapply(adj_matrices, function(adj_matrix) apply(adj_matrix, c(1, 2), function(x) x[[1]]$upper))
 
-  lower_aggregate_adj_matrix <- aggregate_conventional_fcms(lower_adj_matrices, aggregation_function, include_zeroes)
-  mode_aggregate_adj_matrix <- aggregate_conventional_fcms(mode_adj_matrices, aggregation_function, include_zeroes)
+  if (include_zeroes) {
+    lower_aggregate_adj_matrix <- aggregate_conventional_fcms(lower_adj_matrices, aggregation_function, include_zeroes)
+    mode_aggregate_adj_matrix <- aggregate_conventional_fcms(mode_adj_matrices, aggregation_function, include_zeroes)
+    } else {
+    # Do NOT count TFNs with a 0-lower and 0-mode bounds as 0-weighted edges!!!!!!
+    false_zero_lower_tfn_locs_across_adj_matrices <- lapply(adj_matrices, function(adj_matrix) {
+      which(apply(adj_matrix, c(1, 2), function(element) (element[[1]]$lower == 0 & element[[1]]$upper != 0)), arr.ind = TRUE)
+    })
+    false_zero_mode_tfn_locs_across_adj_matrices <- lapply(adj_matrices, function(adj_matrix) {
+      which(apply(adj_matrix, c(1, 2), function(element) (element[[1]]$lower == 0 & element[[1]]$mode == 0 & element[[1]]$upper != 0)), arr.ind = TRUE)
+    })
+    lower_aggregate_adj_matrix <- aggregate_conventional_fcms(lower_adj_matrices, aggregation_function, include_zeroes, false_zero_lower_tfn_locs_across_adj_matrices)
+    mode_aggregate_adj_matrix <- aggregate_conventional_fcms(mode_adj_matrices, aggregation_function, include_zeroes, false_zero_mode_tfn_locs_across_adj_matrices)
+  }
+
   upper_aggregate_adj_matrix <- aggregate_conventional_fcms(upper_adj_matrices, aggregation_function, include_zeroes)
 
   aggregate_adj_matrix_w_tfns <- make_adj_matrix_w_tfns(lower_aggregate_adj_matrix$adj_matrix, mode_aggregate_adj_matrix$adj_matrix, upper_aggregate_adj_matrix$adj_matrix)

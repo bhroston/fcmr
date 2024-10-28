@@ -2,7 +2,7 @@
 % Please edit documentation in R/infer_and_simulate_fcm.R
 \name{convert_element_to_ivfn_or_tfn_if_numeric}
 \alias{convert_element_to_ivfn_or_tfn_if_numeric}
-\title{convert_element_to_ivfn_or_tfn_if_numeric}
+\title{Convert Value to IVFN or TFN if Value is Numeric}
 \usage{
 convert_element_to_ivfn_or_tfn_if_numeric(
   element,
@@ -13,6 +13,9 @@ convert_element_to_ivfn_or_tfn_if_numeric(
 \item{element}{An element in a matrix}
 
 \item{desired_class}{Transform the element into an 'ivfn' or 'tfn'}
+}
+\value{
+An IVFN or TFN representation of a crisp, numeric value
 }
 \description{
 This checks whether the input element is an ordinary number or a triangular number.

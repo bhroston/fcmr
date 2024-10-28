@@ -2,7 +2,7 @@
 % Please edit documentation in R/infer_and_simulate_fcm.R
 \name{infer_ivfn_or_tfn_fcm}
 \alias{infer_ivfn_or_tfn_fcm}
-\title{infer_ivfn_or_tfn_fcm}
+\title{Infer (IVFN or TFN) FCM}
 \usage{
 infer_ivfn_or_tfn_fcm(
   adj_matrix = matrix(),
@@ -42,8 +42,12 @@ and the simulation will stop}
 
 \item{fuzzy_set_samples}{The number of samples to represent ivfn or tfn as. Use to create finer scale results.s}
 }
+\value{
+A list of (ivfn or tfn) fcm inference results (including baseline
+and simulation outputs)
+}
 \description{
-This confers with a baseline simulation of an fcm and a scenario (scenario vector)
+This compares the baseline simulation of an fcm with the input scenario (scenario vector)
 to estimate how outputs change compared to the structural or expected behavior
 of the system.
 }
@@ -60,4 +64,7 @@ This function produces the same output as mental modeler for the following input
  - activation = "kosko"
  - squashing = either "sigmoid" or "tanh"
  - lambda = 1
+}
+\examples{
+man/examples/examples-infer_and_simulate_fcm/examples-infer_and_simulate_fcm-infer_ivfn_or_tfn_fcm.R
 }

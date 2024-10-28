@@ -2,7 +2,7 @@
 % Please edit documentation in R/infer_and_simulate_fcm.R
 \name{convert_fuzzy_set_elements_in_matrix_to_distributions}
 \alias{convert_fuzzy_set_elements_in_matrix_to_distributions}
-\title{convert_fuzzy_set_elements_in_matrix_to_distributions}
+\title{Convert IVFN or TFN Elements in Adj. Matrix to Distributions (i.e. sets)}
 \usage{
 convert_fuzzy_set_elements_in_matrix_to_distributions(
   fuzzy_set_matrix = matrix(),
@@ -17,13 +17,16 @@ convert_fuzzy_set_elements_in_matrix_to_distributions(
 
 \item{N_samples}{The number of samples to draw from the corresponding distribution}
 }
+\value{
+An adj. matrix of IVFNs or TFNs represented as lists (sets) of their
+representative distributions
+}
 \description{
-Given a list of adjacency matrices which include either grey_numbers or
+Given a list of adjacency matrices which include either ivfns or
 tfns, convert those objects to their corresponding
 distributions representative of those values.
 }
 \details{
-[ADD DETAILS HERE!!!!]
-
-Use vignette("fcmconfr-class") for more information.
+This function assists with subtracting the baseline from the scenario
+simulation when calling infer_fcm with IVFN-FCMs or TFN-FCMs.
 }

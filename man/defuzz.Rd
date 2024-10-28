@@ -2,12 +2,15 @@
 % Please edit documentation in R/infer_and_simulate_fcm.R
 \name{defuzz}
 \alias{defuzz}
-\title{defuzz}
+\title{Defuzz}
 \usage{
 defuzz(fuzzy_number)
 }
 \arguments{
 \item{fuzzy_number}{A fuzzy number object. Either an ivfn or tfn}
+}
+\value{
+A crisp value representative of the input IVFN or TFN
 }
 \description{
 Convert a fuzzy number to a crisp value. For IVFNs, return the average of the

@@ -2,7 +2,7 @@
 % Please edit documentation in R/IVFNs_and_TFNs.R
 \name{print.tfn}
 \alias{print.tfn}
-\title{print.tfn}
+\title{Print a Triangular Fuzzy Number (TFN)}
 \usage{
 \method{print}{tfn}(x, ...)
 }
@@ -13,19 +13,6 @@
 }
 \description{
 This improves the readability of the output
-}
-\details{
-triangular Numbers represent intervals within a possibility space (typically
-[0, 1] or [-1, 1]) that contains the true value of an object.
 
-The tfn class does not perform any operations on its input, rather
-it checks whether the input follows the defining criteria of triangular numbers
-
-tfns are constructed using vctrs::new_vctr instead of the typical call to
-structure() because ...
-
-Use vignette("fcm_w_fcm_w_tfn-class") for more information.
-}
-\examples{
-tfn(lower = 0, upper = 1)
+This prints a tfn object
 }
