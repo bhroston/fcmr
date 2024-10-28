@@ -82,3 +82,11 @@ fcms_w_ivfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
 aggregate_fcms_w_ivfns(fcms_w_ivfns, "mean", include_zeroes = FALSE)
 aggregate_fcms_w_ivfns(fcms_w_ivfns, "mean", include_zeroes = TRUE)
 }
+\seealso{
+Other aggregate_fcms: 
+\code{\link{aggregate_conventional_fcms}()},
+\code{\link{aggregate_fcms}()},
+\code{\link{aggregate_fcms_w_tfns}()},
+\code{\link{print.aggregate}()}
+}
+\concept{aggregate_fcms}

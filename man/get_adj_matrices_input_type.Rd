@@ -26,15 +26,12 @@ This function performs two actions:
 
      - 'conventional' means that the adj. matrices contain only numeric objects
 
-
      - 'ivfn' means that the adj. matrices contain only 'ivfn' objects (interval-
        valued fuzzy number) NOTE: also returns the matrix class type (i.e.
        data.frame, tibble, etc.)
 
-
      - 'tfn' means that the adj. matrices contain only 'tfn' objects (triangular
        fuzzy number)
-
 
      - 'unavailable' means that the adj. matrices contain non-numeric data that
        are not of types 'ivfn' or 'tfn'
@@ -165,3 +162,12 @@ adj_matrix_4 <- make_adj_matrix_w_tfns(lower_adj_matrix_4, mode_adj_matrix_4, up
 fcms_w_tfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
 get_adj_matrices_input_type(fcms_w_tfns)
 }
+\seealso{
+Other utility: 
+\code{\link{check_if_local_machine_has_access_to_parallel_processing_functionalities}()},
+\code{\link{check_if_local_machine_has_access_to_show_progress_functionalities}()},
+\code{\link{get_edgelist_from_adj_matrix}()},
+\code{\link{get_node_IDs_from_input}()},
+\code{\link{standardize_adj_matrices}()}
+}
+\concept{utility}

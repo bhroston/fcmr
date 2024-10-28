@@ -15,7 +15,7 @@
 #   - calculate_next_conventional_fcm_state_vector
 #   - calculate_next_fuzzy_set_fcm_state_vector
 #   - squash
-#   - defuzz
+#   - defuzz_ivfn_or_tfn
 #   - convert_element_to_ivfn_or_tfn_if_numeric
 #   - convert_fuzzy_set_elements_in_matrix_to_distributions
 #   - clean_simulation_output
@@ -66,7 +66,8 @@
 #' @returns A list of fcm inference results (including baseline and simulation outputs)
 #'
 #' @export
-#' @examples man/examples/examples-infer_and_simulate_fcm/infer_fcm.R
+#'
+#' @example man/examples/ex-infer_fcm.R
 infer_fcm <- function(adj_matrix = matrix(),
                       initial_state_vector = c(),
                       clamping_vector = c(),
@@ -136,7 +137,7 @@ infer_fcm <- function(adj_matrix = matrix(),
 #' and simulation outputs)
 #'
 #' @export
-#' @examples man/examples/examples-infer_and_simulate_fcm/examples-infer_and_simulate_fcm-infer_conventional_fcm.R
+#' @example man/examples/ex-infer_conventional_fcm.R
 infer_conventional_fcm <- function(adj_matrix = matrix(),
                                    initial_state_vector = c(),
                                    clamping_vector = c(),
@@ -238,7 +239,7 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
 #' and simulation outputs)
 #'
 #' @export
-#' @examples man/examples/examples-infer_and_simulate_fcm/examples-infer_and_simulate_fcm-infer_ivfn_or_tfn_fcm.R
+#' @example man/examples/ex-infer_ivfn_or_tfn_fcm.R
 infer_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
                                   initial_state_vector = c(),
                                   clamping_vector = c(),
@@ -445,7 +446,7 @@ equalize_baseline_and_scenario_outputs <- function(baseline_state_vectors,
 #' @returns (Conventional, IVFN, or TFN) FCM simulation results
 #'
 #' @export
-#' @examples man/examples/examples-infer_and_simulate_fcm/examples-infer_and_simulate_fcm-simulate_fcm.R
+#' @example man/examples/ex-simulate_fcm.R
 simulate_fcm <- function(adj_matrix = matrix(),
                          initial_state_vector = c(),
                          clamping_vector = c(),
@@ -512,7 +513,7 @@ simulate_fcm <- function(adj_matrix = matrix(),
 #' @returns (Conventional) FCM simulation results
 #'
 #' @export
-#' @examples man/examples/examples-infer_and_simulate_fcm/examples-infer_and_simulate_fcm-simulate_conventional_fcm.R
+#' @example man/examples/ex-simulate_conventional_fcm.R
 simulate_conventional_fcm <- function(adj_matrix = matrix(),
                                       initial_state_vector = c(),
                                       clamping_vector = c(),
@@ -618,7 +619,7 @@ simulate_conventional_fcm <- function(adj_matrix = matrix(),
 #' @returns (IVFN or TFN) FCM simulation results
 #'
 #' @export
-#' @examples man/examples/examples-infer_and_simulate_fcm/examples-infer_and_simulate_fcm-simulate_ivfn_or_tfn_fcm.R
+#' @example man/examples/ex-simulate_ivfn_or_tfn_fcm.R
 simulate_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
                                      initial_state_vector = c(),
                                      clamping_vector = c(),
@@ -671,7 +672,7 @@ simulate_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
       }
     )
     normalized_next_fuzzy_set_state_vector[clamped_node_locs] <- formatted_clamped_nodes
-    crisp_normalized_next_state_vector <- lapply(normalized_next_fuzzy_set_state_vector, defuzz)
+    crisp_normalized_next_state_vector <- lapply(normalized_next_fuzzy_set_state_vector, defuzz_ivfn_or_tfn)
 
     # Store result in output objects
     fuzzy_set_state_vectors[[i]] <- normalized_next_fuzzy_set_state_vector
@@ -963,7 +964,7 @@ squash <- function(value = numeric(),
 
 
 
-#' Defuzz
+#' Defuzz (IVFN or TFN)
 #'
 #' @description
 #' Convert a fuzzy number to a crisp value. For IVFNs, return the average of the
@@ -975,7 +976,10 @@ squash <- function(value = numeric(),
 #' @returns A crisp value representative of the input IVFN or TFN
 #'
 #' @export
-defuzz <- function(fuzzy_number) {
+#' @examples
+#' defuzz_ivfn_or_tfn(ivfn(-1, 1))
+#' defuzz_ivfn_or_tfn(tfn(-1, 0, 1))
+defuzz_ivfn_or_tfn <- function(fuzzy_number) {
   fuzzy_class <- methods::is(fuzzy_number)[1]
   if (fuzzy_class == "numeric" | fuzzy_class == "integer") {
     crisp_value <- fuzzy_number
@@ -988,6 +992,42 @@ defuzz <- function(fuzzy_number) {
   }
   crisp_value
 }
+
+
+
+#' #' Defuzz (IVFN)
+#' #'
+#' #' @description
+#' #' Convert a fuzzy number to a crisp value. For IVFNs, return the average of the
+#' #' upper and lower bounds.
+#' #'
+#' #' @param ivfn_variable A fuzzy number object. Either an ivfn or tfn
+#' #'
+#' #' @returns A crisp value representative of the input IVFN
+#' #'
+#' #' @export
+#' #' @examples  defuzz(ivfn(-1, 1))
+#' defuzz.ivfn <- function(ivfn_variable) {
+#'   (ivfn_variable$lower + ivfn_variable$upper)/2
+#' }
+
+
+
+#' #' Defuzz (TFN)
+#' #'
+#' #' @description
+#' #' Convert a fuzzy number to a crisp value. For TFNs, return the average of the lower bound, the
+#' #' mode, and the upper bound.
+#' #'
+#' #' @param tfn_variable A fuzzy number object. Either an ivfn or tfn
+#' #'
+#' #' @returns A crisp value representative of the input TFN
+#' #'
+#' #' @export
+#' #' @examples defuzz(tfn(-1, 0, 1))
+#' defuzz.tfn <- function(tfn_variable) {
+#'   (tfn_variable$lower + tfn_variable$upper)/2
+#' }
 
 
 #' Convert Value to IVFN or TFN if Value is Numeric
@@ -1057,7 +1097,7 @@ convert_fuzzy_set_elements_in_matrix_to_distributions <- function(fuzzy_set_matr
       fuzzy_set_matrix, c(1, 2),
       function(element) {
         if (identical(methods::is(element[[1]]), "tfn")) {
-          element <- list(rtri(N_samples, lower = element[[1]]$lower, mode = element[[1]]$mode, upper = element[[1]]$upper))
+          element <- list(rtriangular(N_samples, lower = element[[1]]$lower, mode = element[[1]]$mode, upper = element[[1]]$upper))
         } else {
           element[[1]]
         }
@@ -1289,7 +1329,7 @@ print.infer_conventional_fcm <- function(x, ...) {
 print.infer_ivfn_or_tfn_fcm <- function(x, ...) {
   cat(paste0("fcmconfr: ", "ivfn or tfn"),
       "\n $inference_df\n",
-      paste0("  ", x$inference_df$concept, ": [", round(x$inference_df$lower, 2), ", ", round(x$inference_df$upper, 2), "] (", round(x$inference_df$crisp, 2), ")", sep = "\n"),
+      paste0("  ", x$inference_df$concept, ": [", round(x$inference$lower, 2), ", ", round(x$inference$upper, 2), "] (", round(x$inference$crisp, 2), ")", sep = "\n"),
       "$inference_for_plotting\n",
       paste0("  - inference data transformed to streamline plotting with ggplot"),
       "\n $inference_state_vectors\n",

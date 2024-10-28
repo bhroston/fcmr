@@ -48,3 +48,10 @@ upper_adj_matrix <- data.frame(
 )
 make_adj_matrix_w_ivfns(lower_adj_matrix, upper_adj_matrix)
 }
+\seealso{
+Other interval-valued-fuzzy-numbers: 
+\code{\link{c.ivfn}()},
+\code{\link{ivfn}()},
+\code{\link{print.ivfn}()}
+}
+\concept{interval-valued-fuzzy-numbers}

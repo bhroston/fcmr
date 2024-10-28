@@ -14,3 +14,10 @@
 \description{
 This prints an ivfn object
 }
+\seealso{
+Other interval-valued-fuzzy-numbers: 
+\code{\link{c.ivfn}()},
+\code{\link{ivfn}()},
+\code{\link{make_adj_matrix_w_ivfns}()}
+}
+\concept{interval-valued-fuzzy-numbers}

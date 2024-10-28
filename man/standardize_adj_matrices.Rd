@@ -46,3 +46,12 @@ adj_matrices_w_different_concepts <- list(adj_matrix_1, adj_matrix_2, adj_matrix
 standardize_adj_matrices(adj_matrices_w_different_concepts)
 
 }
+\seealso{
+Other utility: 
+\code{\link{check_if_local_machine_has_access_to_parallel_processing_functionalities}()},
+\code{\link{check_if_local_machine_has_access_to_show_progress_functionalities}()},
+\code{\link{get_adj_matrices_input_type}()},
+\code{\link{get_edgelist_from_adj_matrix}()},
+\code{\link{get_node_IDs_from_input}()}
+}
+\concept{utility}

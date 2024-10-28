@@ -36,3 +36,9 @@ tfn(-1, 0, 1)
 tfn(0, 0, 1)
 tfn(1, 1, 1)
 }
+\seealso{
+Other triangular-fuzzy-numbers: 
+\code{\link{make_adj_matrix_w_tfns}()},
+\code{\link{print.tfn}()}
+}
+\concept{triangular-fuzzy-numbers}

@@ -15,6 +15,8 @@
 
 #' Aggregate FCMs
 #'
+#' @family aggregate_fcms
+#'
 #' @description
 #' Generate an aggregate adj. matrix from a list of adj. matrices. FCM
 #' aggregation works by calculating the mean/median edge weight for all edges
@@ -40,7 +42,7 @@
 #' as the same data types as the inputs (i.e. Numerics for conventional, IVFNs, or TFNs)
 #'
 #' @export
-#' @example  man/examples/examples-aggregate_fcms/examples-aggregate_fcms-aggregate_fcms.R
+#' @example  man/examples/ex-aggregate_fcms.R
 aggregate_fcms <- function(adj_matrices = list(matrix()),
                            aggregation_function = c("mean", "median"),
                            include_zeroes = FALSE) {
@@ -82,6 +84,8 @@ aggregate_fcms <- function(adj_matrices = list(matrix()),
 
 #' Aggregate (Conventional) FCMs
 #'
+#' @family aggregate_fcms
+#'
 #' @description
 #' Generate an aggregate adj. matrix from a list of (Conventional) adj. matrices.
 #' FCM aggregation works by calculating the mean/median edge weight for all edges
@@ -110,7 +114,7 @@ aggregate_fcms <- function(adj_matrices = list(matrix()),
 #' as numeric data types
 #'
 #' @export
-#' @example man/examples/examples-aggregate_fcms/examples-aggregate_fcms-aggregate_conventional_fcms.R
+#' @example man/examples/ex-aggregate_conventional_fcms.R
 aggregate_conventional_fcms <- function(adj_matrices = list(matrix()),
                                         aggregation_function = c("mean", "median"),
                                         include_zeroes = TRUE,
@@ -174,6 +178,8 @@ aggregate_conventional_fcms <- function(adj_matrices = list(matrix()),
 
 #' Aggregate (IVFN) FCMs
 #'
+#' @family aggregate_fcms
+#'
 #' @description
 #' Generate an aggregate adj. matrix from a list of (IVFN) adj. matrices.
 #' FCM aggregation works by calculating the mean/median edge weight for all edges
@@ -198,7 +204,7 @@ aggregate_conventional_fcms <- function(adj_matrices = list(matrix()),
 #' as IVFN data types
 #'
 #' @export
-#' @example  man/examples/examples-aggregate_fcms/examples-aggregate_fcms-aggregate_fcms_w_ivfns.R
+#' @example  man/examples/ex-aggregate_fcms_w_ivfns.R
 aggregate_fcms_w_ivfns <- function(adj_matrices = list(matrix()),
                                    aggregation_function = c("mean", "median"),
                                    include_zeroes = TRUE) {
@@ -242,6 +248,8 @@ aggregate_fcms_w_ivfns <- function(adj_matrices = list(matrix()),
 
 #' Aggregate (TFN) FCMs
 #'
+#' @family aggregate_fcms
+#'
 #' @description
 #' Generate an aggregate adj. matrix from a list of (TFN) adj. matrices.
 #' FCM aggregation works by calculating the mean/median edge weight for all edges
@@ -266,7 +274,7 @@ aggregate_fcms_w_ivfns <- function(adj_matrices = list(matrix()),
 #' as TFN data types
 #'
 #' @export
-#' @example  man/examples/examples-aggregate_fcms/examples-aggregate_fcms-aggregate_fcms_w_tfns.R
+#' @example  man/examples/ex-aggregate_fcms_w_tfns.R
 aggregate_fcms_w_tfns <- function(adj_matrices = list(matrix()),
                                   aggregation_function = c("mean", "median"),
                                   include_zeroes = TRUE) {
@@ -317,6 +325,8 @@ aggregate_fcms_w_tfns <- function(adj_matrices = list(matrix()),
 
 
 #' Print method for aggregate
+#'
+#' @family aggregate_fcms
 #'
 #' @param x an aggregate object
 #' @param ... additional inputs

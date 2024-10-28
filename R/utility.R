@@ -18,6 +18,8 @@
 
 #' Check if the local machine can access internal parallel processing functionalities
 #'
+#' @family utility
+#'
 #' @description
 #' Check whether the local machine has access to the necessary packages to
 #' run code in parallel and/or using a progress bar. Specifically, checks for
@@ -36,7 +38,7 @@
 #' access internal parallel processing functionalities
 #'
 #' @export
-#' @example man/examples/examples-utility/examples-utility-check_if_local_machine_has_access_to_parallel_processing_functionalities.R
+#' @example man/examples/ex-check_if_local_machine_has_access_to_parallel_processing_functionalities.R
 check_if_local_machine_has_access_to_parallel_processing_functionalities <- function(use_parallel, use_show_progress) {
   # Confirm packages necessary packages are available. If not, change run options
   parallel_check <- use_parallel
@@ -67,6 +69,8 @@ check_if_local_machine_has_access_to_parallel_processing_functionalities <- func
 
 #' Check if the local machine can access internal 'show_progress' functionalities
 #'
+#' @family utility
+#'
 #' @description
 #' Check whether the local machine has access to the necessary packages to
 #' run code in parallel and/or using a progress bar. Specifically, checks for
@@ -85,7 +89,7 @@ check_if_local_machine_has_access_to_parallel_processing_functionalities <- func
 #' access internal 'show_progress' functionalities
 #'
 #' @export
-#' @example man/examples/examples-utility/examples-utility-check_if_local_machine_has_access_to_show_progress_functionalities.R
+#' @example man/examples/ex-check_if_local_machine_has_access_to_show_progress_functionalities.R
 check_if_local_machine_has_access_to_show_progress_functionalities <- function(use_parallel, use_show_progress) {
   # Confirm packages necessary packages are available. If not, change run options
   parallel_check <- use_parallel
@@ -117,6 +121,8 @@ check_if_local_machine_has_access_to_show_progress_functionalities <- function(u
 
 #' Get the data types of adjacency matrices in a list
 #'
+#' @family utility
+#'
 #' @description
 #' This function performs two actions:
 #'
@@ -129,15 +135,12 @@ check_if_local_machine_has_access_to_show_progress_functionalities <- function(u
 #'
 #'      - 'conventional' means that the adj. matrices contain only numeric objects
 #'
-#'
 #'      - 'ivfn' means that the adj. matrices contain only 'ivfn' objects (interval-
 #'        valued fuzzy number) NOTE: also returns the matrix class type (i.e.
 #'        data.frame, tibble, etc.)
 #'
-#'
 #'      - 'tfn' means that the adj. matrices contain only 'tfn' objects (triangular
 #'        fuzzy number)
-#'
 #'
 #'      - 'unavailable' means that the adj. matrices contain non-numeric data that
 #'        are not of types 'ivfn' or 'tfn'
@@ -149,7 +152,7 @@ check_if_local_machine_has_access_to_show_progress_functionalities <- function(u
 #'  object_types_in_list: The 'class' of the input adj. matrices
 #'
 #' @export
-#' @example man/examples/examples-utility/examples-utility-get_adj_matrices_input_type.R
+#' @example man/examples/ex-get_adj_matrices_input_type.R
 get_adj_matrices_input_type <- function(adj_matrix_list_input) {
   classes_in_list_objects <- methods::is(list())
   classes_in_dataframe_objects <- methods::is(data.frame())
@@ -224,6 +227,7 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
 
 #' Create an Adjacency Matrix from an Edgelist
 #'
+#'
 #' @description
 #' Creates an adjacency matrix from an edgelist
 #'
@@ -250,7 +254,7 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
 #' @returns An adjacency matrix (data.frame)
 #'
 #' @export
-#' @example man/examples/examples-utility/examples-utility-get_adj_matrix_from_edgelist.R
+#' @example man/examples/ex-get_adj_matrix_from_edgelist.R
 get_adj_matrix_from_edgelist <- function(edgelist = matrix(),
                                          source_colname = "source",
                                          target_colname = "target",
@@ -303,6 +307,8 @@ get_adj_matrix_from_edgelist <- function(edgelist = matrix(),
 
 #' Convert an Adjacency Matrix to an Edgelist
 #'
+#' @family utility
+#'
 #' @description
 #' Converts an adjacency matrix into an edgelist
 #'
@@ -318,7 +324,7 @@ get_adj_matrix_from_edgelist <- function(edgelist = matrix(),
 #' @returns An edgelist with the following columns: source, target, weight
 #'
 #' @export
-#' @example man/examples/examples-utility/examples-utility-get_edgelist_from_adj_matrix.R
+#' @example man/examples/ex-get_edgelist_from_adj_matrix.R
 get_edgelist_from_adj_matrix <- function(adj_matrix = matrix()) {
   # Check adj matrix
   rows <- nrow(adj_matrix)
@@ -355,8 +361,9 @@ get_edgelist_from_adj_matrix <- function(adj_matrix = matrix()) {
 
 
 
-
 #' Get Node IDs (Concepts) from Adj. Matrix
+#'
+#' @family utility
 #'
 #' @description
 #' Get the column names of an adjacency matrix as the names of concepts. If no
@@ -369,7 +376,7 @@ get_edgelist_from_adj_matrix <- function(adj_matrix = matrix()) {
 #' @returns A vector of concept names
 #'
 #' @export
-#' @example man/examples/examples-utility/examples-utility-get_node_IDs_from_input.R
+#' @example man/examples/ex-get_node_IDs_from_input.R
 get_node_IDs_from_input <- function(adj_matrix = matrix()) {
   empty_colnames <- identical(colnames(adj_matrix), NULL)
   if (empty_colnames) {
@@ -384,6 +391,8 @@ get_node_IDs_from_input <- function(adj_matrix = matrix()) {
 
 
 #' Standardize a List of Adjacency Matrices
+#'
+#' @family utility
 #'
 #' @description
 #' Given a list of adj. matrices of different sizes, transforms the inputs into
@@ -400,7 +409,7 @@ get_node_IDs_from_input <- function(adj_matrix = matrix()) {
 #' concepts are all 0's.
 #'
 #' @export
-#' @example man/examples/examples-utility/examples-utility-standardize_adj_matrices.R
+#' @example man/examples/ex-standardize_adj_matrices.R
 standardize_adj_matrices <- function(adj_matrices = list(matrix())) {
   adj_matrices_dims <- lapply(adj_matrices, function(x) unique(dim(x)))
   all_adj_matrices_are_square <- all(unlist(lapply(adj_matrices_dims, function(x) length(x) == 1)))

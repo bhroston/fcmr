@@ -572,6 +572,7 @@ plot_ivfn_or_tfn_fcmconfr <- function(ivfn_or_tfn_fcmconfr_output,
                                       aggregate_point_fill = "#fb0009",
                                       monte_carlo_col_fill = "#fcdbd0",
                                       monte_carlo_col_alpha = 0.6) {
+  # load_all()
   # browser()
   # Pre-defining values for R CMD Check. Does no effect logic.
   node <- NULL
@@ -608,9 +609,11 @@ plot_ivfn_or_tfn_fcmconfr <- function(ivfn_or_tfn_fcmconfr_output,
 
   max_y <- max(max(mc_CIs$upper_0.975), max(aggregate_inferences$upper))
 
+  # browser()
+
   fcmconfr_plot <- ggplot() +
     geom_col(data = mc_CIs, aes(x = node, y = expected_value, fill = analysis_source, color = monte_carlo_col_fill), width = 0.5, alpha = monte_carlo_col_alpha, linewidth = 0.3) +
-    geom_segment(data = aggregate_inferences, aes(x = concept, y = lower, yend = upper, color = analysis_source), lineend = "round", linewidth = 2) +
+    geom_segment(data = aggregate_inferences, aes(x = concept, xend = concept, y = lower, yend = upper, color = analysis_source), lineend = "round", linewidth = 2) +
     geom_errorbar(data = mc_CIs, aes(x = node, ymin = lower_0.025, ymax = upper_0.975, color = analysis_source), width = 0.5, linewidth = 0.5) +
     scale_fill_manual(values = c(mc = monte_carlo_col_fill, aggregate = aggregate_point_fill), labels = c(mc = "Monte Carlo Average", aggregate = "Aggregate")) +
     scale_color_manual(values = c(mc = "black", aggregate = aggregate_point_fill), labels = c(mc = "Monte Carlo CIs", aggregate = "Aggregate")) +
