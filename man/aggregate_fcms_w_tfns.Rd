@@ -100,3 +100,11 @@ aggregate_fcms_w_tfns(fcms_w_tfns, "mean", include_zeroes = FALSE)
 aggregate_fcms_w_tfns(fcms_w_tfns, "mean", include_zeroes = TRUE)
 
 }
+\seealso{
+Other aggregate_fcms: 
+\code{\link{aggregate_conventional_fcms}()},
+\code{\link{aggregate_fcms}()},
+\code{\link{aggregate_fcms_w_ivfns}()},
+\code{\link{print.aggregate}()}
+}
+\concept{aggregate_fcms}

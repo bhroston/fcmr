@@ -21,3 +21,4 @@ list of distinct tfn objects.
 \examples{
 c(tfn(0, 1), tfn(0.2, 0.5))
 }
+\concept{triangular-fuzzy-numbers@family triangular-fuzzy-numbers}

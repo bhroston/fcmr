@@ -65,3 +65,11 @@ aggregate_conventional_fcms(ex_fcms, "mean", include_zeroes = TRUE)
 aggregate_conventional_fcms(ex_fcms, "mean", include_zeroes = FALSE)
 aggregate_conventional_fcms(ex_fcms, "median")
 }
+\seealso{
+Other aggregate_fcms: 
+\code{\link{aggregate_fcms}()},
+\code{\link{aggregate_fcms_w_ivfns}()},
+\code{\link{aggregate_fcms_w_tfns}()},
+\code{\link{print.aggregate}()}
+}
+\concept{aggregate_fcms}

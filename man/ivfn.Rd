@@ -32,3 +32,10 @@ numeric value.
 ivfn(lower = 0, upper = 1)
 ivfn(-1, 1)
 }
+\seealso{
+Other interval-valued-fuzzy-numbers: 
+\code{\link{c.ivfn}()},
+\code{\link{make_adj_matrix_w_ivfns}()},
+\code{\link{print.ivfn}()}
+}
+\concept{interval-valued-fuzzy-numbers}

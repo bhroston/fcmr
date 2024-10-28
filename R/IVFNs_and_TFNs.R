@@ -46,7 +46,7 @@
 #' @returns An adj. matrix (of class 'ivfn') with edges represented as IVFNs
 #'
 #' @export
-#' @example  man/examples/examples-IVFNs_and_TFNs/examples-IVFNs_and_TFNs-make_adj_matrix_w_ivfns.R
+#' @example  man/examples/ex-make_adj_matrix_w_ivfns.R
 make_adj_matrix_w_ivfns <- function(lower = matrix(), upper = matrix()) {
   if (!identical(dim(lower), dim(upper))) {
     stop("Failed Validation: Input adjacency matrices must be the same size")
@@ -111,7 +111,7 @@ make_adj_matrix_w_ivfns <- function(lower = matrix(), upper = matrix()) {
 #' @returns An interval-valued fuzzy number (IVFN)
 #'
 #' @export
-#' @example  man/examples/examples-IVFNs_and_TFNs/examples-IVFNs_and_TFNs-ivfn.R
+#' @example  man/examples/ex-ivfn.R
 ivfn <- function(lower = double(), upper = double()) {
   if (identical(lower, double())) {
     lower <- -Inf
@@ -210,7 +210,7 @@ c.ivfn <- function(...) {
 #' @returns An adj. matrix (of class 'tfn') with edges represented as TFNs
 #'
 #' @export
-#' @example  man/examples/examples-IVFNs_and_TFNs/examples-IVFNs_and_TFNs-make_adj_matrix_w_tfns.R
+#' @example  man/examples/ex-make_adj_matrix_w_tfns.R
 make_adj_matrix_w_tfns <- function(lower = matrix(),
                                    mode = matrix(),
                                    upper = matrix()) {
@@ -298,7 +298,7 @@ make_adj_matrix_w_tfns <- function(lower = matrix(),
 #' @returns A triangular fuzzy number (TFN)
 #'
 #' @export
-#' @example  man/examples/examples-IVFNs_and_TFNs/examples-IVFNs_and_TFNs-tfn.R
+#' @example  man/examples/ex-tfn.R
 tfn <- function(lower = double(), mode = double(), upper = double()) {
   if (identical(lower, double())) {
     lower <- -Inf
@@ -382,8 +382,6 @@ c.tfn <- function(...) {
 #' This function generates a triangular distribution on the interval from lower
 #' to upper bounds with a a given mode,
 #'
-#' @usage rtri(n, lower = 0, mode = 0.5, upper = 1)
-#'
 #' @param n number of samples to draw from the triangular distribution
 #' @param lower lower limit or minimum of the sample space
 #' @param upper upper limit or maximum of the sample space
@@ -392,11 +390,11 @@ c.tfn <- function(...) {
 #' @details
 #' Additional details...
 #'
-#'
 #' @returns a set c() of values representing a triangular distribution
 #'
 #' @export
-rtri <- function(n = integer(), lower = double(), mode = double(), upper = double()) {
+#' @example  man/examples/ex-rtriangular.R
+rtriangular <- function(n = integer(), lower = double(), mode = double(), upper = double()) {
   if (lower > upper) {
     stop("lower input must be less than upper input")
   }
@@ -405,7 +403,13 @@ rtri <- function(n = integer(), lower = double(), mode = double(), upper = doubl
     mode <- (lower + upper)/2
   }
 
-  midpoint_domain <- (mode - lower)/(upper - lower)
+  # browser()
+
+  if (lower == upper) {
+    midpoint_domain <- 0
+  } else {
+    midpoint_domain <- (mode - lower)/(upper - lower)
+  }
 
   inv_cdf <- vector(mode = "numeric", length = n)
   for (i in 1:n) {
