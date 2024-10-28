@@ -138,12 +138,12 @@ test_that("rtri works", {
   test_mean <- mean(test_rtri)
   test_variance <- var(test_rtri)
 
-  expected_mean <- (test_lower + test_mode + test_upper)/3
+  expected_mean <- (test_lower + test_mode + test_upper)/3 + 1e-10
   expected_variance <- (test_lower^2 + test_mode^2 + test_upper^2 - test_lower*test_mode - test_lower*test_upper - test_mode*test_upper)/18
 
-  perc_error_of_means <- abs(expected_mean - test_mean)/expected_mean
+  error_of_means <- abs(expected_mean - test_mean)
   perc_error_of_vars <- abs(expected_variance - test_variance)/expected_variance
 
-  expect_lt(perc_error_of_means, 0.001)
+  expect_lt(error_of_means, 0.001)
   expect_lt(perc_error_of_vars, 0.01)
 })

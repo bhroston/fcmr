@@ -20,6 +20,8 @@
 # INTERVAL-VALUED FUZZY NUMBERS ----
 #' Create Adj. Matrix w/ Edges Represented as IVFNs
 #'
+#' @family interval-valued-fuzzy-numbers
+#'
 #' @description
 #' This constructs an adjacency matrix with edges represented by interval-value
 #' fuzzy numbers (IVFNs) from an adjacency matrix of lower bounds and an
@@ -87,6 +89,8 @@ make_adj_matrix_w_ivfns <- function(lower = matrix(), upper = matrix()) {
 
 #' Interval-Valued Fuzzy Number (IVFN) - S3 Class
 #'
+#' @family interval-valued-fuzzy-numbers
+#'
 #' @description
 #' This constructs an interval-valued fuzzy number (ivfn) that represents a
 #' continuous, uniform distribution of values within a given range
@@ -135,6 +139,8 @@ ivfn <- function(lower = double(), upper = double()) {
 
 #' Print an Interval-Valued Fuzzy Number (IVFN) - S3 Class
 #'
+#' @family interval-valued-fuzzy-numbers
+#'
 #' @description
 #' This prints an ivfn object
 #'
@@ -150,6 +156,8 @@ print.ivfn <- function(x, ...) {
 
 
 #' c.ivfn
+#'
+#' @family interval-valued-fuzzy-numbers
 #'
 #' @description
 #' This forces the output of c() to the equivalent of list() only for inputs of
@@ -174,6 +182,8 @@ c.ivfn <- function(...) {
 # TRIANGULAR FUZZY NUMBERS (TFNs) ----
 
 #' Create Adj. Matrix w/ Edges Represented as TFNs
+#'
+#' @family triangular-fuzzy-numbers
 #'
 #' @description
 #' This constructs an adjacency matrix with edges represented by triangular
@@ -264,6 +274,8 @@ make_adj_matrix_w_tfns <- function(lower = matrix(),
 
 #' Triangular Fuzzy Number (TFN) - S3 Class
 #'
+#' @family triangular-fuzzy-numbers
+#'
 #' @description
 #' This constructs an triangular fuzzy number (ivfn) that represents a
 #' continuous, triangular distribution of values within a given range
@@ -321,6 +333,8 @@ tfn <- function(lower = double(), mode = double(), upper = double()) {
 
 #' Print a Triangular Fuzzy Number (TFN)
 #'
+#' @family triangular-fuzzy-numbers
+#'
 #' @description
 #' This improves the readability of the output
 #'
@@ -339,6 +353,8 @@ print.tfn <- function(x, ...) {
 
 
 #' c.tfn
+#'
+#' @family triangular-fuzzy-numbers@family triangular-fuzzy-numbers
 #'
 #' @description
 #' This forces the output of c() to the equivalent of list() only for inputs of
@@ -389,36 +405,15 @@ rtri <- function(n = integer(), lower = double(), mode = double(), upper = doubl
     mode <- (lower + upper)/2
   }
 
-  if (lower >= 0) {
-    domain = 1
-  } else if (lower < 0) {
-    domain = 2
-  }
-
-  # Something's wrong with the rtri function, does NOT work with negative values
-  browser()
-  tri_height <- 2*(upper - lower)
-  upward_slope <- tri_height/(mode - lower)
-  upward_y_intercept <- tri_height - (mode - lower)/2
-  # y = m*x + b
-  # y = (m/2)x^2 + ((mode - lower)/2)*x
-  # y = (m/2)x^2 + bx
-  # x = (m/2)y^2 + by
-  # (2/m)x = y^2 + (2b/m)y
-  # (2/m)x = y(y + (2b/m))
-
-  # x = sqrt((-y + 1)*(base)*(widths))
-  # (x^2/(base*width) = -y + 1
-  # y = 1 - (x^2/(base*width))
+  midpoint_domain <- (mode - lower)/(upper - lower)
 
   inv_cdf <- vector(mode = "numeric", length = n)
   for (i in 1:n) {
     x <- i/n
-    if (x <= mode) {
-      # inv_cdf[i] <- sq
-      inv_cdf[i] <- mode + sqrt((-x + 0.25)*(upper - lower)*(mode - lower))
-    } else if (x > mode) {
-      inv_cdf[i] <- sqrt((-x + 0.25)*(upper - lower)*(upper - mode))
+    if (x <= midpoint_domain) {
+      inv_cdf[i] <- lower + sqrt((mode - lower)*(upper - lower)*x)
+    } else if (x > midpoint_domain) {
+      inv_cdf[i] <- upper - sqrt((upper - lower)*(upper - mode)*(1 - x))
     } else {
       stop("Unknown input")
     }
