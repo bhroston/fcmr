@@ -2,7 +2,7 @@
 % Please edit documentation in R/utility.R
 \name{check_if_local_machine_has_access_to_show_progress_functionalities}
 \alias{check_if_local_machine_has_access_to_show_progress_functionalities}
-\title{check_if_local_machine_has_access_to_show_progress_functionalities}
+\title{Check if the local machine can access internal 'show_progress' functionalities}
 \usage{
 check_if_local_machine_has_access_to_show_progress_functionalities(
   use_parallel,
@@ -13,6 +13,10 @@ check_if_local_machine_has_access_to_show_progress_functionalities(
 \item{use_parallel}{TRUE/FALSE The user intends to use parallel processing}
 
 \item{use_show_progress}{TRUE/FALSE The user intends to display progress bars}
+}
+\value{
+TRUE/FALSE Whether the machine has access to the dependencies to
+access internal 'show_progress' functionalities
 }
 \description{
 Check whether the local machine has access to the necessary packages to
@@ -25,3 +29,17 @@ displaying progress bars at runtime. Will revise inputs
 if particular packages are unavailable and warn the user of such changes, but will
 not halt a run.
 }
+\examples{
+check_if_local_machine_has_access_to_show_progress_functionalities(
+  use_parallel = TRUE, use_show_progress = TRUE
+)
+}
+\seealso{
+Other utility: 
+\code{\link{check_if_local_machine_has_access_to_parallel_processing_functionalities}()},
+\code{\link{get_adj_matrices_input_type}()},
+\code{\link{get_edgelist_from_adj_matrix}()},
+\code{\link{get_node_IDs_from_input}()},
+\code{\link{standardize_adj_matrices}()}
+}
+\concept{utility}

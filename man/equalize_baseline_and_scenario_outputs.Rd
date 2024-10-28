@@ -2,7 +2,7 @@
 % Please edit documentation in R/infer_and_simulate_fcm.R
 \name{equalize_baseline_and_scenario_outputs}
 \alias{equalize_baseline_and_scenario_outputs}
-\title{equalize_baseline_and_scenario_outputs}
+\title{[INTENDED FOR DEVELOPER USE ONLY] Equalize Baseline Simulation and Scenario Simulation DataFrames}
 \usage{
 equalize_baseline_and_scenario_outputs(
   baseline_state_vectors,
@@ -10,13 +10,25 @@ equalize_baseline_and_scenario_outputs(
 )
 }
 \arguments{
-\item{baseline_state_vectors}{State vectors (normal or crisp) from a simulate_fcm object for a baseline simulation}
+\item{baseline_state_vectors}{State vectors (normal or crisp) from a
+simulate_fcm object for a baseline simulation}
 
-\item{scenario_state_vectors}{State vectors (normal or crisp) from a simulate_fcm object for a scenario simulation}
+\item{scenario_state_vectors}{State vectors (normal or crisp) from a
+simulate_fcm object for a scenario simulation}
+}
+\value{
+A named list of dataframes (baseline and scenario) that have the
+same number of rows
 }
 \description{
 Ensures that the data frames for the baseline and scenario state vectors have
 the same number of rows. If they do not, extends the final row of the data frame
 with the lower number of rows (simulation iterations) until both data frames are
 the same size.
+}
+\details{
+INTENDED FOR DEVELOPER USE ONLY
+}
+\examples{
+NULL
 }

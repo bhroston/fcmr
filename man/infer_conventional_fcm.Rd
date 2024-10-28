@@ -2,7 +2,7 @@
 % Please edit documentation in R/infer_and_simulate_fcm.R
 \name{infer_conventional_fcm}
 \alias{infer_conventional_fcm}
-\title{infer_conventional_fcm}
+\title{Infer (Conventional) FCM}
 \usage{
 infer_conventional_fcm(
   adj_matrix = matrix(),
@@ -39,8 +39,12 @@ squashing function when tanh or sigmoid are applied}
 vector minus the previous state vector) at which no more iterations are necessary
 and the simulation will stop}
 }
+\value{
+A list of (conventional) fcm inference results (including baseline
+and simulation outputs)
+}
 \description{
-This confers with a baseline simulation of an fcm and a scenario (scenario vector)
+This compares the baseline simulation of an fcm with the input scenario (scenario vector)
 to estimate how outputs change compared to the structural or expected behavior
 of the system.
 }
@@ -57,4 +61,31 @@ This function produces the same output as mental modeler for the following input
  - activation = "kosko"
  - squashing = either "sigmoid" or "tanh"
  - lambda = 1
+}
+\examples{
+adj_matrix <- data.frame(
+  C1 = c(0, 0, 0, 0, 0, 0),
+  C2 = c(-0.85, 0, 0, 0.35, 0, 0),
+  C3 = c(0, 0, 0, 0, 0, 0),
+  C4 = c(-0.7, 0.6, -1, 0, -1, 0),
+  C5 = c(0.1, 0, 0, -0.8, 0, 0),
+  C6 = c(0, -0.95, 0, 0, -0.95, 0)
+)
+
+infer_conventional_fcm(adj_matrix,
+          initial_state_vector = c(1, 1, 1, 1, 1, 1),
+          clamping_vector = c(1, 0, 0, 0, 0, 0),
+          activation = "kosko",
+          squashing = "sigmoid",
+          lambda = 1)
+
+# To simulate an fcm without clamping (i.e. don't calculate the difference
+# from steady-state), change the values in the initial_state_vector while
+# leaving all values in the clamping_vector at 0
+infer_conventional_fcm(adj_matrix,
+          initial_state_vector = c(1, 0, 0, 0, 0, 0),
+          clamping_vector = c(0, 0, 0, 0, 0, 0),
+          activation = "kosko",
+          squashing = "sigmoid",
+          lambda = 1)
 }

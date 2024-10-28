@@ -2,7 +2,7 @@
 % Please edit documentation in R/infer_and_simulate_fcm.R
 \name{squash}
 \alias{squash}
-\title{squash}
+\title{Squash}
 \usage{
 squash(
   value = numeric(),

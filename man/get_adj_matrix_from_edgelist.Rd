@@ -2,7 +2,7 @@
 % Please edit documentation in R/utility.R
 \name{get_adj_matrix_from_edgelist}
 \alias{get_adj_matrix_from_edgelist}
-\title{get_adj_matrix_from_edgelist}
+\title{Create an Adjacency Matrix from an Edgelist}
 \usage{
 get_adj_matrix_from_edgelist(
   edgelist = matrix(),
@@ -28,16 +28,26 @@ the values displayed in the adjacency matrix (i.e. weight, standard_deviation)}
 \item{node_order}{The order in which concepts should be arranged in the output
 adjacency matrix. If no input given, concepts will be arranged alphabetically.}
 }
+\value{
+An adjacency matrix (data.frame)
+}
 \description{
-This "gets" an adjacency matrix representing a graph described by the input
-edgelist.
+Creates an adjacency matrix from an edgelist
 }
 \details{
 The input edgelist must have the following column names: 'source' or 'from',
 'target' or 'to'. The user must manually note if different names are used
 for the edgelist. An additional column may be selected to describe a value
-attributed to a given edge.
+attributed to a given edge (default value column name is 'weight').
 
 The input edgelist can be either a matrix, data.frame, tibble, or
 data.table type object.
+}
+\examples{
+edgelist <- data.frame(
+  "source" = c("C", "A", "D", "A", "C"),
+  "target" = c("A", "B", "B", "D", "D"),
+  "weight" = c(0.3, 0.5, 0.6, 1.0, 1.0)
+)
+get_adj_matrix_from_edgelist(edgelist)
 }

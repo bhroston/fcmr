@@ -1,9 +1,26 @@
 
-
+################################################################################
+# IVFNs_and_TFNs.R
+#
+# These functions are with IVFN and TFN objects
+#
+#   Interval-Valued Fuzzy Numbers (IVFNs)
+#   - make_adj_matrix_w_ivfns
+#   - ivfn
+#   - print.ivfn
+#   - c.ivfn
+#
+#   Triangular Fuzzy Numbers (TFNs)
+#   - make_adj_matrix_w_tfns
+#   - tfn
+#   - print.tfn
+#   - c.tfn
+#
+################################################################################
 # INTERVAL-VALUED FUZZY NUMBERS ----
-
-
-#' make_adj_matrix_w_ivfns
+#' Create Adj. Matrix w/ Edges Represented as IVFNs
+#'
+#' @family interval-valued-fuzzy-numbers
 #'
 #' @description
 #' This constructs an adjacency matrix with edges represented by interval-value
@@ -26,12 +43,10 @@
 #' @param upper An n x n adjacency matrix that represents the upper limits of
 #'              edges in an FCM
 #'
+#' @returns An adj. matrix (of class 'ivfn') with edges represented as IVFNs
+#'
 #' @export
-#' @examples
-#' make_adj_matrix_w_ivfns(
-#'  lower = matrix(data = c(0, 0.2, 0, 0.5), nrow = 2, ncol = 2),
-#'  upper = matrix(data = c(0, 0.4, 0, 0.7), nrow = 2, ncol = 2)
-#' )
+#' @example  man/examples/ex-make_adj_matrix_w_ivfns.R
 make_adj_matrix_w_ivfns <- function(lower = matrix(), upper = matrix()) {
   if (!identical(dim(lower), dim(upper))) {
     stop("Failed Validation: Input adjacency matrices must be the same size")
@@ -71,25 +86,32 @@ make_adj_matrix_w_ivfns <- function(lower = matrix(), upper = matrix()) {
 }
 
 
-#' ivfn S3 class
+
+#' Interval-Valued Fuzzy Number (IVFN) - S3 Class
+#'
+#' @family interval-valued-fuzzy-numbers
 #'
 #' @description
-#' This class is an organization scheme for Grey Numbers (See
-#' ____, XXXX for example).
+#' This constructs an interval-valued fuzzy number (ivfn) that represents a
+#' continuous, uniform distribution of values within a given range
 #'
 #' @details
-#' Interval Value Fuzzy Numbers (IVFNs) represent intervals within a possibility space (typically
-#' [0, 1] or [-1, 1]) that contains the true value of an object.
-#'
 #' The IVFN class does not perform any operations on its input, rather
 #' it checks whether the input follows the defining criteria of IVFNs
 #'
-#' @param lower lower limit of an IVFN (the lower value must be less than or equal to the upper value)
-#' @param upper upper limit of an IVFN (the upper value must be greater or equal to the lower value)
+#' For IVFNs, the lower bound must be less than or equal to the upper bound.
+#' If the lower bound and upper bound are equal, the IVFN represents a "crisp"
+#' numeric value.
+#'
+#' @param lower An n x n adjacency matrix that represents the lower limits of
+#'              edges in an FCM
+#' @param upper An n x n adjacency matrix that represents the upper limits of
+#'              edges in an FCM
+#'
+#' @returns An interval-valued fuzzy number (IVFN)
 #'
 #' @export
-#' @examples
-#' ivfn(lower = 0, upper = 1)
+#' @example  man/examples/ex-ivfn.R
 ivfn <- function(lower = double(), upper = double()) {
   if (identical(lower, double())) {
     lower <- -Inf
@@ -114,35 +136,28 @@ ivfn <- function(lower = double(), upper = double()) {
 }
 
 
-#' print.ivfn
+
+#' Print an Interval-Valued Fuzzy Number (IVFN) - S3 Class
+#'
+#' @family interval-valued-fuzzy-numbers
 #'
 #' @description
-#' This improves the readability of the output
-#'
-#' @details
-#' Grey Numbers represent intervals within a possibility space (typically
-#' [0, 1] or [-1, 1]) that contains the true value of an object.
-#'
-#' The ivfn class does not perform any operations on its input, rather
-#' it checks whether the input follows the defining criteria of grey numbers
-#'
-#' ivfns are constructed using vctrs::new_vctr instead of the typical call to
-#' structure() because ...
-#'
-#' Use vignette("fgcm-class") for more information.
+#' This prints an ivfn object
 #'
 #' @param x a ivfn object
 #' @param ... additional inputs
 #'
+#' @returns NULL
+#'
 #' @export
-#' @examples
-#' ivfn(lower = 0, upper = 1)
 print.ivfn <- function(x, ...) {
   cat(class(x), ": [", x$lower, ", ", x$upper, "]", sep = "")
 }
 
 
 #' c.ivfn
+#'
+#' @family interval-valued-fuzzy-numbers
 #'
 #' @description
 #' This forces the output of c() to the equivalent of list() only for inputs of
@@ -166,12 +181,14 @@ c.ivfn <- function(...) {
 # ----
 # TRIANGULAR FUZZY NUMBERS (TFNs) ----
 
-#' make_adj_matrix_w_tfns
+#' Create Adj. Matrix w/ Edges Represented as TFNs
+#'
+#' @family triangular-fuzzy-numbers
 #'
 #' @description
-#' This constructs a triangular adjacency matrix from an adjacency matrix of the lower
-#' limits of edges in an FCM, an adjacency matrix of the averages or expected values
-#' of edges, and an adjacency matrix of the upper limits of edges in an FCM.
+#' This constructs an adjacency matrix with edges represented by triangular
+#' fuzzy numbers (TFNs) from an adjacency matrix of lower bounds, an adjacency
+#' matrix of modes, and an adjacency matrix of upper bounds
 #'
 #' @details
 #' The input adjacency matrices must square n x n matrices with the same dimensions.
@@ -190,13 +207,10 @@ c.ivfn <- function(...) {
 #' @param upper An n x n adjacency matrix that represents the upper limits of
 #'              edges in an FCM
 #'
+#' @returns An adj. matrix (of class 'tfn') with edges represented as TFNs
+#'
 #' @export
-#' @examples
-#' make_adj_matrix_w_tfns(
-#'  lower = matrix(data = c(0, 0.2, 0, 0.5), nrow = 2, ncol = 2),
-#'  mode = matrix(data = c(0, 0.3, 0, 0.6), nrow = 2, ncol = 2),
-#'  upper = matrix(data = c(0, 0.4, 0, 0.7), nrow = 2, ncol = 2)
-#' )
+#' @example  man/examples/ex-make_adj_matrix_w_tfns.R
 make_adj_matrix_w_tfns <- function(lower = matrix(),
                                    mode = matrix(),
                                    upper = matrix()) {
@@ -258,28 +272,33 @@ make_adj_matrix_w_tfns <- function(lower = matrix(),
 
 
 
-#' tfn S3 class
+#' Triangular Fuzzy Number (TFN) - S3 Class
+#'
+#' @family triangular-fuzzy-numbers
 #'
 #' @description
-#' This class is an organization scheme for Triangular Numbers (See
-#' ____, XXXX for example).
+#' This constructs an triangular fuzzy number (ivfn) that represents a
+#' continuous, triangular distribution of values within a given range
 #'
 #' @details
-#' Triangular Numbers represent intervals within a possibility space (typically
-#' [0, 1] or [-1, 1]) that contains the true value of an object.
+#' The TFN class does not perform any operations on its input, rather
+#' it checks whether the input follows the defining criteria of TFNs
 #'
-#' The tfn class does not perform any operations on its input, rather
-#' it checks whether the input follows the defining criteria of triangular numbers
+#' For TFNs, the lower bound must be less than or equal to the mode which must
+#' be less than or equal to the upper bound.
+#' If the lower bound, mode, and upper bound are equal, the TFN represents a
+#' "crisp" numeric value.
 #'
-#' Use vignette("fcm_w_fcm_w_tfn-class") for more information.
-#'
-#' @param lower lower limit of a Triangular Number set (the lower value must be less than or equal to the upper value)
+#' @param lower lower limit of a Triangular Number set (the lower value must be
+#' less than or equal to the upper value)
 #' @param mode the most likely value of a Triangular Number set
-#' @param upper upper limit of a Triangular Number set (the upper value must be greater or equal to the lower value)
+#' @param upper upper limit of a Triangular Number set (the upper value must be
+#' greater or equal to the lower value)
+#'
+#' @returns A triangular fuzzy number (TFN)
 #'
 #' @export
-#' @examples
-#' tfn(lower = 0, mode = 0.5, upper = 1)
+#' @example  man/examples/ex-tfn.R
 tfn <- function(lower = double(), mode = double(), upper = double()) {
   if (identical(lower, double())) {
     lower <- -Inf
@@ -312,35 +331,30 @@ tfn <- function(lower = double(), mode = double(), upper = double()) {
 }
 
 
-#' print.tfn
+#' Print a Triangular Fuzzy Number (TFN)
+#'
+#' @family triangular-fuzzy-numbers
 #'
 #' @description
 #' This improves the readability of the output
 #'
-#' @details
-#' triangular Numbers represent intervals within a possibility space (typically
-#' [0, 1] or [-1, 1]) that contains the true value of an object.
-#'
-#' The tfn class does not perform any operations on its input, rather
-#' it checks whether the input follows the defining criteria of triangular numbers
-#'
-#' tfns are constructed using vctrs::new_vctr instead of the typical call to
-#' structure() because ...
-#'
-#' Use vignette("fcm_w_fcm_w_tfn-class") for more information.
+#' @description
+#' This prints a tfn object
 #'
 #' @param x a tfn object
 #' @param ... additional inputs
 #'
+#' @returns NULL
+#'
 #' @export
-#' @examples
-#' tfn(lower = 0, upper = 1)
 print.tfn <- function(x, ...) {
   cat(class(x), ": [", x$lower, ", ", x$mode, ", ", x$upper, "]", sep = "")
 }
 
 
 #' c.tfn
+#'
+#' @family triangular-fuzzy-numbers@family triangular-fuzzy-numbers
 #'
 #' @description
 #' This forces the output of c() to the equivalent of list() only for inputs of
@@ -362,23 +376,25 @@ c.tfn <- function(...) {
 
 
 
-#' rtri
+#' The Triangular Distribution
 #'
 #' @description
-#' This pulls n samples from a triangular distribution described by shape parameters
-#' defined by a lower limit, upper limit, and mode
+#' This function generates a triangular distribution on the interval from lower
+#' to upper bounds with a a given mode,
 #'
-#' @details
-#'
-#' Use vignette("fcmcmr-class") for more information.
-#'
+#' @param n number of samples to draw from the triangular distribution
 #' @param lower lower limit or minimum of the sample space
 #' @param upper upper limit or maximum of the sample space
 #' @param mode peak of the sample space
-#' @param n number of samples to draw from the triangular distribution
+#'
+#' @details
+#' Additional details...
+#'
+#' @returns a set c() of values representing a triangular distribution
 #'
 #' @export
-rtri <- function(n = integer(), lower = double(), mode = double(), upper = double()) {
+#' @example  man/examples/ex-rtriangular.R
+rtriangular <- function(n = integer(), lower = double(), mode = double(), upper = double()) {
   if (lower > upper) {
     stop("lower input must be less than upper input")
   }
@@ -386,13 +402,22 @@ rtri <- function(n = integer(), lower = double(), mode = double(), upper = doubl
   if (identical(mode, double())) {
     mode <- (lower + upper)/2
   }
+
+  # browser()
+
+  if (lower == upper) {
+    midpoint_domain <- 0
+  } else {
+    midpoint_domain <- (mode - lower)/(upper - lower)
+  }
+
   inv_cdf <- vector(mode = "numeric", length = n)
   for (i in 1:n) {
     x <- i/n
-    if (x <= mode) {
-      inv_cdf[i] <- sqrt(x*(upper - lower)*(mode - lower)) + lower
-    } else if (x > mode) {
-      inv_cdf[i] <- upper - sqrt((-x + 1)*(upper - lower)*(upper - mode))
+    if (x <= midpoint_domain) {
+      inv_cdf[i] <- lower + sqrt((mode - lower)*(upper - lower)*x)
+    } else if (x > midpoint_domain) {
+      inv_cdf[i] <- upper - sqrt((upper - lower)*(upper - mode)*(1 - x))
     } else {
       stop("Unknown input")
     }

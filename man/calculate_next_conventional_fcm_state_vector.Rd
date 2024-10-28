@@ -2,7 +2,8 @@
 % Please edit documentation in R/infer_and_simulate_fcm.R
 \name{calculate_next_conventional_fcm_state_vector}
 \alias{calculate_next_conventional_fcm_state_vector}
-\title{calculate_next_conventional_fcm_state_vector}
+\title{[INTENDED FOR DEVELOPER USE ONLY] Calculate Next (Conventional) FCM State
+Vector}
 \usage{
 calculate_next_conventional_fcm_state_vector(
   adj_matrix = matrix(),
@@ -18,11 +19,17 @@ calculate_next_conventional_fcm_state_vector(
 \item{activation}{The activation function to be applied. Must be one of the following:
 'kosko', 'modified-kosko', or 'rescale'.}
 }
+\value{
+The (i + 1) iteration of the input state_vector based on the
+adj_matrix and activation function
+}
 \description{
 This calculates the next iteration of a state vector in an fcm simulation
 based on the kosko, modified-kosko, or rescale activation functions
 }
 \details{
+INTENDED FOR DEVELOPER USE ONLY
+
 The state of the art of fcm typically applies one of three activation functions
 in calculating iterative state vector values: kosko, modified-kosko, and
 rescale (as identified in Gonzales et al. 2018 - https://doi.org/10.1142/S0218213018600102).
@@ -36,4 +43,7 @@ value of 0.5 to reduce the influence that a lack of initial state information
 can have on the simulation output (rescale, 2011 - https://doi.org/10.1016/j.asoc.2009.12.010)=
 
 Use vignette("fcm-class") for more information.
+}
+\references{
+Kosko, 1986
 }

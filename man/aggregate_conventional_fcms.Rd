@@ -2,33 +2,74 @@
 % Please edit documentation in R/aggregate_fcms.R
 \name{aggregate_conventional_fcms}
 \alias{aggregate_conventional_fcms}
-\title{aggregate_conventional_fcms}
+\title{Aggregate (Conventional) FCMs}
 \usage{
 aggregate_conventional_fcms(
   adj_matrices = list(matrix()),
   aggregation_function = c("mean", "median"),
-  include_zeroes = TRUE
+  include_zeroes = TRUE,
+  false_zero_locs_by_adj_matrix = list()
 )
 }
 \arguments{
-\item{adj_matrices}{A list type object of fcms. Must have a length greater
-than 1.}
+\item{adj_matrices}{A list of Conventional FCM adj. matrix objects}
 
-\item{aggregation_function}{"mean" or "median"}
+\item{aggregation_function}{Calculate aggregate edge weights as either the
+"mean" or "median" of the input edge weights across inputs}
 
 \item{include_zeroes}{TRUE/FALSE Whether to include zeroes in the mean/median
 calculations. (i.e. if edges not included in a map should count as a zero-weighted
 edge or not at all)}
+
+\item{false_zero_locs_by_adj_matrix}{!FOR DEVELOPER USE ONLY! A list of array
+indexes for IVFN and TFN matrices that contain false-zero edges (False-zero
+edges are those that contain zero as a lower bound for IVFNs and/or mode for
+TFNs but a non-zero value for the upper bound)}
 }
 \value{
-A single fcm calculated as the aggregate of the input adjacency matrices
+An aggregate adj. matrix (of class 'aggregate') with edges represented
+as numeric data types
 }
 \description{
-Construct the aggregate fcm from a group (list)
-of fcms. Via mean or median.
+Generate an aggregate adj. matrix from a list of (Conventional) adj. matrices.
+FCM aggregation works by calculating the mean/median edge weight for all edges
+across the input adj. matrices (i.e. the mean/median of the edge weight
+connecting A -> B across all maps, the mean/median of the edge weight
+connecting B -> C across all maps, and so on). The user may dictate whether
+to incorporate 0-valued edge weights in the mean/median calculations.
 }
 \details{
-Construct an aggregate fcm from a group (list) of fcms
-
-Add details here
+All input adj. matrices must represent Conventional FCMs
+All input adj. matrices must have the same dimensions and concept names to
+generate an aggregate.
 }
+\examples{
+ex_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(1, 0)
+)
+ex_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.25, 0)
+)
+ex_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.75, 0)
+)
+ex_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.5, 0)
+)
+ex_fcms <- list(ex_adj_matrix_1, ex_adj_matrix_2, ex_adj_matrix_3, ex_adj_matrix_4)
+aggregate_conventional_fcms(ex_fcms, "mean", include_zeroes = TRUE)
+aggregate_conventional_fcms(ex_fcms, "mean", include_zeroes = FALSE)
+aggregate_conventional_fcms(ex_fcms, "median")
+}
+\seealso{
+Other aggregate_fcms: 
+\code{\link{aggregate_fcms}()},
+\code{\link{aggregate_fcms_w_ivfns}()},
+\code{\link{aggregate_fcms_w_tfns}()},
+\code{\link{print.aggregate}()}
+}
+\concept{aggregate_fcms}

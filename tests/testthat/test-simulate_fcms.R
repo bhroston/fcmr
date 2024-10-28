@@ -370,10 +370,10 @@ test_that("squash works", {
 })
 
 
-test_that("defuzz works", {
-  expect_equal(defuzz(1), 1)
-  expect_equal(defuzz(ivfn(0.2, 0.6)), 0.4)
-  expect_equal(defuzz(tfn(0.1, 0.3, 0.8)), 0.4)
+test_that("defuzz_ivfn_or_tfn works", {
+  expect_equal(defuzz_ivfn_or_tfn(1), 1)
+  expect_equal(defuzz_ivfn_or_tfn(ivfn(0.2, 0.6)), 0.4)
+  expect_equal(defuzz_ivfn_or_tfn(tfn(0.1, 0.3, 0.8)), 0.4)
 })
 
 

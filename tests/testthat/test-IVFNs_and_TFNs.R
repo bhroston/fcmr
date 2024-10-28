@@ -111,14 +111,14 @@ test_that("c.tfn works", {
 })
 
 
-test_that("rtri works", {
+test_that("rtriangular works", {
   test_lower <- 0.25
   test_mode <- 0.5
   test_upper <- 0.75
 
-  test_rtri <- rtri(test_lower, test_mode, test_upper, n = 1000)
-  test_mean <- mean(test_rtri)
-  test_variance <- var(test_rtri)
+  test_rtriangular <- rtriangular(test_lower, test_mode, test_upper, n = 1000)
+  test_mean <- mean(test_rtriangular)
+  test_variance <- var(test_rtriangular)
 
   expected_mean <- (test_lower + test_mode + test_upper)/3
   expected_variance <- (test_lower^2 + test_mode^2 + test_upper^2 - test_lower*test_mode - test_lower*test_upper - test_mode*test_upper)/18
@@ -128,4 +128,23 @@ test_that("rtri works", {
 
   expect_lt(perc_error_of_means, 0.001)
   expect_lt(perc_error_of_vars, 0.01)
+
+
+  test_lower <- -0.5
+  test_mode <- 0
+  test_upper <- 0.5
+
+  test_rtriangular <- rtriangular(test_lower, test_mode, test_upper, n = 1000)
+  test_mean <- mean(test_rtriangular)
+  test_variance <- var(test_rtriangular)
+
+  expected_mean <- (test_lower + test_mode + test_upper)/3 + 1e-10
+  expected_variance <- (test_lower^2 + test_mode^2 + test_upper^2 - test_lower*test_mode - test_lower*test_upper - test_mode*test_upper)/18
+
+  error_of_means <- abs(expected_mean - test_mean)
+  perc_error_of_vars <- abs(expected_variance - test_variance)/expected_variance
+
+  expect_lt(error_of_means, 0.001)
+  expect_lt(perc_error_of_vars, 0.01)
 })
+

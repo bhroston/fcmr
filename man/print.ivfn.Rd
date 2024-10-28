@@ -2,7 +2,7 @@
 % Please edit documentation in R/IVFNs_and_TFNs.R
 \name{print.ivfn}
 \alias{print.ivfn}
-\title{print.ivfn}
+\title{Print an Interval-Valued Fuzzy Number (IVFN) - S3 Class}
 \usage{
 \method{print}{ivfn}(x, ...)
 }
@@ -12,20 +12,12 @@
 \item{...}{additional inputs}
 }
 \description{
-This improves the readability of the output
+This prints an ivfn object
 }
-\details{
-Grey Numbers represent intervals within a possibility space (typically
-[0, 1] or [-1, 1]) that contains the true value of an object.
-
-The ivfn class does not perform any operations on its input, rather
-it checks whether the input follows the defining criteria of grey numbers
-
-ivfns are constructed using vctrs::new_vctr instead of the typical call to
-structure() because ...
-
-Use vignette("fgcm-class") for more information.
+\seealso{
+Other interval-valued-fuzzy-numbers: 
+\code{\link{c.ivfn}()},
+\code{\link{ivfn}()},
+\code{\link{make_adj_matrix_w_ivfns}()}
 }
-\examples{
-ivfn(lower = 0, upper = 1)
-}
+\concept{interval-valued-fuzzy-numbers}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/infer_and_simulate_fcm.R
 \name{check_simulation_inputs}
 \alias{check_simulation_inputs}
-\title{check_simulation_inputs}
+\title{[INTENDED FOR DEVELOPER USE ONLY] Check Simulation Inputs}
 \usage{
 check_simulation_inputs(
   adj_matrix = matrix(),
@@ -47,6 +47,8 @@ Confirm that all inputs will work with the simulation function and return
 appropriate error messages where necessary
 }
 \details{
+INTENDED FOR DEVELOPER USE ONLY
+
 This checks that all inputs for a simulation function are of an appropriate
 format, and also fills in missing inputs for initial_state_vector, clamping_vector,
 and IDs when appropriate.

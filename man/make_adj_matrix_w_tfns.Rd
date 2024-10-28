@@ -2,7 +2,7 @@
 % Please edit documentation in R/IVFNs_and_TFNs.R
 \name{make_adj_matrix_w_tfns}
 \alias{make_adj_matrix_w_tfns}
-\title{make_adj_matrix_w_tfns}
+\title{Create Adj. Matrix w/ Edges Represented as TFNs}
 \usage{
 make_adj_matrix_w_tfns(lower = matrix(), mode = matrix(), upper = matrix())
 }
@@ -15,10 +15,13 @@ edges in an FCM}
 \item{upper}{An n x n adjacency matrix that represents the upper limits of
 edges in an FCM}
 }
+\value{
+An adj. matrix (of class 'tfn') with edges represented as TFNs
+}
 \description{
-This constructs a triangular adjacency matrix from an adjacency matrix of the lower
-limits of edges in an FCM, an adjacency matrix of the averages or expected values
-of edges, and an adjacency matrix of the upper limits of edges in an FCM.
+This constructs an adjacency matrix with edges represented by triangular
+fuzzy numbers (TFNs) from an adjacency matrix of lower bounds, an adjacency
+matrix of modes, and an adjacency matrix of upper bounds
 }
 \details{
 The input adjacency matrices must square n x n matrices with the same dimensions.
@@ -33,8 +36,28 @@ in the triangular adjacency matrix. Otherwise, generic node IDs will be used
 }
 \examples{
 make_adj_matrix_w_tfns(
- lower = matrix(data = c(0, 0.2, 0, 0.5), nrow = 2, ncol = 2),
- mode = matrix(data = c(0, 0.3, 0, 0.6), nrow = 2, ncol = 2),
- upper = matrix(data = c(0, 0.4, 0, 0.7), nrow = 2, ncol = 2)
+  lower = matrix(data = c(0, 0.2, 0, 0.5), nrow = 2, ncol = 2),
+  mode = matrix(data = c(0, 0.3, 0, 0.6), nrow = 2, ncol = 2),
+  upper = matrix(data = c(0, 0.4, 0, 0.7), nrow = 2, ncol = 2)
 )
+
+lower_adj_matrix <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+mode_adj_matrix <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+upper_adj_matrix <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+make_adj_matrix_w_tfns(lower_adj_matrix, mode_adj_matrix, upper_adj_matrix)
 }
+\seealso{
+Other triangular-fuzzy-numbers: 
+\code{\link{print.tfn}()},
+\code{\link{tfn}()}
+}
+\concept{triangular-fuzzy-numbers}

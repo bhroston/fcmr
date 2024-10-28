@@ -2,7 +2,7 @@
 % Please edit documentation in R/infer_and_simulate_fcm.R
 \name{simulate_fcm}
 \alias{simulate_fcm}
-\title{simulate_fcm}
+\title{Simulate FCM}
 \usage{
 simulate_fcm(
   adj_matrix = matrix(),
@@ -39,8 +39,11 @@ squashing function when tanh or sigmoid are applied}
 vector minus the previous state vector) at which no more iterations are necessary
 and the simulation will stop}
 }
+\value{
+(Conventional, IVFN, or TFN) FCM simulation results
+}
 \description{
-This simulates an fcm based on its adjacency matrix.
+This simulates an fcm (conventional, ivfn, or tfn) based on its adjacency matrix.
 }
 \details{
 This function performs two fcm simulations and compares the output between the two.
@@ -55,4 +58,93 @@ This function produces the same output as mental modeler for the following input
  - activation = "kosko"
  - squashing = either "sigmoid" or "tanh"
  - lambda = 1
+}
+\examples{
+adj_matrix <- data.frame(
+  C1 = c(0, 0, 0, 0, 0, 0),
+  C2 = c(-0.85, 0, 0, 0.35, 0, 0),
+  C3 = c(0, 0, 0, 0, 0, 0),
+  C4 = c(-0.7, 0.6, -1, 0, -1, 0),
+  C5 = c(0.1, 0, 0, -0.8, 0, 0),
+  C6 = c(0, -0.95, 0, 0, -0.95, 0)
+)
+
+simulate_fcm(adj_matrix,
+          initial_state_vector = c(1, 1, 1, 1, 1, 1),
+          clamping_vector = c(1, 0, 0, 0, 0, 0),
+          activation = "kosko",
+          squashing = "sigmoid",
+          lambda = 1)
+
+# To simulate an fcm without clamping (i.e. don't calculate the difference
+# from steady-state), change the values in the initial_state_vector while
+# leaving all values in the clamping_vector at 0
+simulate_fcm(adj_matrix,
+          initial_state_vector = c(1, 0, 0, 0, 0, 0),
+          clamping_vector = c(0, 0, 0, 0, 0, 0),
+          activation = "kosko",
+          squashing = "sigmoid",
+          lambda = 1)
+
+
+# Inference w/ Interval-Valued Fuzzy Numbers (IVFNs)
+lower_adj_matrix <- data.frame(
+  C1 = c(0, 0, 0, 0, 0, 0),
+  C2 = c(-0.85, 0, 0, 0.35, 0, 0),
+  C3 = c(0, 0, 0, 0, 0, 0),
+  C4 = c(-0.7, 0.6, -1, 0, -1, 0),
+  C5 = c(0.1, 0, 0, -0.8, 0, 0),
+  C6 = c(0, -0.95, 0, 0, -0.95, 0)
+)
+upper_adj_matrix <- data.frame(
+  C1 = c(0, 0, 0, 0, 0, 0),
+  C2 = c(-0.2, 0, 0, 0.9, 0, 0),
+  C3 = c(0, 0, 0, 0, 0, 0),
+  C4 = c(-0.3, 0.9, -0.5, 0, -0.5, 0),
+  C5 = c(0.5, 0, 0, -0.3, 0, 0),
+  C6 = c(0, -0.4, 0, 0, -0.5, 0)
+)
+adj_matrix <- make_adj_matrix_w_ivfns(lower_adj_matrix, upper_adj_matrix)
+
+simulate_fcm(adj_matrix,
+          initial_state_vector = c(1, 1, 1, 1, 1, 1),
+          clamping_vector = c(1, 0, 0, 0, 0, 0),
+          activation = "kosko",
+          squashing = "sigmoid",
+          lambda = 1)
+
+
+# Inference w/ Triangular Fuzzy Numbers (TFNs)
+lower_adj_matrix <- data.frame(
+  C1 = c(0, 0, 0, 0, 0, 0),
+  C2 = c(-0.85, 0, 0, 0.35, 0, 0),
+  C3 = c(0, 0, 0, 0, 0, 0),
+  C4 = c(-0.7, 0.6, -1, 0, -1, 0),
+  C5 = c(0.1, 0, 0, -0.8, 0, 0),
+  C6 = c(0, -0.95, 0, 0, -0.95, 0)
+)
+mode_adj_matrix <- data.frame(
+  C1 = c(0, 0, 0, 0, 0, 0),
+  C2 = c(-0.5, 0, 0, 0.6, 0, 0),
+  C3 = c(0, 0, 0, 0, 0, 0),
+  C4 = c(-0.5, 0.7, -0.8, 0, -0.8, 0),
+  C5 = c(0.2, 0, 0, -0.6, 0, 0),
+  C6 = c(0, -0.7, 0, 0, -0.6, 0)
+)
+upper_adj_matrix <- data.frame(
+  C1 = c(0, 0, 0, 0, 0, 0),
+  C2 = c(-0.2, 0, 0, 0.9, 0, 0),
+  C3 = c(0, 0, 0, 0, 0, 0),
+  C4 = c(-0.3, 0.9, -0.5, 0, -0.5, 0),
+  C5 = c(0.5, 0, 0, -0.3, 0, 0),
+  C6 = c(0, -0.4, 0, 0, -0.5, 0)
+)
+adj_matrix <- make_adj_matrix_w_tfns(lower_adj_matrix, mode_adj_matrix, upper_adj_matrix)
+
+simulate_fcm(adj_matrix,
+          initial_state_vector = c(1, 1, 1, 1, 1, 1),
+          clamping_vector = c(1, 0, 0, 0, 0, 0),
+          activation = "kosko",
+          squashing = "sigmoid",
+          lambda = 1)
 }

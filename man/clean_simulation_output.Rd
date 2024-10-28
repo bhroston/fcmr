@@ -2,7 +2,7 @@
 % Please edit documentation in R/infer_and_simulate_fcm.R
 \name{clean_simulation_output}
 \alias{clean_simulation_output}
-\title{clean_simulation_output}
+\title{[INTENDED FOR DEVELOPER USE ONLY] Clean Simulation Output}
 \usage{
 clean_simulation_output(output_obj, concepts)
 }
@@ -12,7 +12,12 @@ clean_simulation_output(output_obj, concepts)
 \item{concepts}{A list of names for each node (must have n items). If empty, will use
 column names of adjacancy matrix (if given).}
 }
+\value{
+A cleaned up simulation output
+}
 \description{
+INTENDED FOR DEVELOPER USE ONLY
+
 This adds quality-of-life improvements and detail to simulation output objects
 such as adding column names and an iter column
 }

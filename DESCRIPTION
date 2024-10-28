@@ -1,7 +1,7 @@
 Package: fcmconfr
 Type: Package
 Title: Fuzzy Cognitive Map Analysis in R
-Version: 0.2.0
+Version: 0.2.3
 Authors@R: person(
   "Ben", "Roston",
   email = "bhroston@vt.edu",
@@ -18,21 +18,21 @@ Suggests:
 Config/testthat/edition: 3
 RoxygenNote: 7.3.2
 Imports: 
-    methods,
-    data.table,
-    stats,
-    utils,
-    parallel,
-    foreach,
-    doSNOW,
-    pbapply,
-    Matrix,
-    tidyr,
-    shiny,
-    shinyWidgets,
-    bslib,
-    tibble,
-    ggplot2
+    methods (>= 4.3.2),
+    data.table (>= 1.15.4),
+    stats (>= 4.3.2),
+    utils (>= 4.3.2),
+    parallel (>= 4.3.2),
+    foreach (>= 1.5.2),
+    doSNOW (>= 1.0.20),
+    pbapply (>= 1.7.2),
+    Matrix (>= 1.6.1.1),
+    tidyr (>= 1.3.0),
+    shiny (>= 1.7.5),
+    shinyWidgets (>= 0.8.7),
+    bslib (>= 0.8.0),
+    tibble (>= 3.2.1),
+    ggplot2 (>= 3.4.2)
 Depends: 
     R (>= 2.10)
 VignetteBuilder: knitr
