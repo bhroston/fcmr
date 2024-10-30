@@ -31,8 +31,6 @@
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
 #' and the simulation will stop
-#' @param fuzzy_set_samples The size (n) of the distributions represented by IVFNs or TFNs (only
-#' used when IVFNs or TFNs in adj_matrices input)
 #' @param inference_estimation_function Estimate confidence intervals about the "mean" or "median" of
 #' inferences from the monte carlo simulations
 #' @param inference_estimation_CI The confidence interval to estimate for the inferences
@@ -69,7 +67,6 @@ fcmconfr <- function(adj_matrices = list(matrix()),
                      lambda = 1,
                      max_iter = 100,
                      min_error = 1e-5,
-                     fuzzy_set_samples = 1000,
                      # Inference Estimation (bootstrap)
                      inference_estimation_function = c("mean", "median"),
                      inference_estimation_CI = 0.95,
@@ -136,8 +133,10 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
   parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
 
+  # browser()
+
   # Individual Adj. Matrices Simulations ----
-  individual_adj_matrices_inferences <- lapply(adj_matrices, infer_fcm, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error, fuzzy_set_samples)
+  individual_adj_matrices_inferences <- lapply(adj_matrices, infer_fcm, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
   if (fcm_class == "conventional") {
     individual_adj_matrices_inferences_df <- do.call(rbind, lapply(individual_adj_matrices_inferences, function(inference) inference$inference))
     individual_adj_matrices_inferences_df <- cbind(input = paste0("adj_matrix_", 1:length(adj_matrices)), individual_adj_matrices_inferences_df)
@@ -183,7 +182,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     # Build aggregate adj_matrix
     aggregate_adj_matrix <- aggregate_fcms(adj_matrices, aggregation_function, include_zero_weighted_edges_in_aggregation_and_mc_sampling)
     # Infer aggregate adj_matrix
-    aggregate_fcm_inference <- infer_fcm(aggregate_adj_matrix$adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error, fuzzy_set_samples)
+    aggregate_fcm_inference <- infer_fcm(aggregate_adj_matrix$adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
   }
 
   # browser()
@@ -208,7 +207,6 @@ fcmconfr <- function(adj_matrices = list(matrix()),
       lambda = lambda,
       max_iter = max_iter,
       min_error = min_error,
-      fuzzy_set_samples = fuzzy_set_samples,
       parallel = parallel,
       show_progress = show_progress,
       n_cores = n_cores,
@@ -271,8 +269,7 @@ organize_fcmconfr_output <- function(...) {
                                squashing = variables$squashing,
                                lambda = variables$lambda,
                                max_iter = variables$max_iter,
-                               min_error = variables$min_error,
-                               fuzzy_set_samples = variables$fuzzy_set_samples),
+                               min_error = variables$min_error),
         additional_opts = list(perform_monte_carlo_inference_bootstrap_analysis = variables$perform_monte_carlo_inference_bootstrap_analysis,
                                perform_aggregate_analysis = variables$perform_aggregate_analysis,
                                perform_monte_carlo_analysis = variables$perform_monte_carlo_analysis)

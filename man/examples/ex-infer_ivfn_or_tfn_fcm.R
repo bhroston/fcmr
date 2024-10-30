@@ -22,8 +22,7 @@ infer_fcm(adj_matrix,
           clamping_vector = c(1, 0, 0, 0, 0, 0),
           activation = "kosko",
           squashing = "sigmoid",
-          lambda = 1,
-          fuzzy_set_samples = 1000)
+          lambda = 1)
 
 
 # Inference w/ Triangular Fuzzy Numbers (TFNs)
@@ -58,5 +57,4 @@ infer_fcm(adj_matrix,
           clamping_vector = c(1, 0, 0, 0, 0, 0),
           activation = "kosko",
           squashing = "sigmoid",
-          lambda = 1,
-          fuzzy_set_samples = 1000)
+          lambda = 1)

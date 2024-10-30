@@ -1,7 +1,5 @@
 
 test_that("infer_fcm works", {
-
-
   adj_matrix <- data.frame(
     C1 = c(0, 0, 0, 0, 0, 0),
     C2 = c(-0.85, 0, 0, 0.35, 0, 0),
@@ -38,12 +36,11 @@ test_that("infer_fcm works", {
   adj_matrix <- make_adj_matrix_w_ivfns(lower_adj_matrix, upper_adj_matrix)
 
   test_sim <- infer_fcm(adj_matrix,
-                                    initial_state_vector = c(1, 1, 1, 1, 1, 1),
-                                    clamping_vector = c(1, 0, 0, 0, 0, 0),
-                                    activation = "kosko",
-                                    squashing = "sigmoid",
-                                    lambda = 1,
-                                    fuzzy_set_samples = 1000)
+                        initial_state_vector = c(1, 1, 1, 1, 1, 1),
+                        clamping_vector = c(1, 0, 0, 0, 0, 0),
+                        activation = "kosko",
+                        squashing = "sigmoid",
+                        lambda = 1)
   test_baseline <- simulate_ivfn_or_tfn_fcm(adj_matrix,
                                             initial_state_vector = c(1, 1, 1, 1, 1, 1),
                                             clamping_vector = c(0, 0, 0, 0, 0, 0),
@@ -126,8 +123,7 @@ test_that("infer_ivfn_or_tfn_fcm works", {
                                     clamping_vector = c(1, 0, 0, 0, 0, 0),
                                     activation = "kosko",
                                     squashing = "sigmoid",
-                                    lambda = 1,
-                                    fuzzy_set_samples = 1000)
+                                    lambda = 1)
   test_baseline <- simulate_ivfn_or_tfn_fcm(adj_matrix,
                                             initial_state_vector = c(1, 1, 1, 1, 1, 1),
                                             clamping_vector = c(0, 0, 0, 0, 0, 0),
@@ -503,9 +499,6 @@ test_that("check_simulation_inputs works", {
   # ----
 
   # Check fuzzy_set_samples ----
-  expect_no_error(check_simulation_inputs(adj_matrix = test_ivfn_fcm, initial_state_vector = c(1, 1), clamping_vector = c(1, 0), fuzzy_set_samples = 100))
-  expect_error(check_simulation_inputs(adj_matrix = test_ivfn_fcm, initial_state_vector = c(1, 1), clamping_vector = c(1, 0), fuzzy_set_samples = "a"))
-  expect_error(check_simulation_inputs(adj_matrix = test_ivfn_fcm, initial_state_vector = c(1, 1), clamping_vector = c(1, 0), fuzzy_set_samples = 1.5))
-  expect_error(check_simulation_inputs(adj_matrix = test_ivfn_fcm, initial_state_vector = c(1, 1), clamping_vector = c(1, 0), fuzzy_set_samples = 0))
+  expect_no_error(check_simulation_inputs(adj_matrix = test_ivfn_fcm, initial_state_vector = c(1, 1), clamping_vector = c(1, 0)))
   # ----
 })

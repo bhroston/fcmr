@@ -39,6 +39,7 @@ tfn(1, 1, 1)
 \seealso{
 Other triangular-fuzzy-numbers: 
 \code{\link{make_adj_matrix_w_tfns}()},
-\code{\link{print.tfn}()}
+\code{\link{print.tfn}()},
+\code{\link{subtract_tfn}()}
 }
 \concept{triangular-fuzzy-numbers}
