@@ -15,7 +15,6 @@ fcmconfr(
   lambda = 1,
   max_iter = 100,
   min_error = 1e-05,
-  fuzzy_set_samples = 1000,
   inference_estimation_function = c("mean", "median"),
   inference_estimation_CI = 0.95,
   inference_estimation_bootstrap_reps = 5000,
@@ -62,9 +61,6 @@ squashing function when tanh or sigmoid are applied}
 \item{min_error}{The lowest error (sum of the absolute value of the current state
 vector minus the previous state vector) at which no more iterations are necessary
 and the simulation will stop}
-
-\item{fuzzy_set_samples}{The size (n) of the distributions represented by IVFNs or TFNs (only
-used when IVFNs or TFNs in adj_matrices input)}
 
 \item{inference_estimation_function}{Estimate confidence intervals about the "mean" or "median" of
 inferences from the monte carlo simulations}
