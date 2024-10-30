@@ -52,6 +52,7 @@ make_adj_matrix_w_ivfns(lower_adj_matrix, upper_adj_matrix)
 Other interval-valued-fuzzy-numbers: 
 \code{\link{c.ivfn}()},
 \code{\link{ivfn}()},
-\code{\link{print.ivfn}()}
+\code{\link{print.ivfn}()},
+\code{\link{subtract_ivfn}()}
 }
 \concept{interval-valued-fuzzy-numbers}

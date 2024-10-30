@@ -28,8 +28,6 @@
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
 #' and the simulation will stop
-#' @param fuzzy_set_samples The size (n) of the distributions represented by IVFNs or TFNs (only
-#' used when IVFNs or TFNs in adj_matrices input)
 #' @param parallel TRUE/FALSE Whether to utilize parallel processing
 #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 #' from the pbapply package as the underlying function.
@@ -47,7 +45,6 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
                                       lambda = 1,
                                       max_iter = 100,
                                       min_error = 1e-5,
-                                      fuzzy_set_samples = 1000,
                                       parallel = TRUE,
                                       n_cores = integer(),
                                       show_progress = TRUE,
@@ -85,7 +82,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
       "convert_element_to_ivfn_or_tfn_if_numeric", "clean_simulation_output",
       "check_simulation_inputs",
       "mc_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
-      "squashing", "lambda", "max_iter", "min_error", "fuzzy_set_samples"
+      "squashing", "lambda", "max_iter", "min_error"
     )
 
     parallel::clusterExport(cl, varlist = vars, envir = environment())
@@ -107,8 +104,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
           squashing = squashing,
           lambda = lambda,
           max_iter = max_iter,
-          min_error = min_error,
-          fuzzy_set_samples = fuzzy_set_samples
+          min_error = min_error
         )
       }
     close(pb)
@@ -137,7 +133,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
       "convert_element_to_ivfn_or_tfn_if_numeric", "clean_simulation_output",
       "check_simulation_inputs",
       "mc_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
-      "squashing", "lambda", "max_iter", "min_error", "fuzzy_set_samples"
+      "squashing", "lambda", "max_iter", "min_error"
     )
 
     parallel::clusterExport(cl, varlist = vars, envir = environment())
@@ -156,8 +152,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
           squashing = squashing,
           lambda = lambda,
           max_iter = max_iter,
-          min_error = min_error,
-          fuzzy_set_samples = fuzzy_set_samples
+          min_error = min_error
         )
       }
     )
@@ -177,8 +172,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
           squashing = squashing,
           lambda = lambda,
           max_iter = max_iter,
-          min_error = min_error,
-          fuzzy_set_samples = fuzzy_set_samples
+          min_error = min_error
         )
       }
     )
@@ -197,8 +191,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
           squashing = squashing,
           lambda = lambda,
           max_iter = max_iter,
-          min_error = min_error,
-          fuzzy_set_samples = fuzzy_set_samples
+          min_error = min_error
         )
       }
     )

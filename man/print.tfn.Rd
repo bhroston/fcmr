@@ -19,6 +19,7 @@ This prints a tfn object
 \seealso{
 Other triangular-fuzzy-numbers: 
 \code{\link{make_adj_matrix_w_tfns}()},
+\code{\link{subtract_tfn}()},
 \code{\link{tfn}()}
 }
 \concept{triangular-fuzzy-numbers}

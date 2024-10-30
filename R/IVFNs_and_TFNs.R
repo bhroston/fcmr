@@ -136,6 +136,58 @@ ivfn <- function(lower = double(), upper = double()) {
 }
 
 
+#' IVFN Subtraction (Interval Calculus)
+#'
+#' @family interval-valued-fuzzy-numbers
+#'
+#' @description
+#' This subtracts one Interval-Value Fuzzy Number (IVFN) from another via
+#' interval calculus. An IVFN represented by the interval X:
+#'
+#' \deqn{X\  =( x_{1}, x_{3}) \ =\ [ x_{1} ;x_{2}] =\{x\in \mathbb{R} \ |\ x_{1} \ \leq x\ \leq x_{2}\}}{ascii}
+#'
+#' where \eqn{x_1}{ascii} and \eqn{x_2}{ascii} represent the lower and upper
+#' bounds, respectively.
+#'
+#' The IVFN X may have another IVFN Y subtracted from it via:
+#'
+#' \deqn{X\ -\ Y\ =\ [ x_{1} \ -\ y_{2} ;\ x_{2} \ -\ y_{1}]}{ascii}
+#'
+#' @details
+#' It is not required for one IVFN to be "greater than" the other.
+#'
+#' This difference may also be estimated by translating the IVFN's into
+#' their corresponding distributions (e.g. ivfn(-1, 1) = runif(n, -1, 1)),
+#' subtracting one distribution from the other, and estimating the minimum
+#' and maximum values of the difference distribution.
+#'
+#' @references \insertRef{mooreIntervalAnalysisFuzzy2003}{fcmconfr}
+#' @references \insertRef{dimuroIntervalFuzzyNumbers2011}{fcmconfr}
+#' @references \insertRef{mooreIntervalAnalysis1966}{fcmconfr}
+#'
+#' @param ivfn_1 An interval-value fuzzy number (ivfn) object
+#' @param ivfn_2 An interval-value fuzzy number (ivfn) object
+#'
+#' @returns An IVFN object representing the subtraction of ivfn_2 from ivfn_1
+#'
+#' @importFrom Rdpack reprompt
+#'
+#' @export
+#' @examples
+#' subtract_ivfn(ivfn(0.5, 0.8), ivfn(0.2, 0.5))
+#' subtract_ivfn(ivfn(-0.5, 0.3), ivfn(0.4, 0.6))
+#' subtract_ivfn(ivfn(-1, 1), ivfn(-0.5, 0.5))
+subtract_ivfn <- function(ivfn_1 = ivfn(), ivfn_2 = ivfn()) {
+  if ((!identical(methods::is(ivfn_1), "ivfn")) | (!identical(methods::is(ivfn_2), "ivfn"))) {
+    stop("Input Error: Both inputs must be valid ivfn objects")
+  }
+
+  new_lower <- ivfn_1$lower - ivfn_2$upper
+  new_upper <- ivfn_1$upper - ivfn_2$lower
+  ivfn(new_lower, new_upper)
+}
+
+
 
 #' Print an Interval-Valued Fuzzy Number (IVFN) - S3 Class
 #'
@@ -331,6 +383,68 @@ tfn <- function(lower = double(), mode = double(), upper = double()) {
 }
 
 
+
+#' TFN Subtraction (Interval Calculus)
+#'
+#' @family triangular-fuzzy-numbers
+#'
+#' @description
+#' This subtracts one Triangular Fuzzy Number (TFN) from another via
+#' interval calculus. A TFN represented by the fuzzy set (triangular distribution):
+#'
+#' \deqn{X\  =( x_{1} ,x_{2} ,x_{3}) \ =\ \left\{\begin{matrix}
+#' 0 & for\  & x< x_{1}\\
+#' \frac{2( x\ -\ x_{1})}{( x_{3} -x_{1})( x_{2} -x_{1})} & for\  & x_{1} \leq x< x_{3} \ \\
+#' \frac{2}{x_{3} -x_{1}} & for & x\ =\ x_{2}\\
+#' \frac{2( x_{3} -x)}{( x_{3} -x_{1})( x_{3} -x_{2})} & for\  & x_{2} < x\leq x_{3}\\
+#' 0 & for & x >x_{3}
+#' \end{matrix}\right.}{ascii}
+#'
+#' where \eqn{x_1}{ascii} and \eqn{x_3}{ascii} are the lower and upper bounds, respectively,
+#' and \eqn{x_2}{ascii} is the mode.
+#'
+#' The TFN X may have another TFN Y subtracted from it via:
+#'
+#' \deqn{X\ -\ Y\ =\ ( x_{1} -y_{3} ,\ x_{2} -y_{2} ,\ x_{3} -y_{1})}{ascii}
+#'
+#' @details
+#' It is not required for one IVFN to be "greater than" the other.
+#'
+#' This difference may also be estimated by translating the TFN's into
+#' their corresponding distributions
+#' (e.g. tfn(-1, 0, 1) = EnvStats::rtri(n, min = -1, max = 1, mode = 0)),
+#' subtracting one distribution from the other, and estimating the minimum,
+#' mode, and maximum values of the difference distribution.
+#'
+#' @references \insertRef{chakravertyFuzzyNumbers2019}{fcmconfr}
+#' @references \insertRef{hanssAppliedFuzzyArithmetic2005}{fcmconfr}
+#' @references \insertRef{trillasFuzzyArithmetic2015}{fcmconfr}
+#'
+#' @param tfn_1 A triangular fuzzy number (tfn) object
+#' @param tfn_2 A triangular fuzzy number (tfn) object
+#'
+#' @returns An TFN object representing the subtraction of tfn_2 from tfn_1
+#'
+#' @importFrom Rdpack reprompt
+#'
+#' @export
+#' @examples
+#' subtract_tfn(tfn(0.5, 0.6, 0.8), tfn(0.2, 0.3, 0.5))
+#' subtract_tfn(tfn(-0.5, -0.2, 0.3), tfn(0.4, 0.5, 0.6))
+#' subtract_tfn(tfn(-1, 0, 1), tfn(-0.5, 0, 0.5))
+subtract_tfn <- function(tfn_1 = tfn(), tfn_2 = tfn()) {
+  if ((!identical(methods::is(tfn_1), "tfn")) | (!identical(methods::is(tfn_2), "tfn"))) {
+    stop("Input Error: Both inputs must be valid tfn objects")
+  }
+
+  new_lower <- tfn_1$lower - tfn_2$upper
+  new_mode <- tfn_1$mode - tfn_2$mode
+  new_upper <- tfn_1$upper - tfn_2$lower
+  tfn(new_lower, new_mode, new_upper)
+}
+
+
+
 #' Print a Triangular Fuzzy Number (TFN)
 #'
 #' @family triangular-fuzzy-numbers
@@ -393,8 +507,8 @@ c.tfn <- function(...) {
 #' @returns a set c() of values representing a triangular distribution
 #'
 #' @export
-#' @example  man/examples/ex-rtriangular.R
-rtriangular <- function(n = integer(), lower = double(), mode = double(), upper = double()) {
+#' @example  man/examples/ex-rtriangular_dist.R
+rtriangular_dist <- function(n = integer(), lower = double(), mode = double(), upper = double()) {
   if (lower > upper) {
     stop("lower input must be less than upper input")
   }
@@ -426,22 +540,22 @@ rtriangular <- function(n = integer(), lower = double(), mode = double(), upper 
 
   structure(
     .Data = values_distribution,
-    .label = paste0("rtri(", n, ", ", lower, ", ", mode, ", ", upper, ")"),
-    class = "rtri"
+    .label = paste0("rtriangular_dist(", n, ", ", lower, ", ", mode, ", ", upper, ")"),
+    class = "rtriangular_dist"
   )
 }
 
 
-#' plot.rtri
+#' plot.rtriangular_dist
 #'
 #' @description
-#' Plot rtri distribution similar to how runif is plotted with the base plot function
+#' Plot rtriangular_dist distribution similar to how runif is plotted with the base plot function
 #'
-#' @param x an rtri object
+#' @param x an rtriangular_dist object
 #' @param ... additional inputs (leave empty)
 #'
 #' @export
-plot.rtri <- function(x, ...) {
+plot.rtriangular_dist <- function(x, ...) {
   index <- sample(1:length(x), length(x), replace = FALSE)
   plot(x = index, y = x, xlab = "Index", ylab = attr(x, ".label"))
 }

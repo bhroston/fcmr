@@ -25,6 +25,7 @@ c(ivfn(0, 1), ivfn(0.2, 0.5))
 Other interval-valued-fuzzy-numbers: 
 \code{\link{ivfn}()},
 \code{\link{make_adj_matrix_w_ivfns}()},
-\code{\link{print.ivfn}()}
+\code{\link{print.ivfn}()},
+\code{\link{subtract_ivfn}()}
 }
 \concept{interval-valued-fuzzy-numbers}

@@ -13,7 +13,6 @@ infer_monte_carlo_fcm_set(
   lambda = 1,
   max_iter = 100,
   min_error = 1e-05,
-  fuzzy_set_samples = 1000,
   parallel = TRUE,
   n_cores = integer(),
   show_progress = TRUE,
@@ -43,9 +42,6 @@ squashing function when tanh or sigmoid are applied}
 \item{min_error}{The lowest error (sum of the absolute value of the current state
 vector minus the previous state vector) at which no more iterations are necessary
 and the simulation will stop}
-
-\item{fuzzy_set_samples}{The size (n) of the distributions represented by IVFNs or TFNs (only
-used when IVFNs or TFNs in adj_matrices input)}
 
 \item{parallel}{TRUE/FALSE Whether to utilize parallel processing}
 

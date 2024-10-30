@@ -181,7 +181,7 @@ test_that("build_monte_carlo_fcms works", {
   ))
   mc_samples_row2_col1 <- unlist(lapply(test_mc_fcms, function(x) x[2, 1]))
 
-  expected_samples_row2_col1 <- c(rtriangular(1000, 0.2, 0.3, 0.4), rtriangular(1000, 0.4, 0.6, 0.8), rtriangular(1000, 0.4, 0.6, 0.8))
+  expected_samples_row2_col1 <- c(rtriangular_dist(1000, 0.2, 0.3, 0.4), rtriangular_dist(1000, 0.4, 0.6, 0.8), rtriangular_dist(1000, 0.4, 0.6, 0.8))
   diff_in_means <- abs(mean(mc_samples_row2_col1) - mean(expected_samples_row2_col1))
   diff_in_var <- abs(var(mc_samples_row2_col1) - var(expected_samples_row2_col1))
 
@@ -277,7 +277,7 @@ test_that("build_monte_carlo_fcms_from_fuzzy_set_adj_matrices works", {
   ))
   mc_samples_row2_col1 <- unlist(lapply(test_mc_fcms, function(x) x[2, 1]))
 
-  expected_samples_row2_col1 <- c(rtriangular(1000, 0.2, 0.3, 0.4), rtriangular(1000, 0.4, 0.6, 0.8), rtriangular(1000, 0.4, 0.6, 0.8))
+  expected_samples_row2_col1 <- c(rtriangular_dist(1000, 0.2, 0.3, 0.4), rtriangular_dist(1000, 0.4, 0.6, 0.8), rtriangular_dist(1000, 0.4, 0.6, 0.8))
   diff_in_means <- abs(mean(mc_samples_row2_col1) - mean(expected_samples_row2_col1))
   diff_in_var <- abs(var(mc_samples_row2_col1) - var(expected_samples_row2_col1))
 
