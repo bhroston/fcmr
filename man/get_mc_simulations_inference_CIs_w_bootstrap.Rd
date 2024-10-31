@@ -2,7 +2,7 @@
 % Please edit documentation in R/monte_carlo_model_generation_and_simulation.R
 \name{get_mc_simulations_inference_CIs_w_bootstrap}
 \alias{get_mc_simulations_inference_CIs_w_bootstrap}
-\title{get_mc_simulations_inference_CIs_w_bootstrap}
+\title{Calculate Inferences (w/ Confidence Intervals via Bootstrap) of MC FCM Simulations}
 \usage{
 get_mc_simulations_inference_CIs_w_bootstrap(
   mc_simulations_inference_df = data.frame(),
@@ -46,4 +46,17 @@ distribution of simulated values across a given iter if called.
 This function is designed to streamline the process of getting the mean or bootstrapped
 mean of means of a distribution of simulated values across individual iterations. Use get_bootstrapped_means
 to estimate the confidence intervals for the mean value across simulations.
+
+The show_progress and parallel inputs change the functions called, but do NOT
+change the output! These are allowed to be toggled on/off to increase user
+control at runtime.
 }
+\seealso{
+Other monte-carlo-model-generation-and-simulation: 
+\code{\link{build_monte_carlo_fcms}()},
+\code{\link{build_monte_carlo_fcms_from_conventional_adj_matrices}()},
+\code{\link{build_monte_carlo_fcms_from_fuzzy_set_adj_matrices}()},
+\code{\link{infer_monte_carlo_fcm_set}()},
+\code{\link{monte_carlo_bootstrap_checks}()}
+}
+\concept{monte-carlo-model-generation-and-simulation}

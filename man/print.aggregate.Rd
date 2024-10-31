@@ -14,6 +14,9 @@
 \description{
 Print method for aggregate
 }
+\examples{
+NULL
+}
 \seealso{
 Other aggregate_fcms: 
 \code{\link{aggregate_conventional_fcms}()},

@@ -14,3 +14,6 @@
 \description{
 Print method for infer_conventional_fcm objects
 }
+\examples{
+NULL
+}

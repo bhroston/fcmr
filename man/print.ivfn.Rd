@@ -14,6 +14,9 @@
 \description{
 This prints an ivfn object
 }
+\examples{
+print(ivfn(-1, 1))
+}
 \seealso{
 Other interval-valued-fuzzy-numbers: 
 \code{\link{c.ivfn}()},

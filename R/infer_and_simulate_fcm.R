@@ -793,6 +793,8 @@ simulate_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
 #' adj_matrix and activation function
 #'
 #' @export
+#' @examples
+#' NULL
 calculate_next_conventional_fcm_state_vector <- function(adj_matrix = matrix(),
                                                          state_vector = c(),
                                                          activation = c("kosko", "modified-kosko", "rescale")) {
@@ -848,6 +850,8 @@ calculate_next_conventional_fcm_state_vector <- function(adj_matrix = matrix(),
 #' adj_matrix and activation function
 #'
 #' @export
+#' @examples
+#' NULL
 calculate_next_fuzzy_set_fcm_state_vector <- function(fuzzy_set_adj_matrix = matrix(),
                                                       fuzzy_set_state_vector = c(),
                                                       crisp_state_vector = c(),
@@ -933,6 +937,14 @@ calculate_next_fuzzy_set_fcm_state_vector <- function(fuzzy_set_adj_matrix = mat
 #' @param value A numeric value to 'squash'
 #' @param squashing A squashing function to apply. Must be one of the following: 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'
 #' @param lambda A numeric value that defines the steepness of the slope of the squashing function when tanh or sigmoid are applied
+#'
+#' @returns A "squashed" value, the output of the selected transfer ("squashing")
+#' function
+#'
+#' @export
+#' @examples
+#' squash(1, "sigmoid", lambda = 1)
+#' squash(0.6, "tanh", lambda = 0.7)
 squash <- function(value = numeric(),
                    squashing = c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"),
                    lambda = 1) {
@@ -1057,8 +1069,12 @@ defuzz_ivfn_or_tfn <- function(fuzzy_number) {
 #' @returns An IVFN or TFN representation of a crisp, numeric value
 #'
 #' @export
+#' @examples
+#' convert_element_to_ivfn_or_tfn_if_numeric(0.6, "ivfn")
+#' convert_element_to_ivfn_or_tfn_if_numeric(0.7, "tfn")
 convert_element_to_ivfn_or_tfn_if_numeric <- function(element, desired_class = c("ivfn", "tfn")) {
   numeric_class <- methods::is(numeric())
+
   if (identical(methods::is(element), numeric_class) & identical(desired_class, "ivfn")) {
     converted_element <- ivfn(element, element)
   } else if (identical(methods::is(element), numeric_class) & identical(desired_class, "tfn")) {
@@ -1087,6 +1103,7 @@ convert_element_to_ivfn_or_tfn_if_numeric <- function(element, desired_class = c
 #' representative distributions
 #'
 #' @export
+#' @example man/examples/ex-convert_fuzzy_set_elements_in_matrix_to_dists.R
 convert_fuzzy_set_elements_in_matrix_to_distributions <- function(fuzzy_set_matrix = matrix(),
                                                                   object_class = c("ivfn", "tfn"),
                                                                   N_samples = integer()) {
@@ -1138,6 +1155,8 @@ convert_fuzzy_set_elements_in_matrix_to_distributions <- function(fuzzy_set_matr
 #' @returns A cleaned up simulation output
 #'
 #' @export
+#' @examples
+#' NULL
 clean_simulation_output <- function(output_obj, concepts) {
   #browser()
   if (identical(methods::is(data.frame()), methods::is(output_obj))) {
@@ -1188,7 +1207,11 @@ clean_simulation_output <- function(output_obj, concepts) {
 #' vector minus the previous state vector) at which no more iterations are necessary
 #' and the simulation will stop
 #'
+#' @returns A formatted initial_state_vector and clamping_vector
+#'
 #' @export
+#' @examples
+#' NULL
 check_simulation_inputs <- function(adj_matrix = matrix(),
                                     initial_state_vector = c(),
                                     clamping_vector = c(),
@@ -1304,7 +1327,12 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
 #'
 #' @param x an infer_conventional_fcm object
 #' @param ... additional inputs
+#'
+#' @returns NULL
+#'
 #' @export
+#' @examples
+#' NULL
 print.infer_conventional_fcm <- function(x, ...) {
   cat(paste0("fcmconfr: ", "conventional"),
       "\n $inference\n",
@@ -1324,7 +1352,11 @@ print.infer_conventional_fcm <- function(x, ...) {
 #' @param x an infer_ivfn_or_tfn_fcm object
 #' @param ... additional inputs
 #'
+#' @returns NULL
+#'
 #' @export
+#' @examples
+#' NULL
 print.infer_ivfn_or_tfn_fcm <- function(x, ...) {
   cat(paste0("fcmconfr: ", "ivfn or tfn"),
       "\n $inference_df\n",

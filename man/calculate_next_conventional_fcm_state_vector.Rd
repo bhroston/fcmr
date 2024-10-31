@@ -44,6 +44,9 @@ can have on the simulation output (rescale, 2011 - https://doi.org/10.1016/j.aso
 
 Use vignette("fcm-class") for more information.
 }
+\examples{
+NULL
+}
 \references{
 Kosko, 1986
 }

@@ -110,7 +110,12 @@ fcmconfr_gui <- function() {
 #' @param x an fcmconfr object
 #' @param ... additional inputs
 #'
+#' @returns A pasteable output to the console of a call to fcmconfr with the
+#' selected variables
+#'
 #' @export
+#' @examples
+#' NULL
 print.fcmconfr_input <- function(x, ...) {
   cat(
     "fcmconfr(", "\n",

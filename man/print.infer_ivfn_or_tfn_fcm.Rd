@@ -14,3 +14,6 @@
 \description{
 Print method for infer_ivfn_or_tfn_fcm objects
 }
+\examples{
+NULL
+}

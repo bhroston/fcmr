@@ -26,3 +26,15 @@ the data per bootstrap_rep}
 \description{
 Check inputs for monte carlo bootstrap analysis
 }
+\examples{
+NULL
+}
+\seealso{
+Other monte-carlo-model-generation-and-simulation: 
+\code{\link{build_monte_carlo_fcms}()},
+\code{\link{build_monte_carlo_fcms_from_conventional_adj_matrices}()},
+\code{\link{build_monte_carlo_fcms_from_fuzzy_set_adj_matrices}()},
+\code{\link{get_mc_simulations_inference_CIs_w_bootstrap}()},
+\code{\link{infer_monte_carlo_fcm_set}()}
+}
+\concept{monte-carlo-model-generation-and-simulation}

@@ -17,6 +17,10 @@ squash(
 
 \item{lambda}{A numeric value that defines the steepness of the slope of the squashing function when tanh or sigmoid are applied}
 }
+\value{
+A "squashed" value, the output of the selected transfer ("squashing")
+function
+}
 \description{
 Calculate squashing function output of an input value and lambda values
 }
@@ -24,4 +28,8 @@ Calculate squashing function output of an input value and lambda values
 This function calculates the 'squashed' value of a state based upon five
 available squashing functions typical in the literature (as identified in
 Gonzales et al. 2018 - https://doi.org/10.1142/S0218213018600102)
+}
+\examples{
+squash(1, "sigmoid", lambda = 1)
+squash(0.6, "tanh", lambda = 0.7)
 }

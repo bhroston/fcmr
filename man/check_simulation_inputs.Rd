@@ -39,6 +39,9 @@ squashing function when tanh or sigmoid are applied}
 vector minus the previous state vector) at which no more iterations are necessary
 and the simulation will stop}
 }
+\value{
+A formatted initial_state_vector and clamping_vector
+}
 \description{
 Confirm that all inputs will work with the simulation function and return
 appropriate error messages where necessary
@@ -49,4 +52,7 @@ INTENDED FOR DEVELOPER USE ONLY
 This checks that all inputs for a simulation function are of an appropriate
 format, and also fills in missing inputs for initial_state_vector, clamping_vector,
 and IDs when appropriate.
+}
+\examples{
+NULL
 }

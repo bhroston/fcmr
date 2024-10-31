@@ -9,6 +9,9 @@ organize_fcmconfr_output(...)
 \arguments{
 \item{...}{additional inputs; typically environmental variables}
 }
+\value{
+An organzed list output of fcmconfr
+}
 \description{
 This arranges fcmconfr inputs and outputs into a neatly-arranged list of lists
 }
@@ -16,4 +19,7 @@ This arranges fcmconfr inputs and outputs into a neatly-arranged list of lists
 A standardized way to organize the fcmconfr into easily navigable data structures.
 
 Use vignette("fcmconfr-class") for more information.
+}
+\examples{
+NULL
 }

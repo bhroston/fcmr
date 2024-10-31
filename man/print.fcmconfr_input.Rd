@@ -11,6 +11,13 @@
 
 \item{...}{additional inputs}
 }
+\value{
+A pasteable output to the console of a call to fcmconfr with the
+selected variables
+}
 \description{
 Print fcmconfr_input
+}
+\examples{
+NULL
 }

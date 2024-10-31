@@ -1,17 +1,33 @@
 
+################################################################################
+# monte_carlo_model_generation_and_simulation.R
+#
+# These functions assist in generating empirical FCMs via monte carlo methods
+# and simulating the generated FCMs in bulk.
+#
+#   - infer_monte_carlo_fcm_set
+#   - get_mc_simulations_inference_CIs_w_bootstrap
+#   - build_monte_carlo_fcms
+#   - build_monte_carlo_fcms_from_conventional_adj_matrices
+#   - build_monte_carlo_fcms_from_fuzzy_set_adj_matrices
+#   - monte_carlo_bootstrap_checks
+#
+################################################################################
 
 
-#' infer_monte_carlo_fcm_set
+#' Infer FCMs Generated from Monte Carlo Methods
+#'
+#' @family monte-carlo-model-generation-and-simulation
 #'
 #' @description
-#' This calculates a sequence of iterations of a simulation over every item in
-#' a list of fmcm objects given an initial state vector along with the
-#' activation, squashing, and lambda parameters.
-#' Additional variables may be defined to control simulation length,
-#' column names, and lambda optimization.
+#' This function mass simulates a set of FCMs (Conventional, IVFN, and/or TFN)
+#' (whose edge weights were sampled using monte carlo methods) by repetitively
+#' calling the infer_fcm function for each empirical (monte carlo) adj. matrix.
 #'
 #' @details
-#' [ADD DETAILS HERE!!!].
+#' The show_progress and parallel inputs change the functions called, but do NOT
+#' change the output! These are allowed to be toggled on/off to increase user
+#' control at runtime.
 #'
 #' @param mc_adj_matrices A list of adjecency matrices generated from simulation using build_fmcm_models.
 #' @param initial_state_vector A list state values at the start of an fcm simulation
@@ -36,7 +52,13 @@
 #' @param include_simulations_in_output TRUE/FALSE whether to include simulations of monte-carlo-generated
 #' FCM. Will dramatically increase size of output if TRUE.
 #'
+#' @returns A list of two dataframes: the first contains all inference estimates
+#' across the empirical (monte carlo) FCM inferences, and the second is an
+#' elongated version of the first dataframe that organizes the data for
+#' plotting (particularly with ggplot2)
+#'
 #' @export
+#' @example man/examples/ex-infer_mc_fcm_set.R
 infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
                                       initial_state_vector = c(),
                                       clamping_vector = c(),
@@ -51,7 +73,6 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
                                       include_simulations_in_output = FALSE) {
 
   # Adding for R CMD check. Does not impact logic.
-  # iter <- NULL
   i <- NULL
 
   checks <- lapply(mc_adj_matrices, check_simulation_inputs, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
@@ -197,9 +218,8 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
     )
   }
 
-  # cat("\n")
-  # print("Organizing Output", quote = FALSE)
-  # cat("\n")
+
+  # browser()
 
   inference_values_by_sim <- lapply(inferences_for_mc_adj_matrices, function(sim) sim$inference)
   inference_values_by_sim <- data.frame(do.call(rbind, inference_values_by_sim))
@@ -231,7 +251,9 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
 }
 
 
-#' get_mc_simulations_inference_CIs_w_bootstrap
+#' Calculate Inferences (w/ Confidence Intervals via Bootstrap) of MC FCM Simulations
+#'
+#' @family monte-carlo-model-generation-and-simulation
 #'
 #' @description
 #' This gets the mean of the distribution of simulated values
@@ -242,6 +264,10 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
 #' This function is designed to streamline the process of getting the mean or bootstrapped
 #' mean of means of a distribution of simulated values across individual iterations. Use get_bootstrapped_means
 #' to estimate the confidence intervals for the mean value across simulations.
+#'
+#' The show_progress and parallel inputs change the functions called, but do NOT
+#' change the output! These are allowed to be toggled on/off to increase user
+#' control at runtime.
 #'
 #' @param mc_simulations_inference_df The final values of a set of fcm simulations; also the inference of a infer_fmcm object
 #' @param inference_function Estimate confidence intervals about the "mean" or "median" of
@@ -486,18 +512,28 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
 
 
 
-#' build_monte_carlo_fcms
+#' Build Monte Carlo FCMs
+#'
+#' @family monte-carlo-model-generation-and-simulation
 #'
 #' @description
 #' This function generates N fcm adjacency matrices whose edge weights are sampled
-#' from edge values (that may be numeric, grey_numbers, or triangular_numbers) and
+#' from edge values (that may be numeric, IVFNs, or TFNs) and
 #' stores them as a list of adjacency matrices.
 #'
-#' @details
-#' If an edge is represented by multiple grey/triangular_numbers, then those distributions
-#' are averaged together to create the aggregate distribution to sample from.
+#' The show_progress and parallel inputs change the functions called, but do NOT
+#' change the output! These are allowed to be toggled on/off to increase user
+#' control at runtime.
 #'
-#' Use vignette("fcmconfr-class") for more information.
+#' @details
+#' For Conventional FCMs, edge weights are sampled the edge weight explicitly
+#' defined in the input FCMs.
+#'
+#' For IVFN and TFN FCMs, edge weights are sampled from the combined
+#' distributions representative of the IVFN/TFN edge weights. For example,
+#' if an edge is given the following weights across two maps: IVFN(0.4, 0.8) and
+#' IVFN[0.5, 0.7], the samples will be drawn from the combined distribution:
+#' sample(N, c(runif(N, 0.4, 0.8), runif(N, 0.5, 0.7)), replace = TRUE).
 #'
 #' @param adj_matrix_list A list of n x n adjacencey matrices representing fcms
 #' @param N_samples The number of samples to draw with the selected sampling method. Also,
@@ -507,7 +543,10 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
 #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 #' from the pbapply package as the underlying function.
 #'
+#' @returns A list of empirical (Conventional) FCM adj. matrices generated via monte carlo methods
+#'
 #' @export
+#' @example man/examples/ex-build_monte_carlo_fcms.R
 build_monte_carlo_fcms <- function(adj_matrix_list = list(matrix()),
                                    N_samples = integer(),
                                    include_zeroes = TRUE,
@@ -528,7 +567,9 @@ build_monte_carlo_fcms <- function(adj_matrix_list = list(matrix()),
 
 
 
-#' build_monte_carlo_fcms_from_conventional_fcms
+#' Build Monte Carlo (Conventional) FCMs
+#'
+#' @family monte-carlo-model-generation-and-simulation
 #'
 #' @description
 #' This function generates n fcm models whose edge weights are sampled from either
@@ -536,9 +577,9 @@ build_monte_carlo_fcms <- function(adj_matrix_list = list(matrix()),
 #' of edge values, and stores them as a list of adjacency matrices.
 #'
 #' @details
-#' [ADD DETAILS HERE!!!]
-#'
-#' Use vignette("fcmconfr-class") for more information.
+#' The show_progress and parallel inputs change the functions called, but do NOT
+#' change the output! These are allowed to be toggled on/off to increase user
+#' control at runtime.
 #'
 #' @param adj_matrix_list A list of n x n adjacencey matrices representing fcms
 #' @param N_samples The number of samples to draw with the selected sampling method. Also,
@@ -548,7 +589,10 @@ build_monte_carlo_fcms <- function(adj_matrix_list = list(matrix()),
 #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 #' from the pbapply package as the underlying function.
 #'
+#' @returns A list of empirical (Conventional) FCM adj. matrices generated via monte carlo methods
+#'
 #' @export
+#' @example man/examples/ex-build_mc_models_from_conventional_adj_matrices.R
 build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_list = list(Matrix::sparseMatrix()),
                                                                   N_samples = integer(),
                                                                   include_zeroes = TRUE,
@@ -590,18 +634,22 @@ build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_lis
 
 
 
-#' build_monte_carlo_fcms_from_fuzzy_set_adj_matrices
+#' Build Monte Carlo (IVFN or TFN) FCMs
+#'
+#' @family monte-carlo-model-generation-and-simulation
 #'
 #' @description
 #' This function generates n fcm adjacency matrices whose edge weights are sampled
-#' from edge values (that may be numeric, grey_numbers, or triangular_numbers) and
+#' from edge values (that may be Conventional, IVFNs, or TFNs) and
 #' stores them as a list of adjacency matrices.
 #'
 #' @details
-#' If an edge is represented by multiple grey/triangular_numbers, then those distributions
+#' If an edge is represented by IVFNs/TFNs, then those distributions
 #' are averaged together to create the aggregate distribution to sample from.
 #'
-#' Use vignette("fcmconfr-class") for more information.
+#' The show_progress and parallel inputs change the functions called, but do NOT
+#' change the output! These are allowed to be toggled on/off to increase user
+#' control at runtime.
 #'
 #' @param fuzzy_set_adj_matrix_list A list of n x n fuzzy adjacencey matrices representing fcms
 #' @param fuzzy_set_adj_matrix_list_class "fgcm" or "fcm_w_tfn" - the class of elements in the fuzzy_set_adj_matrix_list
@@ -611,7 +659,10 @@ build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_lis
 #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 #' from the pbapply package as the underlying function.
 #'
+#' @returns A list of empirical (Conventional) FCM adj. matrices generated via monte carlo methods
+#'
 #' @export
+#' @example man/examples/ex-build_mc_models_from_fuzzy_set_adj_matrices.R
 build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_matrix_list = list(data.frame()),
                                                                fuzzy_set_adj_matrix_list_class = c("conventional", "ivfn", "tfn"),
                                                                N_samples = integer(),
@@ -686,7 +737,10 @@ build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_mat
 }
 
 
+
 #' Check inputs for monte carlo bootstrap analysis
+#'
+#' @family monte-carlo-model-generation-and-simulation
 #'
 #' @param inference_function Estimate confidence intervals about the "mean" or "median" of
 #' inferences from the monte carlo simulations
@@ -696,7 +750,11 @@ build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_mat
 #' @param bootstrap_draws_per_rep Number of samples to draw (with replacement) from
 #' the data per bootstrap_rep
 #'
+#' @returns NULL
+#'
 #' @export
+#' @examples
+#' NULL
 monte_carlo_bootstrap_checks <- function(inference_function,
                                          confidence_interval,
                                          bootstrap_reps,

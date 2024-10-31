@@ -54,7 +54,10 @@
 #' @param include_monte_carlo_FCM_simulations_in_output TRUE/FALSE Whether to include simulations of monte carlo FCMs. Switch to FALSE if concerned
 #' about the size of the output of fcmconfr (simulations are necessary and will run regardless)
 #'
+#' @returns
+#'
 #' @export
+#' @example
 fcmconfr <- function(adj_matrices = list(matrix()),
                      # Aggregation and Monte Carlo Sampling
                      aggregation_function = c("mean", "median"),
@@ -245,7 +248,11 @@ fcmconfr <- function(adj_matrices = list(matrix()),
 #'
 #' @param ... additional inputs; typically environmental variables
 #'
+#' @returns An organzed list output of fcmconfr
+#'
 #' @export
+#' @examples
+#' NULL
 organize_fcmconfr_output <- function(...) {
   variables <- as.list(...)
 
@@ -351,7 +358,11 @@ organize_fcmconfr_output <- function(...) {
 #' @param x an fcmconfr object
 #' @param ... additional inputs
 #'
+#' @returns NULL
+#'
 #' @export
+#' @examples
+#' NULL
 print.fcmconfr <- function(x, ...) {
   performed_aggregate <- x$params$additional_opts$perform_aggregate_analysis
   performed_mc <- x$params$additional_opts$perform_monte_carlo_analysis
@@ -446,7 +457,10 @@ print.fcmconfr <- function(x, ...) {
 #' @param monte_carlo_col_fill Hex code value for the columns/bars representing monte carlo data
 #' @param monte_carlo_col_alpha Between 0 and 1, the opacity of the monte_carlo_col_fill
 #'
+#' @returns A plot of the results generated from fcmconfr
+#'
 #' @export
+#' @example
 fcmconfr_plot <- function(fcmconfr_output,
                           swap_axes = FALSE,
                           aggregate_point_fill = "#fb0009",
@@ -476,7 +490,11 @@ fcmconfr_plot <- function(fcmconfr_output,
 #' expand_limits ggtitle labs xlab ylab theme_classic theme margin element_text
 #' element_blank unit scale_x_discrete coord_flip
 #'
+#' @returns A plot of the results generated from fcmconfr for a set of
+#' Conventional FCMs
+#'
 #' @export
+#' @example
 plot_conventional_fcmconfr <- function(conventional_fcmconfr_output,
                                        swap_axes = FALSE,
                                        aggregate_point_fill = "#fb0009",
@@ -563,7 +581,11 @@ plot_conventional_fcmconfr <- function(conventional_fcmconfr_output,
 #' expand_limits ggtitle labs xlab ylab theme_classic theme margin element_text
 #' element_blank unit scale_x_discrete coord_flip
 #'
+#' @returns A plot of the results generated from fcmconfr for a set of
+#' IVFN or TFN FCMs
+#'
 #' @export
+#' @example
 plot_ivfn_or_tfn_fcmconfr <- function(ivfn_or_tfn_fcmconfr_output,
                                       swap_axes = FALSE,
                                       aggregate_point_fill = "#fb0009",

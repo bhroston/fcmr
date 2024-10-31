@@ -23,6 +23,10 @@ plot_ivfn_or_tfn_fcmconfr(
 
 \item{monte_carlo_col_alpha}{Between 0 and 1, the opacity of the monte_carlo_col_fill}
 }
+\value{
+A plot of the results generated from fcmconfr for a set of
+IVFN or TFN FCMs
+}
 \description{
 Plot function for fcmconfr from ivfn or tfn FCM
 }
