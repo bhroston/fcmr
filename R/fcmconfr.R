@@ -3,12 +3,70 @@
 #' fcmconfr
 #'
 #' @description
-#' [ADD DETAILS HERE!!!]
+#' This is the primary function of the fcmconfr package. This function performs
+#' up to three different analyses of a set of (or an individual) input FCM(s).
+#' Call \code{\link{fcmconfr_gui()}}. for assistance with inputs.
+#'
+#' \enumerate{
+#'    \item FCM Simulation: Simulate the (raw/unmodified) input FCMs to estimate
+#'          their inferences. Inferences are calculated by comparing the simulation
+#'          output of a particular scenario with the simulation output of the
+#'          baseline (i.e. the natural behavior of the network without external
+#'          perturbation), (Ozesmi & Ozesmi, 2003) and help distinguish
+#'          decision-making impacts with the structural or
+#'          expected, steady-state of the system.
+#'    \item Aggregate Analysis: Generate an aggregate adj. matrix from a list of
+#'          adj. matrices. FCM aggregation works by calculating the mean/median
+#'          edge weight for all edges across the input adj. matrices (i.e. the
+#'          mean/median of the edge weight connecting A -> B across all maps,
+#'          the mean/median of the edge weight connecting B -> C across all
+#'          maps, and so on) (Aminpour et al., 2020). The user may dictate
+#'          whether to incorporate 0-valued edge weights in the mean/median
+#'          calculations.
+#'    \item Monte Carlo Analysis: Generate empirical adj. matrices whose edge
+#'          weights are drawn from edge weights from the input FCMs using
+#'          monte carlo sampling methods.These empirical FCMs are then simulated
+#'          in bulk using the FCM Simulation method previously described. This
+#'          outputs a dataframe of inferences across all empirical FCMs that
+#'          represent the possibility space of inferences representative of the
+#'          collective. This function also uses bootstrapping methods to
+#'          estimate confidence intervals about the inferences generated from
+#'          the empirical FCMs (may be toggled off if wanting to reduce runtime).
+#' }
+#'
+#' This function accepts three different types of FCMs which differ in how they
+#' represent edge weights. Note: All input FCMs must be the same type (i.e. a
+#' list of input FCMs must all be of one type or another, but cannot contain
+#' multiple types of FCMs in the same input set).
+#'
+#' \enumerate{
+#'    \item Conventional FCMs: These represent edge weights as fuzzy numbers and
+#'          represent FCMs in thir traditional form (Stylios, 1997)
+#'    \item Interval-Valued Fuzzy Number (IVFN) FCMs: An extension of Conventional
+#'          FCMs, these represent edge weights as interval-valued fuzzy numbers
+#'          (IVFNs) which describe a range of values and are defined by a lower
+#'          and upper bound (e.g. [0.2, 0.8] represents the set of values
+#'          between 0.2 and 0.8 which may be represented as a uniform distribution
+#'          via runif(N, min = 0.2, max = 0.8)) (Moore & Lodwick, 2003)
+#'    \item Triangular Fuzzy Number (TFN) FCMs: An extension of Conventional
+#'          FCMs, these represent edge weights as triangular fuzzy numbers (TFNs)
+#'          which describe a bounded range of values with a greater density of
+#'          values at some point in between, such that the probability density
+#'          function of the distribution appears triangular (Moore & Lodwick, 2003).
+#'          These are defined by their lower and upper bounds as well as a mode
+#'          value, and can be called within this package via the
+#'          \code{\link{rtriangular_dist()}} function or with other packages
+#'          such as EnvStats::rtri().
+#' }
+#'
+#' @references \insertRef{ozesmiParticipatoryApproachEcosystem2003}{fcmconfr}
+#' @references \insertRef{aminpourWisdomStakeholderCrowds2020}{fcmconfr}
+#' @references \insertRef{styliosIntroducingTheoryFuzzy1997}{fcmconfr}
+#' @references \insertRef{mooreIntervalAnalysisFuzzy2003}{fcmconfr}
 #'
 #' @details
-#' [ADD DETAILS HERE!!!]
+#' Call \code{\link{fcmconfr_gui()}}. for assistance with inputs.
 #'
-#' Use vignette("fcmconfr") for more information.
 #' @param adj_matrices A list of adjacency matrices (n x n) representing FCMs. This
 #' can also be an individual adjacency matrix.Adj. Matrices can be conventional FCMs,
 #' FCMs with edge weights as Interval Value Fuzzy Numbers (IVFNs) or FCMs with edge
@@ -54,10 +112,12 @@
 #' @param include_monte_carlo_FCM_simulations_in_output TRUE/FALSE Whether to include simulations of monte carlo FCMs. Switch to FALSE if concerned
 #' about the size of the output of fcmconfr (simulations are necessary and will run regardless)
 #'
+#' @importFrom Rdpack reprompt
+#'
 #' @returns
 #'
 #' @export
-#' @example
+#' @example man/examples/ex-fcmconfr.R
 fcmconfr <- function(adj_matrices = list(matrix()),
                      # Aggregation and Monte Carlo Sampling
                      aggregation_function = c("mean", "median"),

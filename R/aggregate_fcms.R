@@ -38,8 +38,12 @@
 #' calculations. (i.e. if edges not included in a map should count as a zero-weighted
 #' edge or not at all)
 #'
+#' @references \insertRef{aminpourWisdomStakeholderCrowds2020}{fcmconfr}
+#'
 #' @returns An aggregate adj. matrix (of class 'aggregate') with edges represented
 #' as the same data types as the inputs (i.e. Numerics for conventional, IVFNs, or TFNs)
+#'
+#' @importFrom Rdpack reprompt
 #'
 #' @export
 #' @example  man/examples/ex-aggregate_fcms.R

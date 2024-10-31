@@ -97,10 +97,242 @@ them when aggregating adj. matrices and sampling for monte carlo FCMs}
 about the size of the output of fcmconfr (simulations are necessary and will run regardless)}
 }
 \description{
-[ADD DETAILS HERE!!!]
+This is the primary function of the fcmconfr package. This function performs
+up to three different analyses of a set of (or an individual) input FCM(s).
+Call \code{\link{fcmconfr_gui()}}. for assistance with inputs.
+
+\enumerate{
+   \item FCM Simulation: Simulate the (raw/unmodified) input FCMs to estimate
+         their inferences. Inferences are calculated by comparing the simulation
+         output of a particular scenario with the simulation output of the
+         baseline (i.e. the natural behavior of the network without external
+         perturbation), (Ozesmi & Ozesmi, 2003) and help distinguish
+         decision-making impacts with the structural or
+         expected, steady-state of the system.
+   \item Aggregate Analysis: Generate an aggregate adj. matrix from a list of
+         adj. matrices. FCM aggregation works by calculating the mean/median
+         edge weight for all edges across the input adj. matrices (i.e. the
+         mean/median of the edge weight connecting A -> B across all maps,
+         the mean/median of the edge weight connecting B -> C across all
+         maps, and so on) (Aminpour et al., 2020). The user may dictate
+         whether to incorporate 0-valued edge weights in the mean/median
+         calculations.
+   \item Monte Carlo Analysis: Generate empirical adj. matrices whose edge
+         weights are drawn from edge weights from the input FCMs using
+         monte carlo sampling methods.These empirical FCMs are then simulated
+         in bulk using the FCM Simulation method previously described. This
+         outputs a dataframe of inferences across all empirical FCMs that
+         represent the possibility space of inferences representative of the
+         collective. This function also uses bootstrapping methods to
+         estimate confidence intervals about the inferences generated from
+         the empirical FCMs (may be toggled off if wanting to reduce runtime).
+}
+
+This function accepts three different types of FCMs which differ in how they
+represent edge weights. Note: All input FCMs must be the same type (i.e. a
+list of input FCMs must all be of one type or another, but cannot contain
+multiple types of FCMs in the same input set).
+
+\enumerate{
+   \item Conventional FCMs: These represent edge weights as fuzzy numbers and
+         represent FCMs in thir traditional form (Stylios, 1997)
+   \item Interval-Valued Fuzzy Number (IVFN) FCMs: An extension of Conventional
+         FCMs, these represent edge weights as interval-valued fuzzy numbers
+         (IVFNs) which describe a range of values and are defined by a lower
+         and upper bound (e.g. [0.2, 0.8] represents the set of values
+         between 0.2 and 0.8 which may be represented as a uniform distribution
+         via runif(N, min = 0.2, max = 0.8)) (Moore & Lodwick, 2003)
+   \item Triangular Fuzzy Number (TFN) FCMs: An extension of Conventional
+         FCMs, these represent edge weights as triangular fuzzy numbers (TFNs)
+         which describe a bounded range of values with a greater density of
+         values at some point in between, such that the probability density
+         function of the distribution appears triangular (Moore & Lodwick, 2003).
+         These are defined by their lower and upper bounds as well as a mode
+         value, and can be called within this package via the
+         \code{\link{rtriangular_dist()}} function or with other packages
+         such as EnvStats::rtri().
+}
 }
 \details{
-[ADD DETAILS HERE!!!]
+Call \code{\link{fcmconfr_gui()}}. for assistance with inputs.
+}
+\examples{
+# Conventional FCMs
+test_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0, 0, 0),
+  "B" = c(1, 0, 0, 1),
+  "C" = c(0, 1, 0, 0),
+  "D" = c(0, 0, 1, 0)
+)
+test_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0, 0, 0),
+  "B" = c(0.25, 0, 0, 0.25),
+  "C" = c(0, 0.25, 0, 0),
+  "D" = c(0, 0, 0.25, 0)
+)
+test_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0, 0, 0),
+  "B" = c(0.75, 0, 0, 0.75),
+  "C" = c(0, 0.75, 0, 0),
+  "D" = c(0, 0, 0.75, 0)
+)
+test_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0, 0, 0),
+  "B" = c(0.5, 0, 0, 0.5),
+  "C" = c(0, 0.5, 0, 0),
+  "D" = c(0, 0, 0.5, 0)
+)
+ex_conventional_fcms <- list(test_adj_matrix_1, test_adj_matrix_2, test_adj_matrix_3, test_adj_matrix_4)
+ex_conventional_fcmconfr <- fcmconfr(
+  adj_matrices = ex_conventional_fcms,
+  # Aggregation and Monte Carlo Sampling
+  aggregation_function = 'mean',
+  monte_carlo_sampling_draws = 100,
+  # Simulation
+  initial_state_vector = c(1, 1, 1, 1),
+  clamping_vector = c(0, 1, 0, 0),
+  activation = 'kosko',
+  squashing = 'sigmoid',
+  lambda = 1,
+  max_iter = 100,
+  min_error = 1e-05,
+  # Inference Estimation (bootstrap)
+  inference_estimation_function = "median",
+  inference_estimation_CI = 0.95,
+  inference_estimation_bootstrap_reps = 1000,
+  inference_estimation_bootstrap_draws_per_rep = 1000,
+  # Runtime Options
+  show_progress = TRUE,
+  parallel = TRUE,
+  n_cores = 2,
+  # Additional Options
+  perform_aggregate_analysis = TRUE,
+  perform_monte_carlo_analysis = TRUE,
+  perform_monte_carlo_inference_bootstrap_analysis = TRUE,
+  include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+  include_monte_carlo_FCM_simulations_in_output = TRUE
+)
 
-Use vignette("fcmconfr") for more information.
+
+# IVFN FCM fcmconfr
+lower_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.25, 0)
+)
+upper_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.75, 0)
+)
+adj_matrix_w_ivfns_1 <- make_adj_matrix_w_ivfns(lower_adj_matrix_1, upper_adj_matrix_1)
+lower_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.15, 0)
+)
+upper_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.85, 0)
+)
+adj_matrix_w_ivfns_2 <- make_adj_matrix_w_ivfns(lower_adj_matrix_2, upper_adj_matrix_2)
+ex_ivfn_fcms <- list(adj_matrix_w_ivfns_1, adj_matrix_w_ivfns_2)
+ex_ivfn_fcmconfr <- fcmconfr(
+  adj_matrices = ex_ivfn_fcms,
+  # Aggregation and Monte Carlo Sampling
+  aggregation_function = 'mean',
+  monte_carlo_sampling_draws = 100,
+  # Simulation
+  initial_state_vector = c(1, 1),
+  clamping_vector = c(0, 1),
+  activation = 'kosko',
+  squashing = 'sigmoid',
+  lambda = 1,
+  max_iter = 100,
+  min_error = 1e-05,
+  # Inference Estimation (bootstrap)
+  inference_estimation_function = "mean",
+  inference_estimation_CI = 0.95,
+  inference_estimation_bootstrap_reps = 1000,
+  inference_estimation_bootstrap_draws_per_rep = 1000,
+  # Runtime Options
+  show_progress = TRUE,
+  parallel = FALSE,
+  n_cores = 10,
+  # Additional Options
+  perform_aggregate_analysis = TRUE,
+  perform_monte_carlo_analysis = TRUE,
+  perform_monte_carlo_inference_bootstrap_analysis = TRUE,
+  include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+  include_monte_carlo_FCM_simulations_in_output = TRUE
+)
+
+
+# TFN FCM fcmconfr
+lower_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.25, 0)
+)
+mode_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.5, 0)
+)
+upper_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.75, 0)
+)
+adj_matrix_w_tfns_1 <- make_adj_matrix_w_tfns(lower_adj_matrix_1, mode_adj_matrix_1, upper_adj_matrix_1)
+
+lower_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.15, 0)
+)
+mode_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.65, 0)
+)
+upper_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.85, 0)
+)
+adj_matrix_w_tfns_2 <- make_adj_matrix_w_tfns(lower_adj_matrix_2, mode_adj_matrix_2, upper_adj_matrix_2)
+
+ex_tfn_fcms <- list(adj_matrix_w_tfns_1, adj_matrix_w_tfns_2)
+ex_tfn_fcmconfr <- fcmconfr(
+  adj_matrices = ex_tfn_fcms,
+  # Aggregation and Monte Carlo Sampling
+  aggregation_function = 'mean',
+  monte_carlo_sampling_draws = 100,
+  # Simulation
+  initial_state_vector = c(1, 1),
+  clamping_vector = c(0, 1),
+  activation = 'kosko',
+  squashing = 'sigmoid',
+  lambda = 1,
+  max_iter = 100,
+  min_error = 1e-05,
+  # Inference Estimation (bootstrap)
+  inference_estimation_function = "mean",
+  inference_estimation_CI = 0.95,
+  inference_estimation_bootstrap_reps = 1000,
+  inference_estimation_bootstrap_draws_per_rep = 1000,
+  # Runtime Options
+  show_progress = TRUE,
+  parallel = FALSE,
+  n_cores = 10,
+  # Additional Options
+  perform_aggregate_analysis = TRUE,
+  perform_monte_carlo_analysis = TRUE,
+  perform_monte_carlo_inference_bootstrap_analysis = TRUE,
+  include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+  include_monte_carlo_FCM_simulations_in_output = TRUE
+)
+
+
+}
+\references{
+\insertRef{ozesmiParticipatoryApproachEcosystem2003}{fcmconfr}
+
+\insertRef{aminpourWisdomStakeholderCrowds2020}{fcmconfr}
+
+\insertRef{styliosIntroducingTheoryFuzzy1997}{fcmconfr}
+
+\insertRef{mooreIntervalAnalysisFuzzy2003}{fcmconfr}
 }
