@@ -158,6 +158,40 @@ test_that("aggregate_fcms works", {
 })
 
 
+test_that("aggregate_fcms catches boundary cases", {
+  test_adj_matrix_1 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(1, 0)
+  )
+  expect_no_error(test_aggregate <- aggregate_fcms(test_adj_matrix_1, "mean", include_zeroes = TRUE))
+
+
+  test_adj_matrix_2 <- data.frame(
+    "A" = c(0, 0, 0),
+    "B" = c(1, 0, 1),
+    "C" = c(0, 1, 0)
+  )
+  test_adj_matrices <- list(test_adj_matrix_1, test_adj_matrix_2)
+  expect_error(aggregate_fcms(test_adj_matrices, "mean", include_zeroes = TRUE))
+
+
+  test_adj_matrix_1 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(1, 0)
+  )
+  test_adj_matrix_2 <- data.frame(
+    "A" = c(0, 0),
+    "C" = c(0.25, 0)
+  )
+  test_adj_matrix_3 <- data.frame(
+    "B" = c(0, 0),
+    "D" = c(0.75, 0)
+  )
+  test_fcms <- list(test_adj_matrix_1, test_adj_matrix_2, test_adj_matrix_3)
+  expect_error(aggregate_fcms(test_fcms, "mean", include_zeroes = TRUE))
+})
+
+
 test_that("aggregate_conventional_fcms works", {
   test_adj_matrix_1 <- data.frame(
     "A" = c(0, 0),
@@ -314,4 +348,31 @@ test_that("fcm_w_tfn_aggregation works", {
 
   test_aggregate <- aggregate_fcms_w_tfns(test_fcms_w_tfns, "median", include_zeroes = FALSE)
   expect_equal(test_aggregate$adj_matrix[1, 2][[1]], tfn(0.3, 0.4, 0.6))
+})
+
+
+test_that("print.aggregate works", {
+  test_adj_matrix_1 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(1, 0)
+  )
+  test_adj_matrix_2 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.25, 0)
+  )
+  test_adj_matrix_3 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.75, 0)
+  )
+  test_adj_matrix_4 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.5, 0)
+  )
+  test_fcms <- list(test_adj_matrix_1, test_adj_matrix_2, test_adj_matrix_3, test_adj_matrix_4)
+  test_aggregate <- aggregate_fcms(test_fcms, "mean", include_zeroes = TRUE)
+
+  output <- capture.output(test_aggregate)
+  expect_identical(output[length(output)], "Aggregate (mean) of 4 adj. matrices")
+
+  expect_snapshot(test_aggregate)
 })
