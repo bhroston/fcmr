@@ -201,7 +201,7 @@ subtract_ivfn <- function(ivfn_1 = ivfn(), ivfn_2 = ivfn()) {
 #' @param x a ivfn object
 #' @param ... additional inputs
 #'
-#' @returns NULL
+#' @returns A console printout of an IVFN object
 #'
 #' @export
 #' @examples
@@ -464,7 +464,7 @@ subtract_tfn <- function(tfn_1 = tfn(), tfn_2 = tfn()) {
 #' @param x a tfn object
 #' @param ... additional inputs
 #'
-#' @returns NULL
+#' @returns A console printout of a TFN object
 #'
 #' @export
 #' @examples

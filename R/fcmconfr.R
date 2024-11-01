@@ -422,7 +422,7 @@ organize_fcmconfr_output <- function(...) {
 #' @param x an fcmconfr object
 #' @param ... additional inputs
 #'
-#' @returns NULL
+#' @returns A console printout of fcmconfr results
 #'
 #' @export
 #' @examples
@@ -688,7 +688,6 @@ plot_ivfn_or_tfn_fcmconfr <- function(ivfn_or_tfn_fcmconfr_output,
                                       aggregate_point_fill = "#fb0009",
                                       monte_carlo_col_fill = "#fcdbd0",
                                       monte_carlo_col_alpha = 0.6) {
-  # load_all()
   # browser()
   # Pre-defining values for R CMD Check. Does no effect logic.
   node <- NULL

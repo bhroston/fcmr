@@ -1328,7 +1328,7 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
 #' @param x an infer_conventional_fcm object
 #' @param ... additional inputs
 #'
-#' @returns NULL
+#' @returns A console printout of infer_conventional_fcm results
 #'
 #' @export
 #' @examples
@@ -1352,7 +1352,7 @@ print.infer_conventional_fcm <- function(x, ...) {
 #' @param x an infer_ivfn_or_tfn_fcm object
 #' @param ... additional inputs
 #'
-#' @returns NULL
+#' @returns A console printout of infer_ivfn_or_tfn_fcm results
 #'
 #' @export
 #' @examples
