@@ -27,7 +27,7 @@ ex_fcms <- list(
 )
 
 mc_fcms <- build_monte_carlo_fcms_from_conventional_adj_matrices(
-  ex_fcms, N_samples = 1000, include_zeroes = FALSE, show_progress = TRUE
+  ex_fcms, N_samples = 100, include_zeroes = FALSE, show_progress = TRUE
 )
 
 mc_fcms_inferences <- infer_monte_carlo_fcm_set(
