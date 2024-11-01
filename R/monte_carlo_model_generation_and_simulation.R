@@ -669,7 +669,7 @@ build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_mat
                                                                include_zeroes = FALSE,
                                                                show_progress = TRUE) {
 
-  #browser()
+  # browser()
   if (!(fuzzy_set_adj_matrix_list_class %in% c("conventional", "ivfn", "tfn"))) {
     stop("Input fuzzy_set_adj_matrix_list_class must be one of the following: 'conventional', 'ivfn', or 'tfn'")
   }
@@ -678,7 +678,7 @@ build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_mat
 
   flatten_fuzzy_adj_matrix <- function(fuzzy_adj_matrix) do.call(cbind, lapply(as.vector(fuzzy_adj_matrix), rbind))
   flattened_fuzzy_set_adj_matrix_list <- do.call(rbind, lapply(fuzzy_set_adj_matrix_list, flatten_fuzzy_adj_matrix))
-  flattened_fuzzy_set_adj_matrix_list_w_distributions <- convert_fuzzy_set_elements_in_matrix_to_distributions(flattened_fuzzy_set_adj_matrix_list, fuzzy_set_adj_matrix_list_class, N_samples)
+  flattened_fuzzy_set_adj_matrix_list_w_distributions <- convert_fuzzy_set_elements_in_matrix_to_distributions(fuzzy_set_matrix = flattened_fuzzy_set_adj_matrix_list, object_class = fuzzy_set_adj_matrix_list_class, N_samples = N_samples)
 
   if (!include_zeroes) {
     flattened_fuzzy_set_adj_matrix_list_w_distributions <- apply(flattened_fuzzy_set_adj_matrix_list_w_distributions, c(1, 2), function(element) ifelse(element[[1]][[1]] == 0, NA, element[[1]][[1]]), simplify = FALSE)

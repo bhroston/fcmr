@@ -23,7 +23,9 @@ test_adj_matrix_4 <- data.frame(
   "C" = c(0, 0.5, 0, 0),
   "D" = c(0, 0, 0.5, 0)
 )
-ex_conventional_fcms <- list(test_adj_matrix_1, test_adj_matrix_2, test_adj_matrix_3, test_adj_matrix_4)
+ex_conventional_fcms <- list(
+  test_adj_matrix_1, test_adj_matrix_2, test_adj_matrix_3, test_adj_matrix_4
+)
 ex_conventional_fcmconfr <- fcmconfr(
   adj_matrices = ex_conventional_fcms,
   # Aggregation and Monte Carlo Sampling
@@ -64,7 +66,9 @@ upper_adj_matrix_1 <- data.frame(
   "A" = c(0, 0),
   "B" = c(0.75, 0)
 )
-adj_matrix_w_ivfns_1 <- make_adj_matrix_w_ivfns(lower_adj_matrix_1, upper_adj_matrix_1)
+adj_matrix_w_ivfns_1 <- make_adj_matrix_w_ivfns(
+  lower_adj_matrix_1, upper_adj_matrix_1
+)
 lower_adj_matrix_2 <- data.frame(
   "A" = c(0, 0),
   "B" = c(0.15, 0)
@@ -73,7 +77,9 @@ upper_adj_matrix_2 <- data.frame(
   "A" = c(0, 0),
   "B" = c(0.85, 0)
 )
-adj_matrix_w_ivfns_2 <- make_adj_matrix_w_ivfns(lower_adj_matrix_2, upper_adj_matrix_2)
+adj_matrix_w_ivfns_2 <- make_adj_matrix_w_ivfns(
+  lower_adj_matrix_2, upper_adj_matrix_2
+)
 ex_ivfn_fcms <- list(adj_matrix_w_ivfns_1, adj_matrix_w_ivfns_2)
 ex_ivfn_fcmconfr <- fcmconfr(
   adj_matrices = ex_ivfn_fcms,
@@ -119,7 +125,9 @@ upper_adj_matrix_1 <- data.frame(
   "A" = c(0, 0),
   "B" = c(0.75, 0)
 )
-adj_matrix_w_tfns_1 <- make_adj_matrix_w_tfns(lower_adj_matrix_1, mode_adj_matrix_1, upper_adj_matrix_1)
+adj_matrix_w_tfns_1 <- make_adj_matrix_w_tfns(
+  lower_adj_matrix_1, mode_adj_matrix_1, upper_adj_matrix_1
+)
 
 lower_adj_matrix_2 <- data.frame(
   "A" = c(0, 0),
@@ -133,7 +141,9 @@ upper_adj_matrix_2 <- data.frame(
   "A" = c(0, 0),
   "B" = c(0.85, 0)
 )
-adj_matrix_w_tfns_2 <- make_adj_matrix_w_tfns(lower_adj_matrix_2, mode_adj_matrix_2, upper_adj_matrix_2)
+adj_matrix_w_tfns_2 <- make_adj_matrix_w_tfns(
+  lower_adj_matrix_2, mode_adj_matrix_2, upper_adj_matrix_2
+)
 
 ex_tfn_fcms <- list(adj_matrix_w_tfns_1, adj_matrix_w_tfns_2)
 ex_tfn_fcmconfr <- fcmconfr(

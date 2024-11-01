@@ -55,8 +55,12 @@ upper_adj_matrix <- data.frame(
   C5 = c(0.7, 0, 0, -0.1, 0, 0),
   C6 = c(0, -0.2, 0.25, 0, -0.7, 0)
 )
-ex_tfn_adj_matrix <- make_adj_matrix_w_tfns(lower_adj_matrix, mode_adj_matrix, upper_adj_matrix)
+ex_tfn_adj_matrix <- make_adj_matrix_w_tfns(
+  lower_adj_matrix, mode_adj_matrix, upper_adj_matrix
+)
 
-convert_fuzzy_set_elements_in_matrix_to_distributions(ex_tfn_adj_matrix, "tfn", 1000)
+convert_fuzzy_set_elements_in_matrix_to_distributions(
+  ex_tfn_adj_matrix, "tfn", 1000
+)
 
 }

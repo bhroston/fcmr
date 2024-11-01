@@ -5,7 +5,7 @@
 #' @description
 #' This is the primary function of the fcmconfr package. This function performs
 #' up to three different analyses of a set of (or an individual) input FCM(s).
-#' Call \code{\link{fcmconfr_gui()}}. for assistance with inputs.
+#' Call \code{\link{fcmconfr_gui}}. for assistance with inputs.
 #'
 #' \enumerate{
 #'    \item FCM Simulation: Simulate the (raw/unmodified) input FCMs to estimate
@@ -55,7 +55,7 @@
 #'          function of the distribution appears triangular (Moore & Lodwick, 2003).
 #'          These are defined by their lower and upper bounds as well as a mode
 #'          value, and can be called within this package via the
-#'          \code{\link{rtriangular_dist()}} function or with other packages
+#'          \code{\link{rtriangular_dist}} function or with other packages
 #'          such as EnvStats::rtri().
 #' }
 #'
@@ -65,7 +65,7 @@
 #' @references \insertRef{mooreIntervalAnalysisFuzzy2003}{fcmconfr}
 #'
 #' @details
-#' Call \code{\link{fcmconfr_gui()}}. for assistance with inputs.
+#' Call \code{\link{fcmconfr_gui}}. for assistance with inputs.
 #'
 #' @param adj_matrices A list of adjacency matrices (n x n) representing FCMs. This
 #' can also be an individual adjacency matrix.Adj. Matrices can be conventional FCMs,
@@ -114,7 +114,10 @@
 #'
 #' @importFrom Rdpack reprompt
 #'
-#' @returns
+#' @returns A list of outputs generated from the input_fcms simulations,
+#'          aggregate_fcm analysis, and monte_carlo_fcms analysis. Bootstrap
+#'          estimates of inferences from monte carlo analysis are included, as
+#'          well as function inputs.
 #'
 #' @export
 #' @example man/examples/ex-fcmconfr.R
@@ -296,15 +299,15 @@ fcmconfr <- function(adj_matrices = list(matrix()),
 
 
 
-#' organize_fcmconfr_output
+#' [INTENDED FOR DEVELOPER USE ONLY] Organize fcmconfr Output
 #'
 #' @description
-#' This arranges fcmconfr inputs and outputs into a neatly-arranged list of lists
+#' This arranges fcmconfr inputs and outputs into a neatly-arranged list of lists,
+#' and critically, neatly-arranged data structures to clean code written in
+#' the \code{\link{fcmconfr}} function.
 #'
 #' @details
-#' A standardized way to organize the fcmconfr into easily navigable data structures.
-#'
-#' Use vignette("fcmconfr-class") for more information.
+#' [INTENDED FOR DEVELOPER USE ONLY]
 #'
 #' @param ... additional inputs; typically environmental variables
 #'
@@ -408,12 +411,13 @@ organize_fcmconfr_output <- function(...) {
 #' print.fcmconfr
 #'
 #' @description
-#' This improves the readability of the fcmconfr
+#' This improves the readability of the fcmconfr output
 #'
 #' @details
-#' Show the objects listed in the fcmconfr output $inference and $params, as well
-#' as $bootstrap if present in output. Additionally, this prints descriptions/summaries
-#' of objects within each sub-list like inference_opts, bootstrap_input_opts, etc.
+#' Show the objects listed in the fcmconfr output \code{$inference} and \code{$params},
+#' as well as \code{$bootstrap} if present in output. Additionally, this prints
+#' descriptions/summaries of objects within each sub-list like inference_opts,
+#' bootstrap_input_opts, etc.
 #'
 #' @param x an fcmconfr object
 #' @param ... additional inputs
@@ -509,7 +513,18 @@ print.fcmconfr <- function(x, ...) {
 }
 
 
-#' fcmconfr_plot
+#' Plot fcmconfr Output
+#'
+#' @description
+#' This function plots the primary results of the \code{\link{fcmconfr}}
+#' output. The plot features the results of the input fcm inferences,
+#' aggregate analysis inferences, and the monte carlo analysis bulk inference
+#' confidence intervals. This function takes \code{\link{fcmconfr}} outputs
+#' generated from Conventional FCMs, Interval-Value Fuzzy Number (IVFN) FCMs,
+#' and Triangular Fuzzy Number (TFN) FCMs as inputs.
+#'
+#' @details
+#' Plots generated using ggplot2
 #'
 #' @param fcmconfr_output Output directly from fcmconfr
 #' @param swap_axes Switch x and y axes. Preferable when concepts have longer names
@@ -520,7 +535,7 @@ print.fcmconfr <- function(x, ...) {
 #' @returns A plot of the results generated from fcmconfr
 #'
 #' @export
-#' @example
+#' @example man/examples/ex-fcmconfr_plot.R
 fcmconfr_plot <- function(fcmconfr_output,
                           swap_axes = FALSE,
                           aggregate_point_fill = "#fb0009",
@@ -537,7 +552,17 @@ fcmconfr_plot <- function(fcmconfr_output,
 }
 
 
-#' Plot function for fcmconfr from conventional FCM
+#' Plot fcmconfr Output (Conventional FCMs)
+#'
+#' @description
+#' This function plots the primary results of the \code{\link{fcmconfr}}
+#' output. The plot features the results of the input fcm inferences,
+#' aggregate analysis inferences, and the monte carlo analysis bulk inference
+#' confidence intervals. This function takes \code{\link{fcmconfr}} outputs
+#' generated from Conventional FCMs.
+#'
+#' @details
+#' Plots generated using ggplot2
 #'
 #' @param conventional_fcmconfr_output Output directly from fcmconfr (for conventional fcms as inputs)
 #' @param swap_axes Switch x and y axes. Preferable when concepts have longer names
@@ -554,7 +579,7 @@ fcmconfr_plot <- function(fcmconfr_output,
 #' Conventional FCMs
 #'
 #' @export
-#' @example
+#' @example man/examples/ex-plot_conventional_fcmconfr.R
 plot_conventional_fcmconfr <- function(conventional_fcmconfr_output,
                                        swap_axes = FALSE,
                                        aggregate_point_fill = "#fb0009",
@@ -628,7 +653,19 @@ plot_conventional_fcmconfr <- function(conventional_fcmconfr_output,
 }
 
 
-#' Plot function for fcmconfr from ivfn or tfn FCM
+
+#' Plot fcmconfr Output (IVFN FCMs or TFN FCMs)
+#'
+#' @description
+#' This function plots the primary results of the \code{\link{fcmconfr}}
+#' output. The plot features the results of the input fcm inferences,
+#' aggregate analysis inferences, and the monte carlo analysis bulk inference
+#' confidence intervals. This function takes \code{\link{fcmconfr}} outputs
+#' generated from Interval-Value Fuzzy Number (IVFN) FCMs,
+#' and Triangular Fuzzy Number (TFN) FCMs as inputs.
+#'
+#' @details
+#' Plots generated using ggplot2
 #'
 #' @param ivfn_or_tfn_fcmconfr_output Output directly from fcmconfr (for ivfn or tfn fcms as inputs)
 #' @param swap_axes Switch x and y axes. Preferable when concepts have longer names
@@ -645,7 +682,7 @@ plot_conventional_fcmconfr <- function(conventional_fcmconfr_output,
 #' IVFN or TFN FCMs
 #'
 #' @export
-#' @example
+#' @example man/examples/ex-plot_ivfn_or_tfn_fcmconfr.R
 plot_ivfn_or_tfn_fcmconfr <- function(ivfn_or_tfn_fcmconfr_output,
                                       swap_axes = FALSE,
                                       aggregate_point_fill = "#fb0009",
@@ -725,246 +762,3 @@ plot_ivfn_or_tfn_fcmconfr <- function(ivfn_or_tfn_fcmconfr_output,
 
   fcmconfr_plot
 }
-
-
-
-
-
-
-
-#
-#
-#   if (x$params$simulation_opts$squashing == "tanh" | x$params$simulation_opts$squashing == "trivalent") {
-#     domain_min <- -1
-#     domain_max <- 1
-#   } else {
-#     domain_min <- 0
-#     domain_max <- 1
-#   }
-#
-#   if (x$fcm_class == "conventional") {
-#     input_fcms_inferences_longer <- tidyr::pivot_longer(x$inferences$input_fcms$inferences, cols = 2:ncol(x$inferences$input_fcms$inferences))
-#     input_fcms_inferences_longer$analysis_source <- "input"
-#     mc_inferences_longer <- tidyr::pivot_longer(x$inferences$monte_carlo_fcms$all_inferences, cols = 1:ncol(x$inferences$monte_carlo_fcms$all_inferences))
-#     mc_inferences_longer$analysis_source <- "mc"
-#     aggregate_inferences_longer <- tidyr::pivot_longer(x$inferences$aggregate_fcm$inferences, cols = 1:ncol(x$inferences$aggregate_fcm$inferences))
-#     aggregate_inferences_longer$analysis_source <- "aggregate"
-#
-#     results <- rbind(input_fcms_inferences_longer[, -1], mc_inferences_longer)
-#     results$analysis_source <- factor(results$analysis_source, levels = c("mc", "input"))
-#
-#     fcmconfr_plot <- ggplot() +
-#       geom_boxplot(data = input_fcms_inferences_longer, aes(x = value, y = name, color = analysis_source), position = position_nudge(y = 0.18), width = 0.1) +
-#       geom_boxplot(data = mc_inferences_longer, aes(x = value, y = name, color = analysis_source), position = position_nudge(y = -0.18), width = 0.4, fill = "lightgrey") +
-#       geom_point(data = aggregate_inferences_longer, aes(x = value, y = name, shape = analysis_source), position = position_nudge(y = -0.18), size = 2, fill = "darkgray") +
-#       geom_point(data = results, aes(x = value, y = name, alpha = analysis_source), position = position_jitterdodge(jitter.width = 0.3), stroke = NA) +
-#       ggtitle("FCMconfR Inferences", subtitle = fcm_class_subtitle) +
-#       scale_x_continuous(breaks = seq(domain_min, domain_max, by = 0.2), limits = c(domain_min, domain_max), expand = c(0, 0)) +
-#       #scale_fill_manual(values = c(input = "white", mc = "lightgrey"), labels = c(input = "Input", mc = "Monte Carlo")) +
-#       scale_color_manual(values = c(input = "darkgrey", mc = "black"), labels = c(input = "Input", mc = "Monte Carlo")) +
-#       scale_shape_manual(values = c("triangle"), labels = c("Aggregate")) +
-#       scale_alpha_manual(values = c(input = 0.5, mc = 0.1)) +
-#       guides(alpha = "none", color = guide_legend(order = 1), shape = guide_legend(order = 2)) +
-#       xlab("Inference Value") +
-#       ylab("Concept (Node)") +
-#       theme_classic() +
-#       theme(
-#         plot.margin = margin(t = 20, r = 40, b = 20, l = 20),
-#         plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
-#         plot.subtitle = element_text(hjust = 0.5, margin = margin(b = 10)),
-#         axis.title = element_text(size = 12),
-#         axis.title.x = element_text(margin = margin(t = 10)),
-#         axis.title.y = element_text(margin = margin(r = 10)),
-#         axis.text = element_text(size = 12),
-#         legend.position = "bottom",
-#         legend.title = element_blank(),
-#         legend.spacing = unit(0.001, 'cm'),
-#         legend.text = element_text(size = 10)
-#       )
-#   }
-#
-#   fcmconfr_plot
-#
-#
-
-
-
-  # ggplot() +
-  #   geom_boxplot(data = input_fcms_inferences_longer, aes(x = value, y = name), width = 0.5, fill = "white") +
-  #   geom_jitter(data = input_fcms_inferences_longer, aes(x = value, y = name), height = 0.1, alpha = 0.1) +
-  #   ggtitle("Title") +
-  #   scale_x_continuous(breaks = seq(domain_min, domain_max, by = 0.2), limits = c(domain_min, domain_max), expand = c(0, 0)) +
-  #   xlab("Inference Value") +
-  #   ylab("Concept (Node)") +
-  #   theme_classic() +
-  #   theme(
-  #     plot.margin = margin(t = 20, r = 40, b = 20, l = 20),
-  #     plot.title = element_text(face = "bold", size = 14, hjust = 0.5, margin = margin(b = 10)),
-  #     axis.title = element_text(size = 12),
-  #     axis.title.x = element_text(margin = margin(t = 10)),
-  #     axis.title.y = element_text(margin = margin(r = 10)),
-  #     axis.text = element_text(size = 12)
-  #   )
-
-
-
-  # # barplot_fig <- barplot(
-  # #   apply(x$inferences$input_fcms$inferences[,2:ncol(x$inferences$input_fcms$inferences)], 2, median)
-  # # )
-  # boxplot(
-  #   x$inferences$input_fcms$inferences[,2:ncol(x$inferences$input_fcms$inferences)],
-  #   ylim = c(domain_min, domain_max),
-  #   col = NULL,
-  #   las = 1,
-  #   horizontal = TRUE
-  # )
-  # points(y = factor(input_fcms_inferences_longer$name), x = input_fcms_inferences_longer$value)
-  # ggplot() +
-  #   geom_col(data = input_fcms_inferences_longer, aes(x = name, y = value))
-  #
-  # ggplot() +
-  #   geom_jitter(data = input_fcms_inferences_longer, aes(x = name, y = value)) +
-  #   geom_crossbar(data = bootstrapped_means, aes(x = node, y = lower_0.025, ymin = lower_0.025, ymax = upper_0.975), fill = "red", color = "red", size = 0.1)
-
-
-
-#' #' plot.fcmconfr
-#' #'
-#' #' @export
-#' plot.fcmconfr <- function(x, ...) {
-#'   if (x$fcm_class == "conventional") {
-#'     fcm_class_subtitle <- "Conventional FCM"
-#'   }
-#'
-#'   if (x$params$simulation_opts$squashing == "tanh" | x$params$simulation_opts$squashing == "trivalent") {
-#'     domain_min <- -1
-#'     domain_max <- 1
-#'   } else {
-#'     domain_min <- 0
-#'     domain_max <- 1
-#'   }
-#'
-#'   if (x$fcm_class == "conventional") {
-#'     input_fcms_inferences_longer <- tidyr::pivot_longer(x$inferences$input_fcms$inferences, cols = 2:ncol(x$inferences$input_fcms$inferences))
-#'     input_fcms_inferences_longer$analysis_source <- "input"
-#'     mc_inferences_longer <- tidyr::pivot_longer(x$inferences$monte_carlo_fcms$all_inferences, cols = 1:ncol(x$inferences$monte_carlo_fcms$all_inferences))
-#'     mc_inferences_longer$analysis_source <- "mc"
-#'     aggregate_inferences_longer <- tidyr::pivot_longer(x$inferences$aggregate_fcm$inferences, cols = 1:ncol(x$inferences$aggregate_fcm$inferences))
-#'     aggregate_inferences_longer$analysis_source <- "aggregate"
-#'
-#'     results <- rbind(input_fcms_inferences_longer[, -1], mc_inferences_longer)
-#'     results$analysis_source <- factor(results$analysis_source, levels = c("mc", "input"))
-#'
-#'     fcmconfr_plot <- ggplot() +
-#'       #geom_boxplot(data = input_fcms_inferences_longer, aes(x = value, y = name, color = analysis_source), position = position_nudge(y = 0.18), width = 0.1) +
-#'       # geom_boxplot(data = mc_inferences_longer, aes(x = value, y = name, color = analysis_source), position = position_nudge(y = -0.18), width = 0.4, fill = "lightgrey") +
-#'       geom_boxplot(data = mc_inferences_longer, aes(x = value, y = name, color = analysis_source), width = 0.4, fill = "lightgrey") +
-#'       # geom_point(data = aggregate_inferences_longer, aes(x = value, y = name, shape = analysis_source), position = position_nudge(y = -0.18), size = 2, fill = "darkgray") +
-#'       geom_point(data = aggregate_inferences_longer, aes(x = value, y = name, shape = analysis_source), size = 2, fill = "lightgrey") +
-#'       #geom_point(data = results, aes(x = value, y = name, alpha = analysis_source), position = position_jitterdodge(jitter.width = 0.3), stroke = NA) +
-#'       geom_point(data = input_fcms_inferences_longer, aes(x = value, y = name, alpha = analysis_source), position = position_jitterdodge(jitter.width = 0.3), stroke = NA) +
-#'       ggtitle("FCMconfR Inferences", subtitle = fcm_class_subtitle) +
-#'       # scale_x_continuous(breaks = seq(domain_min, domain_max, by = 0.2), limits = c(domain_min, domain_max), expand = c(0, 0)) +
-#'       #scale_fill_manual(values = c(input = "white", mc = "lightgrey"), labels = c(input = "Input", mc = "Monte Carlo")) +
-#'       scale_color_manual(values = c(input = "darkgrey", mc = "black"), labels = c(input = "Input", mc = "Monte Carlo")) +
-#'       scale_shape_manual(values = c("triangle"), labels = c("Aggregate")) +
-#'       scale_alpha_manual(values = c(input = 0.5, mc = 0.1)) +
-#'       guides(alpha = "none", color = guide_legend(order = 1), shape = guide_legend(order = 2)) +
-#'       xlab("Inference Value") +
-#'       ylab("Concept (Node)") +
-#'       theme_classic() +
-#'       theme(
-#'         plot.margin = margin(t = 20, r = 40, b = 20, l = 20),
-#'         plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
-#'         plot.subtitle = element_text(hjust = 0.5, margin = margin(b = 10)),
-#'         axis.title = element_text(size = 12),
-#'         axis.title.x = element_text(margin = margin(t = 10)),
-#'         axis.title.y = element_text(margin = margin(r = 10)),
-#'         axis.text = element_text(size = 12),
-#'         legend.position = "bottom",
-#'         legend.title = element_blank(),
-#'         legend.spacing = unit(0.001, 'cm'),
-#'         legend.text = element_text(size = 10)
-#'       )
-#'   }
-#'
-#'   fcmconfr_plot
-#'
-#' #'
-#' #'  if (x$fcm_class == "conventional") {
-#' input_fcms_inferences_longer <- tidyr::pivot_longer(x$inferences$input_fcms$inferences, cols = 2:ncol(x$inferences$input_fcms$inferences))
-#' input_fcms_inferences_longer$analysis_source <- "input"
-#' mc_inferences_longer <- tidyr::pivot_longer(x$inferences$monte_carlo_fcms$all_inferences, cols = 1:ncol(x$inferences$monte_carlo_fcms$all_inferences))
-#' mc_inferences_longer$analysis_source <- "mc"
-#' aggregate_inferences_longer <- tidyr::pivot_longer(x$inferences$aggregate_fcm$inferences, cols = 1:ncol(x$inferences$aggregate_fcm$inferences))
-#' aggregate_inferences_longer$analysis_source <- "aggregate"
-#' results <- rbind(input_fcms_inferences_longer[, -1], mc_inferences_longer)
-#' results$analysis_source <- factor(results$analysis_source, levels = c("mc", "input"))
-#' fcmconfr_plot <- ggplot() +
-#'   geom_boxplot(data = input_fcms_inferences_longer, aes(x = value, y = name, color = analysis_source), position = position_nudge(y = 0.18), width = 0.1) +
-#'   geom_boxplot(data = mc_inferences_longer, aes(x = value, y = name, color = analysis_source), position = position_nudge(y = -0.18), width = 0.4, fill = "lightgrey") +
-#'   geom_point(data = aggregate_inferences_longer, aes(x = value, y = name, shape = analysis_source), position = position_nudge(y = -0.18), size = 2, fill = "darkgray") +
-#'   geom_point(data = results, aes(x = value, y = name, alpha = analysis_source), position = position_jitterdodge(jitter.width = 0.3), stroke = NA) +
-#'   ggtitle("FCMconfR Inferences", subtitle = fcm_class_subtitle) +
-#'   scale_x_continuous(breaks = seq(domain_min, domain_max, by = 0.2), limits = c(domain_min, domain_max), expand = c(0, 0)) +
-#'   #scale_fill_manual(values = c(input = "white", mc = "lightgrey"), labels = c(input = "Input", mc = "Monte Carlo")) +
-#'   scale_color_manual(values = c(input = "darkgrey", mc = "black"), labels = c(input = "Input", mc = "Monte Carlo")) +
-#'   scale_shape_manual(values = c("triangle"), labels = c("Aggregate")) +
-#'   scale_alpha_manual(values = c(input = 0.5, mc = 0.1)) +
-#'   guides(alpha = "none", color = guide_legend(order = 1), shape = guide_legend(order = 2)) +
-#'   xlab("Inference Value") +
-#'   ylab("Concept (Node)") +
-#'   theme_classic() +
-#'   theme(
-#'     plot.margin = margin(t = 20, r = 40, b = 20, l = 20),
-#'     plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
-#'     plot.subtitle = element_text(hjust = 0.5, margin = margin(b = 10)),
-#'     axis.title = element_text(size = 12),
-#'     axis.title.x = element_text(margin = margin(t = 10)),
-#'     axis.title.y = element_text(margin = margin(r = 10)),
-#'     axis.text = element_text(size = 12),
-#'     legend.position = "bottom",
-#'     legend.title = element_blank(),
-#'     legend.spacing = unit(0.001, 'cm'),
-#'     legend.text = element_text(size = 10)
-#'   )
-#' }
-#' fcmconfr_plot
-#'
-#'   # ggplot() +
-#'   #   geom_boxplot(data = input_fcms_inferences_longer, aes(x = value, y = name), width = 0.5, fill = "white") +
-#'   #   geom_jitter(data = input_fcms_inferences_longer, aes(x = value, y = name), height = 0.1, alpha = 0.1) +
-#'   #   ggtitle("Title") +
-#'   #   scale_x_continuous(breaks = seq(domain_min, domain_max, by = 0.2), limits = c(domain_min, domain_max), expand = c(0, 0)) +
-#'   #   xlab("Inference Value") +
-#'   #   ylab("Concept (Node)") +
-#'   #   theme_classic() +
-#'   #   theme(
-#'   #     plot.margin = margin(t = 20, r = 40, b = 20, l = 20),
-#'   #     plot.title = element_text(face = "bold", size = 14, hjust = 0.5, margin = margin(b = 10)),
-#'   #     axis.title = element_text(size = 12),
-#'   #     axis.title.x = element_text(margin = margin(t = 10)),
-#'   #     axis.title.y = element_text(margin = margin(r = 10)),
-#'   #     axis.text = element_text(size = 12)
-#'   #   )
-#'
-#'
-#'
-#'   # # barplot_fig <- barplot(
-#'   # #   apply(x$inferences$input_fcms$inferences[,2:ncol(x$inferences$input_fcms$inferences)], 2, median)
-#'   # # )
-#'   # boxplot(
-#'   #   x$inferences$input_fcms$inferences[,2:ncol(x$inferences$input_fcms$inferences)],
-#'   #   ylim = c(domain_min, domain_max),
-#'   #   col = NULL,
-#'   #   las = 1,
-#'   #   horizontal = TRUE
-#'   # )
-#'   # points(y = factor(input_fcms_inferences_longer$name), x = input_fcms_inferences_longer$value)
-#'   # ggplot() +
-#'   #   geom_col(data = input_fcms_inferences_longer, aes(x = name, y = value))
-#'   #
-#'   # ggplot() +
-#'   #   geom_jitter(data = input_fcms_inferences_longer, aes(x = name, y = value)) +
-#'   #   geom_crossbar(data = bootstrapped_means, aes(x = node, y = lower_0.025, ymin = lower_0.025, ymax = upper_0.975), fill = "red", color = "red", size = 0.1)
-#' }

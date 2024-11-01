@@ -96,10 +96,16 @@ them when aggregating adj. matrices and sampling for monte carlo FCMs}
 \item{include_monte_carlo_FCM_simulations_in_output}{TRUE/FALSE Whether to include simulations of monte carlo FCMs. Switch to FALSE if concerned
 about the size of the output of fcmconfr (simulations are necessary and will run regardless)}
 }
+\value{
+A list of outputs generated from the input_fcms simulations,
+         aggregate_fcm analysis, and monte_carlo_fcms analysis. Bootstrap
+         estimates of inferences from monte carlo analysis are included, as
+         well as function inputs.
+}
 \description{
 This is the primary function of the fcmconfr package. This function performs
 up to three different analyses of a set of (or an individual) input FCM(s).
-Call \code{\link{fcmconfr_gui()}}. for assistance with inputs.
+Call \code{\link{fcmconfr_gui}}. for assistance with inputs.
 
 \enumerate{
    \item FCM Simulation: Simulate the (raw/unmodified) input FCMs to estimate
@@ -149,12 +155,12 @@ multiple types of FCMs in the same input set).
          function of the distribution appears triangular (Moore & Lodwick, 2003).
          These are defined by their lower and upper bounds as well as a mode
          value, and can be called within this package via the
-         \code{\link{rtriangular_dist()}} function or with other packages
+         \code{\link{rtriangular_dist}} function or with other packages
          such as EnvStats::rtri().
 }
 }
 \details{
-Call \code{\link{fcmconfr_gui()}}. for assistance with inputs.
+Call \code{\link{fcmconfr_gui}}. for assistance with inputs.
 }
 \examples{
 # Conventional FCMs
@@ -182,7 +188,9 @@ test_adj_matrix_4 <- data.frame(
   "C" = c(0, 0.5, 0, 0),
   "D" = c(0, 0, 0.5, 0)
 )
-ex_conventional_fcms <- list(test_adj_matrix_1, test_adj_matrix_2, test_adj_matrix_3, test_adj_matrix_4)
+ex_conventional_fcms <- list(
+  test_adj_matrix_1, test_adj_matrix_2, test_adj_matrix_3, test_adj_matrix_4
+)
 ex_conventional_fcmconfr <- fcmconfr(
   adj_matrices = ex_conventional_fcms,
   # Aggregation and Monte Carlo Sampling
@@ -223,7 +231,9 @@ upper_adj_matrix_1 <- data.frame(
   "A" = c(0, 0),
   "B" = c(0.75, 0)
 )
-adj_matrix_w_ivfns_1 <- make_adj_matrix_w_ivfns(lower_adj_matrix_1, upper_adj_matrix_1)
+adj_matrix_w_ivfns_1 <- make_adj_matrix_w_ivfns(
+  lower_adj_matrix_1, upper_adj_matrix_1
+)
 lower_adj_matrix_2 <- data.frame(
   "A" = c(0, 0),
   "B" = c(0.15, 0)
@@ -232,7 +242,9 @@ upper_adj_matrix_2 <- data.frame(
   "A" = c(0, 0),
   "B" = c(0.85, 0)
 )
-adj_matrix_w_ivfns_2 <- make_adj_matrix_w_ivfns(lower_adj_matrix_2, upper_adj_matrix_2)
+adj_matrix_w_ivfns_2 <- make_adj_matrix_w_ivfns(
+  lower_adj_matrix_2, upper_adj_matrix_2
+)
 ex_ivfn_fcms <- list(adj_matrix_w_ivfns_1, adj_matrix_w_ivfns_2)
 ex_ivfn_fcmconfr <- fcmconfr(
   adj_matrices = ex_ivfn_fcms,
@@ -278,7 +290,9 @@ upper_adj_matrix_1 <- data.frame(
   "A" = c(0, 0),
   "B" = c(0.75, 0)
 )
-adj_matrix_w_tfns_1 <- make_adj_matrix_w_tfns(lower_adj_matrix_1, mode_adj_matrix_1, upper_adj_matrix_1)
+adj_matrix_w_tfns_1 <- make_adj_matrix_w_tfns(
+  lower_adj_matrix_1, mode_adj_matrix_1, upper_adj_matrix_1
+)
 
 lower_adj_matrix_2 <- data.frame(
   "A" = c(0, 0),
@@ -292,7 +306,9 @@ upper_adj_matrix_2 <- data.frame(
   "A" = c(0, 0),
   "B" = c(0.85, 0)
 )
-adj_matrix_w_tfns_2 <- make_adj_matrix_w_tfns(lower_adj_matrix_2, mode_adj_matrix_2, upper_adj_matrix_2)
+adj_matrix_w_tfns_2 <- make_adj_matrix_w_tfns(
+  lower_adj_matrix_2, mode_adj_matrix_2, upper_adj_matrix_2
+)
 
 ex_tfn_fcms <- list(adj_matrix_w_tfns_1, adj_matrix_w_tfns_2)
 ex_tfn_fcmconfr <- fcmconfr(

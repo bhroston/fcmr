@@ -6,6 +6,14 @@
 \usage{
 fcmconfr_gui()
 }
+\value{
+On exit, this function outputs a copy-and-paste-able sample script
+to call \code{\link{fcmconfr}} with the selected inputs.
+}
 \description{
-A short description...
+This function opens a shiny application window designed to help users
+determine inputs for the \code{\link{fcmconfr}} function.
+}
+\examples{
+NULL
 }
