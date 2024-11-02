@@ -37,6 +37,9 @@ will use all available cores in the machine.}
 \item{show_progress}{TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 from the pbapply package as the underlying function.}
 }
+\value{
+A list of raw bootstrap draws and a dataframe of confidence intervals
+}
 \description{
 This gets the mean of the distribution of simulated values
 across a given iter. Also returns the bootstrapped mean of means of the
@@ -50,6 +53,57 @@ to estimate the confidence intervals for the mean value across simulations.
 The show_progress and parallel inputs change the functions called, but do NOT
 change the output! These are allowed to be toggled on/off to increase user
 control at runtime.
+}
+\examples{
+ex_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0, 0, 0),
+  "B" = c(0, 0, 0, 1),
+  "C" = c(0, 1, 0, 0),
+  "D" = c(0, 0, 1, 0)
+)
+ex_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0, 0, 0),
+  "B" = c(0.25, 0, 0, 0.25),
+  "C" = c(0, 0.25, 0, 0),
+  "D" = c(0, 0, 0.25, 0)
+)
+ex_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0, 0, 0),
+  "B" = c(0.75, 0, 0, 0.75),
+  "C" = c(0, 0.75, 0, 0),
+  "D" = c(0, 0, 0.75, 0)
+)
+ex_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0, 0, 0),
+  "B" = c(0.5, 0, 0, 0.5),
+  "C" = c(0, 0.5, 0, 0),
+  "D" = c(0, 0, 0.5, 0)
+)
+ex_fcms <- list(
+  ex_adj_matrix_1, ex_adj_matrix_2, ex_adj_matrix_3, ex_adj_matrix_4
+)
+
+mc_fcms <- build_monte_carlo_fcms_from_conventional_adj_matrices(
+  ex_fcms, N_samples = 100, include_zeroes = FALSE, show_progress = TRUE
+)
+
+mc_fcms_inferences <- infer_monte_carlo_fcm_set(
+  mc_adj_matrices = mc_fcms,
+  initial_state_vector <- c(1, 1, 1, 1),
+  clamping_vector <- c(1, 0, 0, 0),
+  activation = "kosko",
+  squashing = "sigmoid",
+  lambda = 1,
+  max_iter = 1000,
+  min_error = 1e-5,
+  parallel = FALSE,
+  show_progress = TRUE
+)
+
+mc_sims_inferences <- get_mc_simulations_inference_CIs_w_bootstrap(
+  mc_fcms_inferences$inference, "median", 0.95, parallel = FALSE
+)
+
 }
 \seealso{
 Other monte-carlo-model-generation-and-simulation: 

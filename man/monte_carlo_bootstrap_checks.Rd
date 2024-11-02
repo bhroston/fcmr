@@ -23,6 +23,9 @@ confidence intervals? (e.g. 0.95)}
 \item{bootstrap_draws_per_rep}{Number of samples to draw (with replacement) from
 the data per bootstrap_rep}
 }
+\value{
+NULL; Errors if checks fail
+}
 \description{
 Check inputs for monte carlo bootstrap analysis
 }

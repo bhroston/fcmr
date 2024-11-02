@@ -11,6 +11,9 @@
 
 \item{...}{additional inputs}
 }
+\value{
+A console printout of a TFN object
+}
 \description{
 This improves the readability of the output
 

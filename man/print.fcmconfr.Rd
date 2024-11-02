@@ -11,6 +11,9 @@
 
 \item{...}{additional inputs}
 }
+\value{
+A console printout of fcmconfr results
+}
 \description{
 This improves the readability of the fcmconfr output
 }

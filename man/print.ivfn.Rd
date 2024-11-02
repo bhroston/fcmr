@@ -11,6 +11,9 @@
 
 \item{...}{additional inputs}
 }
+\value{
+A console printout of an IVFN object
+}
 \description{
 This prints an ivfn object
 }

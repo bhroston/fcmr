@@ -285,7 +285,8 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
 #'
 #' @returns A list of raw bootstrap draws and a dataframe of confidence intervals
 #'
-#' @export man/examples/ex-get_mc_sims_inference_CIs_w_bootstrap.R
+#' @export
+#' @example man/examples/ex-get_mc_sims_inference_CIs_w_bootstrap.R
 get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inference_df = data.frame(),
                                                          inference_function = "mean",
                                                          confidence_interval = 0.95,

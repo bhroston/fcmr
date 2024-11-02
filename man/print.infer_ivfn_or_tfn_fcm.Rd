@@ -11,6 +11,9 @@
 
 \item{...}{additional inputs}
 }
+\value{
+A console printout of infer_ivfn_or_tfn_fcm results
+}
 \description{
 Print method for infer_ivfn_or_tfn_fcm objects
 }
