@@ -64,6 +64,8 @@ make_adj_matrix_w_ivfns <- function(lower = matrix(), upper = matrix()) {
     IDs <- colnames(lower)
   } else {
     IDs <- paste0("C", 1:nrow(lower))
+    colnames(lower) <- IDs
+    colnames(upper) <- IDs
   }
 
   adj_matrix_w_ivfns <- as.data.frame(matrix(data = list(0), nrow = size, ncol = size))
@@ -272,7 +274,7 @@ c.ivfn <- function(...) {
 make_adj_matrix_w_tfns <- function(lower = matrix(),
                                    mode = matrix(),
                                    upper = matrix()) {
-  if (!identical(dim(lower), dim(mode), dim(upper))) {
+  if (!(identical(dim(lower), dim(mode)) & identical(dim(mode), dim(upper)))) {
     stop("Failed Validation: Input adjacency matrices must be the same size")
   }
 
