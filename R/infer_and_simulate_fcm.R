@@ -79,10 +79,10 @@ infer_fcm <- function(adj_matrix = matrix(),
   check_simulation_inputs(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
 
   fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
-  if (!(fcm_class %in% c("conventional", "ivfn", "tfn"))) {
-    stop("Input adj_matrix must be an adjacency matrix with edges represented as
-         numeric values, ivfns, or tfns")
-  }
+  # if (!(fcm_class %in% c("conventional", "ivfn", "tfn"))) {
+  #   stop("Input adj_matrix must be an adjacency matrix with edges represented as
+  #        numeric values, ivfns, or tfns")
+  # }
 
   # browser()
 
@@ -153,7 +153,7 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
   fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
   if (!(fcm_class %in% c("conventional"))) {
     stop("Input adj_matrix must be an adjacency matrix with edges represented as
-         numeric values only")
+         discrete numeric values (Conventional) only")
   }
 
   # Get baseline simulation
@@ -248,9 +248,11 @@ infer_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
                                   max_iter = 100,
                                   min_error = 1e-5) {
   # Perform checks
+  # browser()
+
   checks <- check_simulation_inputs(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
   fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
-  if (!(fcm_class %in% c("conventional", "ivfn", "tfn"))) {
+  if (!(fcm_class %in% c("ivfn", "tfn"))) {
     stop("Input adj_matrix must be an adjacency matrix with edges represented as
          numeric values, ivfns, or tfns")
   }
@@ -384,11 +386,13 @@ equalize_baseline_and_scenario_outputs <- function(baseline_state_vectors,
   n_iters_baseline <- nrow(baseline_state_vectors)
   n_iters_scenario <- nrow(scenario_state_vectors)
 
+  # browser()
+
   if (n_iters_baseline == n_iters_scenario) {
     baseline_state_vectors <- baseline_state_vectors[, -1]
     scenario_state_vectors <- scenario_state_vectors[, -1]
   } else if (n_iters_baseline < n_iters_scenario) {
-    extended_baseline_state_vectors <- apply(scenario_state_vectors, 2, function(iter) c(iter, rep(iter[n_iters_baseline], n_iters_scenario - n_iters_baseline)))
+    extended_baseline_state_vectors <- apply(baseline_state_vectors, 2, function(iter) c(iter, rep(iter[n_iters_baseline], n_iters_scenario - n_iters_baseline)))
     baseline_state_vectors <- extended_baseline_state_vectors
     scenario_state_vectors <- scenario_state_vectors
   } else if (n_iters_scenario < n_iters_baseline) {
@@ -473,10 +477,10 @@ simulate_fcm <- function(adj_matrix = matrix(),
   check_simulation_inputs(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
 
   fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
-  if (!(fcm_class %in% c("conventional", "ivfn", "tfn"))) {
-    stop("Input adj_matrix must be an adjacency matrix with edges represented as
-         numeric values, ivfns, or tfns")
-  }
+  # if (!(fcm_class %in% c("conventional", "ivfn", "tfn"))) {
+  #   stop("Input adj_matrix must be an adjacency matrix with edges represented as
+  #        numeric values, ivfns, or tfns")
+  # }
 
   if (fcm_class == "conventional") {
     simulation <- simulate_conventional_fcm(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
@@ -537,6 +541,11 @@ simulate_conventional_fcm <- function(adj_matrix = matrix(),
                                       max_iter = 100,
                                       min_error = 1e-5) {
 
+  fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
+  if (!(fcm_class %in% c("conventional"))) {
+    stop("Input adj_matrix must be an adjacency matrix with edges represented as
+         discrete numeric values (Conventional) to call simulate_conventional_fcm")
+  }
   concept_names <- colnames(adj_matrix)
 
   state_vectors <- data.frame(matrix(data = numeric(), nrow = max_iter + 1, ncol = length(initial_state_vector)))
@@ -1116,11 +1125,7 @@ convert_fuzzy_set_elements_in_matrix_to_distributions <- function(fuzzy_set_matr
     fuzzy_set_matrix_w_distributions <- apply(
       fuzzy_set_matrix, c(1, 2),
       function(element) {
-        if (identical(methods::is(element[[1]]), "ivfn")) {
-          element <- list(stats::runif(N_samples, element[[1]]$lower, element[[1]]$upper))
-        } else {
-          element[[1]]
-        }
+        element <- list(stats::runif(N_samples, element[[1]]$lower, element[[1]]$upper))
       }
     )
   } else if (object_class == "tfn") {
@@ -1128,9 +1133,7 @@ convert_fuzzy_set_elements_in_matrix_to_distributions <- function(fuzzy_set_matr
       fuzzy_set_matrix, c(1, 2),
       function(element) {
         if (identical(methods::is(element[[1]]), "tfn")) {
-          element <- list(rtriangular_dist(N_samples, lower = element[[1]]$lower, mode = element[[1]]$mode, upper = element[[1]]$upper))
-        } else {
-          element[[1]]
+          list(rtriangular_dist(N_samples, lower = element[[1]]$lower, mode = element[[1]]$mode, upper = element[[1]]$upper))
         }
       }
     )
