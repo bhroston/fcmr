@@ -521,9 +521,16 @@ c.tfn <- function(...) {
 #' @export
 #' @example  man/examples/ex-rtriangular_dist.R
 rtriangular_dist <- function(n = integer(), lower = double(), mode = double(), upper = double()) {
-  if (lower > upper) {
-    stop("lower input must be less than upper input")
+  # Confirm n is an integer
+  if (!is.numeric(n)) {
+    stop("Input Error: n must be an integer")
   }
+  if (is.numeric(n) & (n %% 2 != 0)) {
+    stop("Input Error: n must be an integer")
+  }
+
+  # Confirm lower <= mode <= upper
+  tfn(lower, mode, upper)
 
   if (identical(mode, double())) {
     mode <- (lower + upper)/2
@@ -544,8 +551,6 @@ rtriangular_dist <- function(n = integer(), lower = double(), mode = double(), u
       inv_cdf[i] <- lower + sqrt((mode - lower)*(upper - lower)*x)
     } else if (x > midpoint_domain) {
       inv_cdf[i] <- upper - sqrt((upper - lower)*(upper - mode)*(1 - x))
-    } else {
-      stop("Unknown input")
     }
   }
   values_distribution <- inv_cdf
