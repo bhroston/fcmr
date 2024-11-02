@@ -332,14 +332,20 @@ get_edgelist_from_adj_matrix <- function(adj_matrix = matrix()) {
   if (rows != cols) {
     stop("Failed Input Validation: Input adjacency matrix must be a square (n x n) matrix")
   }
-  data_types_in_adj_matrix <- unique(do.call(list, (apply(adj_matrix, c(1, 2), function(x) list(methods::is(x[[1]]))))))
-  if (length(data_types_in_adj_matrix) > 1) {
-    stop("Failed Input Validation: Input adjacency matrix must contain objects of the same type. Either numerics, ivfns, or tfns.")
-  }
+
+  # Confirm adj_matrix has either Conventional, IVFN, or TFN data types
+  get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
+
+  # #data_types_in_adj_matrix <- unique(do.call(c, (apply(adj_matrix, c(1, 2), function(x) list(methods::is(x[[1]]))))))
+  # all_data_are_numeric <- all(apply(adj_matrix, c(1, 2), is.numeric))
+  # if (!all_data_are_numeric) {
+  #   stop("Failed Input Validation: Input adjacency matrix must contain objects of the same type. Either numerics, ivfns, or tfns.")
+  # }
 
   empty_colnames <- identical(colnames(adj_matrix), NULL)
   if (empty_colnames) {
     IDs <- paste0("C", 1:nrow(adj_matrix))
+    colnames(adj_matrix) <- IDs
   } else if (!empty_colnames) {
     IDs <- colnames(adj_matrix)
   }
