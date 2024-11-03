@@ -4,5 +4,5 @@
 <img src="man/figures/logo.png" align="right" height="138"/>
 
 <!-- badges: start -->
-[![Codecov test coverage](https://codecov.io/gh/bhroston/fcmconfr/branch/main/graph/badge.svg)](https://app.codecov.io/gh/bhroston/fcmconfr?branch=main)
+[![codecov](https://codecov.io/gh/bhroston/fcmconfr/graph/badge.svg?token=D83LF4TC8D)](https://codecov.io/gh/bhroston/fcmconfr)
 <!-- badges: end -->
