@@ -2,7 +2,7 @@
 % Please edit documentation in R/monte_carlo_model_generation_and_simulation.R
 \name{build_monte_carlo_fcms}
 \alias{build_monte_carlo_fcms}
-\title{build_monte_carlo_fcms}
+\title{Build Monte Carlo FCMs}
 \usage{
 build_monte_carlo_fcms(
   adj_matrix_list = list(matrix()),
@@ -23,14 +23,186 @@ edge weights or ignore them in aggregation}
 \item{show_progress}{TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 from the pbapply package as the underlying function.}
 }
+\value{
+A list of empirical (Conventional) FCM adj. matrices generated via monte carlo methods
+}
 \description{
 This function generates N fcm adjacency matrices whose edge weights are sampled
-from edge values (that may be numeric, grey_numbers, or triangular_numbers) and
+from edge values (that may be numeric, IVFNs, or TFNs) and
 stores them as a list of adjacency matrices.
+
+The show_progress and parallel inputs change the functions called, but do NOT
+change the output! These are allowed to be toggled on/off to increase user
+control at runtime.
 }
 \details{
-If an edge is represented by multiple grey/triangular_numbers, then those distributions
-are averaged together to create the aggregate distribution to sample from.
+For Conventional FCMs, edge weights are sampled the edge weight explicitly
+defined in the input FCMs.
 
-Use vignette("fcmconfr-class") for more information.
+For IVFN and TFN FCMs, edge weights are sampled from the combined
+distributions representative of the IVFN/TFN edge weights. For example,
+if an edge is given the following weights across two maps: IVFN(0.4, 0.8) and
+IVFN[0.5, 0.7], the samples will be drawn from the combined distribution:
+sample(N, c(runif(N, 0.4, 0.8), runif(N, 0.5, 0.7)), replace = TRUE).
 }
+\examples{
+# Conventional FCMs
+ex_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0, 0, 0),
+  "B" = c(0, 0, 0, 1),
+  "C" = c(0, 1, 0, 0),
+  "D" = c(0, 0, 1, 0)
+)
+ex_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0, 0, 0),
+  "B" = c(0.25, 0, 0, 0.25),
+  "C" = c(0, 0.25, 0, 0),
+  "D" = c(0, 0, 0.25, 0)
+)
+ex_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0, 0, 0),
+  "B" = c(0.75, 0, 0, 0.75),
+  "C" = c(0, 0.75, 0, 0),
+  "D" = c(0, 0, 0.75, 0)
+)
+ex_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0, 0, 0),
+  "B" = c(0.5, 0, 0, 0.5),
+  "C" = c(0, 0.5, 0, 0),
+  "D" = c(0, 0, 0.5, 0)
+)
+ex_fcms <- list(
+  ex_adj_matrix_1, ex_adj_matrix_2, ex_adj_matrix_3, ex_adj_matrix_4
+)
+
+mc_conventional_fcms <- build_monte_carlo_fcms(
+  ex_fcms, N_samples = 1000, include_zeroes = FALSE, show_progress = TRUE
+)
+
+
+
+# For Interval-Valued Fuzzy Numbers (IVFNs)
+lower_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+upper_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+adj_matrix_1 <- make_adj_matrix_w_ivfns(lower_adj_matrix_1, upper_adj_matrix_1)
+lower_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+upper_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(1, 0)
+)
+adj_matrix_2 <- make_adj_matrix_w_ivfns(lower_adj_matrix_2, upper_adj_matrix_2)
+lower_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.2, 0)
+)
+upper_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+adj_matrix_3 <- make_adj_matrix_w_ivfns(lower_adj_matrix_3, upper_adj_matrix_3)
+lower_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.0, 0)
+)
+upper_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+adj_matrix_4 <- make_adj_matrix_w_ivfns(lower_adj_matrix_4, upper_adj_matrix_4)
+fcms_w_ivfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
+
+mc_ivfn_fcms <- build_monte_carlo_fcms(
+  fcms_w_ivfns, N_samples = 1000, include_zeroes = FALSE
+)
+
+
+# For Triangular Fuzzy Numbers (TFNs)
+lower_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+mode_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+upper_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+adj_matrix_1 <- make_adj_matrix_w_tfns(
+  lower_adj_matrix_1, mode_adj_matrix_1, upper_adj_matrix_1
+)
+lower_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+mode_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.7, 0)
+)
+upper_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(1, 0)
+)
+adj_matrix_2 <- make_adj_matrix_w_tfns(
+  lower_adj_matrix_2, mode_adj_matrix_2, upper_adj_matrix_2
+)
+lower_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.2, 0)
+)
+mode_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+upper_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+adj_matrix_3 <- make_adj_matrix_w_tfns(
+  lower_adj_matrix_3, mode_adj_matrix_3, upper_adj_matrix_3
+)
+lower_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.0, 0)
+)
+mode_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0, 0)
+)
+upper_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+adj_matrix_4 <- make_adj_matrix_w_tfns(
+  lower_adj_matrix_4, mode_adj_matrix_4, upper_adj_matrix_4
+)
+
+fcms_w_tfns <- list(
+  adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4
+)
+
+mc_tfn_fcms <- build_monte_carlo_fcms(
+  fcms_w_tfns, N_samples = 1000, include_zeroes = FALSE
+)
+
+
+}
+\seealso{
+Other monte-carlo-model-generation-and-simulation: 
+\code{\link{build_monte_carlo_fcms_from_conventional_adj_matrices}()},
+\code{\link{build_monte_carlo_fcms_from_fuzzy_set_adj_matrices}()},
+\code{\link{get_mc_simulations_inference_CIs_w_bootstrap}()},
+\code{\link{infer_monte_carlo_fcm_set}()},
+\code{\link{monte_carlo_bootstrap_checks}()}
+}
+\concept{monte-carlo-model-generation-and-simulation}

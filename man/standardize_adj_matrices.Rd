@@ -42,7 +42,9 @@ adj_matrix_4 <- data.frame(
   "E" = c(0, 0, 0, 0),
   "F" = c(1, 0, 1, 0)
 )
-adj_matrices_w_different_concepts <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
+adj_matrices_w_different_concepts <- list(
+  adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4
+)
 standardize_adj_matrices(adj_matrices_w_different_concepts)
 
 }

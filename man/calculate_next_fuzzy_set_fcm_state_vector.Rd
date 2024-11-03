@@ -49,3 +49,6 @@ rescale: Like modified-kosko, but assigns nodes with no value with a
 value of 0.5 to reduce the influence that a lack of initial state information
 can have on the simulation output (rescale, 2011 - https://doi.org/10.1016/j.asoc.2009.12.010)=
 }
+\examples{
+NULL
+}

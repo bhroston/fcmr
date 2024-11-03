@@ -106,6 +106,9 @@ fcms_w_ivfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
 # calculations even if include_zeroes = FALSE
 aggregate_fcms(fcms_w_ivfns, "mean", include_zeroes = FALSE)
 }
+\references{
+\insertRef{aminpourWisdomStakeholderCrowds2020}{fcmconfr}
+}
 \seealso{
 Other aggregate_fcms: 
 \code{\link{aggregate_conventional_fcms}()},

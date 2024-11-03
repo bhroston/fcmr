@@ -21,13 +21,18 @@
 
 
 test_that("check_if_local_machine_has_access_to_parallel_processing_functionalities works", {
-  NULL
+  expect_no_error(check_if_local_machine_has_access_to_parallel_processing_functionalities(use_parallel = TRUE, use_show_progress = TRUE))
+  expect_no_error(check_if_local_machine_has_access_to_parallel_processing_functionalities(use_parallel = TRUE, use_show_progress = FALSE))
+  expect_no_error(check_if_local_machine_has_access_to_parallel_processing_functionalities(use_parallel = FALSE, use_show_progress = FALSE))
+  expect_no_error(check_if_local_machine_has_access_to_parallel_processing_functionalities(use_parallel = FALSE, use_show_progress = TRUE))
 })
 
 
-
 test_that("check_if_local_machine_has_access_to_show_progress_functionalities works", {
-  NULL
+  expect_no_error(check_if_local_machine_has_access_to_show_progress_functionalities(use_parallel = TRUE, use_show_progress = TRUE))
+  expect_no_error(check_if_local_machine_has_access_to_show_progress_functionalities(use_parallel = TRUE, use_show_progress = FALSE))
+  expect_no_error(check_if_local_machine_has_access_to_show_progress_functionalities(use_parallel = FALSE, use_show_progress = FALSE))
+  expect_no_error(check_if_local_machine_has_access_to_show_progress_functionalities(use_parallel = FALSE, use_show_progress = TRUE))
 })
 
 
@@ -166,6 +171,34 @@ test_that("get_adj_matrices_input_type works", {
   input_type <- get_adj_matrices_input_type(fcms_w_tfns)
   expect_true(input_type$adj_matrices_input_is_list)
   expect_identical(input_type$object_types_in_list, "tfn")
+
+
+  df_adj_matrix <- data.frame(
+    "A" = c(0, 1),
+    "B" = c(1, 0)
+  )
+  dt_adj_matrix <- data.table::data.table(
+    "A" = c(0, 1),
+    "B" = c(1, 0)
+  )
+  adj_matrices <- list(df_adj_matrix, dt_adj_matrix)
+  expect_error(get_adj_matrices_input_type(adj_matrices))
+
+  expect_identical(get_adj_matrices_input_type(dt_adj_matrix)$object_types_in_list, c("conventional", "data.table"))
+
+  tib_adj_matrix <- tibble::tibble(
+    "A" = c(0, 1),
+    "B" = c(0, 1)
+  )
+  expect_identical(get_adj_matrices_input_type(tib_adj_matrix)$object_types_in_list, c("conventional", "tibble"))
+
+  expect_error(get_adj_matrices_input_type(list("A", "B")))
+
+  df_adj_matrix <- data.frame(
+    "A" = c(0, 1),
+    "B" = c("A", 0)
+  )
+  expect_error(get_adj_matrices_input_type(df_adj_matrix))
 })
 
 
@@ -218,6 +251,16 @@ test_that("get_adj_matrix_from_edgelist works", {
   # test_adj_matrix <- get_adj_matrix_from_edgelist(edgelist)
   # expect_equal(igraph_adj_matrix, test_adj_matrix)
   expect_no_error(get_adj_matrix_from_edgelist(edgelist))
+
+  expect_error(get_adj_matrix_from_edgelist(edgelist, source_colname = "wrong_sourcename"))
+  expect_error(get_adj_matrix_from_edgelist(edgelist, node_order = c("A", "B", "C")))
+
+  edgelist <- data.frame(
+    "source" = c("A", "B", "C"),
+    "target" = c("B", "C", "A"),
+    "weight" = c(1, 1, 1)
+  )
+  expect_identical(colnames(get_adj_matrix_from_edgelist(edgelist, node_order = c("C", "B", "A"))), c("C", "B", "A"))
 })
 
 
@@ -238,6 +281,25 @@ test_that("get_edgelist_from_adj_matrix works", {
   )
 
   expect_identical(get_edgelist_from_adj_matrix(test_adj_matrix), goal_edgelist)
+
+  df_adj_matrix <- data.frame(
+    "A" = c(0, 1, 0),
+    "B" = c(1, 0, 0)
+  )
+  expect_error(get_edgelist_from_adj_matrix(df_adj_matrix))
+
+  df_adj_matrix <- data.frame(
+    "A" = c(0, 1),
+    "B" = c(1, "a")
+  )
+  expect_error(get_edgelist_from_adj_matrix(df_adj_matrix))
+
+  df_adj_matrix <- data.frame(
+    c(0, 1),
+    c(1, 0)
+  )
+  colnames(df_adj_matrix) <- NULL
+  expect_identical(get_edgelist_from_adj_matrix(df_adj_matrix)$source, c("C2", "C1"))
 })
 
 
@@ -283,8 +345,22 @@ test_that("standardize_adj_matrices works", {
   )
   test_fcms <- list(test_adj_matrix_1, test_adj_matrix_2, test_adj_matrix_3, test_adj_matrix_4)
   standardized_adj_matrices <- standardize_adj_matrices(test_fcms)
-
   expect_equal(unique(lapply(standardized_adj_matrices, colnames)), list(c("A", "B", "C", "D", "E", "F")))
+
+
+  test_adj_matrix_5 <- data.frame(
+    "A" = c(0, 1, 0),
+    "B" = c(1, 0, 0)
+  )
+  test_fcms <- list(test_adj_matrix_1, test_adj_matrix_2, test_adj_matrix_3, test_adj_matrix_4, test_adj_matrix_5)
+  expect_error(standardize_adj_matrices(test_fcms))
+
+  test_adj_matrix_6 <- data.frame(
+    "A" = c(0, 1),
+    "B" = c(1, 1)
+  )
+  test_fcms <- list(test_adj_matrix_1, test_adj_matrix_6)
+  expect_equal(length(unique(unlist(lapply(standardize_adj_matrices(test_fcms), dim)))), 1)
 
   expected_adj_matrix_4 <- data.frame(
     "A" = c(0, 0, 0, 0, 0.3, 0),

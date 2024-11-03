@@ -11,8 +11,14 @@
 
 \item{...}{additional inputs}
 }
+\value{
+A console printout of an IVFN object
+}
 \description{
 This prints an ivfn object
+}
+\examples{
+print(ivfn(-1, 1))
 }
 \seealso{
 Other interval-valued-fuzzy-numbers: 

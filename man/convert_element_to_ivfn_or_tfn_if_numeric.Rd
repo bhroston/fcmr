@@ -52,3 +52,7 @@ This checks whether the input element is an ordinary number or a triangular numb
 If it is an ivfn or tfn, it returns the input, but if it is a numeric type
 object (ordinary number), it will convert that number into an ivfn or tfn
 }
+\examples{
+convert_element_to_ivfn_or_tfn_if_numeric(0.6, "ivfn")
+convert_element_to_ivfn_or_tfn_if_numeric(0.7, "tfn")
+}

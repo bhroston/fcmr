@@ -11,6 +11,12 @@
 
 \item{...}{additional inputs}
 }
+\value{
+A console printout of infer_conventional_fcm results
+}
 \description{
 Print method for infer_conventional_fcm objects
+}
+\examples{
+NULL
 }

@@ -9,6 +9,9 @@
 \arguments{
 \item{...}{a set of ivfn objects}
 }
+\value{
+A list of ivfn objects
+}
 \description{
 This forces the output of c() to the equivalent of list() only for inputs of
 type ivfn

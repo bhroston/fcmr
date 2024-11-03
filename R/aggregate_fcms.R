@@ -38,8 +38,12 @@
 #' calculations. (i.e. if edges not included in a map should count as a zero-weighted
 #' edge or not at all)
 #'
+#' @references \insertRef{aminpourWisdomStakeholderCrowds2020}{fcmconfr}
+#'
 #' @returns An aggregate adj. matrix (of class 'aggregate') with edges represented
 #' as the same data types as the inputs (i.e. Numerics for conventional, IVFNs, or TFNs)
+#'
+#' @importFrom Rdpack reprompt
 #'
 #' @export
 #' @example  man/examples/ex-aggregate_fcms.R
@@ -330,7 +334,12 @@ aggregate_fcms_w_tfns <- function(adj_matrices = list(matrix()),
 #'
 #' @param x an aggregate object
 #' @param ... additional inputs
+#'
+#' @returns A console printout of aggregate_fcm output
+#'
 #' @export
+#' @examples
+#' NULL
 print.aggregate <- function(x, ...) {
   print(x$adj_matrix)
   cat(paste0("\nAggregate (", x$params$aggregation_fun, ") of ", length(x$params$input_adj_matrices), " adj. matrices"))
