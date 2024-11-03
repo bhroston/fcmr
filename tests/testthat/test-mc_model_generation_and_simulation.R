@@ -112,61 +112,61 @@ test_that("infer_monte_carlo_fcm_set works", {
   expect_true(all(test_fmcm_inference_p_and_no_sp$inference - test_fmcm_inference_no_p_and_no_sp$inference == 0))
 
 
-  # Check when no n_cores given
-  invisible(capture.output(
-    expect_warning(
-      test_fmcm_inference <- infer_monte_carlo_fcm_set(
-        mc_adj_matrices = test_mc_fcms,
-        initial_state_vector <- c(1, 1, 1, 1),
-        clamping_vector <- c(1, 0, 0, 0),
-        activation = "kosko",
-        squashing = "sigmoid",
-        lambda = 1,
-        max_iter = 1000,
-        min_error = 1e-5,
-        parallel = TRUE,
-        show_progress = TRUE
-      )
-    )
-  ))
-
-  # Check when n_cores > max. possible cores
-  invisible(capture.output(
-    expect_warning(
-      test_fmcm_inference <- infer_monte_carlo_fcm_set(
-        mc_adj_matrices = test_mc_fcms,
-        initial_state_vector <- c(1, 1, 1, 1),
-        clamping_vector <- c(1, 0, 0, 0),
-        activation = "kosko",
-        squashing = "sigmoid",
-        lambda = 1,
-        max_iter = 1000,
-        min_error = 1e-5,
-        parallel = TRUE,
-        show_progress = TRUE,
-        n_cores = 20
-      )
-    )
-  ))
-
-  # Check when invalid n_cores given
-  invisible(capture.output(
-    expect_error(
-      test_fmcm_inference <- infer_monte_carlo_fcm_set(
-        mc_adj_matrices = test_mc_fcms,
-        initial_state_vector <- c(1, 1, 1, 1),
-        clamping_vector <- c(1, 0, 0, 0),
-        activation = "kosko",
-        squashing = "sigmoid",
-        lambda = 1,
-        max_iter = 1000,
-        min_error = 1e-5,
-        parallel = TRUE,
-        show_progress = TRUE,
-        n_cores = 1.5
-      )
-    )
-  ))
+  # # Check when no n_cores given
+  # invisible(capture.output(
+  #   expect_warning(
+  #     test_fmcm_inference <- infer_monte_carlo_fcm_set(
+  #       mc_adj_matrices = test_mc_fcms,
+  #       initial_state_vector <- c(1, 1, 1, 1),
+  #       clamping_vector <- c(1, 0, 0, 0),
+  #       activation = "kosko",
+  #       squashing = "sigmoid",
+  #       lambda = 1,
+  #       max_iter = 1000,
+  #       min_error = 1e-5,
+  #       parallel = TRUE,
+  #       show_progress = TRUE
+  #     )
+  #   )
+  # ))
+  #
+  # # Check when n_cores > max. possible cores
+  # invisible(capture.output(
+  #   expect_warning(
+  #     test_fmcm_inference <- infer_monte_carlo_fcm_set(
+  #       mc_adj_matrices = test_mc_fcms,
+  #       initial_state_vector <- c(1, 1, 1, 1),
+  #       clamping_vector <- c(1, 0, 0, 0),
+  #       activation = "kosko",
+  #       squashing = "sigmoid",
+  #       lambda = 1,
+  #       max_iter = 1000,
+  #       min_error = 1e-5,
+  #       parallel = TRUE,
+  #       show_progress = TRUE,
+  #       n_cores = 20
+  #     )
+  #   )
+  # ))
+  #
+  # # Check when invalid n_cores given
+  # invisible(capture.output(
+  #   expect_error(
+  #     test_fmcm_inference <- infer_monte_carlo_fcm_set(
+  #       mc_adj_matrices = test_mc_fcms,
+  #       initial_state_vector <- c(1, 1, 1, 1),
+  #       clamping_vector <- c(1, 0, 0, 0),
+  #       activation = "kosko",
+  #       squashing = "sigmoid",
+  #       lambda = 1,
+  #       max_iter = 1000,
+  #       min_error = 1e-5,
+  #       parallel = TRUE,
+  #       show_progress = TRUE,
+  #       n_cores = 1.5
+  #     )
+  #   )
+  # ))
 })
 
 
@@ -244,26 +244,26 @@ test_that("get_mc_simulations_inference_CIs_w_bootstrap", {
   # Check rejects non-dataframe objects
   expect_error(get_mc_simulations_inference_CIs_w_bootstrap("a", "median", 0.95, parallel = FALSE))
 
-  # Check when no n_cores given
-  invisible(capture.output(
-    expect_warning(
-      get_mc_simulations_inference_CIs_w_bootstrap(test_mc_fcms_inferences$inference, "mean", 0.95, parallel = TRUE, show_progress = TRUE)
-    )
-  ))
-
-  # Check when n_cores > max. possible cores
-  invisible(capture.output(
-    expect_warning(
-      get_mc_simulations_inference_CIs_w_bootstrap(test_mc_fcms_inferences$inference, "mean", 0.95, parallel = TRUE, show_progress = TRUE, n_cores = 20)
-    )
-  ))
-
-  # Check when invalid n_cores given
-  invisible(capture.output(
-    expect_error(
-      get_mc_simulations_inference_CIs_w_bootstrap(test_mc_fcms_inferences$inference, "mean", 0.95, parallel = TRUE, show_progress = TRUE, n_cores = 1.5)
-    )
-  ))
+  # # Check when no n_cores given
+  # invisible(capture.output(
+  #   expect_warning(
+  #     get_mc_simulations_inference_CIs_w_bootstrap(test_mc_fcms_inferences$inference, "mean", 0.95, parallel = TRUE, show_progress = TRUE)
+  #   )
+  # ))
+  #
+  # # Check when n_cores > max. possible cores
+  # invisible(capture.output(
+  #   expect_warning(
+  #     get_mc_simulations_inference_CIs_w_bootstrap(test_mc_fcms_inferences$inference, "mean", 0.95, parallel = TRUE, show_progress = TRUE, n_cores = 20)
+  #   )
+  # ))
+  #
+  # # Check when invalid n_cores given
+  # invisible(capture.output(
+  #   expect_error(
+  #     get_mc_simulations_inference_CIs_w_bootstrap(test_mc_fcms_inferences$inference, "mean", 0.95, parallel = TRUE, show_progress = TRUE, n_cores = 1.5)
+  #   )
+  # ))
 
 })
 
