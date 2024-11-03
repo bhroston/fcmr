@@ -12,3 +12,5 @@
 _\.new\.png$
 ^codecov\.yml$
 ^\.covrignore$
+^\.ccache$
+^tic\.R$
