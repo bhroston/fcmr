@@ -11,7 +11,7 @@ fcmconfr(
   initial_state_vector = c(),
   clamping_vector = c(),
   activation = c("kosko", "modified-kosko", "rescale"),
-  squashing = c("sigmoid", "tanh"),
+  squashing = c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"),
   lambda = 1,
   max_iter = 100,
   min_error = 1e-05,

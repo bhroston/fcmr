@@ -129,7 +129,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
                      initial_state_vector = c(),
                      clamping_vector = c(),
                      activation = c("kosko", "modified-kosko", "rescale"),
-                     squashing = c("sigmoid", "tanh"),
+                     squashing = c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"),
                      lambda = 1,
                      max_iter = 100,
                      min_error = 1e-5,
@@ -228,7 +228,8 @@ fcmconfr <- function(adj_matrices = list(matrix()),
 
   if (!perform_monte_carlo_analysis & perform_monte_carlo_inference_bootstrap_analysis) {
     warning("  Cannot estimate CIs of monte carlo inferences if monte carlo analysis is not being performed.
-    Skipping CI bound estimation.")
+    Skipping CI bound estimation. Additionally, cannot estimate inferences using monte carlo methods if
+    analysing an individual, conventional FCM.")
     perform_monte_carlo_inference_bootstrap_analysis <- FALSE
   }
 
