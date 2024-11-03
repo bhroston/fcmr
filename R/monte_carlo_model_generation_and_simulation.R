@@ -81,15 +81,27 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
   parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
 
-  if (parallel & show_progress) {
-    print("Initializing cluster", quote = FALSE)
+  # browser()
+
+  if (parallel) {
     max_possible_cores <- parallel::detectCores()
     if (identical(n_cores, integer())) {
+      warning(paste0("Input n_cores not defined by user. Assuming n_cores is the maximum available on machine: n_cores = ", max_possible_cores))
       n_cores <- max_possible_cores
     }
-    if (n_cores > max_possible_cores) {
-      warning(paste0(" Input n_cores is greater than the available cores on this machine.\n Reducing to ", n_cores))
+    if (!is.numeric(n_cores) | (n_cores %% 2 != 0)) {
+      stop("Input Validation Error: n_cores must be an integer.")
     }
+    if (n_cores > max_possible_cores) {
+      warning(paste0(" Input n_cores is greater than the available cores on this machine.\n Reducing to ", max_possible_cores))
+    }
+  }
+  if (!parallel & !identical(n_cores, integer())) {
+    warning(paste0(" Input n_cores is ignored since parallel = FALSE" ))
+  }
+
+  if (parallel & show_progress) {
+    print("Initializing cluster", quote = FALSE)
     cl <- parallel::makeCluster(n_cores)
 
     # Have to store variables in new env that can be accessed by parLapply. There
@@ -134,13 +146,6 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
 
   } else if (parallel & !show_progress) {
     print("Initializing cluster", quote = FALSE)
-    max_possible_cores <- parallel::detectCores()
-    if (identical(n_cores, integer())) {
-      n_cores <- max_possible_cores
-    }
-    if (n_cores > max_possible_cores) {
-      warning(paste0(" Input n_cores is greater than the available cores on this machine.\n Reducing to ", n_cores))
-    }
     cl <- parallel::makeCluster(n_cores)
 
     # Have to store variables in new env that can be accessed by parLapply. There
@@ -251,6 +256,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
 }
 
 
+
 #' Calculate Inferences (w/ Confidence Intervals via Bootstrap) of MC FCM Simulations
 #'
 #' @family monte-carlo-model-generation-and-simulation
@@ -306,18 +312,36 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
          (inference)")
   }
 
+  # browser()
+  # Check function inputs
+  monte_carlo_bootstrap_checks(inference_function, confidence_interval, bootstrap_reps, bootstrap_draws_per_rep)
+
   # Confirm necessary packages are available. If not, warn user and change run options
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
   parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
 
   # browser()
 
+  if (parallel) {
+    max_possible_cores <- parallel::detectCores()
+    if (identical(n_cores, integer())) {
+      warning(paste0("Input n_cores not defined by user. Assuming n_cores is the maximum available on machine: n_cores = ", max_possible_cores))
+      n_cores <- max_possible_cores
+    }
+    if (!is.numeric(n_cores) | (n_cores %% 2 != 0)) {
+      stop("Input Validation Error: n_cores must be an integer.")
+    }
+    if (n_cores > max_possible_cores) {
+      warning(paste0(" Input n_cores is greater than the available cores on this machine.\n Reducing to ", max_possible_cores))
+    }
+  }
+  if (!parallel & !identical(n_cores, integer())) {
+    warning(paste0(" Input n_cores is ignored since parallel = FALSE" ))
+  }
+
   if (parallel & show_progress) {
     print("Performing bootstrap simulations", quote = FALSE)
     print("Initializing cluster", quote = FALSE)
-    if (identical(n_cores, integer())) {
-      n_cores <- parallel::detectCores()
-    }
     cl <- parallel::makeCluster(n_cores)
     # Have to store variables in new env that can be accessed by parLapply. There
     # is surely a better way to do this, but this way works
@@ -363,9 +387,6 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
   } else if (parallel & !show_progress) {
     print("Performing bootstrap simulations", quote = FALSE)
     print("Initializing cluster", quote = FALSE)
-    if (identical(n_cores, integer())) {
-      n_cores <- parallel::detectCores()
-    }
     cl <- parallel::makeCluster(n_cores)
     # Have to store variables in new env that can be accessed by parLapply. There
     # is surely a better way to do this, but this way works
@@ -692,21 +713,15 @@ build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_mat
     column_samples <- pbapply::pbapply(
       flattened_fuzzy_set_adj_matrix_list_w_distributions, 2,
       function(column_vec) {
-        #browser()
+        # browser()
         # sample_list_of_vectors_ignoring_NAs
         na_omit_column_vec <- stats::na.omit(do.call(c, column_vec))
         if (length(na_omit_column_vec) != 0) {
-          column_vec_with_numerics_replicated <- lapply(
-            column_vec,
-            function(value) {
-              if (is.numeric(value) & length(value) == 1) {
-                rep(value, N_samples)
-              } else {
-                value
-              }
-            })
-        na_omit_column_vec <- stats::na.omit(do.call(c, column_vec_with_numerics_replicated))
-        sample(na_omit_column_vec, N_samples, replace = TRUE)
+          column_vecs_w_NAs <- lapply(
+            column_vec, function(value) value
+          )
+          column_vecs_w_NAs <- stats::na.omit(do.call(c, column_vecs_w_NAs))
+        sample(column_vecs_w_NAs, N_samples, replace = TRUE)
       } else {
         rep(0, N_samples)
       }
@@ -718,17 +733,25 @@ build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_mat
       # sample_list_of_vectors_ignoring_NAs
       na_omit_column_vec <- stats::na.omit(do.call(c, column_vec))
       if (length(na_omit_column_vec) != 0) {
-        column_vec_with_numerics_replicated <- lapply(
-          column_vec,
-          function(value) {
-            if (is.numeric(value) & length(value) == 1) {
-              rep(value, N_samples)
-            } else {
-              value
-            }
-          })
-        na_omit_column_vec <- stats::na.omit(do.call(c, column_vec_with_numerics_replicated))
-        sample(na_omit_column_vec, N_samples, replace = TRUE)
+        na_omit_column_vec <- stats::na.omit(do.call(c, column_vec))
+        if (length(na_omit_column_vec) != 0) {
+          column_vecs_w_NAs <- lapply(
+            column_vec, function(value) value
+          )
+          column_vecs_w_NAs <- stats::na.omit(do.call(c, column_vecs_w_NAs))
+          sample(column_vecs_w_NAs, N_samples, replace = TRUE)
+        }
+        # column_vec_with_numerics_replicated <- lapply(
+        #   column_vec,
+        #   function(value) {
+        #     if (is.numeric(value) & length(value) == 1) {
+        #       rep(value, N_samples)
+        #     } else {
+        #       value
+        #     }
+        #   })
+        # na_omit_column_vec <- stats::na.omit(do.call(c, column_vec_with_numerics_replicated))
+        # sample(na_omit_column_vec, N_samples, replace = TRUE)
       } else {
         rep(0, N_samples)
       }
@@ -762,7 +785,9 @@ monte_carlo_bootstrap_checks <- function(inference_function,
                                          confidence_interval,
                                          bootstrap_reps,
                                          bootstrap_draws_per_rep) {
-  if (inference_function %in% c("mean", "median")) {
+  # browser()
+
+  if (!(inference_function %in% c("mean", "median"))) {
     stop("Input Validation Error: inference_function must be either 'mean' or 'median'")
   }
 
@@ -770,7 +795,7 @@ monte_carlo_bootstrap_checks <- function(inference_function,
     stop("Input Validation Error: confidence_interval must be a number between 0 and 1")
   }
 
-  if (confidence_interval < 0 | !(confidence_interval < 1)) {
+  if (confidence_interval < 0 | confidence_interval >= 1) {
     stop("Input Validation Error: confidence_interval must be a number between 0 and 1")
   }
 
