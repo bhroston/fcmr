@@ -11,3 +11,4 @@
 ^pkgdown$
 _\.new\.png$
 ^codecov\.yml$
+^\.covrignore$
