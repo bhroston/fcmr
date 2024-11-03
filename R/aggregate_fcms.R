@@ -335,7 +335,7 @@ aggregate_fcms_w_tfns <- function(adj_matrices = list(matrix()),
 #' @param x an aggregate object
 #' @param ... additional inputs
 #'
-#' @returns NULL
+#' @returns A console printout of aggregate_fcm output
 #'
 #' @export
 #' @examples
