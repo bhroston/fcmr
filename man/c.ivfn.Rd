@@ -9,6 +9,9 @@
 \arguments{
 \item{...}{a set of ivfn objects}
 }
+\value{
+A list of ivfn objects
+}
 \description{
 This forces the output of c() to the equivalent of list() only for inputs of
 type ivfn
@@ -25,6 +28,7 @@ c(ivfn(0, 1), ivfn(0.2, 0.5))
 Other interval-valued-fuzzy-numbers: 
 \code{\link{ivfn}()},
 \code{\link{make_adj_matrix_w_ivfns}()},
-\code{\link{print.ivfn}()}
+\code{\link{print.ivfn}()},
+\code{\link{subtract_ivfn}()}
 }
 \concept{interval-valued-fuzzy-numbers}

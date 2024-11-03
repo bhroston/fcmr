@@ -2,7 +2,7 @@
 % Please edit documentation in R/monte_carlo_model_generation_and_simulation.R
 \name{infer_monte_carlo_fcm_set}
 \alias{infer_monte_carlo_fcm_set}
-\title{infer_monte_carlo_fcm_set}
+\title{Infer FCMs Generated from Monte Carlo Methods}
 \usage{
 infer_monte_carlo_fcm_set(
   mc_adj_matrices = list(matrix()),
@@ -13,7 +13,6 @@ infer_monte_carlo_fcm_set(
   lambda = 1,
   max_iter = 100,
   min_error = 1e-05,
-  fuzzy_set_samples = 1000,
   parallel = TRUE,
   n_cores = integer(),
   show_progress = TRUE,
@@ -44,9 +43,6 @@ squashing function when tanh or sigmoid are applied}
 vector minus the previous state vector) at which no more iterations are necessary
 and the simulation will stop}
 
-\item{fuzzy_set_samples}{The size (n) of the distributions represented by IVFNs or TFNs (only
-used when IVFNs or TFNs in adj_matrices input)}
-
 \item{parallel}{TRUE/FALSE Whether to utilize parallel processing}
 
 \item{n_cores}{Number of cores to use in parallel processing. If no input given,
@@ -58,13 +54,212 @@ from the pbapply package as the underlying function.}
 \item{include_simulations_in_output}{TRUE/FALSE whether to include simulations of monte-carlo-generated
 FCM. Will dramatically increase size of output if TRUE.}
 }
+\value{
+A list of two dataframes: the first contains all inference estimates
+across the empirical (monte carlo) FCM inferences, and the second is an
+elongated version of the first dataframe that organizes the data for
+plotting (particularly with ggplot2)
+}
 \description{
-This calculates a sequence of iterations of a simulation over every item in
-a list of fmcm objects given an initial state vector along with the
-activation, squashing, and lambda parameters.
-Additional variables may be defined to control simulation length,
-column names, and lambda optimization.
+This function mass simulates a set of FCMs (Conventional, IVFN, and/or TFN)
+(whose edge weights were sampled using monte carlo methods) by repetitively
+calling the infer_fcm function for each empirical (monte carlo) adj. matrix.
 }
 \details{
-[ADD DETAILS HERE!!!].
+The show_progress and parallel inputs change the functions called, but do NOT
+change the output! These are allowed to be toggled on/off to increase user
+control at runtime.
 }
+\examples{
+ex_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0, 0, 0),
+  "B" = c(0, 0, 0, 1),
+  "C" = c(0, 1, 0, 0),
+  "D" = c(0, 0, 1, 0)
+)
+ex_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0, 0, 0),
+  "B" = c(0.25, 0, 0, 0.25),
+  "C" = c(0, 0.25, 0, 0),
+  "D" = c(0, 0, 0.25, 0)
+)
+ex_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0, 0, 0),
+  "B" = c(0.75, 0, 0, 0.75),
+  "C" = c(0, 0.75, 0, 0),
+  "D" = c(0, 0, 0.75, 0)
+)
+ex_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0, 0, 0),
+  "B" = c(0.5, 0, 0, 0.5),
+  "C" = c(0, 0.5, 0, 0),
+  "D" = c(0, 0, 0.5, 0)
+)
+ex_fcms <- list(
+  ex_adj_matrix_1, ex_adj_matrix_2, ex_adj_matrix_3, ex_adj_matrix_4
+)
+
+mc_fcms <- build_monte_carlo_fcms_from_conventional_adj_matrices(
+  ex_fcms, N_samples = 1000, include_zeroes = FALSE, show_progress = TRUE
+)
+
+mc_fcms_inferences <- infer_monte_carlo_fcm_set(
+  mc_adj_matrices = mc_fcms,
+  initial_state_vector <- c(1, 1, 1, 1),
+  clamping_vector <- c(1, 0, 0, 0),
+  activation = "kosko",
+  squashing = "sigmoid",
+  lambda = 1,
+  max_iter = 1000,
+  min_error = 1e-5,
+  parallel = FALSE,
+  show_progress = TRUE
+)
+
+
+
+
+# For Interval-Valued Fuzzy Numbers (IVFNs)
+lower_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+upper_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+adj_matrix_1 <- make_adj_matrix_w_ivfns(lower_adj_matrix_1, upper_adj_matrix_1)
+lower_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+upper_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(1, 0)
+)
+adj_matrix_2 <- make_adj_matrix_w_ivfns(lower_adj_matrix_2, upper_adj_matrix_2)
+lower_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.2, 0)
+)
+upper_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+adj_matrix_3 <- make_adj_matrix_w_ivfns(lower_adj_matrix_3, upper_adj_matrix_3)
+lower_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.0, 0)
+)
+upper_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+adj_matrix_4 <- make_adj_matrix_w_ivfns(lower_adj_matrix_4, upper_adj_matrix_4)
+fcms_w_ivfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
+
+mc_fcms <- build_monte_carlo_fcms_from_fuzzy_set_adj_matrices(
+  fcms_w_ivfns, "ivfn", 1000, include_zeroes = FALSE
+)
+mc_fcms_inferences <- infer_monte_carlo_fcm_set(
+  mc_adj_matrices = mc_fcms,
+  initial_state_vector <- c(1, 1),
+  clamping_vector <- c(1, 0),
+  activation = "kosko",
+  squashing = "sigmoid",
+  lambda = 1,
+  max_iter = 100,
+  min_error = 1e-5,
+  parallel = FALSE,
+  show_progress = TRUE
+)
+
+# For Triangular Fuzzy Numbers (TFNs)
+lower_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+mode_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+upper_adj_matrix_1 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+adj_matrix_1 <- make_adj_matrix_w_tfns(
+  lower_adj_matrix_1, mode_adj_matrix_1, upper_adj_matrix_1
+)
+lower_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+mode_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.7, 0)
+)
+upper_adj_matrix_2 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(1, 0)
+)
+adj_matrix_2 <- make_adj_matrix_w_tfns(
+  lower_adj_matrix_2, mode_adj_matrix_2, upper_adj_matrix_2
+)
+lower_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.2, 0)
+)
+mode_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+upper_adj_matrix_3 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.6, 0)
+)
+adj_matrix_3 <- make_adj_matrix_w_tfns(
+  lower_adj_matrix_3, mode_adj_matrix_3, upper_adj_matrix_3
+)
+lower_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.0, 0)
+)
+mode_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0, 0)
+)
+upper_adj_matrix_4 <- data.frame(
+  "A" = c(0, 0),
+  "B" = c(0.4, 0)
+)
+adj_matrix_4 <- make_adj_matrix_w_tfns(
+  lower_adj_matrix_4, mode_adj_matrix_4, upper_adj_matrix_4
+)
+
+fcms_w_tfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
+
+mc_fcms <- build_monte_carlo_fcms_from_fuzzy_set_adj_matrices(
+  fcms_w_tfns, "tfn", 1000, include_zeroes = FALSE
+)
+mc_fcms_inferences <- infer_monte_carlo_fcm_set(
+  mc_adj_matrices = mc_fcms,
+  initial_state_vector <- c(1, 1),
+  clamping_vector <- c(1, 0),
+  activation = "kosko",
+  squashing = "sigmoid",
+  lambda = 1,
+  max_iter = 100,
+  min_error = 1e-5,
+  parallel = FALSE,
+  show_progress = TRUE
+)
+}
+\seealso{
+Other monte-carlo-model-generation-and-simulation: 
+\code{\link{build_monte_carlo_fcms}()},
+\code{\link{build_monte_carlo_fcms_from_conventional_adj_matrices}()},
+\code{\link{build_monte_carlo_fcms_from_fuzzy_set_adj_matrices}()},
+\code{\link{get_mc_simulations_inference_CIs_w_bootstrap}()},
+\code{\link{monte_carlo_bootstrap_checks}()}
+}
+\concept{monte-carlo-model-generation-and-simulation}

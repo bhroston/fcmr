@@ -49,8 +49,7 @@ infer_fcm(adj_matrix,
           clamping_vector = c(1, 0, 0, 0, 0, 0),
           activation = "kosko",
           squashing = "sigmoid",
-          lambda = 1,
-          fuzzy_set_samples = 1000)
+          lambda = 1)
 
 
 # Inference w/ Triangular Fuzzy Numbers (TFNs)
@@ -78,12 +77,13 @@ upper_adj_matrix <- data.frame(
   C5 = c(0.5, 0, 0, -0.3, 0, 0),
   C6 = c(0, -0.4, 0, 0, -0.5, 0)
 )
-adj_matrix <- make_adj_matrix_w_tfns(lower_adj_matrix, mode_adj_matrix, upper_adj_matrix)
+adj_matrix <- make_adj_matrix_w_tfns(
+  lower_adj_matrix, mode_adj_matrix, upper_adj_matrix
+)
 
 infer_fcm(adj_matrix,
           initial_state_vector = c(1, 1, 1, 1, 1, 1),
           clamping_vector = c(1, 0, 0, 0, 0, 0),
           activation = "kosko",
           squashing = "sigmoid",
-          lambda = 1,
-          fuzzy_set_samples = 1000)
+          lambda = 1)

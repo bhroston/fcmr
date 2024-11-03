@@ -21,3 +21,6 @@ INTENDED FOR DEVELOPER USE ONLY
 This adds quality-of-life improvements and detail to simulation output objects
 such as adding column names and an iter column
 }
+\examples{
+NULL
+}

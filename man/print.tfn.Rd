@@ -11,14 +11,21 @@
 
 \item{...}{additional inputs}
 }
+\value{
+A console printout of a TFN object
+}
 \description{
 This improves the readability of the output
 
 This prints a tfn object
 }
+\examples{
+tfn(-1, 0, 1)
+}
 \seealso{
 Other triangular-fuzzy-numbers: 
 \code{\link{make_adj_matrix_w_tfns}()},
+\code{\link{subtract_tfn}()},
 \code{\link{tfn}()}
 }
 \concept{triangular-fuzzy-numbers}

@@ -61,7 +61,6 @@
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
 #' and the simulation will stop
-#' @param fuzzy_set_samples The number of samples to represent ivfn or tfn as. Use to create finer scale results.s
 #'
 #' @returns A list of fcm inference results (including baseline and simulation outputs)
 #'
@@ -75,21 +74,22 @@ infer_fcm <- function(adj_matrix = matrix(),
                       squashing = "tanh",
                       lambda = 1,
                       max_iter = 100,
-                      min_error = 1e-5,
-                      fuzzy_set_samples = 1000) {
+                      min_error = 1e-5) {
 
   check_simulation_inputs(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
 
   fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
-  if (!(fcm_class %in% c("conventional", "ivfn", "tfn"))) {
-    stop("Input adj_matrix must be an adjacency matrix with edges represented as
-         numeric values, ivfns, or tfns")
-  }
+  # if (!(fcm_class %in% c("conventional", "ivfn", "tfn"))) {
+  #   stop("Input adj_matrix must be an adjacency matrix with edges represented as
+  #        numeric values, ivfns, or tfns")
+  # }
+
+  # browser()
 
   if (fcm_class == "conventional") {
     inference <- infer_conventional_fcm(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
   } else if (fcm_class %in% c("ivfn", "tfn")) {
-    inference <- infer_ivfn_or_tfn_fcm(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error, fuzzy_set_samples)
+    inference <- infer_ivfn_or_tfn_fcm(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
   }
 
   inference
@@ -153,7 +153,7 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
   fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
   if (!(fcm_class %in% c("conventional"))) {
     stop("Input adj_matrix must be an adjacency matrix with edges represented as
-         numeric values only")
+         discrete numeric values (Conventional) only")
   }
 
   # Get baseline simulation
@@ -233,7 +233,6 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
 #' and the simulation will stop
-#' @param fuzzy_set_samples The number of samples to represent ivfn or tfn as. Use to create finer scale results.s
 #'
 #' @returns A list of (ivfn or tfn) fcm inference results (including baseline
 #' and simulation outputs)
@@ -247,16 +246,19 @@ infer_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
                                   squashing = "tanh",
                                   lambda = 1,
                                   max_iter = 100,
-                                  min_error = 1e-5,
-                                  fuzzy_set_samples = 1000) {
+                                  min_error = 1e-5) {
   # Perform checks
+  # browser()
+
   checks <- check_simulation_inputs(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
   fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
-  if (!(fcm_class %in% c("conventional", "ivfn", "tfn"))) {
+  if (!(fcm_class %in% c("ivfn", "tfn"))) {
     stop("Input adj_matrix must be an adjacency matrix with edges represented as
          numeric values, ivfns, or tfns")
   }
   concepts <- colnames(adj_matrix)
+
+  # browser()
 
   # Get baseline simulation
   baseline_initial_state_vector <- initial_state_vector
@@ -276,40 +278,45 @@ infer_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
   baseline_simulation$crisp_state_vectors <- equalized_crisp_state_vector_dfs$baseline
   scenario_simulation$crisp_state_vectors <- equalized_crisp_state_vector_dfs$scenario
 
-  baseline_state_vectors_as_distributions <- convert_fuzzy_set_elements_in_matrix_to_distributions(baseline_simulation$state_vectors, fcm_class, fuzzy_set_samples)
-  scenario_state_vectors_as_distributions <- convert_fuzzy_set_elements_in_matrix_to_distributions(scenario_simulation$state_vectors, fcm_class, fuzzy_set_samples)
+  # baseline_state_vectors_as_distributions <- convert_fuzzy_set_elements_in_matrix_to_distributions(baseline_simulation$state_vectors, fcm_class, fuzzy_set_samples)
+  # scenario_state_vectors_as_distributions <- convert_fuzzy_set_elements_in_matrix_to_distributions(scenario_simulation$state_vectors, fcm_class, fuzzy_set_samples)
+  #
+  # inference_state_vectors_as_distributions <- baseline_state_vectors_as_distributions
+  # for (i in 1:nrow(baseline_state_vectors_as_distributions)) {
+  #   for (j in 1:ncol(baseline_state_vectors_as_distributions)) {
+  #     inference_state_vectors_as_distributions[i, j] <- list(unlist(scenario_state_vectors_as_distributions[i, j]) - unlist(baseline_state_vectors_as_distributions[i, j]))
+  #   }
+  # }
 
+  # crisp_inference_state_vectors <- data.frame(
+  #   apply(inference_state_vectors_as_distributions, c(1, 2), function(element) mean(element[[1]]), simplify = TRUE)
+  # )
 
-  inference_state_vectors_as_distributions <- baseline_state_vectors_as_distributions
-  for (i in 1:nrow(baseline_state_vectors_as_distributions)) {
-    for (j in 1:ncol(baseline_state_vectors_as_distributions)) {
-      inference_state_vectors_as_distributions[i, j] <- list(unlist(scenario_state_vectors_as_distributions[i, j]) - unlist(baseline_state_vectors_as_distributions[i, j]))
+  # browser()
+
+  inference_state_vectors_estimates <- scenario_simulation$state_vectors
+  if (fcm_class == "ivfn") {
+    for (i in 1:nrow(scenario_simulation$state_vectors)) {
+      for (j in 1:ncol(scenario_simulation$state_vectors)) {
+        # browser()
+        inference_state_vectors_estimates[i, j][[1]] <- list(subtract_ivfn(scenario_simulation$state_vectors[i, j][[1]], baseline_simulation$state_vectors[i, j][[1]]))
+      }
+    }
+  } else if (fcm_class == "tfn") {
+    for (i in 1:nrow(scenario_simulation$state_vectors)) {
+      for (j in 1:ncol(scenario_simulation$state_vectors)) {
+        inference_state_vectors_estimates[i, j][[1]] <- list(subtract_tfn(scenario_simulation$state_vectors[i, j][[1]], baseline_simulation$state_vectors[i, j][[1]]))
+      }
     }
   }
 
   crisp_inference_state_vectors <- data.frame(
-    apply(inference_state_vectors_as_distributions, c(1, 2), function(element) mean(element[[1]]), simplify = TRUE)
+    apply(inference_state_vectors_estimates, c(1, 2), function(element) mean(unlist(element[[1]])), simplify = TRUE)
   )
 
-  if (fcm_class == "ivfn") {
-    inference_state_vectors <- data.frame(
-      apply(
-        inference_state_vectors_as_distributions, c(1, 2),
-        function(element) {
-          ivfn(min(element[[1]]), max(element[[1]]))
-        }
-      ))
-  } else if (fcm_class == "tfn") {
-    inference_state_vectors <- data.frame(
-      apply(
-        inference_state_vectors_as_distributions, c(1, 2),
-        function(element) {
-          tfn(min(element[[1]]), mean(element[[1]]),  max(element[[1]]))
-        }
-      ))
-  }
+  # browser()
 
-  inference_state_vectors <- clean_simulation_output(inference_state_vectors, concepts)
+  inference_state_vectors <- clean_simulation_output(inference_state_vectors_estimates, concepts)
   crisp_inference_state_vectors <- clean_simulation_output(crisp_inference_state_vectors, concepts)
 
   final_inference_state_vectors <- inference_state_vectors[nrow(inference_state_vectors),][, -1]
@@ -379,25 +386,36 @@ equalize_baseline_and_scenario_outputs <- function(baseline_state_vectors,
   n_iters_baseline <- nrow(baseline_state_vectors)
   n_iters_scenario <- nrow(scenario_state_vectors)
 
+  # browser()
+
   if (n_iters_baseline == n_iters_scenario) {
     baseline_state_vectors <- baseline_state_vectors[, -1]
     scenario_state_vectors <- scenario_state_vectors[, -1]
   } else if (n_iters_baseline < n_iters_scenario) {
-    extended_baseline_state_vectors <- apply(scenario_state_vectors, 2, function(iter) c(iter, rep(iter[n_iters_baseline], n_iters_scenario - n_iters_baseline)))
+    extended_baseline_state_vectors <- apply(baseline_state_vectors, 2, function(iter) c(iter, rep(iter[n_iters_baseline], n_iters_scenario - n_iters_baseline)))
     baseline_state_vectors <- extended_baseline_state_vectors
     scenario_state_vectors <- scenario_state_vectors
   } else if (n_iters_scenario < n_iters_baseline) {
-    extended_scenario_state_vectors <- apply(scenario_state_vectors, 2, function(iter) c(iter, rep(iter[n_iters_scenario], n_iters_baseline - n_iters_scenario)))
+    extended_scenario_state_vectors <- apply(scenario_state_vectors, 2, function(iter) c(iter, rep(iter[n_iters_scenario], n_iters_baseline - n_iters_scenario)), simplify = FALSE)
     baseline_state_vectors <- baseline_state_vectors
     scenario_state_vectors <- extended_scenario_state_vectors
   }
 
+  # browser()
+
   # Here in case given inputs from an ivfn or tfn simulation
-  if (identical(methods::is(baseline_state_vectors), c("list", "vector"))) {
-    scenario_state_vectors <- data.frame(do.call(cbind, baseline_state_vectors))
+  if (all(c("list", "vector") %in% methods::is(baseline_state_vectors))) {
+    baseline_state_vectors <- data.frame(do.call(cbind, baseline_state_vectors))
   }
-  if (identical(methods::is(scenario_state_vectors), c("list", "vector"))) {
+  if (all(c("list", "vector") %in% methods::is(scenario_state_vectors))) {
     scenario_state_vectors <- data.frame(do.call(cbind, scenario_state_vectors))
+  }
+
+  if ("iter" %in% colnames(baseline_state_vectors)) {
+    baseline_state_vectors[, colnames(baseline_state_vectors) == "iter"] <- NULL
+  }
+  if ("iter" %in% colnames(scenario_state_vectors)) {
+    scenario_state_vectors[, colnames(scenario_state_vectors) == "iter"] <- NULL
   }
 
   list(
@@ -459,10 +477,10 @@ simulate_fcm <- function(adj_matrix = matrix(),
   check_simulation_inputs(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
 
   fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
-  if (!(fcm_class %in% c("conventional", "ivfn", "tfn"))) {
-    stop("Input adj_matrix must be an adjacency matrix with edges represented as
-         numeric values, ivfns, or tfns")
-  }
+  # if (!(fcm_class %in% c("conventional", "ivfn", "tfn"))) {
+  #   stop("Input adj_matrix must be an adjacency matrix with edges represented as
+  #        numeric values, ivfns, or tfns")
+  # }
 
   if (fcm_class == "conventional") {
     simulation <- simulate_conventional_fcm(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
@@ -523,6 +541,11 @@ simulate_conventional_fcm <- function(adj_matrix = matrix(),
                                       max_iter = 100,
                                       min_error = 1e-5) {
 
+  fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
+  if (!(fcm_class %in% c("conventional"))) {
+    stop("Input adj_matrix must be an adjacency matrix with edges represented as
+         discrete numeric values (Conventional) to call simulate_conventional_fcm")
+  }
   concept_names <- colnames(adj_matrix)
 
   state_vectors <- data.frame(matrix(data = numeric(), nrow = max_iter + 1, ncol = length(initial_state_vector)))
@@ -779,6 +802,8 @@ simulate_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
 #' adj_matrix and activation function
 #'
 #' @export
+#' @examples
+#' NULL
 calculate_next_conventional_fcm_state_vector <- function(adj_matrix = matrix(),
                                                          state_vector = c(),
                                                          activation = c("kosko", "modified-kosko", "rescale")) {
@@ -834,6 +859,8 @@ calculate_next_conventional_fcm_state_vector <- function(adj_matrix = matrix(),
 #' adj_matrix and activation function
 #'
 #' @export
+#' @examples
+#' NULL
 calculate_next_fuzzy_set_fcm_state_vector <- function(fuzzy_set_adj_matrix = matrix(),
                                                       fuzzy_set_state_vector = c(),
                                                       crisp_state_vector = c(),
@@ -919,6 +946,14 @@ calculate_next_fuzzy_set_fcm_state_vector <- function(fuzzy_set_adj_matrix = mat
 #' @param value A numeric value to 'squash'
 #' @param squashing A squashing function to apply. Must be one of the following: 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'
 #' @param lambda A numeric value that defines the steepness of the slope of the squashing function when tanh or sigmoid are applied
+#'
+#' @returns A "squashed" value, the output of the selected transfer ("squashing")
+#' function
+#'
+#' @export
+#' @examples
+#' squash(1, "sigmoid", lambda = 1)
+#' squash(0.6, "tanh", lambda = 0.7)
 squash <- function(value = numeric(),
                    squashing = c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"),
                    lambda = 1) {
@@ -1043,8 +1078,12 @@ defuzz_ivfn_or_tfn <- function(fuzzy_number) {
 #' @returns An IVFN or TFN representation of a crisp, numeric value
 #'
 #' @export
+#' @examples
+#' convert_element_to_ivfn_or_tfn_if_numeric(0.6, "ivfn")
+#' convert_element_to_ivfn_or_tfn_if_numeric(0.7, "tfn")
 convert_element_to_ivfn_or_tfn_if_numeric <- function(element, desired_class = c("ivfn", "tfn")) {
   numeric_class <- methods::is(numeric())
+
   if (identical(methods::is(element), numeric_class) & identical(desired_class, "ivfn")) {
     converted_element <- ivfn(element, element)
   } else if (identical(methods::is(element), numeric_class) & identical(desired_class, "tfn")) {
@@ -1073,6 +1112,7 @@ convert_element_to_ivfn_or_tfn_if_numeric <- function(element, desired_class = c
 #' representative distributions
 #'
 #' @export
+#' @example man/examples/ex-convert_fuzzy_set_elements_in_matrix_to_dists.R
 convert_fuzzy_set_elements_in_matrix_to_distributions <- function(fuzzy_set_matrix = matrix(),
                                                                   object_class = c("ivfn", "tfn"),
                                                                   N_samples = integer()) {
@@ -1085,11 +1125,7 @@ convert_fuzzy_set_elements_in_matrix_to_distributions <- function(fuzzy_set_matr
     fuzzy_set_matrix_w_distributions <- apply(
       fuzzy_set_matrix, c(1, 2),
       function(element) {
-        if (identical(methods::is(element[[1]]), "ivfn")) {
-          element <- list(stats::runif(N_samples, element[[1]]$lower, element[[1]]$upper))
-        } else {
-          element[[1]]
-        }
+        element <- list(stats::runif(N_samples, element[[1]]$lower, element[[1]]$upper))
       }
     )
   } else if (object_class == "tfn") {
@@ -1097,9 +1133,7 @@ convert_fuzzy_set_elements_in_matrix_to_distributions <- function(fuzzy_set_matr
       fuzzy_set_matrix, c(1, 2),
       function(element) {
         if (identical(methods::is(element[[1]]), "tfn")) {
-          element <- list(rtriangular(N_samples, lower = element[[1]]$lower, mode = element[[1]]$mode, upper = element[[1]]$upper))
-        } else {
-          element[[1]]
+          list(rtriangular_dist(N_samples, lower = element[[1]]$lower, mode = element[[1]]$mode, upper = element[[1]]$upper))
         }
       }
     )
@@ -1124,6 +1158,8 @@ convert_fuzzy_set_elements_in_matrix_to_distributions <- function(fuzzy_set_matr
 #' @returns A cleaned up simulation output
 #'
 #' @export
+#' @examples
+#' NULL
 clean_simulation_output <- function(output_obj, concepts) {
   #browser()
   if (identical(methods::is(data.frame()), methods::is(output_obj))) {
@@ -1173,9 +1209,12 @@ clean_simulation_output <- function(output_obj, concepts) {
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
 #' and the simulation will stop
-#' @param fuzzy_set_samples The number of samples to represent ivfn or tfn as. Use to create finer scale results.s
+#'
+#' @returns A formatted initial_state_vector and clamping_vector
 #'
 #' @export
+#' @examples
+#' NULL
 check_simulation_inputs <- function(adj_matrix = matrix(),
                                     initial_state_vector = c(),
                                     clamping_vector = c(),
@@ -1183,8 +1222,7 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
                                     squashing = c("sigmoid"),
                                     lambda = 1,
                                     max_iter = 100,
-                                    min_error = 1e-4,
-                                    fuzzy_set_samples = 100) {
+                                    min_error = 1e-4) {
 
   # Check adj_matrix ----
   rows <- nrow(adj_matrix)
@@ -1281,19 +1319,6 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
   }
   # ----
 
-  # Check fuzzy_set_samples ----
-  if (!is.numeric(fuzzy_set_samples)) {
-    stop("Failed Input Validation: Input fuzzy_set_samples must be numeric")
-  }
-  if (!(fuzzy_set_samples == round(fuzzy_set_samples))) {
-    stop("Failed Input Validation: Input fuzzy_set_samples must be a positive integer")
-  }
-  if (fuzzy_set_samples <= 0) {
-    stop("Failed Input Validation: Input fuzzy_set_samples must be a positive integer")
-  }
-  # ----
-
-
   list(
     initial_state_vector = initial_state_vector,
     clamping_vector = clamping_vector
@@ -1305,7 +1330,12 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
 #'
 #' @param x an infer_conventional_fcm object
 #' @param ... additional inputs
+#'
+#' @returns A console printout of infer_conventional_fcm results
+#'
 #' @export
+#' @examples
+#' NULL
 print.infer_conventional_fcm <- function(x, ...) {
   cat(paste0("fcmconfr: ", "conventional"),
       "\n $inference\n",
@@ -1325,7 +1355,11 @@ print.infer_conventional_fcm <- function(x, ...) {
 #' @param x an infer_ivfn_or_tfn_fcm object
 #' @param ... additional inputs
 #'
+#' @returns A console printout of infer_ivfn_or_tfn_fcm results
+#'
 #' @export
+#' @examples
+#' NULL
 print.infer_ivfn_or_tfn_fcm <- function(x, ...) {
   cat(paste0("fcmconfr: ", "ivfn or tfn"),
       "\n $inference_df\n",

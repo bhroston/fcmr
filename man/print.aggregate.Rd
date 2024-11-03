@@ -11,8 +11,14 @@
 
 \item{...}{additional inputs}
 }
+\value{
+A console printout of aggregate_fcm output
+}
 \description{
 Print method for aggregate
+}
+\examples{
+NULL
 }
 \seealso{
 Other aggregate_fcms: 

@@ -76,7 +76,9 @@ upper_adj_matrix_3 <- data.frame(
   "A" = c(0, 0),
   "B" = c(0.6, 0)
 )
-adj_matrix_3 <- make_adj_matrix_w_tfns(lower_adj_matrix_3, mode_adj_matrix_3, upper_adj_matrix_3)
+adj_matrix_3 <- make_adj_matrix_w_tfns(
+  lower_adj_matrix_3, mode_adj_matrix_3, upper_adj_matrix_3
+)
 lower_adj_matrix_4 <- data.frame(
   "A" = c(0, 0),
   "B" = c(0.0, 0)
@@ -89,7 +91,9 @@ upper_adj_matrix_4 <- data.frame(
   "A" = c(0, 0),
   "B" = c(0.4, 0)
 )
-adj_matrix_4 <- make_adj_matrix_w_tfns(lower_adj_matrix_4, mode_adj_matrix_4, upper_adj_matrix_4)
+adj_matrix_4 <- make_adj_matrix_w_tfns(
+  lower_adj_matrix_4, mode_adj_matrix_4, upper_adj_matrix_4
+)
 
 fcms_w_tfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
 

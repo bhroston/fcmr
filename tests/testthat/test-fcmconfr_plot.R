@@ -41,7 +41,6 @@ test_that("fcmconfr_plot works", {
         lambda = 1,
         max_iter = 100,
         min_error = 1e-05,
-        fuzzy_set_samples = 100,
         # Inference Estimation (bootstrap)
         inference_estimation_function = "median",
         inference_estimation_CI = 0.95,
@@ -98,7 +97,6 @@ test_that("fcmconfr_plot works", {
         lambda = 1,
         max_iter = 100,
         min_error = 1e-05,
-        fuzzy_set_samples = 100,
         # Inference Estimation (bootstrap)
         inference_estimation_function = "mean",
         inference_estimation_CI = 0.95,
@@ -164,7 +162,6 @@ test_that("fcmconfr_plot works", {
         lambda = 1,
         max_iter = 100,
         min_error = 1e-05,
-        fuzzy_set_samples = 100,
         # Inference Estimation (bootstrap)
         inference_estimation_function = "mean",
         inference_estimation_CI = 0.95,

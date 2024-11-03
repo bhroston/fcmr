@@ -12,8 +12,7 @@ infer_fcm(
   squashing = "tanh",
   lambda = 1,
   max_iter = 100,
-  min_error = 1e-05,
-  fuzzy_set_samples = 1000
+  min_error = 1e-05
 )
 }
 \arguments{
@@ -39,8 +38,6 @@ squashing function when tanh or sigmoid are applied}
 \item{min_error}{The lowest error (sum of the absolute value of the current state
 vector minus the previous state vector) at which no more iterations are necessary
 and the simulation will stop}
-
-\item{fuzzy_set_samples}{The number of samples to represent ivfn or tfn as. Use to create finer scale results.s}
 }
 \value{
 A list of fcm inference results (including baseline and simulation outputs)
@@ -116,8 +113,7 @@ infer_fcm(adj_matrix,
           clamping_vector = c(1, 0, 0, 0, 0, 0),
           activation = "kosko",
           squashing = "sigmoid",
-          lambda = 1,
-          fuzzy_set_samples = 1000)
+          lambda = 1)
 
 
 # Inference w/ Triangular Fuzzy Numbers (TFNs)
@@ -145,13 +141,14 @@ upper_adj_matrix <- data.frame(
   C5 = c(0.5, 0, 0, -0.3, 0, 0),
   C6 = c(0, -0.4, 0, 0, -0.5, 0)
 )
-adj_matrix <- make_adj_matrix_w_tfns(lower_adj_matrix, mode_adj_matrix, upper_adj_matrix)
+adj_matrix <- make_adj_matrix_w_tfns(
+  lower_adj_matrix, mode_adj_matrix, upper_adj_matrix
+)
 
 infer_fcm(adj_matrix,
           initial_state_vector = c(1, 1, 1, 1, 1, 1),
           clamping_vector = c(1, 0, 0, 0, 0, 0),
           activation = "kosko",
           squashing = "sigmoid",
-          lambda = 1,
-          fuzzy_set_samples = 1000)
+          lambda = 1)
 }

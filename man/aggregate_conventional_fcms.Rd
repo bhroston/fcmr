@@ -60,7 +60,9 @@ ex_adj_matrix_4 <- data.frame(
   "A" = c(0, 0),
   "B" = c(0.5, 0)
 )
-ex_fcms <- list(ex_adj_matrix_1, ex_adj_matrix_2, ex_adj_matrix_3, ex_adj_matrix_4)
+ex_fcms <- list(
+  ex_adj_matrix_1, ex_adj_matrix_2, ex_adj_matrix_3, ex_adj_matrix_4
+)
 aggregate_conventional_fcms(ex_fcms, "mean", include_zeroes = TRUE)
 aggregate_conventional_fcms(ex_fcms, "mean", include_zeroes = FALSE)
 aggregate_conventional_fcms(ex_fcms, "median")

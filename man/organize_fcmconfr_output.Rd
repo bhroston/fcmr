@@ -2,18 +2,24 @@
 % Please edit documentation in R/fcmconfr.R
 \name{organize_fcmconfr_output}
 \alias{organize_fcmconfr_output}
-\title{organize_fcmconfr_output}
+\title{[INTENDED FOR DEVELOPER USE ONLY] Organize fcmconfr Output}
 \usage{
 organize_fcmconfr_output(...)
 }
 \arguments{
 \item{...}{additional inputs; typically environmental variables}
 }
+\value{
+An organzed list output of fcmconfr
+}
 \description{
-This arranges fcmconfr inputs and outputs into a neatly-arranged list of lists
+This arranges fcmconfr inputs and outputs into a neatly-arranged list of lists,
+and critically, neatly-arranged data structures to clean code written in
+the \code{\link{fcmconfr}} function.
 }
 \details{
-A standardized way to organize the fcmconfr into easily navigable data structures.
-
-Use vignette("fcmconfr-class") for more information.
+[INTENDED FOR DEVELOPER USE ONLY]
+}
+\examples{
+NULL
 }

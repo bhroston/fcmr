@@ -12,8 +12,7 @@ check_simulation_inputs(
   squashing = c("sigmoid"),
   lambda = 1,
   max_iter = 100,
-  min_error = 1e-04,
-  fuzzy_set_samples = 100
+  min_error = 1e-04
 )
 }
 \arguments{
@@ -39,8 +38,9 @@ squashing function when tanh or sigmoid are applied}
 \item{min_error}{The lowest error (sum of the absolute value of the current state
 vector minus the previous state vector) at which no more iterations are necessary
 and the simulation will stop}
-
-\item{fuzzy_set_samples}{The number of samples to represent ivfn or tfn as. Use to create finer scale results.s}
+}
+\value{
+A formatted initial_state_vector and clamping_vector
 }
 \description{
 Confirm that all inputs will work with the simulation function and return
@@ -52,4 +52,7 @@ INTENDED FOR DEVELOPER USE ONLY
 This checks that all inputs for a simulation function are of an appropriate
 format, and also fills in missing inputs for initial_state_vector, clamping_vector,
 and IDs when appropriate.
+}
+\examples{
+NULL
 }
