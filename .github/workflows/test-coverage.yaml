@@ -10,8 +10,6 @@ name: test-coverage.yaml
 
 permissions: read-all
 
-runs-on: self-hosted
-
 jobs:
   test-coverage:
     runs-on: ubuntu-latest
