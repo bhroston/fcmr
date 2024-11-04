@@ -8,6 +8,8 @@ on:
 
 name: test-coverage.yaml
 
+runs-on: self-hosted
+
 permissions: read-all
 
 jobs:
