@@ -55,6 +55,100 @@ weights as Interval-Value Fuzzy Numbers (IVFNs, named here as IVFN-FCMs)
 and the other represents edge weights as Triangular Fuzzy Numbers (TFNs,
 named here as TFN-FCMs).
 
+## Installation
+
+You can install the development version of `fcmconfr()` from GitHub
+with:
+
+``` r
+# install.packages("remotes")
+remotes::install_github("bhroston/fcmconfr")
+```
+
+## Using fcmconfr (Example)
+
+``` r
+library(fcmconfr)
+
+# This example uses the salinization_ses_fcms dataset included within the package
+# 
+
+# Use fcmconfr_gui() to select inputs or manually identify input parameters
+# fcmconfr_gui()
+
+# Use fcmconfr() to perform the analysis
+fcmconfr(
+  adj_matrices = salinization_ses_fcms,
+  # Aggregation and Monte Carlo Sampling
+  aggregation_function = 'mean',
+  monte_carlo_sampling_draws = 1000,
+  # Simulation
+  initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+  clamping_vector = c(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+  activation = 'modified-kosko',
+  squashing = 'sigmoid',
+  lambda = 1,
+  max_iter = 100,
+  min_error = 1e-05,
+  # Inference Estimation (bootstrap)
+  inference_estimation_function = mean,
+  inference_estimation_CI = 0.95,
+  inference_estimation_bootstrap_reps = 1000,
+  inference_estimation_bootstrap_draws_per_rep = 1000,
+  # Runtime Options
+  show_progress = TRUE,
+  parallel = FALSE,
+  n_cores = 1,
+  # Additional Options
+  perform_aggregate_analysis = TRUE,
+  perform_monte_carlo_analysis = TRUE,
+  perform_monte_carlo_inference_bootstrap_analysis = TRUE,
+  include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+  include_monte_carlo_FCM_simulations_in_output = FALSE
+)
+```
+
+## Citation
+
+``` r
+citation("fcmconfr")
+#> To cite fcmconfr in publications use:
+#> 
+#>   Roston & Rippy, (2024). FCMConfR: FCM Uncertainty Analysis Tools.
+#>   https://github.com/bhroston/fcmconfr.git.
+#> 
+#> A BibTeX entry for LaTeX users is
+#> 
+#>   @bibentry{,
+#>     bibtype = {Manual}
+#>     title = {FCMConfR: FCM Uncertainty Analysis Tools},
+#>     author = {Ben Roston and Megan Rippy},
+#>     year = {2024},
+#>     url = {https://github.com/bhroston/fcmconfr},
+#>     copyright = {GNU General Public License}
+#>   }
+```
+
+## Further Reading
+
+further reading here
+
+## Contributing
+
+Please note that this package is released with a [Contributor Code of
+Conduct](https://ropensci.org/code-of-conduct/). By contributing to this
+project, you agree to abide by its terms.
+
+- If you think you have encountered a bug, please [submit an
+  issue](https://github.com/bhroston/fcmconfr/issues).
+
+- Please include a
+  [reprex](https://reprex.tidyverse.org/articles/articles/learn-reprex.html)
+  (a minimal, reproducible example) to clearly communicate about your
+  code.
+
+------------------------------------------------------------------------
+
 However, most remain untested, and their mathematical complexity leaves
 many largely inaccessible (citation).
 
