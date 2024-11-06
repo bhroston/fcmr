@@ -156,6 +156,8 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
          discrete numeric values (Conventional) only")
   }
 
+  # browser()
+
   # Get baseline simulation
   baseline_initial_state_vector <- rep(1, length(initial_state_vector))
   baseline_clamping_vector <- rep(0, length(clamping_vector))
@@ -165,6 +167,8 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
   scenario_initial_state_vector <- initial_state_vector
   scenario_clamping_vector <- clamping_vector
   scenario_simulation <- simulate_fcm(adj_matrix, scenario_initial_state_vector, scenario_clamping_vector, activation, squashing, lambda, max_iter, min_error)
+
+  # browser()
 
   equalized_state_vector_dfs <- equalize_baseline_and_scenario_outputs(baseline_simulation$state_vectors, scenario_simulation$state_vectors)
   baseline_simulation$state_vectors <- equalized_state_vector_dfs$baseline
@@ -292,7 +296,7 @@ infer_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
   #   apply(inference_state_vectors_as_distributions, c(1, 2), function(element) mean(element[[1]]), simplify = TRUE)
   # )
 
-  # browser()
+  browser()
 
   inference_state_vectors_estimates <- scenario_simulation$state_vectors
   if (fcm_class == "ivfn") {
@@ -411,11 +415,12 @@ equalize_baseline_and_scenario_outputs <- function(baseline_state_vectors,
     scenario_state_vectors <- data.frame(do.call(cbind, scenario_state_vectors))
   }
 
+  #browser()
   if ("iter" %in% colnames(baseline_state_vectors)) {
-    baseline_state_vectors[, colnames(baseline_state_vectors) == "iter"] <- NULL
+    baseline_state_vectors[, !(colnames(baseline_state_vectors) %in% "iter")]
   }
   if ("iter" %in% colnames(scenario_state_vectors)) {
-    scenario_state_vectors[, colnames(scenario_state_vectors) == "iter"] <- NULL
+    scenario_state_vectors[, !(colnames(scenario_state_vectors) %in% "iter")]
   }
 
   list(
