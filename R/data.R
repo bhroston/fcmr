@@ -1,4 +1,17 @@
 
+#' salinization_ses_fcms
+#'
+#' An example fcm dataset collected by collecting stakeholder perceptions of
+#' rising salinization in a socio-ecological system.
+#'
+#' Given in Rippy et al, (2024)
+#'
+#' @format ## `salinization_ses_fcms`
+#' A list of fcm adjacency matrices
+#'
+"salinization_ses_fcms"
+
+
 #' Vat FGCM Examples
 #'
 #' An example fgcm representing a multi-tank vat system. Depicted in
