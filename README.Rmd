@@ -129,7 +129,11 @@ citation("fcmconfr")
 
 ## Further Reading
 
-further reading here
+See package vignettes:
+
+-   Getting started with fcmconfr
+
+-   Detailed example
 
 ## Contributing
 
