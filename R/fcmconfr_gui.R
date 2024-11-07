@@ -19,55 +19,60 @@ fcmconfr_gui <- function() {
   bslib::versions()
   shinyWidgets::animations
 
+  # This is here to pass the user-selected inputs from the gui into this
+  # function's (fcmconfr_gui) environment, which can then be passed to the
+  # console.
   shiny_env_check <- 1
 
   shiny::runApp(appDir = system.file('shiny', package = 'fcmconfr'))
+
+  fcmconfr_gui_vars <- names(fcmconfr_gui_input)
+
+  # browser()
 
   if (identical(fcmconfr_gui_input$adj_matrices, "")) {
     stop("No adj matrix list was selected. Please call gui again for selection.")
   }
 
-  if (!exists("fcmconfr_gui_input$clamping_vector")) {
+  if (!("clamping_vector" %in% fcmconfr_gui_vars)) {
     fcmconfr_gui_input$clamping_vector <- rep(0, length(fcmconfr_gui_input$initial_state_vector))
   }
 
-  if (!exists("fcmconfr_gui_input$aggregation_function")) {
+  if (!("aggregation_function" %in% fcmconfr_gui_vars)) {
     fcmconfr_gui_input$aggregation_function <- "mean"
   }
 
-  if (!exists("fcmconfr_gui_input$monte_carlo_samples")) {
+  if (!("monte_carlo_samples" %in% fcmconfr_gui_vars)) {
     fcmconfr_gui_input$monte_carlo_samples <- 1000
   }
 
-  if (!exists("fcmconfr_gui_input$fuzzy_set_samples")) {
-    fcmconfr_gui_input$fuzzy_set_samples <- 1000
-  }
-
-  if (!exists("fcmconfr_gui_input$mc_inference_estimation_function")) {
+  if (!("mc_inference_estimation_function" %in% fcmconfr_gui_vars)) {
     fcmconfr_gui_input$mc_inference_estimation_function <- "mean"
   }
 
-  if (!exists("fcmconfr_gui_input$mc_inference_estimation_CI")) {
+  if (!("mc_inference_estimation_CI" %in% fcmconfr_gui_vars)) {
     fcmconfr_gui_input$mc_inference_estimation_CI <- 0.95
   }
 
-  if (!exists("fcmconfr_gui_input$mc_inference_bootstrap_reps")) {
+  if (!("mc_inference_bootstrap_reps" %in% fcmconfr_gui_vars)) {
     fcmconfr_gui_input$mc_inference_bootstrap_reps <- 1000
   }
 
-  if (!exists("fcmconfr_gui_input$mc_inference_bootstrap_draws_per_rep")) {
+  if (!("mc_inference_bootstrap_draws_per_rep" %in% fcmconfr_gui_vars)) {
     fcmconfr_gui_input$mc_inference_bootstrap_draws_per_rep <- 1000
   }
 
-  if (!exists("fcmconfr_gui_input$n_cores")) {
-    fcmconfr_gui_input$n_cores <- 1
+  # browser()
+
+  if (!("n_cores" %in% fcmconfr_gui_vars)) {
+    fcmconfr_gui_input$n_cores <- 2
   }
 
-  if (!exists("fcmconfr_gui_input$include_zero_weighted_edges_in_aggregation_and_mc_sampling")) {
+  if (!("include_zero_weighted_edges_in_aggregation_and_mc_sampling" %in% fcmconfr_gui_vars)) {
     fcmconfr_gui_input$include_zero_weighted_edges_in_aggregation_and_mc_sampling <- FALSE
   }
 
-  if (!exists("fcmconfr_gui_input$include_monte_carlo_FCM_simulations_in_output")) {
+  if (!("include_monte_carlo_FCM_simulations_in_output" %in% fcmconfr_gui_vars)) {
     fcmconfr_gui_input$include_monte_carlo_FCM_simulations_in_output <- FALSE
   }
 
@@ -75,39 +80,14 @@ fcmconfr_gui <- function() {
   fcmconfr_gui_input$clamping_vector <- paste0("c(", paste(fcmconfr_gui_input$clamping_vector, collapse = ", "), ")")
   fcmconfr_gui_input$concepts <- paste0("c('", paste(fcmconfr_gui_input$concepts, collapse = "', '"), "')")
 
-  cat(
-    "fcmconfr(", "\n",
-    "  adj_matrices = ", fcmconfr_gui_input$adj_matrices, ",\n",
-    "  # Aggregation and Monte Carlo Sampling", "\n",
-    "  aggregation_function = ", paste0("'", fcmconfr_gui_input$aggregation_fun, "'"), ",\n",
-    "  monte_carlo_sampling_draws = ", fcmconfr_gui_input$monte_carlo_samples, ",\n",
-    "  # Simulation", "\n",
-    "  initial_state_vector = ", fcmconfr_gui_input$initial_state_vector, ",\n",
-    "  clamping_vector = ", fcmconfr_gui_input$clamping_vector, ",\n",
-    "  activation = ", paste0("'", fcmconfr_gui_input$activation, "'"), ",\n",
-    "  squashing = ",  paste0("'", fcmconfr_gui_input$squashing, "'"), ",\n",
-    "  lambda = ", fcmconfr_gui_input$lambda, ",\n",
-    "  max_iter = ", fcmconfr_gui_input$max_iter, ",\n",
-    "  min_error = ", fcmconfr_gui_input$min_error, ",\n",
-    "  fuzzy_set_samples = ", fcmconfr_gui_input$fuzzy_set_samples, ",\n",
-    "  # Inference Estimation (bootstrap)", "\n",
-    "  inference_estimation_function = ", fcmconfr_gui_input$mc_inference_estimation_function, ",\n",
-    "  inference_estimation_CI = ", fcmconfr_gui_input$mc_inference_estimation_CI, ",\n",
-    "  inference_estimation_bootstrap_reps = ", fcmconfr_gui_input$mc_inference_bootstrap_reps, ",\n",
-    "  inference_estimation_bootstrap_draws_per_rep = ", fcmconfr_gui_input$mc_inference_bootstrap_draws_per_rep, ",\n",
-    "  # Runtime Options", "\n",
-    "  show_progress = ", fcmconfr_gui_input$show_progress, ",\n",
-    "  parallel = ", fcmconfr_gui_input$parallel, ",\n",
-    "  n_cores = ", fcmconfr_gui_input$n_cores, ",\n",
-    "  # Additional Options", "\n",
-    "  perform_aggregate_analysis = ", fcmconfr_gui_input$perform_aggregation, ",\n",
-    "  perform_monte_carlo_analysis = ", fcmconfr_gui_input$perform_monte_carlo, ",\n",
-    "  perform_monte_carlo_inference_bootstrap_analysis = ", fcmconfr_gui_input$perform_inference_bootstrap, ",\n",
-    "  include_zero_weighted_edges_in_aggregation_and_mc_sampling = ", fcmconfr_gui_input$include_zero_weighted_edges_in_aggregation_and_mc_sampling, ",\n",
-    "  include_monte_carlo_FCM_simulations_in_output = ",  fcmconfr_gui_input$include_monte_carlo_FCM_simulations_in_output, "\n",
-    ")", sep = ""
+  fcmconfr_gui_inputs <- structure(
+    .Data = fcmconfr_gui_input,
+    class = "fcmconfr_gui_input"
   )
 
+  # browser()
+
+  fcmconfr_gui_inputs
 }
 
 
@@ -127,36 +107,171 @@ fcmconfr_gui <- function() {
 #' @examples
 #' NULL
 print.fcmconfr_gui_input <- function(x, ...) {
-  cat(
-    "fcmconfr(", "\n",
-    "  adj_matrices = ", x$adj_matrices, ",\n",
-    "  # Aggregation and Monte Carlo Sampling", "\n",
-    "  aggregation_function = ", paste0("'", x$aggregation_fun, "'"), ",\n",
-    "  monte_carlo_sampling_draws = ", x$monte_carlo_samples, ",\n",
-    "  # Simulation", "\n",
-    "  initial_state_vector = ", x$initial_state_vector, ",\n",
-    "  clamping_vector = ", x$clamping_vector, ",\n",
-    "  activation = ", paste0("'", x$activation, "'"), ",\n",
-    "  squashing = ",  paste0("'", x$squashing, "'"), ",\n",
-    "  lambda = ", x$lambda, ",\n",
-    "  max_iter = ", x$max_iter, ",\n",
-    "  min_error = ", x$min_error, ",\n",
-    "  fuzzy_set_samples = ", x$fuzzy_set_samples, ",\n",
-    "  # Inference Estimation (bootstrap)", "\n",
-    "  inference_estimation_function = ", x$mc_inference_estimation_function, ",\n",
-    "  inference_estimation_CI = ", x$mc_inference_estimation_CI, ",\n",
-    "  inference_estimation_bootstrap_reps = ", x$mc_inference_bootstrap_reps, ",\n",
-    "  inference_estimation_bootstrap_draws_per_rep = ", x$mc_inference_bootstrap_draws_per_rep, ",\n",
-    "  # Runtime Options", "\n",
-    "  show_progress = ", x$show_progress, ",\n",
-    "  parallel = ", x$parallel, ",\n",
-    "  n_cores = ", x$n_cores, ",\n",
-    "  # Additional Options", "\n",
-    "  perform_aggregate_analysis = ", x$perform_aggregation, ",\n",
-    "  perform_monte_carlo_analysis = ", x$perform_monte_carlo, ",\n",
-    "  perform_monte_carlo_inference_bootstrap_analysis = ", x$perform_inference_bootstrap, ",\n",
-    "  include_zero_weighted_edges_in_aggregation_and_mc_sampling = ", x$include_zero_weighted_edges_in_aggregation_and_mc_sampling, ",\n",
-    "  include_monte_carlo_FCM_simulations_in_output = ",  x$include_monte_carlo_FCM_simulations_in_output, "\n",
-    ")", sep = ""
-  )
+
+  performed_aggregation <- x$perform_aggregation
+  performed_mc <- x$perform_monte_carlo
+  performed_bootstrap <- x$perform_inference_bootstrap
+
+  # browser()
+
+  if (performed_aggregation & !performed_mc & !performed_bootstrap) {
+    cat(
+      "fcmconfr(", "\n",
+      "  adj_matrices = ", x$adj_matrices, ",\n",
+      "  # Aggregation", "\n",
+      "  aggregation_function = ", paste0("'", x$aggregation_fun, "'"), ",\n",
+      "  # Simulation", "\n",
+      "  initial_state_vector = ", x$initial_state_vector, ",\n",
+      "  clamping_vector = ", x$clamping_vector, ",\n",
+      "  activation = ", paste0("'", x$activation, "'"), ",\n",
+      "  squashing = ",  paste0("'", x$squashing, "'"), ",\n",
+      "  lambda = ", x$lambda, ",\n",
+      "  max_iter = ", x$max_iter, ",\n",
+      "  min_error = ", x$min_error, ",\n",
+      "  # Runtime Options", "\n",
+      "  show_progress = ", x$show_progress, ",\n",
+      "  # Additional Options", "\n",
+      "  perform_aggregate_analysis = ", x$perform_aggregation, ",\n",
+      "  perform_monte_carlo_analysis = ", x$perform_monte_carlo, ",\n",
+      "  perform_monte_carlo_inference_bootstrap_analysis = ", x$perform_inference_bootstrap, ",\n",
+      "  include_zero_weighted_edges_in_aggregation_and_mc_sampling = ", x$include_zero_weighted_edges_in_aggregation_and_mc_sampling, "\n",
+      ")", sep = ""
+    )
+  } else if (performed_aggregation & performed_mc & !performed_bootstrap) {
+    cat(
+      "fcmconfr(", "\n",
+      "  adj_matrices = ", x$adj_matrices, ",\n",
+      "  # Aggregation and Monte Carlo Sampling", "\n",
+      "  aggregation_function = ", paste0("'", x$aggregation_fun, "'"), ",\n",
+      "  monte_carlo_sampling_draws = ", x$monte_carlo_samples, ",\n",
+      "  # Simulation", "\n",
+      "  initial_state_vector = ", x$initial_state_vector, ",\n",
+      "  clamping_vector = ", x$clamping_vector, ",\n",
+      "  activation = ", paste0("'", x$activation, "'"), ",\n",
+      "  squashing = ",  paste0("'", x$squashing, "'"), ",\n",
+      "  lambda = ", x$lambda, ",\n",
+      "  max_iter = ", x$max_iter, ",\n",
+      "  min_error = ", x$min_error, ",\n",
+      "  # Runtime Options", "\n",
+      "  show_progress = ", x$show_progress, ",\n",
+      "  parallel = ", x$parallel, ",\n",
+      "  n_cores = ", x$n_cores, ",\n",
+      "  # Additional Options", "\n",
+      "  perform_aggregate_analysis = ", x$perform_aggregation, ",\n",
+      "  perform_monte_carlo_analysis = ", x$perform_monte_carlo, ",\n",
+      "  perform_monte_carlo_inference_bootstrap_analysis = ", x$perform_inference_bootstrap, ",\n",
+      "  include_zero_weighted_edges_in_aggregation_and_mc_sampling = ", x$include_zero_weighted_edges_in_aggregation_and_mc_sampling, ",\n",
+      "  include_monte_carlo_FCM_simulations_in_output = ",  x$include_monte_carlo_FCM_simulations_in_output, "\n",
+      ")", sep = ""
+    )
+  } else if (performed_aggregation & performed_mc & performed_bootstrap) {
+    cat(
+      "fcmconfr(", "\n",
+      "  adj_matrices = ", x$adj_matrices, ",\n",
+      "  # Aggregation and Monte Carlo Sampling", "\n",
+      "  aggregation_function = ", paste0("'", x$aggregation_fun, "'"), ",\n",
+      "  monte_carlo_sampling_draws = ", x$monte_carlo_samples, ",\n",
+      "  # Simulation", "\n",
+      "  initial_state_vector = ", x$initial_state_vector, ",\n",
+      "  clamping_vector = ", x$clamping_vector, ",\n",
+      "  activation = ", paste0("'", x$activation, "'"), ",\n",
+      "  squashing = ",  paste0("'", x$squashing, "'"), ",\n",
+      "  lambda = ", x$lambda, ",\n",
+      "  max_iter = ", x$max_iter, ",\n",
+      "  min_error = ", x$min_error, ",\n",
+      "  # Inference Estimation (bootstrap)", "\n",
+      "  inference_estimation_function = ", x$mc_inference_estimation_function, ",\n",
+      "  inference_estimation_CI = ", x$mc_inference_estimation_CI, ",\n",
+      "  inference_estimation_bootstrap_reps = ", x$mc_inference_bootstrap_reps, ",\n",
+      "  inference_estimation_bootstrap_draws_per_rep = ", x$mc_inference_bootstrap_draws_per_rep, ",\n",
+      "  # Runtime Options", "\n",
+      "  show_progress = ", x$show_progress, ",\n",
+      "  parallel = ", x$parallel, ",\n",
+      "  n_cores = ", x$n_cores, ",\n",
+      "  # Additional Options", "\n",
+      "  perform_aggregate_analysis = ", x$perform_aggregation, ",\n",
+      "  perform_monte_carlo_analysis = ", x$perform_monte_carlo, ",\n",
+      "  perform_monte_carlo_inference_bootstrap_analysis = ", x$perform_inference_bootstrap, ",\n",
+      "  include_zero_weighted_edges_in_aggregation_and_mc_sampling = ", x$include_zero_weighted_edges_in_aggregation_and_mc_sampling, ",\n",
+      "  include_monte_carlo_FCM_simulations_in_output = ",  x$include_monte_carlo_FCM_simulations_in_output, "\n",
+      ")", sep = ""
+    )
+  } else if (!performed_aggregation & performed_mc & !performed_bootstrap) {
+    cat(
+      "fcmconfr(", "\n",
+      "  adj_matrices = ", x$adj_matrices, ",\n",
+      "  # Monte Carlo Sampling", "\n",
+      "  monte_carlo_sampling_draws = ", x$monte_carlo_samples, ",\n",
+      "  # Simulation", "\n",
+      "  initial_state_vector = ", x$initial_state_vector, ",\n",
+      "  clamping_vector = ", x$clamping_vector, ",\n",
+      "  activation = ", paste0("'", x$activation, "'"), ",\n",
+      "  squashing = ",  paste0("'", x$squashing, "'"), ",\n",
+      "  lambda = ", x$lambda, ",\n",
+      "  max_iter = ", x$max_iter, ",\n",
+      "  min_error = ", x$min_error, ",\n",
+      "  # Runtime Options", "\n",
+      "  show_progress = ", x$show_progress, ",\n",
+      "  parallel = ", x$parallel, ",\n",
+      "  n_cores = ", x$n_cores, ",\n",
+      "  # Additional Options", "\n",
+      "  perform_aggregate_analysis = ", x$perform_aggregation, ",\n",
+      "  perform_monte_carlo_analysis = ", x$perform_monte_carlo, ",\n",
+      "  perform_monte_carlo_inference_bootstrap_analysis = ", x$perform_inference_bootstrap, ",\n",
+      "  include_zero_weighted_edges_in_aggregation_and_mc_sampling = ", x$include_zero_weighted_edges_in_aggregation_and_mc_sampling, ",\n",
+      "  include_monte_carlo_FCM_simulations_in_output = ",  x$include_monte_carlo_FCM_simulations_in_output, "\n",
+      ")", sep = ""
+    )
+  } else if (!performed_aggregation & performed_mc & performed_bootstrap) {
+    cat(
+      "fcmconfr(", "\n",
+      "  adj_matrices = ", x$adj_matrices, ",\n",
+      "  # Monte Carlo Sampling", "\n",
+      "  monte_carlo_sampling_draws = ", x$monte_carlo_samples, ",\n",
+      "  # Simulation", "\n",
+      "  initial_state_vector = ", x$initial_state_vector, ",\n",
+      "  clamping_vector = ", x$clamping_vector, ",\n",
+      "  activation = ", paste0("'", x$activation, "'"), ",\n",
+      "  squashing = ",  paste0("'", x$squashing, "'"), ",\n",
+      "  lambda = ", x$lambda, ",\n",
+      "  max_iter = ", x$max_iter, ",\n",
+      "  min_error = ", x$min_error, ",\n",
+      "  # Inference Estimation (bootstrap)", "\n",
+      "  inference_estimation_function = ", x$mc_inference_estimation_function, ",\n",
+      "  inference_estimation_CI = ", x$mc_inference_estimation_CI, ",\n",
+      "  inference_estimation_bootstrap_reps = ", x$mc_inference_bootstrap_reps, ",\n",
+      "  inference_estimation_bootstrap_draws_per_rep = ", x$mc_inference_bootstrap_draws_per_rep, ",\n",
+      "  # Runtime Options", "\n",
+      "  show_progress = ", x$show_progress, ",\n",
+      "  parallel = ", x$parallel, ",\n",
+      "  n_cores = ", x$n_cores, ",\n",
+      "  # Additional Options", "\n",
+      "  perform_aggregate_analysis = ", x$perform_aggregation, ",\n",
+      "  perform_monte_carlo_analysis = ", x$perform_monte_carlo, ",\n",
+      "  perform_monte_carlo_inference_bootstrap_analysis = ", x$perform_inference_bootstrap, ",\n",
+      "  include_zero_weighted_edges_in_aggregation_and_mc_sampling = ", x$include_zero_weighted_edges_in_aggregation_and_mc_sampling, ",\n",
+      "  include_monte_carlo_FCM_simulations_in_output = ",  x$include_monte_carlo_FCM_simulations_in_output, "\n",
+      ")", sep = ""
+    )
+  } else if (!performed_aggregation & !performed_mc & !performed_bootstrap) {
+    cat(
+      "fcmconfr(", "\n",
+      "  adj_matrices = ", x$adj_matrices, ",\n",
+      "  # Simulation", "\n",
+      "  initial_state_vector = ", x$initial_state_vector, ",\n",
+      "  clamping_vector = ", x$clamping_vector, ",\n",
+      "  activation = ", paste0("'", x$activation, "'"), ",\n",
+      "  squashing = ",  paste0("'", x$squashing, "'"), ",\n",
+      "  lambda = ", x$lambda, ",\n",
+      "  max_iter = ", x$max_iter, ",\n",
+      "  min_error = ", x$min_error, ",\n",
+      "  # Runtime Options", "\n",
+      "  show_progress = ", x$show_progress, ",\n",
+      "  # Additional Options", "\n",
+      "  perform_aggregate_analysis = ", x$perform_aggregation, ",\n",
+      "  perform_monte_carlo_analysis = ", x$perform_monte_carlo, ",\n",
+      "  perform_monte_carlo_inference_bootstrap_analysis = ", x$perform_inference_bootstrap, ",\n",
+      ")", sep = ""
+    )
+  }
 }
