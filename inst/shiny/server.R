@@ -8,6 +8,55 @@
 #' @param session data surrounding the shiny instance itself
 shiny_server <- function(input, output, session) {
 
+  output$definitions <- shiny::renderUI(
+    if (input$nav_panel == "Data") {
+      shiny::fluidRow(
+        shiny::HTML("<p><small><b>Initial State Vector:</b> sets the starting value
+                    of each concept in the simulation. Typically, all values are
+                    set to 1 to include every concept in the simulation. Set
+                    concepts that should not be included in the simulation (i.e.
+                    there impacts on the system should be ignored) to 0.</small>
+                    <br><br>
+                    <small><b>Clamping Vector:</b> Fixes or 'clamps' the activation
+                    values of specific concepts. Set a concept's clamping value to
+                    1 to measure its influence on the simulation output.</small></p>")
+      )
+    } else if (input$nav_panel == "Agg. and Monte Carlo Options") {
+      shiny::fluidRow(
+        shiny::HTML("<p><small><b>Include 0-Weighted Edges:</b> text</small>
+                    <br><br>
+                    <small><b>Aggregation Function:</b> text</small>
+                    <br><br>
+                    <small><b>Monte Carlo Options:</b> text</small></p>
+                    <br><br>
+                    <small><b>Inference Bootstrapping Options:</b> text</small></>")
+
+      )
+    } else if (input$nav_panel == "Simulation Options") {
+      shiny::fluidRow(
+        shiny::fluidRow(
+          shiny::HTML("<p><small><b>Activation Function</b> text</small>
+                    <br><br>
+                    <small><b>Squashing Function:</b> text</small>
+                    <br><br>
+                    <small><b>Lambda:</b> text</small></p>
+                    <br><br>
+                    <small><b>Max Iterations per Sim:</b> text</small>
+                    <br><br>
+                    <small><b>Max Iterations per Sim:</b> text</small></p>")
+
+        )
+      )
+    } else if (input$nav_panel == "Runtime Options") {
+      shiny::fluidRow(
+        shiny::fluidRow(
+          shiny::HTML("<p><small> text</small></p>")
+
+        )
+      )
+    }
+  )
+
   # Data Nav Panel
   # Data Loading and Checks ====
   adj_matrices_selected <- reactive({
@@ -528,8 +577,6 @@ shiny_server <- function(input, output, session) {
       NULL
     }
   })
-
-
 
 
   # Form Data
