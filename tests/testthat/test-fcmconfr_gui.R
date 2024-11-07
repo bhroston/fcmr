@@ -1,3 +1,321 @@
+
+test_that("fcmconfr_gui console output works", {
+  agg_and_no_mc_and_no_bs <- structure(
+    .Data = list(
+      adj_matrices = "salinization_ses_fcms",
+      # Aggregation
+      aggregation_function = 'mean',
+      # Simulation
+      initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+      clamping_vector = c(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+      activation = 'kosko',
+      squashing = 'sigmoid',
+      lambda = 1,
+      max_iter = 100,
+      min_error = 1e-05,
+      # Runtime Options
+      show_progress = TRUE,
+      # Additional Options
+      perform_aggregation = TRUE,
+      perform_monte_carlo = FALSE,
+      perform_inference_bootstrap = FALSE,
+      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE
+    ),
+    class = "fcmconfr_gui_input"
+  )
+  # test <- fcmconfr(
+  #   adj_matrices = salinization_ses_fcms,
+  #   # Aggregation
+  #   aggregation_function = 'mean',
+  #   # Simulation
+  #   initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+  #   clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+  #   activation = 'kosko',
+  #   squashing = 'sigmoid',
+  #   lambda = 1,
+  #   max_iter = 100,
+  #   min_error = 1e-05,
+  #   # Runtime Options
+  #   show_progress = TRUE,
+  #   # Additional Options
+  #   perform_aggregate_analysis = TRUE,
+  #   perform_monte_carlo_analysis = FALSE,
+  #   perform_monte_carlo_inference_bootstrap_analysis = FALSE,
+  #   include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE
+  # )
+  expect_snapshot(agg_and_no_mc_and_no_bs)
+
+  agg_and_mc_and_no_bs <- structure(
+    .Data = list(
+      adj_matrices = "salinization_ses_fcms",
+      # Aggregation and Monte Carlo Sampling
+      aggregation_function = 'mean',
+      monte_carlo_samples = 1000,
+      # Simulation
+      initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+      clamping_vector = c(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+      activation = 'kosko',
+      squashing = 'sigmoid',
+      lambda = 1,
+      max_iter = 100,
+      min_error = 1e-05,
+      # Runtime Options
+      show_progress = TRUE,
+      parallel = TRUE,
+      n_cores = 1,
+      # Additional Options
+      perform_aggregation = TRUE,
+      perform_monte_carlo = TRUE,
+      perform_inference_bootstrap = FALSE,
+      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
+      include_monte_carlo_FCM_simulations_in_output = TRUE
+    ),
+    class = "fcmconfr_gui_input"
+  )
+  # test <- fcmconfr(
+  #   adj_matrices = salinization_ses_fcms,
+  #   # Aggregation and Monte Carlo Sampling
+  #   aggregation_function = 'mean',
+  #   monte_carlo_sampling_draws = 50,
+  #   # Simulation
+  #   initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+  #   clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+  #   activation = 'kosko',
+  #   squashing = 'sigmoid',
+  #   lambda = 1,
+  #   max_iter = 100,
+  #   min_error = 1e-05,
+  #   # Runtime Options
+  #   show_progress = TRUE,
+  #   parallel = TRUE,
+  #   n_cores = 2,
+  #   # Additional Options
+  #   perform_aggregate_analysis = TRUE,
+  #   perform_monte_carlo_analysis = TRUE,
+  #   perform_monte_carlo_inference_bootstrap_analysis = FALSE,
+  #   include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
+  #   include_monte_carlo_FCM_simulations_in_output = TRUE
+  # )
+  expect_snapshot(agg_and_mc_and_no_bs)
+
+  agg_and_mc_and_bs <- structure(
+    .Data = list(
+      adj_matrices = "salinization_ses_fcms",
+      # Aggregation and Monte Carlo Sampling
+      aggregation_function = 'mean',
+      monte_carlo_samples = 1000,
+      # Simulation
+      initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+      clamping_vector = c(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+      activation = 'kosko',
+      squashing = 'sigmoid',
+      lambda = 1,
+      max_iter = 100,
+      min_error = 1e-05,
+      # Inference Estimation (bootstrap)
+      mc_inference_estimation_function = "mean",
+      mc_inference_estimation_CI = 0.95,
+      mc_inference_bootstrap_reps = 1000,
+      mc_inference_bootstrap_draws_per_rep = 1000,
+      # Runtime Options
+      show_progress = TRUE,
+      parallel = TRUE,
+      n_cores = 1,
+      # Additional Options
+      perform_aggregation = TRUE,
+      perform_monte_carlo = TRUE,
+      perform_inference_bootstrap = TRUE,
+      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
+      include_monte_carlo_FCM_simulations_in_output = TRUE
+    ),
+    class = "fcmconfr_gui_input"
+  )
+  # test <- fcmconfr(
+  #   adj_matrices = salinization_ses_fcms,
+  #   # Aggregation and Monte Carlo Sampling
+  #   aggregation_function = 'mean',
+  #   monte_carlo_sampling_draws = 10,
+  #   # Simulation
+  #   initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+  #   clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+  #   activation = 'kosko',
+  #   squashing = 'sigmoid',
+  #   lambda = 1,
+  #   max_iter = 100,
+  #   min_error = 1e-05,
+  #   # Inference Estimation (bootstrap)
+  #   inference_estimation_function = mean,
+  #   inference_estimation_CI = 0.95,
+  #   inference_estimation_bootstrap_reps = 100,
+  #   inference_estimation_bootstrap_draws_per_rep = 100,
+  #   # Runtime Options
+  #   show_progress = TRUE,
+  #   parallel = TRUE,
+  #   n_cores = 2,
+  #   # Additional Options
+  #   perform_aggregate_analysis = TRUE,
+  #   perform_monte_carlo_analysis = TRUE,
+  #   perform_monte_carlo_inference_bootstrap_analysis = TRUE,
+  #   include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+  #   include_monte_carlo_FCM_simulations_in_output = FALSE
+  # )
+  expect_snapshot(agg_and_mc_and_bs)
+
+  no_agg_and_mc_and_no_bs <- structure(
+    .Data = list(
+      adj_matrices = "salinization_ses_fcms",
+      # Monte Carlo Sampling
+      monte_carlo_samples = 1000,
+      # Simulation
+      initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+      clamping_vector = c(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+      activation = 'kosko',
+      squashing = 'sigmoid',
+      lambda = 1,
+      max_iter = 100,
+      min_error = 1e-05,
+      # Runtime Options
+      show_progress = TRUE,
+      parallel = TRUE,
+      n_cores = 1,
+      # Additional Options
+      perform_aggregation = FALSE,
+      perform_monte_carlo = TRUE,
+      perform_inference_bootstrap = FALSE,
+      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
+      include_monte_carlo_FCM_simulations_in_output = TRUE
+    ),
+    class = "fcmconfr_gui_input"
+  )
+  # test <- fcmconfr(
+  #   adj_matrices = salinization_ses_fcms,
+  #   # Monte Carlo Sampling
+  #   monte_carlo_sampling_draws = 10,
+  #   # Simulation
+  #   initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+  #   clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+  #   activation = 'kosko',
+  #   squashing = 'sigmoid',
+  #   lambda = 1,
+  #   max_iter = 100,
+  #   min_error = 1e-05,
+  #   # Runtime Options
+  #   show_progress = TRUE,
+  #   parallel = TRUE,
+  #   n_cores = 2,
+  #   # Additional Options
+  #   perform_aggregate_analysis = FALSE,
+  #   perform_monte_carlo_analysis = TRUE,
+  #   perform_monte_carlo_inference_bootstrap_analysis = FALSE,
+  #   include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
+  #   include_monte_carlo_FCM_simulations_in_output = TRUE
+  # )
+  expect_snapshot(no_agg_and_mc_and_no_bs)
+
+  no_agg_and_mc_and_bs <- structure(
+    .Data = list(
+      adj_matrices = "salinization_ses_fcms",
+      # Monte Carlo Sampling
+      monte_carlo_samples = 1000,
+      # Simulation
+      initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+      clamping_vector = c(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+      activation = 'kosko',
+      squashing = 'sigmoid',
+      lambda = 1,
+      max_iter = 100,
+      min_error = 1e-05,
+      # Inference Estimation (bootstrap)
+      mc_inference_estimation_function = "mean",
+      mc_inference_estimation_CI = 0.95,
+      mc_inference_bootstrap_reps = 1000,
+      mc_inference_bootstrap_draws_per_rep = 1000,
+      # Runtime Options
+      show_progress = TRUE,
+      parallel = TRUE,
+      n_cores = 1,
+      # Additional Options
+      perform_aggregation = FALSE,
+      perform_monte_carlo = TRUE,
+      perform_inference_bootstrap = TRUE,
+      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
+      include_monte_carlo_FCM_simulations_in_output = TRUE
+    ),
+    class = "fcmconfr_gui_input"
+  )
+  # test <- fcmconfr(
+  #   adj_matrices = salinization_ses_fcms,
+  #   # Monte Carlo Sampling
+  #   monte_carlo_sampling_draws = 10,
+  #   # Simulation
+  #   initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+  #   clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+  #   activation = 'kosko',
+  #   squashing = 'sigmoid',
+  #   lambda = 1,
+  #   max_iter = 100,
+  #   min_error = 1e-05,
+  #   # Inference Estimation (bootstrap)
+  #   inference_estimation_function = mean,
+  #   inference_estimation_CI = 0.95,
+  #   inference_estimation_bootstrap_reps = 100,
+  #   inference_estimation_bootstrap_draws_per_rep = 100,
+  #   # Runtime Options
+  #   show_progress = TRUE,
+  #   parallel = TRUE,
+  #   n_cores = 2,
+  #   # Additional Options
+  #   perform_aggregate_analysis = FALSE,
+  #   perform_monte_carlo_analysis = TRUE,
+  #   perform_monte_carlo_inference_bootstrap_analysis = TRUE,
+  #   include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
+  #   include_monte_carlo_FCM_simulations_in_output = TRUE
+  # )
+  expect_snapshot(no_agg_and_mc_and_bs)
+
+  no_agg_and_no_mc_and_no_bs <- structure(
+    .Data = list(
+      adj_matrices = "salinization_ses_fcms",
+      # Simulation
+      initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+      clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+      activation = 'kosko',
+      squashing = 'sigmoid',
+      lambda = 1,
+      max_iter = 100,
+      min_error = 1e-05,
+      # Runtime Options
+      show_progress = TRUE,
+      # Additional Options
+      perform_aggregation = FALSE,
+      perform_monte_carlo = FALSE,
+      perform_inference_bootstrap = FALSE
+    ),
+    class = "fcmconfr_gui_input"
+  )
+  # test <- fcmconfr(
+  #   adj_matrices = salinization_ses_fcms,
+  #   # Simulation
+  #   initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+  #   clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+  #   activation = 'kosko',
+  #   squashing = 'sigmoid',
+  #   lambda = 1,
+  #   max_iter = 100,
+  #   min_error = 1e-05,
+  #   # Runtime Options
+  #   show_progress = TRUE,
+  #   # Additional Options
+  #   perform_aggregate_analysis = FALSE,
+  #   perform_monte_carlo_analysis = FALSE,
+  #   perform_monte_carlo_inference_bootstrap_analysis = FALSE,
+  # )
+  expect_snapshot(no_agg_and_no_mc_and_no_bs)
+})
+
+
+
+
 # # test_adj_matrix <- data.frame(
 # #   "A" = rep(0, 26),
 # #   "B" = rep(0, 26),
