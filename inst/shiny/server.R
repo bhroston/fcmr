@@ -12,24 +12,28 @@ shiny_server <- function(input, output, session) {
     if (input$nav_panel == "Data") {
       shiny::fluidRow(
         shiny::HTML("<p><small><b>Initial State Vector:</b> sets the starting value
-                    of each concept in the simulation. Typically, all values are
-                    set to 1 to include every concept in the simulation. Set
-                    concepts that should not be included in the simulation (i.e.
-                    there impacts on the system should be ignored) to 0.</small>
-                    <br><br>
-                    <small><b>Clamping Vector:</b> Fixes or 'clamps' the activation
-                    values of specific concepts. Set a concept's clamping value to
-                    1 to measure its influence on the simulation output.</small></p>")
+        of each concept in the simulation. Typically, all values are set to 1 to
+        include every concept in the simulation. Set concepts that should not be
+        included in the simulation (i.e. there impacts on the system should be
+        ignored) to 0.</small>
+        <br><br>
+        <small><b>Clamping Vector:</b> Fixes or 'clamps' the activation
+        values of specific concepts. Set a concept's clamping value to
+        1 to measure its influence on the simulation output.</small></p>")
       )
     } else if (input$nav_panel == "Agg. and Monte Carlo Options") {
       shiny::fluidRow(
-        shiny::HTML("<p><small><b>Include 0-Weighted Edges:</b> text</small>
-                    <br><br>
-                    <small><b>Aggregation Function:</b> text</small>
-                    <br><br>
-                    <small><b>Monte Carlo Options:</b> text</small></p>
-                    <br><br>
-                    <small><b>Inference Bootstrapping Options:</b> text</small></>")
+        shiny::HTML("<p><small><b>Include 0-Weighted Edges:</b> Whether to
+        incorporate zeroes as intentionally-defined edge weights or ignore
+        them when aggregating adj. matrices and sampling for monte carlo FCMs.</small>
+        <br><br>
+        <small><b>Aggregation Function:</b> Aggregate the adj. matrices into a
+        single FCM by taking either the mean or median of the edge weights for
+        edges included in multiple maps.</small>
+        <br><br>
+        <small><b>Monte Carlo Options:</b> text</small></p>
+        <br><br>
+        <small><b>Inference Bootstrapping Options:</b> text</small></>")
 
       )
     } else if (input$nav_panel == "Simulation Options") {
