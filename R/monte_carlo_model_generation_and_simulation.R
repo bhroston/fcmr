@@ -122,7 +122,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
 
     doSNOW::registerDoSNOW(cl)
     # pb <- utils::txtProgressBar(min = 0, max = length(simulated_adj_matrices)/n_cores, style = 3)
-    invisible(utils::capture.output(pb <- utils::txtProgressBar(min = 0, max = length(mc_adj_matrices)/n_cores, style = 3)))
+    invisible(utils::capture.output(pb <- utils::txtProgressBar(min = 0, max = length(mc_adj_matrices)/n_cores, style = 3, width = 50)))
     progress <- function(n) utils::setTxtProgressBar(pb, n)
     # cat("\n")
     print("Running simulations. There may be an additional wait for larger sets.", quote = FALSE)
