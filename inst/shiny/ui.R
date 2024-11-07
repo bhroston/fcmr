@@ -96,6 +96,7 @@ shiny_ui <- function() {
             shinyWidgets::radioGroupButtons("activation", "", choiceValues = c("kosko", "modified-kosko", "rescale"), choiceNames = c("Kosko", "Modified-Kosko", "Rescale"))
           )
         ),
+        shiny::uiOutput("rescale_tanh_warning_text"),
         shiny::fluidRow(
           shiny::column(
             width = 5, align = "right",
@@ -135,8 +136,7 @@ shiny_ui <- function() {
             width = 3, align = "left",
             shiny::numericInput("min_error", "", 1e-5, min = 0, max = 1)
           )
-        ),
-        shiny::uiOutput("fuzzy_set_samples_ui")
+        )
       ), # ----
       bslib::nav_panel(
         title = "Runtime Options", icon = shiny::icon("clock"), # ----

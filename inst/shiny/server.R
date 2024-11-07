@@ -491,17 +491,19 @@ shiny_server <- function(input, output, session) {
   })
   # ----
 
-  # Fuzzy Set Samples
-  output$fuzzy_set_samples_ui <- shiny::renderUI({
-    if (fcm_class() %in% c("ivfn", "tfn") | !adj_matrices_selected()) {
+  # Warn users about using tanh with rescale activation
+  output$rescale_tanh_warning_text <- shiny::renderUI({
+    if (input$activation == "rescale") {
       shiny::fluidRow(
         shiny::column(
           width = 5, align = "right",
-          shiny::h5(paste0("Fuzzy Set Samples"), style = "padding: 28px;")
+          shiny::h5("", style = "padding: 35px;")
         ),
         shiny::column(
-          width = 3, align = "left",
-          shiny::numericInput("fuzzy_set_samples", "", 1, min = 10, step = 10)
+          width = 7, align = "left",
+          shiny::p("The Rescale activation function is designed to work with
+                   the sigmoid squashing function only!"),
+          shiny::p("Using tanh will produce illogical results.")
         )
       )
     } else {
@@ -526,6 +528,8 @@ shiny_server <- function(input, output, session) {
       NULL
     }
   })
+
+
 
 
   # Form Data
