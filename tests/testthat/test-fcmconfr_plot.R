@@ -48,8 +48,8 @@ test_that("fcmconfr_plot works", {
         inference_estimation_bootstrap_draws_per_rep = 1000,
         # Runtime Options
         show_progress = TRUE,
-        parallel = FALSE,
-        n_cores = 10,
+        parallel = TRUE,
+        n_cores = 2,
         # Additional Options
         perform_aggregate_analysis = TRUE,
         perform_monte_carlo_analysis = TRUE,
@@ -104,8 +104,8 @@ test_that("fcmconfr_plot works", {
         inference_estimation_bootstrap_draws_per_rep = 1000,
         # Runtime Options
         show_progress = TRUE,
-        parallel = FALSE,
-        n_cores = 10,
+        parallel = TRUE,
+        n_cores = 2,
         # Additional Options
         perform_aggregate_analysis = TRUE,
         perform_monte_carlo_analysis = TRUE,
@@ -169,8 +169,8 @@ test_that("fcmconfr_plot works", {
         inference_estimation_bootstrap_draws_per_rep = 1000,
         # Runtime Options
         show_progress = TRUE,
-        parallel = FALSE,
-        n_cores = 10,
+        parallel = TRUE,
+        n_cores = 2,
         # Additional Options
         perform_aggregate_analysis = TRUE,
         perform_monte_carlo_analysis = TRUE,
