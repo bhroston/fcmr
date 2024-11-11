@@ -568,7 +568,8 @@ test_that("clean_simulation_output works", {
     C6 = c(0, -0.95, 0, 0, -0.95, 0)
   )
   test_sim <- simulate_conventional_fcm(adj_matrix, c(1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0), activation = "kosko", squashing = "sigmoid")
-  clean_simulation_output(test_sim$state_vectors, c("C1", "C2", "C3", "C4", "C5", "C6"))
+  clean_df <- clean_simulation_output(test_sim$state_vectors, c("C1", "C2", "C3", "C4", "C5", "C6"))
+  expect_identical(colnames(clean_df), c("iter", "C1", "C2", "C3", "C4", "C5", "C6"))
 })
 
 

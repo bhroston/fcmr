@@ -91,40 +91,6 @@ test_that("streamlined fcmconfr works", {
   adj_matrix_w_ivfns_2 <- make_adj_matrix_w_ivfns(lower_adj_matrix_2, upper_adj_matrix_2)
   test_fcms <- list(adj_matrix_w_ivfns_1, adj_matrix_w_ivfns_2)
 
-
-
-  lower_adj_matrix_1 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.25, 0)
-  )
-  mode_adj_matrix_1 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.5, 0)
-  )
-  upper_adj_matrix_1 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.75, 0)
-  )
-  adj_matrix_w_tfns_1 <- make_adj_matrix_w_tfns(lower_adj_matrix_1, mode_adj_matrix_1, upper_adj_matrix_1)
-
-  lower_adj_matrix_2 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.15, 0)
-  )
-  mode_adj_matrix_2 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.65, 0)
-  )
-  upper_adj_matrix_2 <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0.85, 0)
-  )
-  adj_matrix_w_tfns_2 <- make_adj_matrix_w_tfns(lower_adj_matrix_2, mode_adj_matrix_2, upper_adj_matrix_2)
-
-  test_fcms <- list(adj_matrix_w_tfns_1, adj_matrix_w_tfns_2)
-
-  # test_aggregate <- aggregate_fcms(test_fcms, "mean")
-
   expect_no_error(
     invisible(capture.output(
       test <- fcmconfr(
@@ -159,6 +125,39 @@ test_that("streamlined fcmconfr works", {
   )
 
   expect_snapshot(test)
+
+
+  lower_adj_matrix_1 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.25, 0)
+  )
+  mode_adj_matrix_1 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.5, 0)
+  )
+  upper_adj_matrix_1 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.75, 0)
+  )
+  adj_matrix_w_tfns_1 <- make_adj_matrix_w_tfns(lower_adj_matrix_1, mode_adj_matrix_1, upper_adj_matrix_1)
+
+  lower_adj_matrix_2 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.15, 0)
+  )
+  mode_adj_matrix_2 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.65, 0)
+  )
+  upper_adj_matrix_2 <- data.frame(
+    "A" = c(0, 0),
+    "B" = c(0.85, 0)
+  )
+  adj_matrix_w_tfns_2 <- make_adj_matrix_w_tfns(lower_adj_matrix_2, mode_adj_matrix_2, upper_adj_matrix_2)
+
+  test_fcms <- list(adj_matrix_w_tfns_1, adj_matrix_w_tfns_2)
+
+  # test_aggregate <- aggregate_fcms(test_fcms, "mean")
 
   expect_no_error(
     invisible(capture.output(
