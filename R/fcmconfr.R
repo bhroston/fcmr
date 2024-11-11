@@ -602,6 +602,9 @@ plot_conventional_fcmconfr <- function(conventional_fcmconfr_output,
   #
 
   fcm_class_subtitle <- "Conventional FCMs"
+  fcm_clamping_vector <- conventional_fcmconfr_output$params$simulation_opts$clamping_vector
+  fcm_nodes <- unique(lapply(conventional_fcmconfr_output$params$adj_matrices, colnames))[[1]]
+  clamped_nodes <- fcm_nodes[fcm_clamping_vector != 0]
 
   agg_function <- conventional_fcmconfr_output$params$aggregation_function
   if (agg_function == "mean") {
@@ -615,7 +618,17 @@ plot_conventional_fcmconfr <- function(conventional_fcmconfr_output,
   mc_CIs <- conventional_fcmconfr_output$inferences$monte_carlo_fcms$bootstrap$CIs_by_node
   mc_CIs$analysis_source <- "mc"
 
+  # Remove clamped_nodes from plot data frames
+  aggregate_inferences_longer <- aggregate_inferences_longer[!(aggregate_inferences_longer$name %in% clamped_nodes), ]
+  mc_CIs <- mc_CIs[!(mc_CIs$node %in% clamped_nodes), ]
+
   max_y <- max(max(mc_CIs$upper_0.975), max(aggregate_inferences_longer$value))
+  max_y <- (ceiling(max_y*1000)/1000)
+  min_y <- min(min(mc_CIs$lower_0.025), min(aggregate_inferences_longer$value))
+  min_y <- (floor(min_y*1000)/1000)
+
+  aggregate_inferences_longer <- aggregate_inferences_longer[aggregate_inferences_longer$value >= 0.001, ]
+  mc_CIs <- mc_CIs[mc_CIs$node %in% aggregate_inferences_longer$name, ]
 
   fcmconfr_plot <- ggplot() +
     geom_col(data = mc_CIs, aes(x = node, y = expected_value, fill = analysis_source, color = monte_carlo_col_fill), width = 0.5, alpha = monte_carlo_col_alpha, linewidth = 0.3) +
@@ -623,7 +636,7 @@ plot_conventional_fcmconfr <- function(conventional_fcmconfr_output,
     geom_point(data = aggregate_inferences_longer, aes(x = name, y = value, fill = analysis_source), color = "black", shape = 21, size = 3, stroke = 0.5) +
     scale_fill_manual(values = c(mc = monte_carlo_col_fill, aggregate = aggregate_point_fill), labels = c(mc = "Monte Carlo Average", aggregate = "Aggregate")) +
     scale_color_manual(values = c(mc = "black"), labels = c(mc = "Monte Carlo CIs")) +
-    scale_y_continuous(expand = c(0, 0), limits = c(0, max_y + 0.05)) +
+    scale_y_continuous(expand = c(0, 0), limits = c(min_y, max_y)) +
     guides(alpha = "none", color = guide_legend(order = 1), shape = guide_legend(order = 2)) +
     expand_limits(y = 0) +
     ggtitle("FCMconfR Inferences", subtitle = paste(fcm_class_subtitle)) +
