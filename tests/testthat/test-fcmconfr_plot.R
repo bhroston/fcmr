@@ -88,7 +88,7 @@ test_that("fcmconfr_plot works", {
         adj_matrices = test_fcms,
         # Aggregation and Monte Carlo Sampling
         aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 100,
+        monte_carlo_sampling_draws = 1000,
         # Simulation
         initial_state_vector = c(1, 1),
         clamping_vector = c(0, 1),
