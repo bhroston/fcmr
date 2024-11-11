@@ -296,7 +296,7 @@ infer_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
   #   apply(inference_state_vectors_as_distributions, c(1, 2), function(element) mean(element[[1]]), simplify = TRUE)
   # )
 
-  browser()
+  # browser()
 
   inference_state_vectors_estimates <- scenario_simulation$state_vectors
   if (fcm_class == "ivfn") {
@@ -417,10 +417,10 @@ equalize_baseline_and_scenario_outputs <- function(baseline_state_vectors,
 
   #browser()
   if ("iter" %in% colnames(baseline_state_vectors)) {
-    baseline_state_vectors[, !(colnames(baseline_state_vectors) %in% "iter")]
+    baseline_state_vectors <- baseline_state_vectors[, !(colnames(baseline_state_vectors) %in% "iter")]
   }
   if ("iter" %in% colnames(scenario_state_vectors)) {
-    scenario_state_vectors[, !(colnames(scenario_state_vectors) %in% "iter")]
+    scenario_state_vectors <- scenario_state_vectors[, !(colnames(scenario_state_vectors) %in% "iter")]
   }
 
   list(
