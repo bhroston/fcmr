@@ -11,51 +11,70 @@ shiny_server <- function(input, output, session) {
   output$definitions <- shiny::renderUI(
     if (input$nav_panel == "Data") {
       shiny::fluidRow(
-        shiny::HTML("<p><small><b>Initial State Vector:</b> sets the starting value
-        of each concept in the simulation. Typically, all values are set to 1 to
-        include every concept in the simulation. Set concepts that should not be
-        included in the simulation (i.e. there impacts on the system should be
-        ignored) to 0.</small>
+        shiny::HTML("<p><small><b>Initial State Vector:</b> Sets the starting
+        value of each concept in the simulation. Typically, all values are set
+        to 1 to include every concept. Set concepts that should not be included
+        in the simulation to 0 (i.e. their impacts on the system should be
+        ignored).</small>
         <br><br>
-        <small><b>Clamping Vector:</b> Fixes or 'clamps' the activation
-        values of specific concepts. Set a concept's clamping value to
-        1 to measure its influence on the simulation output.</small></p>")
+        <small><b>Clamping Vector:</b> Fixes or 'clamps' the value of specific
+        concepts for the entire simulation. Set a concept's clamping value in
+        the range of [0, 1] or [-1, 1] depending on the squashing function to
+        measure its influence on the simulation output.</small></p>")
       )
     } else if (input$nav_panel == "Agg. and Monte Carlo Options") {
       shiny::fluidRow(
-        shiny::HTML("<p><small><b>Include 0-Weighted Edges:</b> Whether to
-        incorporate zeroes as intentionally-defined edge weights or ignore
-        them when aggregating adj. matrices and sampling for monte carlo FCMs.</small>
-        <br><br>
-        <small><b>Aggregation Function:</b> Aggregate the adj. matrices into a
-        single FCM by taking either the mean or median of the edge weights for
-        edges included in multiple maps.</small>
-        <br><br>
-        <small><b>Monte Carlo Options:</b> text</small></p>
-        <br><br>
-        <small><b>Inference Bootstrapping Options:</b> text</small></>")
-
+        shiny::HTML("<p><small><b>Include 0-Weighted Edges:</b> Only applicable
+        when FCMs are aggregated. When taking the median or the mean across all
+        adjacency matrices in a set, links that are not specified are either
+        assigned a weight of zero (Include 0-Weighted Edges = TRUE) or ignored
+        (Include 0-Weighted Edges = FALSE).</small></p><br>"),
+        shiny::h4("Aggregation Options"),
+        shiny::HTML("<p><small><b>Aggregation Analysis:</b> Aggregate input
+        adjacency matrices into a single, collective adjacency matrix.</small></p>
+        <br>
+        <small><b>Aggregation Function:</b> Specify the expected value (mean or
+        median) of edge weights across all adjacency matrices in a set.
+        </small></p>
+        <br>"),
+        shiny::h4("Monte Carlo Options"),
+        shiny::HTML("<small><b>Monte Carlo Analysis:</b> Generate N simulations
+        from N adjacency matrices created via Monte Carlo sampling of input
+        adjacency matrices.</small></p>
+        <small><b># Sample Maps to Generate:</b> The number of adjacency
+        matrices (N) to generate</small></p>
+        <small><b>Inference Bootstrap Analysis:</b> Estimate confidence bounds
+        about Monte Carlo simulation outputs for each modeled concept
+        </small></p>
+        <small><b>Inference Estimation Function:</b> Specify whether confidence
+        bounds will be about the mean or the median</small></p>
+        <small><b># Bootstraps:</b> The number of bootstraps to perform when
+        estimating confidence intervals </small></p>
+        <br></>")
       )
     } else if (input$nav_panel == "Simulation Options") {
       shiny::fluidRow(
         shiny::fluidRow(
-          shiny::HTML("<p><small><b>Activation Function</b> text</small>
-                    <br><br>
-                    <small><b>Squashing Function:</b> text</small>
-                    <br><br>
-                    <small><b>Lambda:</b> text</small></p>
-                    <br><br>
-                    <small><b>Max Iterations per Sim:</b> text</small>
-                    <br><br>
-                    <small><b>Max Iterations per Sim:</b> text</small></p>")
-
+          shiny::HTML("<p><small><b>Activation Function</b> The activation
+          function to be applied.</small></p>
+          <small><b>Squashing Function:</b> The squashing (also known as
+          transformation or threshold) function to apply. </small></p>
+          <small><b>Lambda:</b> A numeric value that defines the steepness of
+          the slope of the squashing function when tanh or sigmoid are
+          applied</small></p>
+          <small><b>Max Iterations per Sim:</b> The maximum number of iterations
+          to run if the minimum error value is not achieved</small></p>
+          <small><b>Min. Acceptable Error:</b> The lowest error (sum of the
+          absolute value of the current state vector minus the previous state
+          vector) at which no more iterations are necessary and the simulation
+          will stop</small></p>")
         )
       )
     } else if (input$nav_panel == "Runtime Options") {
       shiny::fluidRow(
         shiny::fluidRow(
-          shiny::HTML("<p><small> text</small></p>")
-
+          shiny::HTML("<p><small>These options only influence runtime
+          performance and do NOT impact results.</small></p>")
         )
       )
     }

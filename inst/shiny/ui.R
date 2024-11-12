@@ -7,7 +7,7 @@ shiny_ui <- function() {
   bslib::page_sidebar(
     title = "FCMconfR GUI",
     sidebar = bslib::sidebar(
-      title = "Definitions", position = "right", open = FALSE,
+      title = "Definitions", position = "right", open = FALSE, width = "350px",
       shiny::uiOutput("definitions")
     ),
     bslib::navset_underline(
