@@ -9,7 +9,6 @@ get_mc_simulations_inference_CIs_w_bootstrap(
   inference_function = "mean",
   confidence_interval = 0.95,
   bootstrap_reps = 1000,
-  bootstrap_draws_per_rep = 1000,
   parallel = TRUE,
   n_cores = integer(),
   show_progress = TRUE
@@ -25,9 +24,6 @@ inferences from the monte carlo simulations}
 confidence intervals? (e.g. 0.95)}
 
 \item{bootstrap_reps}{Repetitions for bootstrap process, if chosen}
-
-\item{bootstrap_draws_per_rep}{Number of samples to draw (with replacement) from
-the data per bootstrap_rep}
 
 \item{parallel}{TRUE/FALSE Whether to perform the function using parallel processing}
 
