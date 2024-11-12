@@ -345,7 +345,7 @@ shiny_server <- function(input, output, session) {
           shiny::fluidRow(
             shiny::column(
               width = 6, align = "right",
-              shiny::h5("Aggregation Function", style = "padding: 35px;")
+              shiny::h5("Aggregation Function", style = "padding-top:35px;")
             ),
             shiny::column(
               width = 6, align = "left",
@@ -407,8 +407,8 @@ shiny_server <- function(input, output, session) {
       shiny::fluidPage(
         shiny::fluidRow(
           shiny::column(
-            width = 6, align = "right",
-            shiny::h5("# Sample Maps To Generate", style = "padding: 35px;")
+            width = 6, align = "right", style = "padding-top:28px;",
+            shiny::h5("# Sample Maps To Generate")
           ),
           shiny::column(
             width = 6, align = "left",
