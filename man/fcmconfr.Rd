@@ -18,7 +18,6 @@ fcmconfr(
   inference_estimation_function = c("mean", "median"),
   inference_estimation_CI = 0.95,
   inference_estimation_bootstrap_reps = 5000,
-  inference_estimation_bootstrap_draws_per_rep = 5000,
   show_progress = TRUE,
   parallel = TRUE,
   n_cores = integer(),
@@ -71,10 +70,6 @@ of each concept across all monte carlo FCMs (via bootstrap)}
 \item{inference_estimation_bootstrap_reps}{The number of bootstraps to perform in
 estimating the confidence interval for the inferences of each concept across all monte
 carlo FCMs}
-
-\item{inference_estimation_bootstrap_draws_per_rep}{The number of draws to sample
-(with replacement) from the estimates for the inferences of each concept across
-all monte carlo FCMs per bootstrap}
 
 \item{show_progress}{TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 from the pbapply package as the underlying function.}
@@ -208,7 +203,6 @@ ex_conventional_fcmconfr <- fcmconfr(
   inference_estimation_function = "median",
   inference_estimation_CI = 0.95,
   inference_estimation_bootstrap_reps = 1000,
-  inference_estimation_bootstrap_draws_per_rep = 1000,
   # Runtime Options
   show_progress = TRUE,
   parallel = TRUE,
@@ -263,11 +257,10 @@ ex_ivfn_fcmconfr <- fcmconfr(
   inference_estimation_function = "mean",
   inference_estimation_CI = 0.95,
   inference_estimation_bootstrap_reps = 1000,
-  inference_estimation_bootstrap_draws_per_rep = 1000,
   # Runtime Options
   show_progress = TRUE,
-  parallel = FALSE,
-  n_cores = 10,
+  parallel = TRUE,
+  n_cores = 2,
   # Additional Options
   perform_aggregate_analysis = TRUE,
   perform_monte_carlo_analysis = TRUE,
@@ -328,11 +321,9 @@ ex_tfn_fcmconfr <- fcmconfr(
   inference_estimation_function = "mean",
   inference_estimation_CI = 0.95,
   inference_estimation_bootstrap_reps = 1000,
-  inference_estimation_bootstrap_draws_per_rep = 1000,
   # Runtime Options
   show_progress = TRUE,
   parallel = FALSE,
-  n_cores = 10,
   # Additional Options
   perform_aggregate_analysis = TRUE,
   perform_monte_carlo_analysis = TRUE,

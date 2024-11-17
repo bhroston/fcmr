@@ -281,8 +281,6 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
 #' @param confidence_interval What are of the distribution should be bounded by the
 #' confidence intervals? (e.g. 0.95)
 #' @param bootstrap_reps Repetitions for bootstrap process, if chosen
-#' @param bootstrap_draws_per_rep Number of samples to draw (with replacement) from
-#' the data per bootstrap_rep
 #' @param parallel TRUE/FALSE Whether to perform the function using parallel processing
 #' @param n_cores Number of cores to use in parallel processing. If no input given,
 #' will use all available cores in the machine.
@@ -297,7 +295,6 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
                                                          inference_function = "mean",
                                                          confidence_interval = 0.95,
                                                          bootstrap_reps = 1000,
-                                                         bootstrap_draws_per_rep = 1000,
                                                          parallel = TRUE,
                                                          n_cores = integer(),
                                                          show_progress = TRUE) {
@@ -314,7 +311,9 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
 
   # browser()
   # Check function inputs
-  monte_carlo_bootstrap_checks(inference_function, confidence_interval, bootstrap_reps, bootstrap_draws_per_rep)
+  # browser()
+  bootstrap_draws_per_rep <- nrow(mc_simulations_inference_df)
+  monte_carlo_bootstrap_checks(inference_function, confidence_interval, bootstrap_reps)
 
   # Confirm necessary packages are available. If not, warn user and change run options
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
@@ -773,8 +772,6 @@ build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_mat
 #' @param confidence_interval What are of the distribution should be bounded by the
 #' confidence intervals? (e.g. 0.95)
 #' @param bootstrap_reps Repetitions for bootstrap process, if chosen
-#' @param bootstrap_draws_per_rep Number of samples to draw (with replacement) from
-#' the data per bootstrap_rep
 #'
 #' @returns NULL; Errors if checks fail
 #'
@@ -783,8 +780,7 @@ build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_mat
 #' NULL
 monte_carlo_bootstrap_checks <- function(inference_function,
                                          confidence_interval,
-                                         bootstrap_reps,
-                                         bootstrap_draws_per_rep) {
+                                         bootstrap_reps) {
   # browser()
 
   if (!(inference_function %in% c("mean", "median"))) {
@@ -805,14 +801,6 @@ monte_carlo_bootstrap_checks <- function(inference_function,
 
   if (bootstrap_reps %% 2 != 0) {
     stop("Input Validation Error: bootstrap_reps must be a positive integer")
-  }
-
-  if (!is.numeric(bootstrap_draws_per_rep)) {
-    stop("Input Validation Error: ootstrap_draws_per_rep must be a positive integer")
-  }
-
-  if (bootstrap_draws_per_rep %% 2 != 0) {
-    stop("Input Validation Error: ootstrap_draws_per_rep must be a positive integer")
   }
 }
 

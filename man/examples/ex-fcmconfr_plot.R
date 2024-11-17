@@ -43,7 +43,6 @@ ex_conventional_fcmconfr <- fcmconfr(
   inference_estimation_function = "median",
   inference_estimation_CI = 0.95,
   inference_estimation_bootstrap_reps = 1000,
-  inference_estimation_bootstrap_draws_per_rep = 1000,
   # Runtime Options
   show_progress = TRUE,
   parallel = TRUE,
@@ -102,7 +101,6 @@ ex_ivfn_fcmconfr <- fcmconfr(
   inference_estimation_function = "mean",
   inference_estimation_CI = 0.95,
   inference_estimation_bootstrap_reps = 1000,
-  inference_estimation_bootstrap_draws_per_rep = 1000,
   # Runtime Options
   show_progress = TRUE,
   parallel = FALSE,
@@ -169,7 +167,6 @@ ex_tfn_fcmconfr <- fcmconfr(
   inference_estimation_function = "mean",
   inference_estimation_CI = 0.95,
   inference_estimation_bootstrap_reps = 1000,
-  inference_estimation_bootstrap_draws_per_rep = 1000,
   # Runtime Options
   show_progress = TRUE,
   parallel = FALSE,
