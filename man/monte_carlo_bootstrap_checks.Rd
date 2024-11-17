@@ -7,8 +7,7 @@
 monte_carlo_bootstrap_checks(
   inference_function,
   confidence_interval,
-  bootstrap_reps,
-  bootstrap_draws_per_rep
+  bootstrap_reps
 )
 }
 \arguments{
@@ -19,9 +18,6 @@ inferences from the monte carlo simulations}
 confidence intervals? (e.g. 0.95)}
 
 \item{bootstrap_reps}{Repetitions for bootstrap process, if chosen}
-
-\item{bootstrap_draws_per_rep}{Number of samples to draw (with replacement) from
-the data per bootstrap_rep}
 }
 \value{
 NULL; Errors if checks fail

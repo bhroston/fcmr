@@ -96,9 +96,6 @@
 #' @param inference_estimation_bootstrap_reps The number of bootstraps to perform in
 #' estimating the confidence interval for the inferences of each concept across all monte
 #' carlo FCMs
-#' @param inference_estimation_bootstrap_draws_per_rep The number of draws to sample
-#' (with replacement) from the estimates for the inferences of each concept across
-#' all monte carlo FCMs per bootstrap
 #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 #' from the pbapply package as the underlying function.
 #' @param parallel TRUE/FALSE Whether to utilize parallel processing
@@ -137,7 +134,6 @@ fcmconfr <- function(adj_matrices = list(matrix()),
                      inference_estimation_function = c("mean", "median"),
                      inference_estimation_CI = 0.95,
                      inference_estimation_bootstrap_reps = 5000,
-                     inference_estimation_bootstrap_draws_per_rep = 5000,
                      # Runtime Options
                      show_progress = TRUE,
                      parallel = TRUE,
@@ -282,12 +278,14 @@ fcmconfr <- function(adj_matrices = list(matrix()),
 
     if (perform_monte_carlo_inference_bootstrap_analysis) {
       # browser()
-      CIs_of_expected_values_of_mc_simulation_inferences <- get_mc_simulations_inference_CIs_w_bootstrap(mc_inferences$inference, inference_estimation_function, inference_estimation_CI, inference_estimation_bootstrap_reps, inference_estimation_bootstrap_draws_per_rep, parallel, n_cores, show_progress)
+      CIs_of_expected_values_of_mc_simulation_inferences <- get_mc_simulations_inference_CIs_w_bootstrap(mc_inferences$inference, inference_estimation_function, inference_estimation_CI, inference_estimation_bootstrap_reps, parallel, n_cores, show_progress)
       quantiles_of_mc_simulation_inferences <- data.frame(t(apply(mc_inferences$inference, 2, stats::quantile)))
       mc_inference_distributions_df <- cbind(CIs_of_expected_values_of_mc_simulation_inferences$CI_by_node, quantiles_of_mc_simulation_inferences)
-      colnames(mc_inference_distributions_df) <- c("node", "lower_0.025_CI", "upper_0.975_CI", "min", "lower_quantile_0.25", "median", "upper_quantile_0.75", "max")
+      colnames(mc_inference_distributions_df) <- c("node", "expected_value", "lower_0.025_CI", "upper_0.975_CI", "min", "lower_quantile_0.25", "median", "upper_quantile_0.75", "max")
     }
   }
+
+  # browser()
 
   # ----
 
@@ -397,8 +395,7 @@ organize_fcmconfr_output <- function(...) {
     )
     fcmconfr_output$params$mc_confidence_intervals_opts = list(
       inference_estimation_CI = variables$inference_estimation_CI,
-      inference_estimation_bootstrap_reps = variables$inference_estimation_bootstrap_reps,
-      inference_estimation_bootstrap_draws_per_rep = variables$inference_estimation_bootstrap_draws_per_rep
+      inference_estimation_bootstrap_reps = variables$inference_estimation_bootstrap_reps
     )
   }
 
@@ -445,7 +442,7 @@ print.fcmconfr <- function(x, ...) {
         paste0(" - monte_carlo_fcms: Inferences of data from the ", n_mc_sims, " fcms constructed from the ", n_input_fcm, " input fcm adj. matrices."),
         "\n$bootstrap\n",
         paste0(" - CIs_about_means_and_quantiles_by_node: ", x$params$mc_confidence_intervals_opts$inference_estimation_CI, "% CI of means of inferences and quantiles by node\n"),
-        paste0(" - bootstrapped_means: ", x$params$mc_confidence_intervals_opts$inference_estimation_bootstrap_reps, " actualizations of the avg inference of ", x$params$mc_confidence_intervals_opts$inference_estimation_bootstrap_draws_per_rep, " draws with replacement"),
+        paste0(" - bootstrapped_means: ", x$params$mc_confidence_intervals_opts$inference_estimation_bootstrap_reps),
         "\n$params\n",
         " - simulation_opts:",
         paste0("act = ", x$params$simulation_opts$activation, "; squash = ", x$params$simulation_opts$squashing, "; lambda = ", x$params$simulation_opts$lambda),
@@ -473,7 +470,7 @@ print.fcmconfr <- function(x, ...) {
         paste0(" - monte_carlo_fcms: Inferences of data from the ", n_mc_sims, " fcms constructed from the ", n_input_fcm, " input fcm adj. matrices."),
         "\n$bootstrap\n",
         paste0(" - CIs_about_means_and_quantiles_by_node: ", x$params$mc_confidence_intervals_opts$inference_estimation_CI, "% CI of means of inferences and quantiles by node\n"),
-        paste0(" - bootstrapped_means: ", x$params$mc_confidence_intervals_opts$inference_estimation_bootstrap_reps, " actualizations of the avg inference of ", x$params$mc_confidence_intervals_opts$inference_estimation_bootstrap_draws_per_rep, " draws with replacement"),
+        paste0(" - bootstrapped_means: ", x$params$mc_confidence_intervals_opts$inference_estimation_bootstrap_reps),
         "\n$params\n",
         " - simulation_opts:",
         paste0("act = ", x$params$simulation_opts$activation, "; squash = ", x$params$simulation_opts$squashing, "; lambda = ", x$params$simulation_opts$lambda),
