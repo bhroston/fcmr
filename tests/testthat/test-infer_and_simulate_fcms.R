@@ -256,7 +256,7 @@ test_that("simulate_fcm works", {
   )
   test_sim <- simulate_fcm(adj_matrix, c(1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0), activation = "kosko", squashing = "sigmoid")
   expect_equal(round(test_sim$state_vectors[2, ], 2), data.frame(1, 1, 0.38, 0.5, 0.11, 0.33, 0.13), ignore_attr = TRUE)
-  expect_equal(round(test_sim$state_vectors[nrow(test_sim$state_vectors), ], 2), data.frame(9, 1, 0.31, 0.5, 0.18, 0.49, 0.32), ignore_attr = TRUE)
+  expect_equal(round(test_sim$state_vectors[nrow(test_sim$state_vectors), ], 2), data.frame(8, 1, 0.31, 0.5, 0.18, 0.49, 0.32), ignore_attr = TRUE)
 
   lower_adj_matrix <- data.frame(
     C1 = c(0, 0, 0, 0, 0, 0),
@@ -320,7 +320,7 @@ test_that("simulate_conventional_fcm works", {
   )
   test_sim <- simulate_conventional_fcm(adj_matrix, c(1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0), activation = "kosko", squashing = "sigmoid")
   expect_equal(round(test_sim$state_vectors[2, ], 2), data.frame(1, 1, 0.38, 0.5, 0.11, 0.33, 0.13), ignore_attr = TRUE)
-  expect_equal(round(test_sim$state_vectors[nrow(test_sim$state_vectors), ], 2), data.frame(9, 1, 0.31, 0.5, 0.18, 0.49, 0.32), ignore_attr = TRUE)
+  expect_equal(round(test_sim$state_vectors[nrow(test_sim$state_vectors), ], 2), data.frame(8, 1, 0.31, 0.5, 0.18, 0.49, 0.32), ignore_attr = TRUE)
 
   expect_warning(simulate_conventional_fcm(adj_matrix, c(1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0), activation = "modified-kosko", squashing = "tanh", max_iter = 5))
 })

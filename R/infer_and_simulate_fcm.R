@@ -158,46 +158,63 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
 
   # browser()
 
-  # Get baseline simulation
-  baseline_initial_state_vector <- rep(1, length(initial_state_vector))
-  baseline_clamping_vector <- rep(0, length(clamping_vector))
-  baseline_simulation <- simulate_fcm(adj_matrix, baseline_initial_state_vector, baseline_clamping_vector, activation, squashing, lambda, max_iter, min_error)
-
   # Get scenario simulation
   scenario_initial_state_vector <- initial_state_vector
   scenario_clamping_vector <- clamping_vector
   scenario_simulation <- simulate_fcm(adj_matrix, scenario_initial_state_vector, scenario_clamping_vector, activation, squashing, lambda, max_iter, min_error)
 
-  # browser()
+  if (all(clamping_vector == 0)) {
+    inference_state_vectors <- scenario_simulation$state_vectors
+    inference_values = inference_state_vectors[nrow(inference_state_vectors), ]
+    inference_values <- subset(inference_values, select = -c(iter))
+    rownames(inference_values) <- 1
+  } else {
+    # Get baseline simulation
+    baseline_initial_state_vector <- rep(1, length(initial_state_vector))
+    baseline_clamping_vector <- rep(0, length(clamping_vector))
+    baseline_simulation <- simulate_fcm(adj_matrix, baseline_initial_state_vector, baseline_clamping_vector, activation, squashing, lambda, max_iter, min_error)
 
-  equalized_state_vector_dfs <- equalize_baseline_and_scenario_outputs(baseline_simulation$state_vectors, scenario_simulation$state_vectors)
-  baseline_simulation$state_vectors <- equalized_state_vector_dfs$baseline
-  scenario_simulation$state_vectors <- equalized_state_vector_dfs$scenario
+    equalized_state_vector_dfs <- equalize_baseline_and_scenario_outputs(baseline_simulation$state_vectors, scenario_simulation$state_vectors)
+    baseline_simulation$state_vectors <- equalized_state_vector_dfs$baseline
+    scenario_simulation$state_vectors <- equalized_state_vector_dfs$scenario
 
-  inference_state_vectors <- data.frame(scenario_simulation$state_vectors - baseline_simulation$state_vectors)
-  inference_state_vectors$iter <- 0:(nrow(inference_state_vectors) - 1)
-  rownames(inference_state_vectors) <- 0:(nrow(inference_state_vectors) - 1)
+    inference_state_vectors <- data.frame(scenario_simulation$state_vectors - baseline_simulation$state_vectors)
+    inference_state_vectors$iter <- 0:(nrow(inference_state_vectors) - 1)
+    rownames(inference_state_vectors) <- 0:(nrow(inference_state_vectors) - 1)
 
-  inference_values <- inference_state_vectors[nrow(inference_state_vectors),]
-  inference_values <- subset(inference_values, select = -c(iter))
-  rownames(inference_values) <- 1
-
+    inference_values <- inference_state_vectors[nrow(inference_state_vectors),]
+    inference_values <- subset(inference_values, select = -c(iter))
+    rownames(inference_values) <- 1
+  }
 
   inference_plot_data <- data.frame(
     node = colnames(inference_values),
     value = unlist(inference_values)
   )
 
-  structure(
-    .Data = list(
-      inference = inference_values,
-      inference_for_plotting = inference_plot_data,
-      inference_state_vectors = inference_state_vectors,
-      scenario_simulation = scenario_simulation,
-      baseline_simulation = baseline_simulation
-    ),
-    class = "infer_conventional_fcm"
-  )
+  if (all(clamping_vector == 0)) {
+    structure(
+      .Data = list(
+        inference = inference_values,
+        inference_for_plotting = inference_plot_data,
+        inference_state_vectors = inference_state_vectors,
+        scenario_simulation = scenario_simulation
+      ),
+      class = "infer_conventional_fcm"
+    )
+  } else {
+    structure(
+      .Data = list(
+        inference = inference_values,
+        inference_for_plotting = inference_plot_data,
+        inference_state_vectors = inference_state_vectors,
+        scenario_simulation = scenario_simulation,
+        baseline_simulation = baseline_simulation
+      ),
+      class = "infer_conventional_fcm"
+    )
+  }
+
 }
 
 
@@ -565,8 +582,9 @@ simulate_conventional_fcm <- function(adj_matrix = matrix(),
     normalized_state_vector[clamping_vector != 0] <- clamping_vector[clamping_vector != 0]
     state_vectors[i, ] <- normalized_state_vector
     errors[i, ] <- abs(as.matrix(state_vectors[i - 1,]) - as.matrix(state_vectors[i, ]))
-    total_error <- sum(errors[i, ])
-    if (total_error < min_error) {
+    # total_error <- sum(errors[i, ])
+    # if (total_error < min_error) {
+    if (all(errors[i, ] < min_error)) {
       state_vectors <- stats::na.omit(state_vectors)
       errors <- stats::na.omit(errors)
       break
@@ -725,8 +743,9 @@ simulate_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
       SIMPLIFY = FALSE
     )
     crisp_errors[i, ] <- abs(crisp_state_vector - crisp_normalized_next_state_vector)
-    total_error <- sum(crisp_errors[i, ])
-    if (total_error < min_error) {
+    # total_error <- sum(crisp_errors[i, ])
+    # if (total_error < min_error) {
+    if (all(crisp_errors[i, ] < min_error)) {
       break
     }
   }
