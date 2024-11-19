@@ -170,6 +170,11 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     warning("No clamping_vector input given. Assuming no values are clamped.")
     clamping_vector <- rep(0, n_nodes)
   }
+  if (any(clamping_vector != 0) & !all(initial_state_vector == 1)) {
+    stop("If any elements in input clamping_vector are set to a value other than
+         0, all elements in input initial_state_vector must be set to 1 to perform
+         the analysis correctly.")
+  }
 
   if (identical(activation, c("kosko", "modified-kosko", "rescale"))) {
     warning("No activation function given, assuming activation = 'kosko'")
