@@ -3,7 +3,7 @@
 #' @export
 get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
 
-  browser()
+  # browser()
 
   fcm_clamping_vector <- fcmconfr_object$params$simulation_opts$clamping_vector
   fcm_nodes <- unique(lapply(fcmconfr_object$params$adj_matrices, colnames))[[1]]
@@ -33,6 +33,13 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
     input_inferences_longer <- tidyr::pivot_longer(input_inferences, cols = 2:ncol(input_inferences))
     aggregate_inferences_longer <- tidyr::pivot_longer(aggregate_inferences, cols = 1:ncol(aggregate_inferences))
     mc_inferences_longer <- tidyr::pivot_longer(mc_inferences, cols = 1:ncol(mc_inferences))
+
+    if (any(abs(input_inferences_longer$value) > 1) | any(abs(aggregate_inferences_longer$value) > 1) | any(abs(mc_inferences_longer$value) > 1)) {
+      warning("Some inferences have a magnitude greater than 1 which suggests that
+              the simulations did not converge, and will likely output unclear and/or
+              illogical results.. Either increase the max. number of iterations
+              (max_iter) or decrease lambda for improved results.")
+    }
 
     max_y <- max(max(input_inferences_longer$value), max(mc_inferences_longer$value), max(aggregate_inferences_longer$value))
     max_y <- (ceiling(max_y*1000))/1000
@@ -116,16 +123,22 @@ autoplot.fcmconfr <- function(fcmconfr_object,
 
   browser()
 
+  plot_data$mc_inferences$value <- plot_data$mc_inferences$value/2
+
   if (fcmconfr_object$fcm_class == "conventional") {
     ggplot() +
-      ggplot2::geom_point(
-        data = plot_data$input_inferences,
-        aes(x = .data$name, y = .data$value), alpha = 0.25
-      ) +
-      ggplot2::geom_point(
+      ggplot2::geom_boxplot(
         data = plot_data$mc_inferences,
-        aes(x = .data$name, y = .data$value),
+        aes(x = .data$name, y = .data$value), outlier.shape = NA, width = 0.7,
       ) +
+      ggplot2::geom_jitter(
+        data = plot_data$mc_inferences,
+        aes(x = .data$name, y = .data$value), size = 0.5, alpha = 0.05, width = 0.3, shape = 8,
+      ) +
+      # ggplot2::geom_jitter(
+      #   data = plot_data$input_inferences,
+      #   aes(x = .data$name, y = .data$value), alpha = 1, shape = 15, size = 3, width = 0,
+      # ) +
       ggplot2::geom_point(
         data = plot_data$aggregate_inferences,
         aes(x = .data$name, y = .data$value), shape = 17, color = "red", size = 3,
