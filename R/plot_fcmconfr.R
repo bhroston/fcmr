@@ -1,39 +1,90 @@
 
-#' Get fcmconfr Object Plot Data
+#' Get Concepts in fcmconfr Object to Include in Plot
 #' @export
-get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
-
+get_concepts_to_plot <- function(fcmconfr_object, filter_limit = 10e-3) {
   # browser()
 
   fcm_clamping_vector <- fcmconfr_object$params$simulation_opts$clamping_vector
   fcm_nodes <- unique(lapply(fcmconfr_object$params$adj_matrices, colnames))[[1]]
-  clamped_nodes <- fcm_nodes[fcm_clamping_vector != 0]
+  clamped_node_indexes <- which(fcm_clamping_vector != 0)
+  clamped_nodes <- fcm_nodes[clamped_node_indexes]
 
-  input_inference_averages <- colSums(fcmconfr_object$inferences$input_fcms$inferences[2:ncol(fcmconfr_object$inferences$input_fcms$inferences)])
-  nodes_of_interest_indexes <- which(input_inference_averages > filter_limit)
-  nodes_of_interest <- names(nodes_of_interest_indexes)
+  fcmconfr_inferences = list(
+    input = fcmconfr_object$inferences$input_fcms$inferences[, -1],
+    agg = fcmconfr_object$inferences$aggregate_fcm$inferences,
+    mc = fcmconfr_object$inferences$monte_carlo_fcms$all_inferences
+  )
+  non_null_inference_dfs <- !(unlist(lapply(fcmconfr_inferences, is.null)))
+  fcmconfr_inferences_across_analyses <- do.call(rbind, fcmconfr_inferences[non_null_inference_dfs])
+  max_inference_by_node <- apply(fcmconfr_inferences_across_analyses, 2, max)
+
+  nodes_to_plot_indexes <-  which(max_inference_by_node > filter_limit & !(fcm_nodes %in% clamped_nodes))
+  nodes_to_plot <- fcm_nodes[nodes_to_plot_indexes]
+
+  list(
+    name = nodes_to_plot,
+    index = nodes_to_plot_indexes
+  )
+}
+
+
+#' Get fcmconfr Object Plot Data
+#' @export
+get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
+  # browser()
+
+  nodes_to_plot <- get_concepts_to_plot(fcmconfr_object, filter_limit)
+
+  if (length(nodes_to_plot$name) == 0) {
+    stop("No inferences are greater than the filter limit, so no plot cannot be drawn.")
+  }
 
   input_inferences <- as.data.frame(fcmconfr_object$inferences$input_fcms$inferences)
-  aggregate_inferences <- as.data.frame(fcmconfr_object$inferences$aggregate_fcm$inferences)
-  mc_inferences <- as.data.frame(fcmconfr_object$inferences$monte_carlo_fcms$all_inferences)
+  input_inferences <- fcmconfr_object$inferences$input_fcms$inferences[, c(1, nodes_to_plot$index + 1)] # Add + 1 to match column indexes in input_fcms$inferences dataframe
 
-  input_inferences <- fcmconfr_object$inferences$input_fcms$inferences[, c(1, nodes_of_interest_indexes + 1)] # Add + 1 to match column indexes in input_fcms$inferences dataframe
-  aggregate_inferences <- data.frame(
-    aggregate_inferences[, nodes_of_interest_indexes]
-  )
-  names(aggregate_inferences) <- nodes_of_interest
+  if (fcmconfr_object$params$additional_opts$perform_aggregate_analysis) {
+    aggregate_inferences <- as.data.frame(fcmconfr_object$inferences$aggregate_fcm$inferences)
+    aggregate_inferences <- data.frame(
+      aggregate_inferences[, nodes_to_plot$index]
+    )
+    names(aggregate_inferences) <- nodes_to_plot$name
+  } else {
+    aggregate_inferences <- data.frame(
+      blank = 0
+    )
+  }
+  if (fcmconfr_object$params$additional_opts$perform_monte_carlo_analysis) {
+    mc_inferences <- as.data.frame(fcmconfr_object$inferences$monte_carlo_fcms$all_inferences)
+    mc_inferences <- data.frame(
+      mc_inferences[, nodes_to_plot$index]
+    )
+    colnames(mc_inferences) <- nodes_to_plot$name
+  } else {
+    mc_inferences <- data.frame(
+      blank = 0
+    )
+  }
+  if (fcmconfr_object$params$additional_opts$perform_monte_carlo_inference_bootstrap_analysis) {
+    mc_inference_CIs <- as.data.frame(fcmconfr_object$inferences$monte_carlo_fcms$bootstrap$CIs_by_node)
+    mc_inference_CIs <- data.frame(
+      mc_inference_CIs[nodes_to_plot$index, ]
+    )
+    colnames(mc_inference_CIs)[colnames(mc_inference_CIs) == "node"] <- "name"
+  } else {
+    mc_inferences_CIs <- data.frame(
+      blank = 0
+    )
+  }
 
-  mc_inferences <- data.frame(
-    mc_inferences[, nodes_of_interest_indexes]
-  )
-  colnames(mc_inferences) <- nodes_of_interest
-
+  # browser()
   if (fcmconfr_object$fcm_class == "conventional") {
+    # browser()
     fcm_class_subtitle <- "Conventional FCMs"
     input_inferences_longer <- tidyr::pivot_longer(input_inferences, cols = 2:ncol(input_inferences))
     aggregate_inferences_longer <- tidyr::pivot_longer(aggregate_inferences, cols = 1:ncol(aggregate_inferences))
     mc_inferences_longer <- tidyr::pivot_longer(mc_inferences, cols = 1:ncol(mc_inferences))
 
+    # # Need to write a better filter for this
     if (any(abs(input_inferences_longer$value) > 1) | any(abs(aggregate_inferences_longer$value) > 1) | any(abs(mc_inferences_longer$value) > 1)) {
       warning("Some inferences have a magnitude greater than 1 which suggests that
               the simulations did not converge, and will likely output unclear and/or
@@ -93,26 +144,34 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
 
   # browser()
 
-
-
   list(
     fcm_class_subtitle = fcm_class_subtitle,
-    clamped_nodes,
     input_inferences = input_inferences_longer,
     aggregate_inferences = aggregate_inferences_longer,
     mc_inferences = mc_inferences_longer,
+    mc_inference_CIs = mc_inference_CIs,
     # mc_CIs = mc_CIs,
     max_activation = max_y,
     min_activation = min_y
   )
 }
 
+
+# input_inferences <- fcmconfr_object$inferences$input_fcms$inferences[2:ncol(fcmconfr_object$inferences$input_fcms$inferences)]
+# input_inferences_greater_than_filter_limit <- apply(input_inferences, 2, function(x) x > filter_limit)
+# nodes_with_inferences_greater_than_filter_limit <- apply(input_inferences_greater_than_filter_limit, 2, function(column) any(column))
+# nodes_of_interest_indexes <- which(nodes_with_inferences_greater_than_filter_limit)
+# nodes_of_interest_indexes <- nodes_of_interest_indexes[which(names(nodes_of_interest_indexes) != clamped_nodes)]
+# nodes_of_interest <- names(nodes_of_interest_indexes)
+
 #' Autoplot fcmconfr
 #' @importFrom ggplot2 autoplot
 #' @export
 autoplot.fcmconfr <- function(fcmconfr_object,
                               coord_flip = TRUE,
-                              inferences_in_plot = c("input", "aggregate", "mc"),
+                              exclude_input_inferences = FALSE,
+                              exclude_agg_inferences = FALSE,
+                              exclude_mc_inferences = FALSE,
                               aggregate_fill = "#f7e3dd",
                               aggregate_color = "#E1D1CB",
                               aggregate_alpha = 0.7,
@@ -120,31 +179,55 @@ autoplot.fcmconfr <- function(fcmconfr_object,
                               ...) {
 
   plot_data <- get_plot_data(fcmconfr_object)
+  concepts_to_plot <- unique(c(plot_data$input_inferences$name, plot_data$aggregate_inferences$name, plot_data$mc_inferences$name))
+  concepts_to_plot <- concepts_to_plot[concepts_to_plot != "blank"]
+
+  plot_data$max_activation <- plot_data$max_activation + 0.1
+  plot_data$min_activation <- plot_data$min_activation - 0.1
 
   browser()
 
-  plot_data$mc_inferences$value <- plot_data$mc_inferences$value/2
-
   if (fcmconfr_object$fcm_class == "conventional") {
-    ggplot() +
+    ggplot_main <- ggplot() +
       ggplot2::geom_boxplot(
         data = plot_data$mc_inferences,
-        aes(x = .data$name, y = .data$value), outlier.shape = NA, width = 0.7,
+        aes(x = .data$name, y = .data$value),
+        outlier.shape = NA, width = 0.6, na.rm = TRUE, linewidth = 0.1,
       ) +
       ggplot2::geom_jitter(
         data = plot_data$mc_inferences,
-        aes(x = .data$name, y = .data$value), size = 0.5, alpha = 0.05, width = 0.3, shape = 8,
+        aes(x = .data$name, y = .data$value, color = .data$analysis_source),
+        size = 0.7, alpha = 0.3, width = 0.2, shape = 16, na.rm = TRUE
       ) +
-      # ggplot2::geom_jitter(
-      #   data = plot_data$input_inferences,
-      #   aes(x = .data$name, y = .data$value), alpha = 1, shape = 15, size = 3, width = 0,
-      # ) +
+      ggplot2::geom_crossbar(
+        data = plot_data$mc_inference_CIs,
+        aes(x = .data$name, ymin = .data$lower_0.025, y = .data$lower_0.025, ymax = .data$lower_0.025),
+        linetype = "dotted", linewidth = 0.2, width = 0.8
+      ) +
+      ggplot2::geom_crossbar(
+        data = plot_data$mc_inference_CIs,
+        aes(x = .data$name, ymin = .data$upper_0.975, y = .data$upper_0.975, ymax = .data$upper_0.975),
+        linetype = "dotted",, linewidth = 0.2, width = 0.8
+      ) +
+      ggplot2::geom_point(
+        data = plot_data$input_inferences,
+        # position = ggplot2::position_jitter(h = 0.025, w = 0),
+        position = ggplot2::position_dodge2(width = 0.1),
+        aes(x = .data$name, y = .data$value, color = .data$analysis_source),
+        alpha = 1, shape = 16, size = 2, na.rm = TRUE
+      ) +
       ggplot2::geom_point(
         data = plot_data$aggregate_inferences,
-        aes(x = .data$name, y = .data$value), shape = 17, color = "red", size = 3,
+        aes(x = .data$name, y = .data$value),
+        shape = 17, color = "red", size = 2,
       ) +
+      scale_color_manual(values = c(input = "black", mc = "lightgrey")) +
+      scale_x_discrete(limits = concepts_to_plot) +
+      scale_y_continuous(expand = c(0, 0), limits = c(plot_data$min_activation, plot_data$max_activation)) +
       default_theme() +
       coord_flip()
+
+
 
     # ggplot_main <- ggplot() +
     #   geom_col(
@@ -193,9 +276,9 @@ autoplot.fcmconfr <- function(fcmconfr_object,
 
 
   if (coord_flip) {
-    ggplot_main + default_theme() + coord_flip()
+    fcmconr_plot <- ggplot_main + default_theme() + coord_flip()
   } else {
-    ggplot_main + default_theme()
+    fcmconfr_plot <- ggplot_main + default_theme()
   }
 }
 
@@ -214,8 +297,8 @@ theme_custom <- function(...) {
   theme_classic(...) %+replace%
     theme(
       plot.margin = margin(t = 20, r = 40, b = 20, l = 20),
-      axis.title.x = element_text(margin = margin(t = 10)),
-      axis.title.y = element_text(margin = margin(r = 10), angle = 90, vjust = 0.5),
+      axis.title.x = element_blank(),  # element_text(margin = margin(t = 10)),
+      axis.title.y = element_blank(),  # element_text(margin = margin(r = 10), angle = 90, vjust = 0.5),
       legend.position = "bottom",
       legend.title = element_blank(),
       legend.spacing = unit(0.001, 'cm')

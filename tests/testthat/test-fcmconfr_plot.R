@@ -1,9 +1,137 @@
 
-test_that("fcmconfr_plot works with example datasets", {
+test_that("fcmconfr_plot works with Conventional FCMs", {
+  # Clamping: Inputs Only
+  conventional_clamping_inputs_only <- fcmconfr(
+    adj_matrices = salinization_conventional_fcms,
+    # Simulation
+    initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
+    clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+    activation = 'modified-kosko',
+    squashing = 'tanh',
+    lambda = 0.5,
+    max_iter = 1000,
+    min_error = 1e-05,
+    # Runtime Options
+    show_progress = TRUE,
+    parallel = TRUE,
+    n_cores = 2,
+    # Additional Options
+    perform_aggregate_analysis = FALSE,
+    perform_monte_carlo_analysis = FALSE,
+    perform_monte_carlo_inference_bootstrap_analysis = FALSE,
+    include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+    include_monte_carlo_FCM_simulations_in_output = FALSE
+  )
+  expect_snapshot(plot(conventional_clamping_inputs_only))
 
-  test_conventional <- fcmconfr(
-    # adj_matrices = salinization_conventional_fcms,
-    adj_matrices = group_conventional_fcms,
+  # Pulse: Inputs Only
+  conventional_pulse_inputs_only <- fcmconfr(
+    adj_matrices = salinization_conventional_fcms,
+    # Simulation
+    initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+    clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
+    activation = 'modified-kosko',
+    squashing = 'tanh',
+    lambda = 0.5,
+    max_iter = 1000,
+    min_error = 1e-05,
+    # Runtime Options
+    show_progress = TRUE,
+    parallel = TRUE,
+    n_cores = 2,
+    # Additional Options
+    perform_aggregate_analysis = FALSE,
+    perform_monte_carlo_analysis = FALSE,
+    perform_monte_carlo_inference_bootstrap_analysis = FALSE,
+    include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+    include_monte_carlo_FCM_simulations_in_output = FALSE
+  )
+  expect_snapshot(plot(conventional_clamping_inputs_only))
+
+
+  # Clamping: Inputs and Agg
+  conventional_clamping_inputs_and_agg <- fcmconfr(
+    adj_matrices = salinization_conventional_fcms,
+    # Aggregation
+    aggregation_function = 'mean',
+    # Simulation
+    initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
+    clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+    activation = 'modified-kosko',
+    squashing = 'tanh',
+    lambda = 0.5,
+    max_iter = 1000,
+    min_error = 1e-05,
+    # Runtime Options
+    show_progress = TRUE,
+    parallel = TRUE,
+    n_cores = 10,
+    # Additional Options
+    perform_aggregate_analysis = TRUE,
+    perform_monte_carlo_analysis = FALSE,
+    perform_monte_carlo_inference_bootstrap_analysis = FALSE,
+    include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+    include_monte_carlo_FCM_simulations_in_output = FALSE
+  )
+  expect_snapshot(plot(conventional_clamping_inputs_and_agg))
+
+  # Pulse: Inputs and Agg
+  conventional_pulse_inputs_and_agg <- fcmconfr(
+    adj_matrices = salinization_conventional_fcms,
+    # Aggregation
+    aggregation_function = 'mean',
+    # Simulation
+    initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+    clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
+    activation = 'modified-kosko',
+    squashing = 'tanh',
+    lambda = 0.5,
+    max_iter = 1000,
+    min_error = 1e-05,
+    # Runtime Options
+    show_progress = TRUE,
+    parallel = TRUE,
+    n_cores = 10,
+    # Additional Options
+    perform_aggregate_analysis = TRUE,
+    perform_monte_carlo_analysis = FALSE,
+    perform_monte_carlo_inference_bootstrap_analysis = FALSE,
+    include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+    include_monte_carlo_FCM_simulations_in_output = FALSE
+  )
+  expect_snapshot(plot(conventional_pulse_inputs_and_agg))
+
+  # Clamping: Inputs, Agg, and MC (NO Bootstrap)
+  conventional_clamping_inputs_agg_and_mc_no_bs <- fcmconfr(
+    adj_matrices = salinization_conventional_fcms,
+    # adj_matrices = group_conventional_fcms,
+    # Aggregation and Monte Carlo Sampling
+    aggregation_function = 'mean',
+    monte_carlo_sampling_draws = 1000,
+    # Simulation
+    initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
+    clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+    activation = 'modified-kosko',
+    squashing = 'tanh',
+    lambda = 0.5,
+    max_iter = 1000,
+    min_error = 1e-05,
+    # Runtime Options
+    show_progress = TRUE,
+    parallel = TRUE,
+    n_cores = 10,
+    # Additional Options
+    perform_aggregate_analysis = TRUE,
+    perform_monte_carlo_analysis = TRUE,
+    perform_monte_carlo_inference_bootstrap_analysis = FALSE,
+    include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
+    include_monte_carlo_FCM_simulations_in_output = TRUE
+  )
+
+  # Pulse: Inputs, Agg, and MC (NO Bootstrap)
+  conventional_pulse_inputs_agg_and_mc_no_bs <- fcmconfr(
+    adj_matrices = salinization_conventional_fcms,
+    # adj_matrices = group_conventional_fcms,
     # Aggregation and Monte Carlo Sampling
     aggregation_function = 'mean',
     monte_carlo_sampling_draws = 1000,
@@ -11,9 +139,71 @@ test_that("fcmconfr_plot works with example datasets", {
     initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
     clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
     activation = 'modified-kosko',
-    squashing = 'sigmoid',
-    lambda = 1,
-    max_iter = 100,
+    squashing = 'tanh',
+    lambda = 0.5,
+    max_iter = 1000,
+    min_error = 1e-05,
+    # Runtime Options
+    show_progress = TRUE,
+    parallel = TRUE,
+    n_cores = 10,
+    # Additional Options
+    perform_aggregate_analysis = TRUE,
+    perform_monte_carlo_analysis = TRUE,
+    perform_monte_carlo_inference_bootstrap_analysis = FALSE,
+    include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+    include_monte_carlo_FCM_simulations_in_output = TRUE
+  )
+
+  # Clamping: Inputs, Agg, and MC (w/ Bootstrap)
+  conventional_clamping_inputs_agg_and_mc_w_bs <- fcmconfr(
+    adj_matrices = salinization_conventional_fcms,
+    # adj_matrices = group_conventional_fcms,
+    # Aggregation and Monte Carlo Sampling
+    aggregation_function = 'mean',
+    monte_carlo_sampling_draws = 1000,
+    # Simulation
+    # initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+    # clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
+    initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
+    clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+    activation = 'modified-kosko',
+    squashing = 'tanh',
+    lambda = 0.5,
+    max_iter = 1000,
+    min_error = 1e-05,
+    # Inference Estimation (bootstrap)
+    inference_estimation_function = mean,
+    inference_estimation_CI = 0.95,
+    inference_estimation_bootstrap_reps = 1000,
+    # Runtime Options
+    show_progress = TRUE,
+    parallel = TRUE,
+    n_cores = 10,
+    # Additional Options
+    perform_aggregate_analysis = TRUE,
+    perform_monte_carlo_analysis = TRUE,
+    perform_monte_carlo_inference_bootstrap_analysis = TRUE,
+    include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
+    include_monte_carlo_FCM_simulations_in_output = TRUE
+  )
+
+  # Pulse: Inputs, Agg, and MC (w/ Bootstrap)
+  conventional_pulse_inputs_agg_and_mc_w_bs <- fcmconfr(
+    adj_matrices = salinization_conventional_fcms,
+    # adj_matrices = group_conventional_fcms,
+    # Aggregation and Monte Carlo Sampling
+    aggregation_function = 'mean',
+    monte_carlo_sampling_draws = 1000,
+    # Simulation
+    # initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+    # clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
+    initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+    clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
+    activation = 'modified-kosko',
+    squashing = 'tanh',
+    lambda = 0.5,
+    max_iter = 1000,
     min_error = 1e-05,
     # Inference Estimation (bootstrap)
     inference_estimation_function = mean,
@@ -28,6 +218,45 @@ test_that("fcmconfr_plot works with example datasets", {
     perform_monte_carlo_analysis = TRUE,
     perform_monte_carlo_inference_bootstrap_analysis = TRUE,
     include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+    include_monte_carlo_FCM_simulations_in_output = TRUE
+  )
+
+})
+
+
+
+
+test_that("fcmconfr_plot works with example datasets", {
+
+  test_conventional <- fcmconfr(
+    adj_matrices = salinization_conventional_fcms,
+    # adj_matrices = group_conventional_fcms,
+    # Aggregation and Monte Carlo Sampling
+    aggregation_function = 'mean',
+    monte_carlo_sampling_draws = 1000,
+    # Simulation
+    # initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+    # clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
+    initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
+    clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+    activation = 'modified-kosko',
+    squashing = 'tanh',
+    lambda = 0.5,
+    max_iter = 1000,
+    min_error = 1e-05,
+    # Inference Estimation (bootstrap)
+    inference_estimation_function = mean,
+    inference_estimation_CI = 0.95,
+    inference_estimation_bootstrap_reps = 1000,
+    # Runtime Options
+    show_progress = TRUE,
+    parallel = TRUE,
+    n_cores = 10,
+    # Additional Options
+    perform_aggregate_analysis = TRUE,
+    perform_monte_carlo_analysis = TRUE,
+    perform_monte_carlo_inference_bootstrap_analysis = TRUE,
+    include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
     include_monte_carlo_FCM_simulations_in_output = TRUE
   )
 })
