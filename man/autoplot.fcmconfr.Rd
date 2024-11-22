@@ -7,6 +7,9 @@
 \method{autoplot}{fcmconfr}(
   fcmconfr_object,
   coord_flip = TRUE,
+  exclude_input_inferences = FALSE,
+  exclude_agg_inferences = FALSE,
+  exclude_mc_inferences = FALSE,
   aggregate_fill = "#f7e3dd",
   aggregate_color = "#E1D1CB",
   aggregate_alpha = 0.7,

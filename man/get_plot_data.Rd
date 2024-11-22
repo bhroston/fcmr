@@ -4,7 +4,7 @@
 \alias{get_plot_data}
 \title{Get fcmconfr Object Plot Data}
 \usage{
-get_plot_data(fcmconfr_object)
+get_plot_data(fcmconfr_object, filter_limit = 0.01)
 }
 \description{
 Get fcmconfr Object Plot Data
