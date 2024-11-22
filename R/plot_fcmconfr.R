@@ -9,11 +9,33 @@ get_concepts_to_plot <- function(fcmconfr_object, filter_limit = 10e-3) {
   clamped_node_indexes <- which(fcm_clamping_vector != 0)
   clamped_nodes <- fcm_nodes[clamped_node_indexes]
 
-  fcmconfr_inferences = list(
-    input = fcmconfr_object$inferences$input_fcms$inferences[, -1],
-    agg = fcmconfr_object$inferences$aggregate_fcm$inferences,
-    mc = fcmconfr_object$inferences$monte_carlo_fcms$all_inferences
-  )
+  if (identical(fcmconfr_object$fcm_class, "conventional")) {
+    fcmconfr_inferences = list(
+      input = fcmconfr_object$inferences$input_fcms$inferences[, -1],
+      agg = fcmconfr_object$inferences$aggregate_fcm$inferences,
+      mc = fcmconfr_object$inferences$monte_carlo_fcms$all_inferences
+    )
+  } else if (identical(fcmconfr_object$fcm_class, "ivfn")) {
+    raw_input_inferences <- fcmconfr_object$inferences$input_fcms$inferences
+    adj_matrix_labels <- names(raw_input_inferences)
+    input_inferences_as_lists <- mapply(
+      function(adj_matrix_name, input_inference) {
+        # browser()
+        cbind(adj_matrix = adj_matrix_name, input_inference)
+      },
+      adj_matrix_name = adj_matrix_labels,
+      input_inference = raw_input_inferences, SIMPLIFY = FALSE
+    )
+    input_inferences <- do.call(rbind, input_inferences_as_lists)
+    rownames(input_inferences) <- NULL
+
+    fcmconfr_inferences = list(
+      input = input_inferences,
+      agg = fcmconfr_object$inferences$aggregate_fcm$inferences,
+      mc = fcmconfr_object$inferences$monte_carlo_fcms$all_inferences
+    )
+  }
+
   non_null_inference_dfs <- !(unlist(lapply(fcmconfr_inferences, is.null)))
   fcmconfr_inferences_across_analyses <- do.call(rbind, fcmconfr_inferences[non_null_inference_dfs])
   max_inference_by_node <- apply(fcmconfr_inferences_across_analyses, 2, max)
@@ -31,7 +53,7 @@ get_concepts_to_plot <- function(fcmconfr_object, filter_limit = 10e-3) {
 #' Get fcmconfr Object Plot Data
 #' @export
 get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
-  # browser()
+
 
   nodes_to_plot <- get_concepts_to_plot(fcmconfr_object, filter_limit)
 
@@ -39,8 +61,25 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
     stop("No inferences are greater than the filter limit, so no plot cannot be drawn.")
   }
 
-  input_inferences <- as.data.frame(fcmconfr_object$inferences$input_fcms$inferences)
-  input_inferences <- fcmconfr_object$inferences$input_fcms$inferences[, c(1, nodes_to_plot$index + 1)] # Add + 1 to match column indexes in input_fcms$inferences dataframe
+  # browser()
+
+  if (identical(fcmconfr_object$fcm_class, "conventional")) {
+    input_inferences <- as.data.frame(fcmconfr_object$inferences$input_fcms$inferences)
+    input_inferences <- fcmconfr_object$inferences$input_fcms$inferences[, c(1, nodes_to_plot$index + 1)] # Add + 1 to match column indexes in input_fcms$inferences dataframe
+  } else if (identical(fcmconfr_object$fcm_class, "ivfn")) {
+    raw_input_inferences <- fcmconfr_object$inferences$input_fcms$inferences
+    adj_matrix_labels <- names(raw_input_inferences)
+    input_inferences_as_lists <- mapply(
+      function(adj_matrix_name, input_inference) {
+        # browser()
+        cbind(adj_matrix = adj_matrix_name, input_inference)
+      },
+      adj_matrix_name = adj_matrix_labels,
+      input_inference = raw_input_inferences, SIMPLIFY = FALSE
+    )
+    input_inferences <- do.call(rbind, input_inferences_as_lists)
+    rownames(input_inferences) <- NULL
+  }
 
   if (fcmconfr_object$params$additional_opts$perform_aggregate_analysis) {
     aggregate_inferences <- as.data.frame(fcmconfr_object$inferences$aggregate_fcm$inferences)
@@ -71,7 +110,7 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
     )
     colnames(mc_inference_CIs)[colnames(mc_inference_CIs) == "node"] <- "name"
   } else {
-    mc_inferences_CIs <- data.frame(
+    mc_inference_CIs <- data.frame(
       blank = 0
     )
   }
@@ -83,6 +122,7 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
     input_inferences_longer <- tidyr::pivot_longer(input_inferences, cols = 2:ncol(input_inferences))
     aggregate_inferences_longer <- tidyr::pivot_longer(aggregate_inferences, cols = 1:ncol(aggregate_inferences))
     mc_inferences_longer <- tidyr::pivot_longer(mc_inferences, cols = 1:ncol(mc_inferences))
+    mc_inference_CIs_longer <- tidyr::pivot_longer(mc_inference_CIs, cols = 1:ncol(mc_inferences))
 
     # # Need to write a better filter for this
     if (any(abs(input_inferences_longer$value) > 1) | any(abs(aggregate_inferences_longer$value) > 1) | any(abs(mc_inferences_longer$value) > 1)) {
@@ -119,6 +159,7 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
   input_inferences_longer$analysis_source <- "input"
   aggregate_inferences_longer$analysis_source <- "aggregate"
   mc_inferences_longer$analysis_source <- "mc_inferences"
+  mc_inference_CIs_longer$analysis_source <- "mc_inference_CIs"
   # mc_CIs$analysis_source <- "mc"
 
   # aggregate_inferences_longer <- tidyr::pivot_longer(fcmconfr_object$inferences$aggregate_fcm$inferences, cols = 1:ncol(fcmconfr_object$inferences$aggregate_fcm$inferences))
@@ -149,7 +190,7 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
     input_inferences = input_inferences_longer,
     aggregate_inferences = aggregate_inferences_longer,
     mc_inferences = mc_inferences_longer,
-    mc_inference_CIs = mc_inference_CIs,
+    mc_inference_CIs = mc_inference_CIs_longer,
     # mc_CIs = mc_CIs,
     max_activation = max_y,
     min_activation = min_y
@@ -185,7 +226,7 @@ autoplot.fcmconfr <- function(fcmconfr_object,
   plot_data$max_activation <- plot_data$max_activation + 0.1
   plot_data$min_activation <- plot_data$min_activation - 0.1
 
-  browser()
+   browser()
 
   if (fcmconfr_object$fcm_class == "conventional") {
     ggplot_main <- ggplot() +
@@ -199,16 +240,17 @@ autoplot.fcmconfr <- function(fcmconfr_object,
         aes(x = .data$name, y = .data$value, color = .data$analysis_source),
         size = 0.7, alpha = 0.3, width = 0.2, shape = 16, na.rm = TRUE
       ) +
-      ggplot2::geom_crossbar(
-        data = plot_data$mc_inference_CIs,
-        aes(x = .data$name, ymin = .data$lower_0.025, y = .data$lower_0.025, ymax = .data$lower_0.025),
-        linetype = "dotted", linewidth = 0.2, width = 0.8
-      ) +
-      ggplot2::geom_crossbar(
-        data = plot_data$mc_inference_CIs,
-        aes(x = .data$name, ymin = .data$upper_0.975, y = .data$upper_0.975, ymax = .data$upper_0.975),
-        linetype = "dotted",, linewidth = 0.2, width = 0.8
-      ) +
+      # ggplot2::geom_crossbar(
+      #   data = plot_data$mc_inference_CIs,
+      #   aes(x = .data$name, ymin = .data$lower_0.025, y = .data$lower_0.025, ymax = .data$lower_0.025),
+      #   #aes(x = .data$name, ymin = .data$lower_0.025, y = .data$lower_0.025, ymax = .data$lower_0.025),
+      #   linetype = "dotted", linewidth = 0.2, width = 0.8
+      # ) +
+      # ggplot2::geom_crossbar(
+      #   data = plot_data$mc_inference_CIs,
+      #   aes(x = .data$name, ymin = .data$upper_0.975, y = .data$upper_0.975, ymax = .data$upper_0.975),
+      #   linetype = "dotted",, linewidth = 0.2, width = 0.8
+      # ) +
       ggplot2::geom_point(
         data = plot_data$input_inferences,
         # position = ggplot2::position_jitter(h = 0.025, w = 0),
@@ -227,41 +269,6 @@ autoplot.fcmconfr <- function(fcmconfr_object,
       default_theme() +
       coord_flip()
 
-
-
-    # ggplot_main <- ggplot() +
-    #   geom_col(
-    #     data = plot_data$aggregate_inferences,
-    #     aes(x = .data$name, y = .data$value,
-    #         fill = .data$analysis_source, color = .data$analysis_source),
-    #     color = aggregate_color, alpha = aggregate_alpha,
-    #     width = 0.8
-    #   ) +
-    #   geom_errorbar(
-    #     data = plot_data$mc_CIs,
-    #     aes(x = .data$node, ymin = .data$lower_0.025, ymax = .data$upper_0.975,
-    #         color = plot_data$mc_CIs$analysis_source),
-    #     width = 0.5, alpha = 0.7,
-    #     linewidth = 0.5
-    #   ) +
-    #   scale_fill_manual(
-    #     values = c(mc = mc_fill, aggregate = aggregate_fill),
-    #     labels = c(mc = "Monte Carlo Average", aggregate = "Aggregate")
-    #   ) +
-    #   scale_color_manual(
-    #     values = c(mc = "black"),
-    #     labels = c(mc = "Monte Carlo CIs")
-    #   ) +
-    #   scale_y_continuous(
-    #     expand = c(0, 0),
-    #     limits = c(plot_data$min_activation, plot_data$max_activation)
-    #   ) +
-    #   guides(alpha = "none", color = guide_legend(order = 1), shape = guide_legend(order = 2)) +
-    #   expand_limits(y = 0) +
-    #   labs(
-    #     x = "Inference Value",
-    #     y = "Concept (Node)"
-    #   )
   } else if (fcmconfr_object$fcm_class == "ivfn") {
     ggplot() +
       geom_col(data = plot_data$aggregate_inferences, aes(x = .data$name, y = .data$crisp))
@@ -409,3 +416,42 @@ default_theme <- function() {
 #   ) +
 #   default_theme() +
 #   coord_flip()
+
+
+
+
+
+
+# ggplot_main <- ggplot() +
+#   geom_col(
+#     data = plot_data$aggregate_inferences,
+#     aes(x = .data$name, y = .data$value,
+#         fill = .data$analysis_source, color = .data$analysis_source),
+#     color = aggregate_color, alpha = aggregate_alpha,
+#     width = 0.8
+#   ) +
+#   geom_errorbar(
+#     data = plot_data$mc_CIs,
+#     aes(x = .data$node, ymin = .data$lower_0.025, ymax = .data$upper_0.975,
+#         color = plot_data$mc_CIs$analysis_source),
+#     width = 0.5, alpha = 0.7,
+#     linewidth = 0.5
+#   ) +
+#   scale_fill_manual(
+#     values = c(mc = mc_fill, aggregate = aggregate_fill),
+#     labels = c(mc = "Monte Carlo Average", aggregate = "Aggregate")
+#   ) +
+#   scale_color_manual(
+#     values = c(mc = "black"),
+#     labels = c(mc = "Monte Carlo CIs")
+#   ) +
+#   scale_y_continuous(
+#     expand = c(0, 0),
+#     limits = c(plot_data$min_activation, plot_data$max_activation)
+#   ) +
+#   guides(alpha = "none", color = guide_legend(order = 1), shape = guide_legend(order = 2)) +
+#   expand_limits(y = 0) +
+#   labs(
+#     x = "Inference Value",
+#     y = "Concept (Node)"
+#   )
