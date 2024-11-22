@@ -203,18 +203,24 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   # browser()
 
   # Individual Adj. Matrices Simulations ----
-  individual_adj_matrices_inferences <- lapply(adj_matrices, infer_fcm, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
+  print("Simulating Input FCMs")
+  if (show_progress) {
+    individual_adj_matrices_inferences <- pbapply::pblapply(adj_matrices, infer_fcm, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
+  } else {
+    individual_adj_matrices_inferences <- lapply(adj_matrices, infer_fcm, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
+  }
+  # browser()
+
   if (fcm_class == "conventional") {
     individual_adj_matrices_inferences_df <- do.call(rbind, lapply(individual_adj_matrices_inferences, function(inference) inference$inference))
     individual_adj_matrices_inferences_df <- cbind(input = paste0("adj_matrix_", 1:length(adj_matrices)), individual_adj_matrices_inferences_df)
   } else if (fcm_class %in% c("ivfn", "tfn")) {
-    individual_adj_matrices_inferences_df <- lapply(individual_adj_matrices_inferences, function(inference) inference$inference_df)
+    individual_adj_matrices_inferences_df <- lapply(individual_adj_matrices_inferences, function(inference) inference$inference)
     names(individual_adj_matrices_inferences_df) <- paste0("adj_matrix_", 1:length(adj_matrices))
   }
   names(individual_adj_matrices_inferences) <- paste0("adj_matrix_", 1:length(adj_matrices))
 
   # Aggregation and Monte Carlo Simulations ----
-
   if (fcm_class == "conventional" & length(adj_matrices) == 1 & (perform_monte_carlo_analysis | perform_aggregate_analysis)) {
     perform_monte_carlo_analysis = FALSE
     perform_aggregate_analysis = FALSE
@@ -280,6 +286,8 @@ fcmconfr <- function(adj_matrices = list(matrix()),
       n_cores = n_cores,
       include_simulations_in_output = include_monte_carlo_FCM_simulations_in_output
     )
+
+    # browser()
 
     if (perform_monte_carlo_inference_bootstrap_analysis) {
       # browser()
