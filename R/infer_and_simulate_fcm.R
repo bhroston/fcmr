@@ -576,6 +576,7 @@ simulate_conventional_fcm <- function(adj_matrix = matrix(),
   errors[1, ] <- 0
 
   for (i in 2:(max_iter + 1)) {
+    # browser()
     state_vector <- state_vectors[i - 1, ]
     next_state_vector <- calculate_next_conventional_fcm_state_vector(adj_matrix, state_vector, activation)
     normalized_state_vector <- squash(next_state_vector, squashing = squashing, lambda = lambda)
