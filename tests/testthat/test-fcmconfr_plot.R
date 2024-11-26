@@ -7,7 +7,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
     initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
     clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
     activation = 'kosko',
-    squashing = 'tanh',
+    squashing = 'sigmoid',
     lambda = 1,
     max_iter = 1000,
     min_error = 1e-05,
@@ -31,7 +31,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
     initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
     clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
     activation = 'modified-kosko',
-    squashing = 'tanh',
+    squashing = 'sigmoid',
     lambda = 1,
     max_iter = 1000,
     min_error = 1e-05,
@@ -49,13 +49,13 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
   expect_snapshot(plot(conventional_clamping_inputs_only))
 
 
-  test <- fcm::fcm.infer(
-    activation_vec = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
-    weight_mat = salinization_conventional_fcms[[1]],
-    iter = 6, infer = "k",
-    transform = "t",
-    lambda = 1
-  )
+  # test <- fcm::fcm.infer(
+  #   activation_vec = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+  #   weight_mat = salinization_conventional_fcms[[1]],
+  #   iter = 6, infer = "k",
+  #   transform = "t",
+  #   lambda = 1
+  # )
 
 
   # Clamping: Inputs and Agg
@@ -67,7 +67,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
     initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
     clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
     activation = 'modified-kosko',
-    squashing = 'tanh',
+    squashing = 'sigmoid',
     lambda = 0.5,
     max_iter = 1000,
     min_error = 1e-05,
@@ -93,7 +93,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
     initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
     clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
     activation = 'modified-kosko',
-    squashing = 'tanh',
+    squashing = 'sigmoid',
     lambda = 0.5,
     max_iter = 1000,
     min_error = 1e-05,
@@ -121,7 +121,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
     initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
     clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
     activation = 'modified-kosko',
-    squashing = 'tanh',
+    squashing = 'sigmoid',
     lambda = 0.5,
     max_iter = 1000,
     min_error = 1e-05,
@@ -136,6 +136,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
     include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
     include_monte_carlo_FCM_simulations_in_output = TRUE
   )
+  expect_snapshot(plot(conventional_clamping_inputs_agg_and_mc_no_bs))
 
   # Pulse: Inputs, Agg, and MC (NO Bootstrap)
   conventional_pulse_inputs_agg_and_mc_no_bs <- fcmconfr(
@@ -148,7 +149,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
     initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
     clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
     activation = 'modified-kosko',
-    squashing = 'tanh',
+    squashing = 'sigmoid',
     lambda = 0.5,
     max_iter = 1000,
     min_error = 1e-05,
@@ -163,6 +164,8 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
     include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
     include_monte_carlo_FCM_simulations_in_output = TRUE
   )
+  expect_snapshot(plot(conventional_pulse_inputs_agg_and_mc_no_bs))
+
 
   # Clamping: Inputs, Agg, and MC (w/ Bootstrap)
   conventional_clamping_inputs_agg_and_mc_w_bs <- fcmconfr(
@@ -177,7 +180,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
     initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
     clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
     activation = 'modified-kosko',
-    squashing = 'tanh',
+    squashing = 'sigmoid',
     lambda = 0.5,
     max_iter = 1000,
     min_error = 1e-05,
@@ -196,6 +199,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
     include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
     include_monte_carlo_FCM_simulations_in_output = TRUE
   )
+  expect_snapshot(plot(conventional_clamping_inputs_agg_and_mc_w_bs))
 
   # Pulse: Inputs, Agg, and MC (w/ Bootstrap)
   conventional_pulse_inputs_agg_and_mc_w_bs <- fcmconfr(
@@ -210,7 +214,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
     initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
     clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
     activation = 'modified-kosko',
-    squashing = 'tanh',
+    squashing = 'sigmoid',
     lambda = 0.5,
     max_iter = 1000,
     min_error = 1e-05,
@@ -220,7 +224,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
     inference_estimation_bootstrap_reps = 1000,
     # Runtime Options
     show_progress = TRUE,
-    parallel = TRUE,
+    parallel = FALSE,
     n_cores = 10,
     # Additional Options
     perform_aggregate_analysis = TRUE,
@@ -229,6 +233,8 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
     include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
     include_monte_carlo_FCM_simulations_in_output = TRUE
   )
+  expect_snapshot(plot(conventional_pulse_inputs_agg_and_mc_w_bs))
+
 })
 
 
@@ -241,7 +247,7 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
     initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
     clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
     activation = 'modified-kosko',
-    squashing = 'tanh',
+    squashing = 'sigmoid',
     lambda = 0.5,
     max_iter = 1000,
     min_error = 1e-05,
@@ -265,7 +271,7 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
     initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
     clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
     activation = 'modified-kosko',
-    squashing = 'tanh',
+    squashing = 'sigmoid',
     lambda = 0.5,
     max_iter = 1000,
     min_error = 1e-05,
@@ -292,7 +298,7 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
     initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
     clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
     activation = 'modified-kosko',
-    squashing = 'tanh',
+    squashing = 'sigmoid',
     lambda = 0.5,
     max_iter = 1000,
     min_error = 1e-05,
@@ -318,7 +324,7 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
     initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
     clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
     activation = 'modified-kosko',
-    squashing = 'tanh',
+    squashing = 'sigmoid',
     lambda = 0.5,
     max_iter = 1000,
     min_error = 1e-05,
@@ -346,7 +352,7 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
     initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
     clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
     activation = 'modified-kosko',
-    squashing = 'tanh',
+    squashing = 'sigmoid',
     lambda = 0.5,
     max_iter = 1000,
     min_error = 1e-05,
@@ -373,7 +379,7 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
     initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
     clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
     activation = 'modified-kosko',
-    squashing = 'tanh',
+    squashing = 'sigmoid',
     lambda = 0.5,
     max_iter = 1000,
     min_error = 1e-05,
@@ -402,7 +408,7 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
     initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
     clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
     activation = 'modified-kosko',
-    squashing = 'tanh',
+    squashing = 'sigmoid',
     lambda = 0.5,
     max_iter = 1000,
     min_error = 1e-05,
@@ -435,7 +441,7 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
     initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
     clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
     activation = 'modified-kosko',
-    squashing = 'tanh',
+    squashing = 'sigmoid',
     lambda = 0.5,
     max_iter = 1000,
     min_error = 1e-05,
@@ -473,7 +479,7 @@ test_that("fcmconfr_plot works with example datasets", {
     initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
     clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
     activation = 'modified-kosko',
-    squashing = 'tanh',
+    squashing = 'sigmoid',
     lambda = 0.5,
     max_iter = 1000,
     min_error = 1e-05,

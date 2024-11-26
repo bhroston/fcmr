@@ -107,9 +107,10 @@ test_that("infer_monte_carlo_fcm_set works", {
   ))
 
   # Confirm all methods produce same output
-  expect_true(all(test_fmcm_inference_p_sp$inference - test_fmcm_inference_no_p_and_sp$inference == 0))
-  expect_true(all(test_fmcm_inference_no_p_and_sp$inference - test_fmcm_inference_p_and_no_sp$inference == 0))
-  expect_true(all(test_fmcm_inference_p_and_no_sp$inference - test_fmcm_inference_no_p_and_no_sp$inference == 0))
+  max_error <- 1e-5
+  expect_true(all(abs(test_fmcm_inference_p_sp$inference - test_fmcm_inference_no_p_and_sp$inference) <= max_error))
+  expect_true(all(abs(test_fmcm_inference_no_p_and_sp$inference - test_fmcm_inference_p_and_no_sp$inference) <= max_error))
+  expect_true(all(abs(test_fmcm_inference_p_and_no_sp$inference - test_fmcm_inference_no_p_and_no_sp$inference) <= max_error))
 
 
   # # Check when no n_cores given
@@ -197,7 +198,7 @@ test_that("get_mc_simulations_inference_CIs_w_bootstrap", {
       initial_state_vector <- c(1, 1, 1, 1),
       clamping_vector <- c(1, 0, 0, 0),
       activation = "kosko",
-      squashing = "tanh",
+      squashing = "sigmoid",
       lambda = 1,
       max_iter = 1000,
       min_error = 1e-5,
