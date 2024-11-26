@@ -75,6 +75,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
   # Adding for R CMD check. Does not impact logic.
   i <- NULL
 
+  # browser()
   checks <- lapply(mc_adj_matrices, check_simulation_inputs, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
 
   # Confirm necessary packages are available. If not, warn user and change run options
@@ -118,6 +119,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
       "squashing", "lambda", "max_iter", "min_error"
     )
 
+    browser()
     parallel::clusterExport(cl, varlist = vars, envir = environment())
 
     doSNOW::registerDoSNOW(cl)
@@ -578,11 +580,12 @@ build_monte_carlo_fcms <- function(adj_matrix_list = list(matrix()),
   # browser()
   adj_matrix_list_class <- get_adj_matrices_input_type(adj_matrix_list)$object_types_in_list[1]
 
+  # browser()
+
   if (adj_matrix_list_class == "conventional") {
     sampled_adj_matrices <- build_monte_carlo_fcms_from_conventional_adj_matrices(adj_matrix_list, N_samples, include_zeroes, show_progress)
   } else {
     sampled_adj_matrices <- build_monte_carlo_fcms_from_fuzzy_set_adj_matrices(adj_matrix_list, adj_matrix_list_class, N_samples, include_zeroes, show_progress)
-
   }
 
   sampled_adj_matrices
@@ -620,6 +623,8 @@ build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_lis
                                                                   N_samples = integer(),
                                                                   include_zeroes = TRUE,
                                                                   show_progress = TRUE) {
+
+  # browser()
   n_nodes <- unique(unlist(lapply(adj_matrix_list, dim)))
   flatten_conventional_adj_matrix <- function(adj_matrix) do.call(c, as.vector(adj_matrix))
   flattened_adj_matrices <- do.call(rbind, lapply(adj_matrix_list, flatten_conventional_adj_matrix))
