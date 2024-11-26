@@ -111,7 +111,9 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
     colnames(mc_inference_CIs)[colnames(mc_inference_CIs) == "node"] <- "name"
   } else {
     mc_inference_CIs <- data.frame(
-      blank = 0
+      name = 0, # Have to label a column 'name' here since will not tidy::pivot_longer this dataframe
+      lower_0.025 = NA,
+      upper_0.975 = NA
     )
   }
 
@@ -122,7 +124,7 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
     input_inferences_longer <- tidyr::pivot_longer(input_inferences, cols = 2:ncol(input_inferences))
     aggregate_inferences_longer <- tidyr::pivot_longer(aggregate_inferences, cols = 1:ncol(aggregate_inferences))
     mc_inferences_longer <- tidyr::pivot_longer(mc_inferences, cols = 1:ncol(mc_inferences))
-    mc_inference_CIs_longer <- tidyr::pivot_longer(mc_inference_CIs, cols = 1:ncol(mc_inferences))
+    # mc_inference_CIs_longer <- tidyr::pivot_longer(mc_inference_CIs, cols = 1:ncol(mc_inference_CIs))
 
     # # Need to write a better filter for this
     if (any(abs(input_inferences_longer$value) > 1) | any(abs(aggregate_inferences_longer$value) > 1) | any(abs(mc_inferences_longer$value) > 1)) {
@@ -158,8 +160,9 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
 
   input_inferences_longer$analysis_source <- "input"
   aggregate_inferences_longer$analysis_source <- "aggregate"
-  mc_inferences_longer$analysis_source <- "mc_inferences"
-  mc_inference_CIs_longer$analysis_source <- "mc_inference_CIs"
+  mc_inferences_longer$analysis_source <- "mc"
+  mc_inference_CIs$analysis_source <- "mc_CIs"
+  # mc_inference_CIs_longer$analysis_source <- "mc_CIs"
   # mc_CIs$analysis_source <- "mc"
 
   # aggregate_inferences_longer <- tidyr::pivot_longer(fcmconfr_object$inferences$aggregate_fcm$inferences, cols = 1:ncol(fcmconfr_object$inferences$aggregate_fcm$inferences))
@@ -190,7 +193,7 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
     input_inferences = input_inferences_longer,
     aggregate_inferences = aggregate_inferences_longer,
     mc_inferences = mc_inferences_longer,
-    mc_inference_CIs = mc_inference_CIs_longer,
+    mc_inference_CIs = mc_inference_CIs,
     # mc_CIs = mc_CIs,
     max_activation = max_y,
     min_activation = min_y
@@ -226,31 +229,31 @@ autoplot.fcmconfr <- function(fcmconfr_object,
   plot_data$max_activation <- plot_data$max_activation + 0.1
   plot_data$min_activation <- plot_data$min_activation - 0.1
 
-   browser()
+  browser()
 
   if (fcmconfr_object$fcm_class == "conventional") {
     ggplot_main <- ggplot() +
-      ggplot2::geom_boxplot(
-        data = plot_data$mc_inferences,
-        aes(x = .data$name, y = .data$value),
-        outlier.shape = NA, width = 0.6, na.rm = TRUE, linewidth = 0.1,
-      ) +
       ggplot2::geom_jitter(
-        data = plot_data$mc_inferences,
+        data = ggplot2::remove_missing(plot_data$mc_inferences),
         aes(x = .data$name, y = .data$value, color = .data$analysis_source),
-        size = 0.7, alpha = 0.3, width = 0.2, shape = 16, na.rm = TRUE
+        size = 0.7, alpha = 0.3, width = 0.2, shape = 16, na.rm = FALSE
       ) +
-      # ggplot2::geom_crossbar(
-      #   data = plot_data$mc_inference_CIs,
-      #   aes(x = .data$name, ymin = .data$lower_0.025, y = .data$lower_0.025, ymax = .data$lower_0.025),
-      #   #aes(x = .data$name, ymin = .data$lower_0.025, y = .data$lower_0.025, ymax = .data$lower_0.025),
-      #   linetype = "dotted", linewidth = 0.2, width = 0.8
-      # ) +
-      # ggplot2::geom_crossbar(
-      #   data = plot_data$mc_inference_CIs,
-      #   aes(x = .data$name, ymin = .data$upper_0.975, y = .data$upper_0.975, ymax = .data$upper_0.975),
-      #   linetype = "dotted",, linewidth = 0.2, width = 0.8
-      # ) +
+      ggplot2::geom_boxplot(
+        data = ggplot2::remove_missing(plot_data$mc_inferences),
+        aes(x = .data$name, y = .data$value),
+        outlier.shape = NA, width = 0.6, na.rm = TRUE, linewidth = 0.1, fill = NA
+      ) +
+      ggplot2::geom_crossbar(
+        data = ggplot2::remove_missing(plot_data$mc_inference_CIs),
+        aes(x = .data$name, ymin = .data$lower_0.025, y = .data$lower_0.025, ymax = .data$lower_0.025),
+        #aes(x = .data$name, ymin = .data$lower_0.025, y = .data$lower_0.025, ymax = .data$lower_0.025),
+        linetype = "dotted", linewidth = 0.2, width = 0.8, na.rm = FALSE
+      ) +
+      ggplot2::geom_crossbar(
+        data = ggplot2::remove_missing(plot_data$mc_inference_CIs),
+        aes(x = .data$name, ymin = .data$upper_0.975, y = .data$upper_0.975, ymax = .data$upper_0.975),
+        linetype = "dotted",, linewidth = 0.2, width = 0.8, na.rm = TRUE
+      ) +
       ggplot2::geom_point(
         data = plot_data$input_inferences,
         # position = ggplot2::position_jitter(h = 0.025, w = 0),
