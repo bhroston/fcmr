@@ -639,11 +639,6 @@ build_monte_carlo_fcms <- function(adj_matrix_list = list(matrix()),
   # # browser()
   adj_matrix_list_class <- get_adj_matrices_input_type(adj_matrix_list)$object_types_in_list[1]
 
-  # browser()
-<<<<<<< HEAD
-
-=======
->>>>>>> 978bd1275ed86b0ce05dd41ce0615126c99c5ae6
   if (adj_matrix_list_class == "conventional") {
     sampled_adj_matrices <- build_monte_carlo_fcms_from_conventional_adj_matrices(adj_matrix_list, N_samples, include_zeroes, show_progress)
   } else {
@@ -685,10 +680,6 @@ build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_lis
                                                                   N_samples = integer(),
                                                                   include_zeroes = TRUE,
                                                                   show_progress = TRUE) {
-<<<<<<< HEAD
-
-=======
->>>>>>> 978bd1275ed86b0ce05dd41ce0615126c99c5ae6
   # browser()
   n_nodes <- unique(unlist(lapply(adj_matrix_list, dim)))
   flatten_conventional_adj_matrix <- function(adj_matrix) {
