@@ -79,10 +79,11 @@ infer_fcm <- function(adj_matrix = matrix(),
   check_simulation_inputs(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
 
   fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
-  # if (!(fcm_class %in% c("conventional", "ivfn", "tfn"))) {
-  #   stop("Input adj_matrix must be an adjacency matrix with edges represented as
-  #        numeric values, ivfns, or tfns")
-  # }
+
+  if (!(fcm_class %in% c("conventional", "ivfn", "tfn"))) {
+    stop("Input adj_matrix must be an adjacency matrix with edges represented as
+         numeric values, ivfns, or tfns")
+  }
 
   # browser()
 
@@ -93,6 +94,8 @@ infer_fcm <- function(adj_matrix = matrix(),
   }
 
   inference
+  #infer_conventional_fcm(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
+
 }
 
 
@@ -164,6 +167,7 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
   scenario_simulation <- simulate_fcm(adj_matrix, scenario_initial_state_vector, scenario_clamping_vector, activation, squashing, lambda, max_iter, min_error)
 
   if (all(clamping_vector == 0)) {
+    # return("all clamping_vector = 0")
     inference_state_vectors <- scenario_simulation$state_vectors
     inference_values = inference_state_vectors[nrow(inference_state_vectors), ]
     inference_values <- subset(inference_values, select = -c(iter))
@@ -1310,6 +1314,14 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
           using a different squashing function.\n",
 
         "\n          Input squashing function: ", squashing)
+    )
+  } else if (activation == "modified-kosko" & squashing == "tanh") {
+    warning(
+      paste0(
+        "          The Tanh squashing functions performs poorly with the
+          Modified-kosko activation function because simulation inference values
+          tend to approach 0 as the number of iterations increases."
+      )
     )
   }
   # ----

@@ -7,5 +7,5 @@
 default_theme()
 }
 \description{
-Default plot.fcmconfr Theme
+A formal call to the custom_theme defined by \code{\link{theme_custom}}
 }

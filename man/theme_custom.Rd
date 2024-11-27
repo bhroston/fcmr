@@ -6,6 +6,10 @@
 \usage{
 theme_custom(...)
 }
+\arguments{
+\item{...}{Additional Inputs}
+}
 \description{
-Custom plot.fcmconfr Theme
+Theme-ing for plot.fcmconfr to improve readability in
+\code{\link{plot.fcmconfr}} function definition
 }

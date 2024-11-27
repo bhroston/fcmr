@@ -197,6 +197,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   # ----
 
   # Confirm necessary packages are available. If not, warn user and change run options
+  # browser()
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
   parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
 
@@ -258,8 +259,8 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     # Infer aggregate adj_matrix
     aggregate_fcm_inference <- infer_fcm(aggregate_adj_matrix$adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
   }
-
-  # browser()
+  #
+  # # browser()
 
   if (perform_monte_carlo_analysis) {
     # Build monte carlo models
@@ -270,6 +271,8 @@ fcmconfr <- function(adj_matrices = list(matrix()),
                                 rownames(sampled_adj_matrix) <- concepts
                                 sampled_adj_matrix
                               })
+
+    # browser()
 
     # Infer monte carlo models with clamping
     mc_inferences <- infer_monte_carlo_fcm_set(

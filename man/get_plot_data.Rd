@@ -6,6 +6,17 @@
 \usage{
 get_plot_data(fcmconfr_object, filter_limit = 0.01)
 }
+\arguments{
+\item{fcmconfr_object}{A direct output of the \code{\link{fcmconfr}} function}
+
+\item{filter_limit}{Remove concepts whose inferences do not exceed this value}
+}
 \description{
-Get fcmconfr Object Plot Data
+This function parses through an \code{\link{fcmconfr}} output to gather and
+organize the analysis results into dataframes that are constructed to be
+plugged directly into a ggplot2 pipeline
+}
+\details{
+This function produces slightly different outputs for \code{\link{fcmconfr}}
+outputs generated from conventional, ivfn, and tfn FCMs
 }

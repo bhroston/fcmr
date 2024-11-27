@@ -270,7 +270,7 @@ test_that("pulse only fcmconfr works", {
         # Simulation
         initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
         clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
-        activation = 'modified-kosko',
+        activation = 'kosko',
         squashing = 'tanh',
         lambda = 1,
         max_iter = 100,
@@ -294,7 +294,8 @@ test_that("pulse only fcmconfr works", {
   )
   test_inferences <- test_fcmconfr_conventional_tanh$inferences$input_fcms$inferences[, -1]
 
-  expected_inferences <- c(0, 0, 0.131, 0, 0.804, 0, 0.882, 0.612, 0)
+  # expected_inferences <- c(0, 0, 0.131, 0, 0.804, 0, 0.882, 0.612, 0)
+  expected_inferences <- c(0, 0, 0, 0, 0, 0, 0, 0, 0)
   avg_error <- sum(abs(test_inferences - expected_inferences))/(length(test_inferences))
   max_allowable_avg_error <- 10e-4
   expect_lt(avg_error, max_allowable_avg_error)
@@ -834,188 +835,201 @@ test_that("print.fcmconfr works", {
   test_fcms <- list(test_adj_matrix_1, test_adj_matrix_2, test_adj_matrix_3, test_adj_matrix_4)
 
   # Perform aggregate & Perform monte carlo & Perform bootstrap
-  test <- fcmconfr(
-    adj_matrices = test_fcms,
-    # Aggregation and Monte Carlo Sampling
-    aggregation_function = 'mean',
-    monte_carlo_sampling_draws = 100,
-    # Simulation
-    initial_state_vector = c(1, 1, 1, 1),
-    clamping_vector = c(0, 1, 0, 0),
-    activation = 'kosko',
-    squashing = 'sigmoid',
-    lambda = 1,
-    max_iter = 100,
-    min_error = 1e-05,
-    # Inference Estimation (bootstrap)
-    inference_estimation_function = "median",
-    inference_estimation_CI = 0.95,
-    inference_estimation_bootstrap_reps = 1000,
-    # Runtime Options
-    show_progress = TRUE,
-    parallel = TRUE,
-    n_cores = 2,
-    # Additional Options
-    perform_aggregate_analysis = TRUE,
-    perform_monte_carlo_analysis = TRUE,
-    perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-    include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-    include_monte_carlo_FCM_simulations_in_output = TRUE
-  )
+  invisible(capture.output(
+    test <- fcmconfr(
+      adj_matrices = test_fcms,
+      # Aggregation and Monte Carlo Sampling
+      aggregation_function = 'mean',
+      monte_carlo_sampling_draws = 100,
+      # Simulation
+      initial_state_vector = c(1, 1, 1, 1),
+      clamping_vector = c(0, 1, 0, 0),
+      activation = 'kosko',
+      squashing = 'sigmoid',
+      lambda = 1,
+      max_iter = 100,
+      min_error = 1e-05,
+      # Inference Estimation (bootstrap)
+      inference_estimation_function = "median",
+      inference_estimation_CI = 0.95,
+      inference_estimation_bootstrap_reps = 1000,
+      # Runtime Options
+      show_progress = TRUE,
+      parallel = TRUE,
+      n_cores = 2,
+      # Additional Options
+      perform_aggregate_analysis = TRUE,
+      perform_monte_carlo_analysis = TRUE,
+      perform_monte_carlo_inference_bootstrap_analysis = TRUE,
+      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+      include_monte_carlo_FCM_simulations_in_output = TRUE
+    )
+  ))
   expect_snapshot(print(test))
 
   # Perform aggregate & Perform monte carlo & !Perform bootstrap
-  test <- fcmconfr(
-    adj_matrices = test_fcms,
-    # Aggregation and Monte Carlo Sampling
-    aggregation_function = 'mean',
-    monte_carlo_sampling_draws = 100,
-    # Simulation
-    initial_state_vector = c(1, 1, 1, 1),
-    clamping_vector = c(0, 1, 0, 0),
-    activation = 'kosko',
-    squashing = 'sigmoid',
-    lambda = 1,
-    max_iter = 100,
-    min_error = 1e-05,
-    # Inference Estimation (bootstrap)
-    inference_estimation_function = "median",
-    inference_estimation_CI = 0.95,
-    inference_estimation_bootstrap_reps = 1000,
-    # Runtime Options
-    show_progress = TRUE,
-    parallel = TRUE,
-    n_cores = 2,
-    # Additional Options
-    perform_aggregate_analysis = TRUE,
-    perform_monte_carlo_analysis = TRUE,
-    perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-    include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-    include_monte_carlo_FCM_simulations_in_output = TRUE
-  )
+  invisible(capture.output(
+    test <- fcmconfr(
+      adj_matrices = test_fcms,
+      # Aggregation and Monte Carlo Sampling
+      aggregation_function = 'mean',
+      monte_carlo_sampling_draws = 100,
+      # Simulation
+      initial_state_vector = c(1, 1, 1, 1),
+      clamping_vector = c(0, 1, 0, 0),
+      activation = 'kosko',
+      squashing = 'sigmoid',
+      lambda = 1,
+      max_iter = 100,
+      min_error = 1e-05,
+      # Inference Estimation (bootstrap)
+      inference_estimation_function = "median",
+      inference_estimation_CI = 0.95,
+      inference_estimation_bootstrap_reps = 1000,
+      # Runtime Options
+      show_progress = TRUE,
+      parallel = TRUE,
+      n_cores = 2,
+      # Additional Options
+      perform_aggregate_analysis = TRUE,
+      perform_monte_carlo_analysis = TRUE,
+      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
+      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+      include_monte_carlo_FCM_simulations_in_output = TRUE
+    )
+  ))
   expect_snapshot(print(test))
 
   # !Perform aggregate & Perform monte carlo & Perform bootstrap
-  test <- fcmconfr(
-    adj_matrices = test_fcms,
-    # Aggregation and Monte Carlo Sampling
-    aggregation_function = 'mean',
-    monte_carlo_sampling_draws = 100,
-    # Simulation
-    initial_state_vector = c(1, 1, 1, 1),
-    clamping_vector = c(0, 1, 0, 0),
-    activation = 'kosko',
-    squashing = 'sigmoid',
-    lambda = 1,
-    max_iter = 100,
-    min_error = 1e-05,
-    # Inference Estimation (bootstrap)
-    inference_estimation_function = "median",
-    inference_estimation_CI = 0.95,
-    inference_estimation_bootstrap_reps = 1000,
-    # Runtime Options
-    show_progress = TRUE,
-    parallel = TRUE,
-    n_cores = 2,
-    # Additional Options
-    perform_aggregate_analysis = FALSE,
-    perform_monte_carlo_analysis = TRUE,
-    perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-    include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-    include_monte_carlo_FCM_simulations_in_output = TRUE
-  )
+  invisible(capture.output(
+    test <- fcmconfr(
+      adj_matrices = test_fcms,
+      # Aggregation and Monte Carlo Sampling
+      aggregation_function = 'mean',
+      monte_carlo_sampling_draws = 100,
+      # Simulation
+      initial_state_vector = c(1, 1, 1, 1),
+      clamping_vector = c(0, 1, 0, 0),
+      activation = 'kosko',
+      squashing = 'sigmoid',
+      lambda = 1,
+      max_iter = 100,
+      min_error = 1e-05,
+      # Inference Estimation (bootstrap)
+      inference_estimation_function = "median",
+      inference_estimation_CI = 0.95,
+      inference_estimation_bootstrap_reps = 1000,
+      # Runtime Options
+      show_progress = TRUE,
+      parallel = TRUE,
+      n_cores = 2,
+      # Additional Options
+      perform_aggregate_analysis = FALSE,
+      perform_monte_carlo_analysis = TRUE,
+      perform_monte_carlo_inference_bootstrap_analysis = TRUE,
+      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+      include_monte_carlo_FCM_simulations_in_output = TRUE
+    )
+  ))
+  expect_snapshot(test)
 
   # !Perform aggregate & Perform monte carlo & !Perform bootstrap
-  test <- fcmconfr(
-    adj_matrices = test_fcms,
-    # Aggregation and Monte Carlo Sampling
-    aggregation_function = 'mean',
-    monte_carlo_sampling_draws = 100,
-    # Simulation
-    initial_state_vector = c(1, 1, 1, 1),
-    clamping_vector = c(0, 1, 0, 0),
-    activation = 'kosko',
-    squashing = 'sigmoid',
-    lambda = 1,
-    max_iter = 100,
-    min_error = 1e-05,
-    # Inference Estimation (bootstrap)
-    inference_estimation_function = "median",
-    inference_estimation_CI = 0.95,
-    inference_estimation_bootstrap_reps = 1000,
-    # Runtime Options
-    show_progress = TRUE,
-    parallel = TRUE,
-    n_cores = 2,
-    # Additional Options
-    perform_aggregate_analysis = FALSE,
-    perform_monte_carlo_analysis = TRUE,
-    perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-    include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-    include_monte_carlo_FCM_simulations_in_output = TRUE
-  )
+  invisible(capture.output(
+    test <- fcmconfr(
+      adj_matrices = test_fcms,
+      # Aggregation and Monte Carlo Sampling
+      aggregation_function = 'mean',
+      monte_carlo_sampling_draws = 100,
+      # Simulation
+      initial_state_vector = c(1, 1, 1, 1),
+      clamping_vector = c(0, 1, 0, 0),
+      activation = 'kosko',
+      squashing = 'sigmoid',
+      lambda = 1,
+      max_iter = 100,
+      min_error = 1e-05,
+      # Inference Estimation (bootstrap)
+      inference_estimation_function = "median",
+      inference_estimation_CI = 0.95,
+      inference_estimation_bootstrap_reps = 1000,
+      # Runtime Options
+      show_progress = TRUE,
+      parallel = TRUE,
+      n_cores = 2,
+      # Additional Options
+      perform_aggregate_analysis = FALSE,
+      perform_monte_carlo_analysis = TRUE,
+      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
+      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+      include_monte_carlo_FCM_simulations_in_output = TRUE
+    )
+  ))
   expect_snapshot(test)
 
   # Perform aggregate & !Perform monte carlo
-  test <- fcmconfr(
-    adj_matrices = test_fcms,
-    # Aggregation and Monte Carlo Sampling
-    aggregation_function = 'mean',
-    monte_carlo_sampling_draws = 100,
-    # Simulation
-    initial_state_vector = c(1, 1, 1, 1),
-    clamping_vector = c(0, 1, 0, 0),
-    activation = 'kosko',
-    squashing = 'sigmoid',
-    lambda = 1,
-    max_iter = 100,
-    min_error = 1e-05,
-    # Inference Estimation (bootstrap)
-    inference_estimation_function = "median",
-    inference_estimation_CI = 0.95,
-    inference_estimation_bootstrap_reps = 1000,
-    # Runtime Options
-    show_progress = TRUE,
-    parallel = TRUE,
-    n_cores = 2,
-    # Additional Options
-    perform_aggregate_analysis = TRUE,
-    perform_monte_carlo_analysis = FALSE,
-    perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-    include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-    include_monte_carlo_FCM_simulations_in_output = TRUE
-  )
+  invisible(capture.output(
+    test <- fcmconfr(
+      adj_matrices = test_fcms,
+      # Aggregation and Monte Carlo Sampling
+      aggregation_function = 'mean',
+      monte_carlo_sampling_draws = 100,
+      # Simulation
+      initial_state_vector = c(1, 1, 1, 1),
+      clamping_vector = c(0, 1, 0, 0),
+      activation = 'kosko',
+      squashing = 'sigmoid',
+      lambda = 1,
+      max_iter = 100,
+      min_error = 1e-05,
+      # Inference Estimation (bootstrap)
+      inference_estimation_function = "median",
+      inference_estimation_CI = 0.95,
+      inference_estimation_bootstrap_reps = 1000,
+      # Runtime Options
+      show_progress = TRUE,
+      parallel = TRUE,
+      n_cores = 2,
+      # Additional Options
+      perform_aggregate_analysis = TRUE,
+      perform_monte_carlo_analysis = FALSE,
+      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
+      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+      include_monte_carlo_FCM_simulations_in_output = TRUE
+    )
+  ))
   expect_snapshot(test)
 
   # !Perform aggregate & !Perform monte carlo
-  test <- fcmconfr(
-    adj_matrices = test_fcms,
-    # Aggregation and Monte Carlo Sampling
-    aggregation_function = 'mean',
-    monte_carlo_sampling_draws = 100,
-    # Simulation
-    initial_state_vector = c(1, 1, 1, 1),
-    clamping_vector = c(0, 1, 0, 0),
-    activation = 'kosko',
-    squashing = 'sigmoid',
-    lambda = 1,
-    max_iter = 100,
-    min_error = 1e-05,
-    # Inference Estimation (bootstrap)
-    inference_estimation_function = "median",
-    inference_estimation_CI = 0.95,
-    inference_estimation_bootstrap_reps = 1000,
-    # Runtime Options
-    show_progress = TRUE,
-    parallel = TRUE,
-    n_cores = 2,
-    # Additional Options
-    perform_aggregate_analysis = FALSE,
-    perform_monte_carlo_analysis = FALSE,
-    perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-    include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-    include_monte_carlo_FCM_simulations_in_output = TRUE
-  )
+  invisible(capture.output(
+    test <- fcmconfr(
+      adj_matrices = test_fcms,
+      # Aggregation and Monte Carlo Sampling
+      aggregation_function = 'mean',
+      monte_carlo_sampling_draws = 100,
+      # Simulation
+      initial_state_vector = c(1, 1, 1, 1),
+      clamping_vector = c(0, 1, 0, 0),
+      activation = 'kosko',
+      squashing = 'sigmoid',
+      lambda = 1,
+      max_iter = 100,
+      min_error = 1e-05,
+      # Inference Estimation (bootstrap)
+      inference_estimation_function = "median",
+      inference_estimation_CI = 0.95,
+      inference_estimation_bootstrap_reps = 1000,
+      # Runtime Options
+      show_progress = TRUE,
+      parallel = TRUE,
+      n_cores = 2,
+      # Additional Options
+      perform_aggregate_analysis = FALSE,
+      perform_monte_carlo_analysis = FALSE,
+      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
+      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+      include_monte_carlo_FCM_simulations_in_output = TRUE
+    )
+  ))
   expect_snapshot(test)
 
 })
