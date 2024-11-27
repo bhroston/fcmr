@@ -124,7 +124,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
       "squashing", "lambda", "max_iter", "min_error"
     )
 
-    browser()
+    # browser()
     parallel::clusterExport(cl, varlist = vars, envir = environment())
 
     doSNOW::registerDoSNOW(cl)
@@ -564,31 +564,51 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
   ## browser()
 
   # print("Getting upper and lower quantile estimates of mean", quote = FALSE)
-  lower_quantile <- (1 - confidence_interval)/2
-  upper_quantile <- (1 + confidence_interval)/2
-  lower_quantiles_by_node <- data.frame(apply(bootstrapped_expectations_of_inference_by_node, 2, function(bootstrapped_expectations) stats::quantile(bootstrapped_expectations, lower_quantile), simplify = FALSE))
-  upper_quantiles_by_node <- data.frame(apply(bootstrapped_expectations_of_inference_by_node, 2, function(bootstrapped_expectations) stats::quantile(bootstrapped_expectations, upper_quantile), simplify = FALSE))
+  lower_CI <- (1 - confidence_interval)/2
+  upper_CI <- (1 + confidence_interval)/2
+  lower_CIs_by_node <- data.frame(apply(bootstrapped_expectations_of_inference_by_node, 2, function(bootstrapped_expectations) stats::quantile(bootstrapped_expectations, lower_CI), simplify = FALSE))
+  upper_CIs_by_node <- data.frame(apply(bootstrapped_expectations_of_inference_by_node, 2, function(bootstrapped_expectations) stats::quantile(bootstrapped_expectations, upper_CI), simplify = FALSE))
 
-  nodes <- ifelse(colnames(lower_quantiles_by_node) == colnames(upper_quantiles_by_node), colnames(lower_quantiles_by_node), stop("Error with quantiles calculation"))
+  nodes <- ifelse(colnames(lower_CIs_by_node) == colnames(upper_CIs_by_node), colnames(lower_CIs_by_node), stop("Error with quantiles calculation"))
 
-  quantiles_by_node <- data.frame(
+  # browser()
+
+  CIs_by_node <- data.frame(
     node = nodes,
     expected_value = expected_value_of_inference_by_node,
-    lower_quantile = vector(mode = "numeric", length = length(nodes)),
-    upper_quantile = vector(mode = "numeric", length = length(nodes))
+    lower_CI = vector(mode = "numeric", length = length(nodes)),
+    upper_CI = vector(mode = "numeric", length = length(nodes))
   )
   for (i in seq_along(nodes)) {
-    quantiles_by_node$lower_quantile[i] <- lower_quantiles_by_node[i][[1]] # not sure why this [[1]] is necessary but it is
-    quantiles_by_node$upper_quantile[i] <- upper_quantiles_by_node[i][[1]] # not sure why this [[1]] is necessary but it is
+    CIs_by_node$lower_CI[i] <- lower_CIs_by_node[i][[1]] # not sure why this [[1]] is necessary but it is
+    CIs_by_node$upper_CI[i] <- upper_CIs_by_node[i][[1]] # not sure why this [[1]] is necessary but it is
   }
-  colnames(quantiles_by_node) <- c("node", "expected_value", paste0("lower_", lower_quantile), paste0("upper_", upper_quantile))
+
+  # browser()
+
+  quantiles_of_mc_simulation_inferences <- data.frame(t(apply(mc_simulations_inference_df, 2, stats::quantile)))
+  mc_inference_distributions_df <- data.frame(cbind(
+    CIs_by_node$node, CIs_by_node$expected_value, quantiles_of_mc_simulation_inferences$X0.,
+    CIs_by_node$lower_CI, quantiles_of_mc_simulation_inferences$X25., quantiles_of_mc_simulation_inferences$X50.,
+    quantiles_of_mc_simulation_inferences$X75., CIs_by_node$upper_CI, quantiles_of_mc_simulation_inferences$X100.
+  ))
+
+  colnames(mc_inference_distributions_df) <- c(
+    "node", "expected_value", "min",
+    paste0(lower_CI, "_CI"), "0.25_quantile", "median",
+    "0.75_quantile", paste0(upper_CI, "_CI"), "max"
+  )
+
+  for (col in 2:ncol(mc_inference_distributions_df)) {
+    mc_inference_distributions_df[, col] <- as.numeric(mc_inference_distributions_df[, col])
+  }
 
   # # browser()
   print("Done", quote = FALSE)
 
   structure(
     .Data = list(
-      CI_by_node = quantiles_by_node,
+      CIs_and_quantiles_by_node = mc_inference_distributions_df,
       bootstrap_expected_values = bootstrapped_expectations_of_inference_by_node
     )
   )
