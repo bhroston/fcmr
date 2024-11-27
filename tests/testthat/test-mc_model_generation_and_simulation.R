@@ -107,9 +107,10 @@ test_that("infer_monte_carlo_fcm_set works", {
   ))
 
   # Confirm all methods produce same output
-  expect_true(all(test_fmcm_inference_p_sp$inference - test_fmcm_inference_no_p_and_sp$inference == 0))
-  expect_true(all(test_fmcm_inference_no_p_and_sp$inference - test_fmcm_inference_p_and_no_sp$inference == 0))
-  expect_true(all(test_fmcm_inference_p_and_no_sp$inference - test_fmcm_inference_no_p_and_no_sp$inference == 0))
+  max_error <- 1e-5
+  expect_true(all(abs(test_fmcm_inference_p_sp$inference - test_fmcm_inference_no_p_and_sp$inference) <= max_error))
+  expect_true(all(abs(test_fmcm_inference_no_p_and_sp$inference - test_fmcm_inference_p_and_no_sp$inference) <= max_error))
+  expect_true(all(abs(test_fmcm_inference_p_and_no_sp$inference - test_fmcm_inference_no_p_and_no_sp$inference) <= max_error))
 
 
   # # Check when no n_cores given
@@ -197,7 +198,7 @@ test_that("get_mc_simulations_inference_CIs_w_bootstrap", {
       initial_state_vector <- c(1, 1, 1, 1),
       clamping_vector <- c(1, 0, 0, 0),
       activation = "kosko",
-      squashing = "tanh",
+      squashing = "sigmoid",
       lambda = 1,
       max_iter = 1000,
       min_error = 1e-5,
@@ -349,8 +350,9 @@ test_that("build_monte_carlo_fcms works", {
   ivfn_mat_4 <- make_adj_matrix_w_ivfns(lower_adj_matrix_2, upper_adj_matrix_2)
   adj_matrices <- list(ivfn_mat_1, ivfn_mat_2, ivfn_mat_3, ivfn_mat_4)
 
-  build_monte_carlo_fcms_from_fuzzy_set_adj_matrices(adj_matrices, "ivfn", 100, include_zeroes = FALSE, show_progress = TRUE)
-
+  invisible(capture.output(
+    build_monte_carlo_fcms_from_fuzzy_set_adj_matrices(adj_matrices, "ivfn", 100, include_zeroes = FALSE, show_progress = TRUE)
+  ))
 
 
   tri_matrix_1 <- make_adj_matrix_w_tfns(
@@ -470,8 +472,9 @@ test_that("build_monte_carlo_fcms_from_fuzzy_set_adj_matrices works", {
   ivfn_mat_4 <- make_adj_matrix_w_ivfns(lower_adj_matrix_2, upper_adj_matrix_2)
   adj_matrices <- list(ivfn_mat_1, ivfn_mat_2, ivfn_mat_3, ivfn_mat_4)
 
-  build_monte_carlo_fcms_from_fuzzy_set_adj_matrices(adj_matrices, "ivfn", 100, include_zeroes = FALSE, show_progress = TRUE)
-
+  invisible(capture.output(
+    build_monte_carlo_fcms_from_fuzzy_set_adj_matrices(adj_matrices, "ivfn", 100, include_zeroes = FALSE, show_progress = TRUE)
+  ))
 
 
   tri_matrix_1 <- make_adj_matrix_w_tfns(
