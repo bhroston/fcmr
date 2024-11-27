@@ -6,6 +6,21 @@
 \usage{
 get_concepts_to_plot(fcmconfr_object, filter_limit = 0.01)
 }
+\arguments{
+\item{fcmconfr_object}{A direct output of the \code{\link{fcmconfr}} function}
+
+\item{filter_limit}{Remove concepts whose inferences do not exceed this value}
+}
 \description{
-Get Concepts in fcmconfr Object to Include in Plot
+This determines which concepts should be included in fcmconfr output plot by
+selecting concepts that either were NOT clamped (if applicable) or did not
+reach a certain activation level throughout the simulation (i.e. whose
+0-value would take up space in the figure.)
+}
+\details{
+This function removes:
+    - Clamped Nodes because they would be held at 1 and would increase the
+    x-axis, potentially diminishing the ability to view other data
+    - Inactivated Nodes because they do not display on the plot and would
+    add unnecessary whitespace to the plot.
 }

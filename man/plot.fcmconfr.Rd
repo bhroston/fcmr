@@ -6,6 +6,13 @@
 \usage{
 \method{plot}{fcmconfr}(x, ...)
 }
+\arguments{
+\item{x}{A direct output of the \code{\link{fcmconfr}} function}
+
+\item{...}{Additional inputs:
+- filter_limit Remove concepts whose inferences do not exceed this value
+- coord_flip Swap x- and y-axes (i.e. rotate plot)}
+}
 \description{
-Plot fcmconfr
+Print the output of the autoplot function (\code{\link{autoplot.fcmconfr}})
 }

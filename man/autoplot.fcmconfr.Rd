@@ -4,19 +4,20 @@
 \alias{autoplot.fcmconfr}
 \title{Autoplot fcmconfr}
 \usage{
-\method{autoplot}{fcmconfr}(
-  fcmconfr_object,
-  coord_flip = TRUE,
-  exclude_input_inferences = FALSE,
-  exclude_agg_inferences = FALSE,
-  exclude_mc_inferences = FALSE,
-  aggregate_fill = "#f7e3dd",
-  aggregate_color = "#E1D1CB",
-  aggregate_alpha = 0.7,
-  mc_fill = "#f7e3dd",
-  ...
-)
+\method{autoplot}{fcmconfr}(object, ...)
+}
+\arguments{
+\item{object}{A direct output of the \code{\link{fcmconfr}} function}
+
+\item{...}{Additional inputs}
 }
 \description{
-Autoplot fcmconfr
+Generate a generic plot visualizing \code{\link{fcmconfr}} results. Call the
+function name directly (\code{\link{autoplot.fcmconfr}})) without parentheses
+to see the exact code to generate the plots, then copy-and-paste and edit
+as needed.
+}
+\details{
+This function produces slightly different outputs for \code{\link{fcmconfr}}
+outputs generated from conventional, ivfn, and tfn FCMs.
 }
