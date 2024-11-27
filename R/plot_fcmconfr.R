@@ -221,7 +221,7 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
 #' @param object A direct output of the \code{\link{fcmconfr}} function
 #' @param ... Additional inputs
 #'
-#' @importFrom ggplot2 autoplot
+#' @importFrom ggplot2 autoplot ggplot aes
 #' @importFrom rlang .data
 #' @export
 autoplot.fcmconfr <- function(object, ...) {
@@ -291,11 +291,11 @@ autoplot.fcmconfr <- function(object, ...) {
         aes(x = .data$name, y = .data$value),
         shape = 17, color = "red", size = 2,
       ) +
-      scale_color_manual(values = c(input = "black", mc = "grey")) +
-      scale_x_discrete(limits = concepts_to_plot) +
-      scale_y_continuous(expand = c(0, 0), limits = c(plot_data$min_activation, plot_data$max_activation)) +
+      ggplot2::scale_color_manual(values = c(input = "black", mc = "grey")) +
+      ggplot2::scale_x_discrete(limits = concepts_to_plot) +
+      ggplot2::scale_y_continuous(expand = c(0, 0), limits = c(plot_data$min_activation, plot_data$max_activation)) +
       default_theme() +
-      coord_flip()
+      ggplot2::coord_flip()
 
   } else if (object$fcm_class == "ivfn") {
     # ggplot() +
@@ -344,7 +344,6 @@ plot.fcmconfr <- function(x, ...) {
   stopifnot(is.numeric(filter_limit) & (filter_limit > 0 & filter_limit < 1))
   stopifnot(is.logical(coord_flip))
 
-
   suppressWarnings(print(autoplot(x, additional_inputs)))
 }
 
@@ -360,14 +359,14 @@ plot.fcmconfr <- function(x, ...) {
 #' @importFrom ggplot2 %+replace%
 #' @export
 theme_custom <- function(...) {
-  theme_classic(...) %+replace%
-    theme(
-      plot.margin = margin(t = 20, r = 40, b = 20, l = 20),
-      axis.title.x = element_blank(),  # element_text(margin = margin(t = 10)),
-      axis.title.y = element_blank(),  # element_text(margin = margin(r = 10), angle = 90, vjust = 0.5),
+  ggplot2::theme_classic(...) %+replace%
+    ggplot2::theme(
+      plot.margin = ggplot2::margin(t = 20, r = 40, b = 20, l = 20),
+      axis.title.x = ggplot2::element_blank(),  # element_text(margin = margin(t = 10)),
+      axis.title.y = ggplot2::element_blank(),  # element_text(margin = margin(r = 10), angle = 90, vjust = 0.5),
       legend.position = "bottom",
-      legend.title = element_blank(),
-      legend.spacing = unit(0.001, 'cm')
+      legend.title = ggplot2::element_blank(),
+      legend.spacing = ggplot2::unit(0.001, 'cm')
     )
 }
 
