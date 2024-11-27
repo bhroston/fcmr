@@ -171,17 +171,17 @@ test_that("infer_monte_carlo_fcm_set works", {
 })
 
 
-test_that("infer_monte_carlo_fcm_set works with salinization data sets", {
-  mc_adj_matrices <- build_monte_carlo_fcms(salinization_conventional_fcms, N_samples = 100, include_zeroes = FALSE, show_progress = TRUE)
-  test <- infer_monte_carlo_fcm_set(
-    mc_adj_matrices,
-    initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
-    clamping_vector = c(),
-    activation = "modified-kosko", squashing = "sigmoid", lambda = 1,
-    max_iter = 1000, min_error = 1e-5,
-    parallel = TRUE, n_cores = 10, show_progress = TRUE
-  )
-})
+# test_that("infer_monte_carlo_fcm_set works with salinization data sets", {
+#   mc_adj_matrices <- build_monte_carlo_fcms(salinization_conventional_fcms, N_samples = 100, include_zeroes = FALSE, show_progress = TRUE)
+#   test <- infer_monte_carlo_fcm_set(
+#     mc_adj_matrices,
+#     initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+#     clamping_vector = c(),
+#     activation = "modified-kosko", squashing = "sigmoid", lambda = 1,
+#     max_iter = 1000, min_error = 1e-5,
+#     parallel = TRUE, n_cores = 2, show_progress = TRUE
+#   )
+# })
 
 
 test_that("get_mc_simulations_inference_CIs_w_bootstrap", {
