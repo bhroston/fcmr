@@ -350,8 +350,9 @@ test_that("build_monte_carlo_fcms works", {
   ivfn_mat_4 <- make_adj_matrix_w_ivfns(lower_adj_matrix_2, upper_adj_matrix_2)
   adj_matrices <- list(ivfn_mat_1, ivfn_mat_2, ivfn_mat_3, ivfn_mat_4)
 
-  build_monte_carlo_fcms_from_fuzzy_set_adj_matrices(adj_matrices, "ivfn", 100, include_zeroes = FALSE, show_progress = TRUE)
-
+  invisible(capture.output(
+    build_monte_carlo_fcms_from_fuzzy_set_adj_matrices(adj_matrices, "ivfn", 100, include_zeroes = FALSE, show_progress = TRUE)
+  ))
 
 
   tri_matrix_1 <- make_adj_matrix_w_tfns(
@@ -471,8 +472,9 @@ test_that("build_monte_carlo_fcms_from_fuzzy_set_adj_matrices works", {
   ivfn_mat_4 <- make_adj_matrix_w_ivfns(lower_adj_matrix_2, upper_adj_matrix_2)
   adj_matrices <- list(ivfn_mat_1, ivfn_mat_2, ivfn_mat_3, ivfn_mat_4)
 
-  build_monte_carlo_fcms_from_fuzzy_set_adj_matrices(adj_matrices, "ivfn", 100, include_zeroes = FALSE, show_progress = TRUE)
-
+  invisible(capture.output(
+    build_monte_carlo_fcms_from_fuzzy_set_adj_matrices(adj_matrices, "ivfn", 100, include_zeroes = FALSE, show_progress = TRUE)
+  ))
 
 
   tri_matrix_1 <- make_adj_matrix_w_tfns(
