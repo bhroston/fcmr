@@ -131,13 +131,13 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
     # cat("\n")
     print("Running simulations. There may be an additional wait for larger sets.", quote = FALSE)
     opts <- list(progress = progress)
-    browser()
+    # browser()
     if (fcm_class == "conventional") {
       inferences_for_mc_adj_matrices <- foreach::foreach(
         i = 1:length(mc_adj_matrices), .options.snow = opts
       ) %dopar% {
         infer_conventional_fcm(
-          adj_matrix = mc_adj_matrices[[1]],
+          adj_matrix = mc_adj_matrices[[i]],
           initial_state_vector = initial_state_vector,
           clamping_vector = clamping_vector,
           activation = activation,
@@ -151,8 +151,8 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
       inferences_for_mc_adj_matrices <- foreach::foreach(
         i = 1:length(mc_adj_matrices), .options.snow = opts
       ) %dopar% {
-        infer_ivfn_or_tfn_fcm_fcm(
-          adj_matrix = mc_adj_matrices[[1]],
+        infer_ivfn_or_tfn_fcm(
+          adj_matrix = mc_adj_matrices[[i]],
           initial_state_vector = initial_state_vector,
           clamping_vector = clamping_vector,
           activation = activation,
@@ -684,9 +684,11 @@ build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_lis
   n_nodes <- unique(unlist(lapply(adj_matrix_list, dim)))
   flatten_conventional_adj_matrix <- function(adj_matrix) {
     # browser()
-    do.call(c, as.vector(adj_matrix))
+    flattened_adj_matrix <- do.call(c, as.vector(adj_matrix))
+    names(flattened_adj_matrix) <- seq_along(flattened_adj_matrix)
+    flattened_adj_matrix
   }
-  flattened_adj_matrices <- do.call(cbind, lapply(adj_matrix_list, flatten_conventional_adj_matrix))
+  flattened_adj_matrices <- do.call(rbind, lapply(adj_matrix_list, flatten_conventional_adj_matrix))
   if (!include_zeroes) {
     flattened_adj_matrices[flattened_adj_matrices == 0] <- NA
   }
