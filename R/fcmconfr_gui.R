@@ -58,10 +58,6 @@ fcmconfr_gui <- function() {
     fcmconfr_gui_input$mc_inference_bootstrap_reps <- 1000
   }
 
-  if (!("mc_inference_bootstrap_draws_per_rep" %in% fcmconfr_gui_vars)) {
-    fcmconfr_gui_input$mc_inference_bootstrap_draws_per_rep <- 1000
-  }
-
   # browser()
 
   if (!("n_cores" %in% fcmconfr_gui_vars)) {
@@ -183,7 +179,6 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "  inference_estimation_function = ", x$mc_inference_estimation_function, ",\n",
       "  inference_estimation_CI = ", x$mc_inference_estimation_CI, ",\n",
       "  inference_estimation_bootstrap_reps = ", x$mc_inference_bootstrap_reps, ",\n",
-      "  inference_estimation_bootstrap_draws_per_rep = ", x$mc_inference_bootstrap_draws_per_rep, ",\n",
       "  # Runtime Options", "\n",
       "  show_progress = ", x$show_progress, ",\n",
       "  parallel = ", x$parallel, ",\n",
@@ -240,7 +235,6 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "  inference_estimation_function = ", x$mc_inference_estimation_function, ",\n",
       "  inference_estimation_CI = ", x$mc_inference_estimation_CI, ",\n",
       "  inference_estimation_bootstrap_reps = ", x$mc_inference_bootstrap_reps, ",\n",
-      "  inference_estimation_bootstrap_draws_per_rep = ", x$mc_inference_bootstrap_draws_per_rep, ",\n",
       "  # Runtime Options", "\n",
       "  show_progress = ", x$show_progress, ",\n",
       "  parallel = ", x$parallel, ",\n",

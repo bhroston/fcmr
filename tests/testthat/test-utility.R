@@ -36,7 +36,6 @@ test_that("check_if_local_machine_has_access_to_show_progress_functionalities wo
 })
 
 
-
 test_that("get_adj_matrices_input_type works", {
   # Individual Conventional Adj. Matrix ----
   adj_matrix_1 <- data.frame(
@@ -202,7 +201,6 @@ test_that("get_adj_matrices_input_type works", {
 })
 
 
-
 test_that("get_adj_matrix_from_edgelist works", {
   test_edgelist <- data.frame(
     from = c("A"),
@@ -264,7 +262,6 @@ test_that("get_adj_matrix_from_edgelist works", {
 })
 
 
-
 test_that("get_edgelist_from_adj_matrix works", {
   test_adj_matrix <- data.frame(
     "C1" = c(0, 0.36, 0.45, -0.90, 0),
@@ -303,7 +300,6 @@ test_that("get_edgelist_from_adj_matrix works", {
 })
 
 
-
 test_that("get_node_IDs_from_input works", {
   test_adj_matrix <- data.frame(
     "A" = c(0, 0.36, 0.45, -0.90, 0),
@@ -320,7 +316,6 @@ test_that("get_node_IDs_from_input works", {
   nodes <- get_node_IDs_from_input(test_adj_matrix)
   expect_identical(nodes, c("C1", "C2", "C3", "C4", "C5"))
 })
-
 
 
 test_that("standardize_adj_matrices works", {
@@ -490,8 +485,6 @@ test_that("standardize_adj_matrices works", {
   expect_equal(standardized_adj_matrices[[3]][2, 4][[1]], tfn(0.75, 0.77, 0.8))
 
 })
-
-
 
 
 #######

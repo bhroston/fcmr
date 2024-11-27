@@ -77,12 +77,15 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
 
   # browser()
   checks <- lapply(mc_adj_matrices, check_simulation_inputs, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
+  fcm_class <- get_adj_matrices_input_type(mc_adj_matrices)$object_types_in_list[1]
+
+  # # browser()
 
   # Confirm necessary packages are available. If not, warn user and change run options
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
   parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
 
-  # browser()
+  # # browser()
 
   if (parallel) {
     max_possible_cores <- parallel::detectCores()
@@ -100,6 +103,8 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
   if (!parallel & !identical(n_cores, integer())) {
     warning(paste0(" Input n_cores is ignored since parallel = FALSE" ))
   }
+
+  # # browser()
 
   if (parallel & show_progress) {
     print("Initializing cluster", quote = FALSE)
@@ -123,15 +128,17 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
     parallel::clusterExport(cl, varlist = vars, envir = environment())
 
     doSNOW::registerDoSNOW(cl)
-    # pb <- utils::txtProgressBar(min = 0, max = length(simulated_adj_matrices)/n_cores, style = 3)
     invisible(utils::capture.output(pb <- utils::txtProgressBar(min = 0, max = length(mc_adj_matrices)/n_cores, style = 3, width = 50)))
     progress <- function(n) utils::setTxtProgressBar(pb, n)
     # cat("\n")
     print("Running simulations. There may be an additional wait for larger sets.", quote = FALSE)
     opts <- list(progress = progress)
-    inferences_for_mc_adj_matrices <- foreach::foreach(
-      i = 1:length(mc_adj_matrices), .options.snow = opts) %dopar% {
-        infer_fcm(
+    # browser()
+    if (fcm_class == "conventional") {
+      inferences_for_mc_adj_matrices <- foreach::foreach(
+        i = 1:length(mc_adj_matrices), .options.snow = opts
+      ) %dopar% {
+        infer_conventional_fcm(
           adj_matrix = mc_adj_matrices[[i]],
           initial_state_vector = initial_state_vector,
           clamping_vector = clamping_vector,
@@ -142,10 +149,25 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
           min_error = min_error
         )
       }
+    } else if (fcm_class %in% c("ivfn", "tfn")) {
+      inferences_for_mc_adj_matrices <- foreach::foreach(
+        i = 1:length(mc_adj_matrices), .options.snow = opts
+      ) %dopar% {
+        infer_ivfn_or_tfn_fcm(
+          adj_matrix = mc_adj_matrices[[i]],
+          initial_state_vector = initial_state_vector,
+          clamping_vector = clamping_vector,
+          activation = activation,
+          squashing = squashing,
+          lambda = lambda,
+          max_iter = max_iter,
+          min_error = min_error
+        )
+      }
+    }
     close(pb)
     names(inferences_for_mc_adj_matrices) <- paste0("mc_", 1:length(inferences_for_mc_adj_matrices))
     parallel::stopCluster(cl)
-
   } else if (parallel & !show_progress) {
     print("Initializing cluster", quote = FALSE)
     cl <- parallel::makeCluster(n_cores)
@@ -168,30 +190,67 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
 
     cat("\n")
     print("Running simulations", quote = FALSE)
-    inferences_for_mc_adj_matrices <- parallel::parLapply(
-      cl,
-      mc_adj_matrices,
-      function(mc_adj_matrix) {
-        infer_fcm(
-          adj_matrix = mc_adj_matrix,
-          initial_state_vector = initial_state_vector,
-          clamping_vector = clamping_vector,
-          activation = activation,
-          squashing = squashing,
-          lambda = lambda,
-          max_iter = max_iter,
-          min_error = min_error
-        )
-      }
-    )
+    if (fcm_class == "conventional") {
+      inferences_for_mc_adj_matrices <- parallel::parLapply(
+        cl,
+        mc_adj_matrices,
+        function(mc_adj_matrix) {
+          infer_conventional_fcm(
+            adj_matrix = mc_adj_matrix,
+            initial_state_vector = initial_state_vector,
+            clamping_vector = clamping_vector,
+            activation = activation,
+            squashing = squashing,
+            lambda = lambda,
+            max_iter = max_iter,
+            min_error = min_error
+          )
+        }
+      )
+    } else if (fcm_class %in% c("ivfn", "tfn")) {
+      inferences_for_mc_adj_matrices <- parallel::parLapply(
+        cl,
+        mc_adj_matrices,
+        function(mc_adj_matrix) {
+          infer_ivfn_or_tfn_fcm(
+            adj_matrix = mc_adj_matrix,
+            initial_state_vector = initial_state_vector,
+            clamping_vector = clamping_vector,
+            activation = activation,
+            squashing = squashing,
+            lambda = lambda,
+            max_iter = max_iter,
+            min_error = min_error
+          )
+        }
+      )
+    }
+    # inferences_for_mc_adj_matrices <- parallel::parLapply(
+    #   cl,
+    #   mc_adj_matrices,
+    #   function(mc_adj_matrix) {
+    #     infer_fcm(
+    #       adj_matrix = mc_adj_matrix,
+    #       initial_state_vector = initial_state_vector,
+    #       clamping_vector = clamping_vector,
+    #       activation = activation,
+    #       squashing = squashing,
+    #       lambda = lambda,
+    #       max_iter = max_iter,
+    #       min_error = min_error
+    #     )
+    #   }
+    # )
     parallel::stopCluster(cl)
 
   } else if (!parallel & show_progress) {
     cat("\n")
     print("Running simulations", quote = FALSE)
+    # browser()
     inferences_for_mc_adj_matrices <- pbapply::pblapply(
       mc_adj_matrices,
       function(mc_adj_matrix) {
+        # # browser()
         infer_fcm(
           adj_matrix = mc_adj_matrix,
           initial_state_vector = initial_state_vector,
@@ -226,7 +285,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
   }
 
 
-  # browser()
+  # # browser()
 
   inference_values_by_sim <- lapply(inferences_for_mc_adj_matrices, function(sim) sim$inference)
   inference_values_by_sim <- data.frame(do.call(rbind, inference_values_by_sim))
@@ -311,9 +370,9 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
          (inference)")
   }
 
-  # browser()
+  # # browser()
   # Check function inputs
-  # browser()
+  # # browser()
   bootstrap_draws_per_rep <- nrow(mc_simulations_inference_df)
   monte_carlo_bootstrap_checks(inference_function, confidence_interval, bootstrap_reps)
 
@@ -321,7 +380,7 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
   parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
 
-  # browser()
+  # # browser()
 
   if (parallel) {
     max_possible_cores <- parallel::detectCores()
@@ -502,7 +561,7 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
   }
   expected_value_of_inference_by_node <- apply(bootstrapped_expectations_of_inference_by_node, 2, mean)
 
-  #browser()
+  ## browser()
 
   # print("Getting upper and lower quantile estimates of mean", quote = FALSE)
   lower_quantile <- (1 - confidence_interval)/2
@@ -524,7 +583,7 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
   }
   colnames(quantiles_by_node) <- c("node", "expected_value", paste0("lower_", lower_quantile), paste0("upper_", upper_quantile))
 
-  # browser()
+  # # browser()
   print("Done", quote = FALSE)
 
   structure(
@@ -577,11 +636,14 @@ build_monte_carlo_fcms <- function(adj_matrix_list = list(matrix()),
                                    include_zeroes = TRUE,
                                    show_progress = TRUE) {
 
-  # browser()
+  # # browser()
   adj_matrix_list_class <- get_adj_matrices_input_type(adj_matrix_list)$object_types_in_list[1]
 
   # browser()
+<<<<<<< HEAD
 
+=======
+>>>>>>> 978bd1275ed86b0ce05dd41ce0615126c99c5ae6
   if (adj_matrix_list_class == "conventional") {
     sampled_adj_matrices <- build_monte_carlo_fcms_from_conventional_adj_matrices(adj_matrix_list, N_samples, include_zeroes, show_progress)
   } else {
@@ -623,10 +685,18 @@ build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_lis
                                                                   N_samples = integer(),
                                                                   include_zeroes = TRUE,
                                                                   show_progress = TRUE) {
+<<<<<<< HEAD
 
+=======
+>>>>>>> 978bd1275ed86b0ce05dd41ce0615126c99c5ae6
   # browser()
   n_nodes <- unique(unlist(lapply(adj_matrix_list, dim)))
-  flatten_conventional_adj_matrix <- function(adj_matrix) do.call(c, as.vector(adj_matrix))
+  flatten_conventional_adj_matrix <- function(adj_matrix) {
+    # browser()
+    flattened_adj_matrix <- do.call(c, as.vector(adj_matrix))
+    names(flattened_adj_matrix) <- seq_along(flattened_adj_matrix)
+    flattened_adj_matrix
+  }
   flattened_adj_matrices <- do.call(rbind, lapply(adj_matrix_list, flatten_conventional_adj_matrix))
   if (!include_zeroes) {
     flattened_adj_matrices[flattened_adj_matrices == 0] <- NA
@@ -635,6 +705,7 @@ build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_lis
   if (show_progress) {
     cat(print("Sampling from column vectors", quote = FALSE))
     column_samples <- pbapply::pbapply(flattened_adj_matrices, 2, function(column_vec) {
+      # browser()
       na_omit_column_vec <- stats::na.omit(column_vec)
       if (length(na_omit_column_vec) != 0) {
         sample(na_omit_column_vec, N_samples, replace = TRUE)
@@ -697,7 +768,7 @@ build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_mat
                                                                include_zeroes = FALSE,
                                                                show_progress = TRUE) {
 
-  # browser()
+  # # browser()
   if (!(fuzzy_set_adj_matrix_list_class %in% c("conventional", "ivfn", "tfn"))) {
     stop("Input fuzzy_set_adj_matrix_list_class must be one of the following: 'conventional', 'ivfn', or 'tfn'")
   }
@@ -717,7 +788,7 @@ build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_mat
     column_samples <- pbapply::pbapply(
       flattened_fuzzy_set_adj_matrix_list_w_distributions, 2,
       function(column_vec) {
-        # browser()
+        # # browser()
         # sample_list_of_vectors_ignoring_NAs
         na_omit_column_vec <- stats::na.omit(do.call(c, column_vec))
         if (length(na_omit_column_vec) != 0) {
@@ -786,7 +857,7 @@ build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_mat
 monte_carlo_bootstrap_checks <- function(inference_function,
                                          confidence_interval,
                                          bootstrap_reps) {
-  # browser()
+  # # browser()
 
   if (!(inference_function %in% c("mean", "median"))) {
     stop("Input Validation Error: inference_function must be either 'mean' or 'median'")
