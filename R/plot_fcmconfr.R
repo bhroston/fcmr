@@ -1,5 +1,22 @@
 
 #' Get Concepts in fcmconfr Object to Include in Plot
+#'
+#' @description
+#' This determines which concepts should be included in fcmconfr output plot by
+#' selecting concepts that either were NOT clamped (if applicable) or did not
+#' reach a certain activation level throughout the simulation (i.e. whose
+#' 0-value would take up space in the figure.)
+#'
+#' @details
+#' This function removes:
+#'     - Clamped Nodes because they would be held at 1 and would increase the
+#'     x-axis, potentially diminishing the ability to view other data
+#'     - Inactivated Nodes because they do not display on the plot and would
+#'     add unnecessary whitespace to the plot.
+#'
+#' @param fcmconfr_object A direct output of the \code{\link{fcmconfr}} function
+#' @param filter_limit Remove concepts whose inferences do not exceed this value
+#'
 #' @export
 get_concepts_to_plot <- function(fcmconfr_object, filter_limit = 10e-3) {
   # browser()
@@ -50,10 +67,23 @@ get_concepts_to_plot <- function(fcmconfr_object, filter_limit = 10e-3) {
 }
 
 
+
 #' Get fcmconfr Object Plot Data
+#'
+#' @description
+#' This function parses through an \code{\link{fcmconfr}} output to gather and
+#' organize the analysis results into dataframes that are constructed to be
+#' plugged directly into a ggplot2 pipeline
+#'
+#' @details
+#' This function produces slightly different outputs for \code{\link{fcmconfr}}
+#' outputs generated from conventional, ivfn, and tfn FCMs
+#'
+#' @param fcmconfr_object A direct output of the \code{\link{fcmconfr}} function
+#' @param filter_limit Remove concepts whose inferences do not exceed this value
+#'
 #' @export
 get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
-
 
   nodes_to_plot <- get_concepts_to_plot(fcmconfr_object, filter_limit)
 
@@ -146,7 +176,7 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
     colnames(aggregate_inferences_longer) <- c("name", "crisp", "lower", "upper")
     mc_inferences_longer <- tidyr::pivot_longer(fcmconfr_object$inferences$monte_carlo_fcms$all_inferences, cols = c(1:ncol(fcmconfr_object$inferences$monte_carlo_fcms$all_inferences)))
 
-    aggregate_inferences_longer <- aggregate_inferences_longer[!(aggregate_inferences_longer$name %in% clamped_nodes), ]
+    aggregate_inferences_longer <- aggregate_inferences_longer[(aggregate_inferences_longer$name %in% nodes_to_plot), ]
     # aggregate_inferences_longer <- aggregate_inferences_longer[aggregate_inferences_longer$value >= 0.001, ]
     mc_inferences_longer <- mc_inferences_longer[!(mc_inferences_longer$name %in% aggregate_inferences_longer$name), ]
 
@@ -162,31 +192,6 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
   aggregate_inferences_longer$analysis_source <- "aggregate"
   mc_inferences_longer$analysis_source <- "mc"
   mc_inference_CIs$analysis_source <- "mc_CIs"
-  # mc_inference_CIs_longer$analysis_source <- "mc_CIs"
-  # mc_CIs$analysis_source <- "mc"
-
-  # aggregate_inferences_longer <- tidyr::pivot_longer(fcmconfr_object$inferences$aggregate_fcm$inferences, cols = 1:ncol(fcmconfr_object$inferences$aggregate_fcm$inferences))
-
-  # mc_CIs <- fcmconfr_object$inferences$monte_carlo_fcms$bootstrap$CIs_by_node
-
-
-  # Remove clamped_nodes from plot data frames
-  # aggregate_inferences_longer <- aggregate_inferences_longer[!(aggregate_inferences_longer$name %in% clamped_nodes), ]
-  # mc_CIs <- mc_CIs[!(mc_CIs$node %in% clamped_nodes), ]
-  #
-  # aggregate_inferences_longer <- aggregate_inferences_longer[aggregate_inferences_longer$value >= 0.001, ]
-  # mc_CIs <- mc_CIs[mc_CIs$node %in% aggregate_inferences_longer$name, ]
-  #
-  # max_y <- max(max(mc_CIs$upper_0.975), max(aggregate_inferences_longer$value))
-  # max_y <- (ceiling(max_y*1000)/1000)
-  # min_y <- min(min(mc_CIs$lower_0.025), min(aggregate_inferences_longer$value))
-  # min_y <- (floor(min_y*1000)/1000)
-
-  # aggregate_inferences_longer <- aggregate_inferences_longer[!(aggregate_inferences_longer$name %in% clamped_nodes), ]
-  # # aggregate_inferences_longer <- aggregate_inferences_longer[aggregate_inferences_longer$value >= 0.001, ]
-  # mc_inferences_longer <- mc_inferences_longer[!(mc_inferences_longer$name %in% aggregate_inferences_longer$name), ]
-
-  # browser()
 
   list(
     fcm_class_subtitle = fcm_class_subtitle,
@@ -201,38 +206,58 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
 }
 
 
-# input_inferences <- fcmconfr_object$inferences$input_fcms$inferences[2:ncol(fcmconfr_object$inferences$input_fcms$inferences)]
-# input_inferences_greater_than_filter_limit <- apply(input_inferences, 2, function(x) x > filter_limit)
-# nodes_with_inferences_greater_than_filter_limit <- apply(input_inferences_greater_than_filter_limit, 2, function(column) any(column))
-# nodes_of_interest_indexes <- which(nodes_with_inferences_greater_than_filter_limit)
-# nodes_of_interest_indexes <- nodes_of_interest_indexes[which(names(nodes_of_interest_indexes) != clamped_nodes)]
-# nodes_of_interest <- names(nodes_of_interest_indexes)
-
 #' Autoplot fcmconfr
+#'
+#' @description
+#' Generate a generic plot visualizing \code{\link{fcmconfr}} results. Call the
+#' function name directly (\code{\link{autoplot.fcmconfr}})) without parentheses
+#' to see the exact code to generate the plots, then copy-and-paste and edit
+#' as needed.
+#'
+#' @details
+#' This function produces slightly different outputs for \code{\link{fcmconfr}}
+#' outputs generated from conventional, ivfn, and tfn FCMs.
+#'
+#' @param object A direct output of the \code{\link{fcmconfr}} function
+#' @param ... Additional inputs
+#'
 #' @importFrom ggplot2 autoplot
+#' @importFrom rlang .data
 #' @export
-autoplot.fcmconfr <- function(fcmconfr_object,
-                              coord_flip = TRUE,
-                              exclude_input_inferences = FALSE,
-                              exclude_agg_inferences = FALSE,
-                              exclude_mc_inferences = FALSE,
-                              aggregate_fill = "#f7e3dd",
-                              aggregate_color = "#E1D1CB",
-                              aggregate_alpha = 0.7,
-                              mc_fill = "#f7e3dd",
-                              ...) {
+autoplot.fcmconfr <- function(object, ...) {
+                              # exclude_input_inferences = FALSE,
+                              # exclude_agg_inferences = FALSE,
+                              # exclude_mc_inferences = FALSE,
+                              # aggregate_fill = "#f7e3dd",
+                              # aggregate_color = "#E1D1CB",
+                              # aggregate_alpha = 0.7,
+                              # mc_fill = "#f7e3dd",
 
-  plot_data <- get_plot_data(fcmconfr_object)
+  # .data <- NULL # Only here to satisfy R CMD Check
+  # browser()
+
+  additional_inputs <- list(...)[[1]]
+  filter_limit <- additional_inputs$filter_limit
+  coord_flip <- additional_inputs$coord_flip
+
+  plot_data <- get_plot_data(object, filter_limit)
   concepts_to_plot <- unique(c(plot_data$input_inferences$name, plot_data$aggregate_inferences$name, plot_data$mc_inferences$name))
   concepts_to_plot <- concepts_to_plot[concepts_to_plot != "blank"]
 
-  plot_data$max_activation <- plot_data$max_activation + 0.1
-  plot_data$min_activation <- plot_data$min_activation - 0.1
+  plot_data$max_activation <- plot_data$max_activation + 0.1*plot_data$max_activation
+  plot_data$min_activation <- plot_data$min_activation - 0.1*plot_data$min_activation
 
-  browser()
+  if (object$params$simulation_opts$squashing == "sigmoid" & all(object$params$simulation_opts$clamping == 0)) {
+    zero_intercept <- 0.5
+  } else {
+    zero_intercept <- 0
+  }
 
-  if (fcmconfr_object$fcm_class == "conventional") {
+  # browser()
+
+  if (object$fcm_class == "conventional") {
     ggplot_main <- ggplot() +
+      ggplot2::geom_hline(yintercept = zero_intercept, linetype = "dotted") +
       ggplot2::geom_jitter(
         data = ggplot2::remove_missing(plot_data$mc_inferences),
         aes(x = .data$name, y = .data$value, color = .data$analysis_source),
@@ -255,52 +280,83 @@ autoplot.fcmconfr <- function(fcmconfr_object,
         linetype = "dotted",, linewidth = 0.2, width = 0.8, na.rm = TRUE
       ) +
       ggplot2::geom_point(
-        data = plot_data$input_inferences,
+        data = ggplot2::remove_missing(plot_data$input_inferences),
         # position = ggplot2::position_jitter(h = 0.025, w = 0),
         position = ggplot2::position_dodge2(width = 0.1),
         aes(x = .data$name, y = .data$value, color = .data$analysis_source),
         alpha = 1, shape = 16, size = 2, na.rm = TRUE
       ) +
       ggplot2::geom_point(
-        data = plot_data$aggregate_inferences,
+        data = ggplot2::remove_missing(plot_data$aggregate_inferences),
         aes(x = .data$name, y = .data$value),
         shape = 17, color = "red", size = 2,
       ) +
-      scale_color_manual(values = c(input = "black", mc = "lightgrey")) +
+      scale_color_manual(values = c(input = "black", mc = "grey")) +
       scale_x_discrete(limits = concepts_to_plot) +
       scale_y_continuous(expand = c(0, 0), limits = c(plot_data$min_activation, plot_data$max_activation)) +
       default_theme() +
       coord_flip()
 
-  } else if (fcmconfr_object$fcm_class == "ivfn") {
-    ggplot() +
-      geom_col(data = plot_data$aggregate_inferences, aes(x = .data$name, y = .data$crisp))
+  } else if (object$fcm_class == "ivfn") {
+    # ggplot() +
+    #   geom_col(data = plot_data$aggregate_inferences, aes(x = .data$name, y = .data$crisp))
+    #
+    # ggplot() +
+    #   geom_col(data = mc_CIs, aes(x = node, y = expected_value, fill = analysis_source, color = monte_carlo_col_fill), width = 0.5, alpha = monte_carlo_col_alpha, linewidth = 0.3) +
+    #   geom_segment(data = aggregate_inferences, aes(x = concept, xend = concept, y = lower, yend = upper, color = analysis_source), lineend = "round", linewidth = 2) +
+    #   geom_errorbar(data = mc_CIs, aes(x = node, ymin = lower_0.025, ymax = upper_0.975, color = analysis_source), width = 0.5, linewidth = 0.5)
+    #
+    }
 
-    ggplot() +
-      geom_col(data = mc_CIs, aes(x = node, y = expected_value, fill = analysis_source, color = monte_carlo_col_fill), width = 0.5, alpha = monte_carlo_col_alpha, linewidth = 0.3) +
-      geom_segment(data = aggregate_inferences, aes(x = concept, xend = concept, y = lower, yend = upper, color = analysis_source), lineend = "round", linewidth = 2) +
-      geom_errorbar(data = mc_CIs, aes(x = node, ymin = lower_0.025, ymax = upper_0.975, color = analysis_source), width = 0.5, linewidth = 0.5)
-  }
 
 
 
-
-  if (coord_flip) {
-    fcmconr_plot <- ggplot_main + default_theme() + coord_flip()
-  } else {
-    fcmconfr_plot <- ggplot_main + default_theme()
-  }
+  # if (coord_flip) {
+  #   fcmconr_plot <- ggplot_main + default_theme() + coord_flip()
+  # } else {
+  #   fcmconfr_plot <- ggplot_main + default_theme()
+  # }
 }
 
+
 #' Plot fcmconfr
+#'
+#' @description
+#' Print the output of the autoplot function (\code{\link{autoplot.fcmconfr}})
+#'
+#' @param x A direct output of the \code{\link{fcmconfr}} function
+#' @param ... Additional inputs:
+#'  - filter_limit Remove concepts whose inferences do not exceed this value
+#'  - coord_flip Swap x- and y-axes (i.e. rotate plot)
+#'
 #' @importFrom graphics plot
 #' @export
 plot.fcmconfr <- function(x, ...) {
-  print(autoplot(x, ...))
+  additional_inputs = list(...)
+  if (!("filter_limit" %in% names(additional_inputs))) {
+    filter_limit = 1e-3
+    additional_inputs$filter_limit <- filter_limit
+  }
+  if (!("coord_flip" %in% names(additional_inputs))) {
+    coord_flip = TRUE
+    additional_inputs$coord_flip <- coord_flip
+  }
+  stopifnot(is.numeric(filter_limit) & (filter_limit > 0 & filter_limit < 1))
+  stopifnot(is.logical(coord_flip))
+
+
+  suppressWarnings(print(autoplot(x, additional_inputs)))
 }
 
 
 #' Custom plot.fcmconfr Theme
+#'
+#' @description
+#' Theme-ing for plot.fcmconfr to improve readability in
+#' \code{\link{plot.fcmconfr}} function definition
+#'
+#' @param ... Additional Inputs
+#'
 #' @importFrom ggplot2 %+replace%
 #' @export
 theme_custom <- function(...) {
@@ -316,10 +372,50 @@ theme_custom <- function(...) {
 }
 
 #' Default plot.fcmconfr Theme
+#'
+#' @description
+#' A formal call to the custom_theme defined by \code{\link{theme_custom}}
+#'
 #' @export
 default_theme <- function() {
   theme_custom()
 }
+
+
+
+
+# input_inferences <- fcmconfr_object$inferences$input_fcms$inferences[2:ncol(fcmconfr_object$inferences$input_fcms$inferences)]
+# input_inferences_greater_than_filter_limit <- apply(input_inferences, 2, function(x) x > filter_limit)
+# nodes_with_inferences_greater_than_filter_limit <- apply(input_inferences_greater_than_filter_limit, 2, function(column) any(column))
+# nodes_of_interest_indexes <- which(nodes_with_inferences_greater_than_filter_limit)
+# nodes_of_interest_indexes <- nodes_of_interest_indexes[which(names(nodes_of_interest_indexes) != clamped_nodes)]
+# nodes_of_interest <- names(nodes_of_interest_indexes)
+
+# mc_inference_CIs_longer$analysis_source <- "mc_CIs"
+# mc_CIs$analysis_source <- "mc"
+
+# aggregate_inferences_longer <- tidyr::pivot_longer(fcmconfr_object$inferences$aggregate_fcm$inferences, cols = 1:ncol(fcmconfr_object$inferences$aggregate_fcm$inferences))
+
+# mc_CIs <- fcmconfr_object$inferences$monte_carlo_fcms$bootstrap$CIs_by_node
+
+
+# Remove clamped_nodes from plot data frames
+# aggregate_inferences_longer <- aggregate_inferences_longer[!(aggregate_inferences_longer$name %in% clamped_nodes), ]
+# mc_CIs <- mc_CIs[!(mc_CIs$node %in% clamped_nodes), ]
+#
+# aggregate_inferences_longer <- aggregate_inferences_longer[aggregate_inferences_longer$value >= 0.001, ]
+# mc_CIs <- mc_CIs[mc_CIs$node %in% aggregate_inferences_longer$name, ]
+#
+# max_y <- max(max(mc_CIs$upper_0.975), max(aggregate_inferences_longer$value))
+# max_y <- (ceiling(max_y*1000)/1000)
+# min_y <- min(min(mc_CIs$lower_0.025), min(aggregate_inferences_longer$value))
+# min_y <- (floor(min_y*1000)/1000)
+
+# aggregate_inferences_longer <- aggregate_inferences_longer[!(aggregate_inferences_longer$name %in% clamped_nodes), ]
+# # aggregate_inferences_longer <- aggregate_inferences_longer[aggregate_inferences_longer$value >= 0.001, ]
+# mc_inferences_longer <- mc_inferences_longer[!(mc_inferences_longer$name %in% aggregate_inferences_longer$name), ]
+
+# browser()
 
 
 #
