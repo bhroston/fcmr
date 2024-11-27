@@ -96,7 +96,8 @@ shiny_ui <- function() {
             shinyWidgets::radioGroupButtons("activation", "", choiceValues = c("kosko", "modified-kosko", "rescale"), choiceNames = c("Kosko", "Modified-Kosko", "Rescale"))
           )
         ),
-        shiny::uiOutput("rescale_tanh_warning_text"),
+        shiny::uiOutput("activation_function_formulae"),
+        shiny::uiOutput("tanh_warning_text"),
         shiny::fluidRow(
           shiny::column(
             width = 5, align = "right",
