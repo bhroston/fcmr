@@ -170,6 +170,11 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     warning("No clamping_vector input given. Assuming no values are clamped.")
     clamping_vector <- rep(0, n_nodes)
   }
+  if (any(clamping_vector != 0) & !all(initial_state_vector == 1)) {
+    stop("If any elements in input clamping_vector are set to a value other than
+         0, all elements in input initial_state_vector must be set to 1 to perform
+         the analysis correctly.")
+  }
 
   if (identical(activation, c("kosko", "modified-kosko", "rescale"))) {
     warning("No activation function given, assuming activation = 'kosko'")
@@ -192,24 +197,31 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   # ----
 
   # Confirm necessary packages are available. If not, warn user and change run options
+  # browser()
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
   parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
 
   # browser()
 
   # Individual Adj. Matrices Simulations ----
-  individual_adj_matrices_inferences <- lapply(adj_matrices, infer_fcm, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
+  print("Simulating Input FCMs")
+  if (show_progress) {
+    individual_adj_matrices_inferences <- pbapply::pblapply(adj_matrices, infer_fcm, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
+  } else {
+    individual_adj_matrices_inferences <- lapply(adj_matrices, infer_fcm, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
+  }
+  # browser()
+
   if (fcm_class == "conventional") {
     individual_adj_matrices_inferences_df <- do.call(rbind, lapply(individual_adj_matrices_inferences, function(inference) inference$inference))
     individual_adj_matrices_inferences_df <- cbind(input = paste0("adj_matrix_", 1:length(adj_matrices)), individual_adj_matrices_inferences_df)
   } else if (fcm_class %in% c("ivfn", "tfn")) {
-    individual_adj_matrices_inferences_df <- lapply(individual_adj_matrices_inferences, function(inference) inference$inference_df)
+    individual_adj_matrices_inferences_df <- lapply(individual_adj_matrices_inferences, function(inference) inference$inference)
     names(individual_adj_matrices_inferences_df) <- paste0("adj_matrix_", 1:length(adj_matrices))
   }
   names(individual_adj_matrices_inferences) <- paste0("adj_matrix_", 1:length(adj_matrices))
 
   # Aggregation and Monte Carlo Simulations ----
-
   if (fcm_class == "conventional" & length(adj_matrices) == 1 & (perform_monte_carlo_analysis | perform_aggregate_analysis)) {
     perform_monte_carlo_analysis = FALSE
     perform_aggregate_analysis = FALSE
@@ -247,8 +259,8 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     # Infer aggregate adj_matrix
     aggregate_fcm_inference <- infer_fcm(aggregate_adj_matrix$adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
   }
-
-  # browser()
+  #
+  # # browser()
 
   if (perform_monte_carlo_analysis) {
     # Build monte carlo models
@@ -259,6 +271,8 @@ fcmconfr <- function(adj_matrices = list(matrix()),
                                 rownames(sampled_adj_matrix) <- concepts
                                 sampled_adj_matrix
                               })
+
+    # browser()
 
     # Infer monte carlo models with clamping
     mc_inferences <- infer_monte_carlo_fcm_set(
@@ -275,6 +289,8 @@ fcmconfr <- function(adj_matrices = list(matrix()),
       n_cores = n_cores,
       include_simulations_in_output = include_monte_carlo_FCM_simulations_in_output
     )
+
+    # browser()
 
     if (perform_monte_carlo_inference_bootstrap_analysis) {
       # browser()
@@ -599,6 +615,9 @@ plot_conventional_fcmconfr <- function(conventional_fcmconfr_output,
   #
 
   fcm_class_subtitle <- "Conventional FCMs"
+  fcm_clamping_vector <- conventional_fcmconfr_output$params$simulation_opts$clamping_vector
+  fcm_nodes <- unique(lapply(conventional_fcmconfr_output$params$adj_matrices, colnames))[[1]]
+  clamped_nodes <- fcm_nodes[fcm_clamping_vector != 0]
 
   agg_function <- conventional_fcmconfr_output$params$aggregation_function
   if (agg_function == "mean") {
@@ -612,7 +631,17 @@ plot_conventional_fcmconfr <- function(conventional_fcmconfr_output,
   mc_CIs <- conventional_fcmconfr_output$inferences$monte_carlo_fcms$bootstrap$CIs_by_node
   mc_CIs$analysis_source <- "mc"
 
+  # Remove clamped_nodes from plot data frames
+  aggregate_inferences_longer <- aggregate_inferences_longer[!(aggregate_inferences_longer$name %in% clamped_nodes), ]
+  mc_CIs <- mc_CIs[!(mc_CIs$node %in% clamped_nodes), ]
+
   max_y <- max(max(mc_CIs$upper_0.975), max(aggregate_inferences_longer$value))
+  max_y <- (ceiling(max_y*1000)/1000)
+  min_y <- min(min(mc_CIs$lower_0.025), min(aggregate_inferences_longer$value))
+  min_y <- (floor(min_y*1000)/1000)
+
+  aggregate_inferences_longer <- aggregate_inferences_longer[aggregate_inferences_longer$value >= 0.001, ]
+  mc_CIs <- mc_CIs[mc_CIs$node %in% aggregate_inferences_longer$name, ]
 
   fcmconfr_plot <- ggplot() +
     geom_col(data = mc_CIs, aes(x = node, y = expected_value, fill = analysis_source, color = monte_carlo_col_fill), width = 0.5, alpha = monte_carlo_col_alpha, linewidth = 0.3) +
@@ -620,7 +649,7 @@ plot_conventional_fcmconfr <- function(conventional_fcmconfr_output,
     geom_point(data = aggregate_inferences_longer, aes(x = name, y = value, fill = analysis_source), color = "black", shape = 21, size = 3, stroke = 0.5) +
     scale_fill_manual(values = c(mc = monte_carlo_col_fill, aggregate = aggregate_point_fill), labels = c(mc = "Monte Carlo Average", aggregate = "Aggregate")) +
     scale_color_manual(values = c(mc = "black"), labels = c(mc = "Monte Carlo CIs")) +
-    scale_y_continuous(expand = c(0, 0), limits = c(0, max_y + 0.05)) +
+    scale_y_continuous(expand = c(0, 0), limits = c(min_y, max_y)) +
     guides(alpha = "none", color = guide_legend(order = 1), shape = guide_legend(order = 2)) +
     expand_limits(y = 0) +
     ggtitle("FCMconfR Inferences", subtitle = paste(fcm_class_subtitle)) +

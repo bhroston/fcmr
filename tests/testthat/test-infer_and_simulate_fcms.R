@@ -256,7 +256,7 @@ test_that("simulate_fcm works", {
   )
   test_sim <- simulate_fcm(adj_matrix, c(1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0), activation = "kosko", squashing = "sigmoid")
   expect_equal(round(test_sim$state_vectors[2, ], 2), data.frame(1, 1, 0.38, 0.5, 0.11, 0.33, 0.13), ignore_attr = TRUE)
-  expect_equal(round(test_sim$state_vectors[nrow(test_sim$state_vectors), ], 2), data.frame(9, 1, 0.31, 0.5, 0.18, 0.49, 0.32), ignore_attr = TRUE)
+  expect_equal(round(test_sim$state_vectors[nrow(test_sim$state_vectors), ], 2), data.frame(8, 1, 0.31, 0.5, 0.18, 0.49, 0.32), ignore_attr = TRUE)
 
   lower_adj_matrix <- data.frame(
     C1 = c(0, 0, 0, 0, 0, 0),
@@ -320,7 +320,7 @@ test_that("simulate_conventional_fcm works", {
   )
   test_sim <- simulate_conventional_fcm(adj_matrix, c(1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0), activation = "kosko", squashing = "sigmoid")
   expect_equal(round(test_sim$state_vectors[2, ], 2), data.frame(1, 1, 0.38, 0.5, 0.11, 0.33, 0.13), ignore_attr = TRUE)
-  expect_equal(round(test_sim$state_vectors[nrow(test_sim$state_vectors), ], 2), data.frame(9, 1, 0.31, 0.5, 0.18, 0.49, 0.32), ignore_attr = TRUE)
+  expect_equal(round(test_sim$state_vectors[nrow(test_sim$state_vectors), ], 2), data.frame(8, 1, 0.31, 0.5, 0.18, 0.49, 0.32), ignore_attr = TRUE)
 
   expect_warning(simulate_conventional_fcm(adj_matrix, c(1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0), activation = "modified-kosko", squashing = "tanh", max_iter = 5))
 })
@@ -638,6 +638,7 @@ test_that("check_simulation_inputs works", {
 
   expect_no_error(check_simulation_inputs(adj_matrix = test_tfn_fcm, initial_state_vector = c(1, 1), clamping_vector = c(1, 0), activation = "rescale",  squashing = "sigmoid"))
   expect_error(check_simulation_inputs(adj_matrix = test_tfn_fcm, initial_state_vector = c(1, 1), clamping_vector = c(1, 0), activation = "rescale", squashing = "tanh"))
+  expect_warning(check_simulation_inputs(adj_matrix = test_tfn_fcm, initial_state_vector = c(1, 1), clamping_vector = c(1, 0), activation = "modified-kosko", squashing = "tanh"))
   # ----
 
   # Check lambda ----
@@ -707,3 +708,78 @@ test_that("print.infer_ivfn_or_tfn_fcm works", {
 
   expect_snapshot(test_sim)
 })
+
+
+
+#
+# test_that("simulate_fcm works with cumtrapz inference estimation", {
+#
+#   test_df <- data.frame(
+#     A = c(0, 0, 0.55, 0),
+#     B = c(-0.78, 0, 0, 0),
+#     C = c(0, 0.23, 0, 0),
+#     D = c(-0.38, 0.43, 0, 0)
+#   )
+#   test_df[test_df == 0] <- NA
+#   rownames(test_df) <- colnames(test_df)
+#   test_df <- apply(test_df, c(1, 2), as.character)
+#   write.csv(test_df, "test.csv", na = '""')
+#
+#   test <- infer_conventional_fcm(
+#     adj_matrix = test_df,
+#     initial_state_vector = c(1, 1, 1, 1),
+#     clamping_vector = c(1, 0, 0, 0),
+#     activation = "kosko",
+#     squashing = "tanh",
+#     lambda = 1,
+#     max_iter = 1000,
+#     min_error = 1e-5
+#   )
+#
+#   test_adj_matrix <- salinization_conventional_fcms[[1]]
+#   test_adj_matrix[test_adj_matrix == 0] <- NA
+#   rownames(test_adj_matrix) <- colnames(test_adj_matrix)
+#   write.csv(test_adj_matrix, file = "test.csv", na = "")
+#
+#   test_sim_pulse_mk <- simulate_conventional_fcm(
+#     adj_matrix = salinization_conventional_fcms[[1]],
+#     initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+#     clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
+#     activation = "modified-kosko",
+#     squashing = "sigmoid",
+#     lambda = 1,
+#     max_iter = 1000,
+#     min_error = 1e-5
+#   )
+#
+#   test_sim_clamping_mk <- simulate_conventional_fcm(
+#     adj_matrix = salinization_conventional_fcms[[1]],
+#     initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
+#     clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+#     activation = "kosko",
+#     squashing = "sigmoid",
+#     lambda = 1,
+#     max_iter = 5000,
+#     min_error = 1e-10
+#   )
+#
+#   fcm_test <- fcm::fcm.infer(activation_vec = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+#                  salinization_conventional_fcms[[1]],
+#                  iter = 1000,
+#                  infer = "mk",
+#                  transform = "s",
+#                  lambda = 1,
+#                  e = 1e-5)
+#
+#   plot(test_sim_pulse_mk$state_vectors$FA.Healthy.ecosystem, type = "l")
+#   plot(test_sim_clamping_mk$state_vectors$FA.Healthy.ecosystem, type = "l")
+#
+#   plot(test_sim_pulse_mk$state_vectors$FA.Healthy.ecosystem, type = "l")
+#   plot(fcm_test$values$FA.Healthy.ecosystem, type = "l")
+#
+#   test <- test_sim_pulse$state_vectors$FA.DW.acceptance
+#
+#   result <- pracma::cumtrapz(x = seq_along(test_sim_pulse$state_vectors$FA.DW.acceptance), y = test_sim_pulse$state_vectors$FA.DW.acceptance)
+#   result <- pracma::trapz(x = seq_along(test_sim_pulse$state_vectors$FA.DW.acceptance), y = test_sim_pulse$state_vectors$FA.DW.acceptance)
+#
+# })
