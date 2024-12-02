@@ -462,6 +462,7 @@ print.fcmconfr <- function(x, ...) {
         paste0("\n  - additional_opts: ", "Perform Aggregate Analysis = ", x$params$additional_opts$perform_aggregate_analysis, "; Perform MC Analysis = ", x$params$additional_opts$perform_monte_carlo_analysis)
     )
   } else if (performed_aggregate & performed_mc & !performed_bootstrap) {
+    # browser()
     n_mc_sims <- x$params$monte_carlo_sampling_draws
 
     cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),
@@ -475,6 +476,7 @@ print.fcmconfr <- function(x, ...) {
         paste0("\n  - additional_opts: ", "Perform Aggregate Analysis = ", x$params$additional_opts$perform_aggregate_analysis, "; Perform MC Analysis = ", x$params$additional_opts$perform_monte_carlo_analysis)
     )
   } else if (!performed_aggregate & performed_mc & performed_bootstrap) {
+    # browser()
     n_mc_sims <- x$params$monte_carlo_sampling_draws
 
     cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),
@@ -490,6 +492,7 @@ print.fcmconfr <- function(x, ...) {
         paste0("\n  - additional_opts: ", "Perform Aggregate Analysis = ", x$params$additional_opts$perform_aggregate_analysis, "; Perform MC Analysis = ", x$params$additional_opts$perform_monte_carlo_analysis)
     )
   } else if (!performed_aggregate & performed_mc & !performed_bootstrap) {
+    # browser()
     n_mc_sims <- x$params$monte_carlo_sampling_draws
 
     cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),
@@ -502,6 +505,7 @@ print.fcmconfr <- function(x, ...) {
         paste0("\n  - additional_opts: ", "Perform Aggregate Analysis = ", x$params$additional_opts$perform_aggregate_analysis, "; Perform MC Analysis = ", x$params$additional_opts$perform_monte_carlo_analysis)
     )
   } else if (performed_aggregate & !performed_mc) {
+    # browser()
     cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),
         "\n$inference\n",
         paste0(" - input_fcms: Inferences and data from the ", n_input_fcm, " input fcm adj. matrices.\n"),
@@ -512,6 +516,7 @@ print.fcmconfr <- function(x, ...) {
         paste0("\n  - additional_opts: ", "Perform Aggregate Analysis = ", x$params$additional_opts$perform_aggregate_analysis, "; Perform MC Analysis = ", x$params$additional_opts$perform_monte_carlo_analysis)
     )
   } else if (!performed_aggregate & !performed_mc) {
+    # browser()
     cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),
         "\n$inference\n",
         paste0(" - input_fcms: Inferences and data from the ", n_input_fcm, " input fcm adj. matrices."),

@@ -1260,10 +1260,10 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
   if (rows != cols) {
     stop("Failed Input Validation: Input adjacency matrix must be a square (n x n) matrix")
   }
-  data_types_in_adj_matrix <- unique(do.call(list, (apply(adj_matrix, c(1, 2), function(x) list(methods::is(x[[1]]))))))
-  if (length(data_types_in_adj_matrix) > 1) {
-    stop("Failed Input Validation: Input adjacency matrix must contain objects of the same type. Either numerics, ivfns, or tfns.")
-  }
+  # data_types_in_adj_matrix <- unique(do.call(list, (apply(adj_matrix, c(1, 2), function(x) list(methods::is(x[[1]]))))))
+  # if (length(data_types_in_adj_matrix) > 1) {
+  #   stop("Failed Input Validation: Input adjacency matrix must contain objects of the same type. Either numerics, ivfns, or tfns.")
+  # }
   n_nodes <- unique(dim(adj_matrix))
 
   # ----

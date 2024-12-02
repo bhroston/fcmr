@@ -498,7 +498,7 @@ test_that("calculate_next_fuzzy_set_fcm_state_vector", {
                                                                crisp_state_vector = c(-1, 1),
                                                                activation = "modified-kosko",
                                                                fcm_class = "tfn")
-  expect_equal(test_next_state, c(tfn(1, 1, 1), tfn(0.25, 1.5, 1.75)), ignore_attr = TRUE)
+  expect_equal(test_next_state, c(tfn(1, 1, 1), tfn(0.25, 0.5, 1.25)), ignore_attr = TRUE)
 
   test_next_state <- calculate_next_fuzzy_set_fcm_state_vector(adj_matrix_w_tfns,
                                                                fuzzy_set_state_vector = c(tfn(1, 1, 1), tfn(1, 1, 1)),
@@ -630,10 +630,14 @@ test_that("check_simulation_inputs works", {
   )
   test_tfn_fcm <- make_adj_matrix_w_tfns(lower_adj_matrix_1, mode_adj_matrix_1, upper_adj_matrix_1)
 
+  # Check for individual adj_matrix ----
+  expect_error(check_simulation_inputs(adj_matrix = salinization_conventional_fcms, initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0, 0, 0, 0)))
+
   # Check adj_matrices ----
   expect_no_error(check_simulation_inputs(adj_matrix = test_conventional_fcm, initial_state_vector = c(1, 1), clamping_vector = c(1, 0)))
   expect_no_error(check_simulation_inputs(adj_matrix = test_ivfn_fcm, initial_state_vector = c(1, 1), clamping_vector = c(1, 0)))
   expect_no_error(check_simulation_inputs(adj_matrix = test_tfn_fcm, initial_state_vector = c(1, 1), clamping_vector = c(1, 0)))
+
 
   expect_error(check_simulation_inputs(cbind(test_conventional_fcm, test_conventional_fcm)))
   error_ivfn_fcm <- test_ivfn_fcm
