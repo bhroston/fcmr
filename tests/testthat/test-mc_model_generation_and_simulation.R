@@ -181,6 +181,23 @@ test_that("infer_monte_carlo_fcm_set catches invalid parallel processing inputs"
       )
     )
   ))
+
+  invisible(capture.output(
+    expect_warning( # When n_cores input given but parallel processing is not intended
+      infer_monte_carlo_fcm_set(
+        salinization_conventional_fcms,
+        initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
+        clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+        activation = "kosko",
+        squashing = "sigmoid",
+        lambda = 1,
+        max_iter = 100,
+        min_error = 1e-5,
+        parallel = FALSE,
+        n_cores = 2
+      )
+    )
+  ))
 })
 
 
