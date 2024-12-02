@@ -80,11 +80,6 @@ infer_fcm <- function(adj_matrix = matrix(),
 
   fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
 
-  if (!(fcm_class %in% c("conventional", "ivfn", "tfn"))) {
-    stop("Input adj_matrix must be an adjacency matrix with edges represented as
-         numeric values, ivfns, or tfns")
-  }
-
   # browser()
 
   if (fcm_class == "conventional") {
@@ -1252,6 +1247,12 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
                                     lambda = 1,
                                     max_iter = 100,
                                     min_error = 1e-4) {
+
+  # Check for individal adj_matrix ----
+  adj_matrix_is_list <- get_adj_matrices_input_type(adj_matrix)$adj_matrices_input_is_list
+  if (adj_matrix_is_list) {
+    stop("Input Validation Error: Input adj_matrix must be an individual adj. matrix, not a list of adj. matrices.")
+  }
 
   # Check adj_matrix ----
   rows <- nrow(adj_matrix)

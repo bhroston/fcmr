@@ -1,5 +1,11 @@
 
 test_that("infer_fcm works", {
+  bad_adj_matrix <- data.frame(
+    A = c("A", "B"),
+    B = c("B", "C")
+  )
+  expect_error(infer_fcm(bad_adj_matrix, initial_state_vector = c(1, 1), clamping_vector = c(0, 0), "kosko", "sigmoid", 1))
+
   adj_matrix <- data.frame(
     C1 = c(0, 0, 0, 0, 0, 0),
     C2 = c(-0.85, 0, 0, 0.35, 0, 0),
@@ -194,6 +200,30 @@ test_that("infer_ivfn_or_tfn_fcm works", {
   total_error <- error_in_lowers + error_in_uppers
 
   expect_lt(total_error, 0.1)
+
+
+  # Compare Ex. Matrices IVFN and TFN Sim Results
+  salinization_sim_ivfn <- infer_ivfn_or_tfn_fcm(salinization_ivfn_fcms[[1]],
+                                                initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
+                                                clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+                                                activation = "modified-kosko",
+                                                squashing = "sigmoid",
+                                                lambda = 1,
+                                                max_iter = 1000,
+                                                min_error = 1e-5)
+
+  salinization_sim_tfn <- infer_ivfn_or_tfn_fcm(salinization_tfn_fcms[[1]],
+                                    initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
+                                    clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+                                    activation = "modified-kosko",
+                                    squashing = "sigmoid",
+                                    lambda = 1,
+                                    max_iter = 1000,
+                                    min_error = 1e-5)
+  lower_differences <- sum(abs(salinization_sim_ivfn$inference$lower - salinization_sim_tfn$inference$lower))^2
+  upper_differences <- sum(abs(salinization_sim_ivfn$inference$upper - salinization_sim_tfn$inference$upper))^2
+  crisp_differences <- sum(abs(salinization_sim_ivfn$inference$crisp - salinization_sim_tfn$inference$crisp))^2
+  expect_true(lower_differences < 1e-3 & upper_differences < 1e-3 & crisp_differences < 1e-3)
 })
 
 
