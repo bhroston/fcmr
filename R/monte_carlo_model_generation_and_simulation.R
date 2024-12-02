@@ -85,7 +85,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
   parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
 
-  # # browser()
+  # browser()
 
   if (parallel) {
     max_possible_cores <- parallel::detectCores()
@@ -93,11 +93,11 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
       warning(paste0("Input n_cores not defined by user. Assuming n_cores is the maximum available on machine: n_cores = ", max_possible_cores))
       n_cores <- max_possible_cores
     }
-    if (!is.numeric(n_cores) | (n_cores %% 2 != 0)) {
+    if (!is.numeric(n_cores) | !(n_cores %% 2 %in% c(0, 1))) {
       stop("Input Validation Error: n_cores must be an integer.")
     }
     if (n_cores > max_possible_cores) {
-      warning(paste0(" Input n_cores is greater than the available cores on this machine.\n Reducing to ", max_possible_cores))
+      warning(paste0(" Input n_cores is greater than the available cores on this machine.\n   Reducing to ", max_possible_cores))
     }
   }
   if (!parallel & !identical(n_cores, integer())) {
@@ -134,36 +134,19 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
     print("Running simulations. There may be an additional wait for larger sets.", quote = FALSE)
     opts <- list(progress = progress)
     # browser()
-    if (fcm_class == "conventional") {
-      inferences_for_mc_adj_matrices <- foreach::foreach(
-        i = 1:length(mc_adj_matrices), .options.snow = opts
-      ) %dopar% {
-        infer_conventional_fcm(
-          adj_matrix = mc_adj_matrices[[i]],
-          initial_state_vector = initial_state_vector,
-          clamping_vector = clamping_vector,
-          activation = activation,
-          squashing = squashing,
-          lambda = lambda,
-          max_iter = max_iter,
-          min_error = min_error
-        )
-      }
-    } else if (fcm_class %in% c("ivfn", "tfn")) {
-      inferences_for_mc_adj_matrices <- foreach::foreach(
-        i = 1:length(mc_adj_matrices), .options.snow = opts
-      ) %dopar% {
-        infer_ivfn_or_tfn_fcm(
-          adj_matrix = mc_adj_matrices[[i]],
-          initial_state_vector = initial_state_vector,
-          clamping_vector = clamping_vector,
-          activation = activation,
-          squashing = squashing,
-          lambda = lambda,
-          max_iter = max_iter,
-          min_error = min_error
-        )
-      }
+    inferences_for_mc_adj_matrices <- foreach::foreach(
+      i = 1:length(mc_adj_matrices), .options.snow = opts
+    ) %dopar% {
+      infer_conventional_fcm(
+        adj_matrix = mc_adj_matrices[[i]],
+        initial_state_vector = initial_state_vector,
+        clamping_vector = clamping_vector,
+        activation = activation,
+        squashing = squashing,
+        lambda = lambda,
+        max_iter = max_iter,
+        min_error = min_error
+      )
     }
     close(pb)
     names(inferences_for_mc_adj_matrices) <- paste0("mc_", 1:length(inferences_for_mc_adj_matrices))
@@ -190,41 +173,22 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
 
     cat("\n")
     print("Running simulations", quote = FALSE)
-    if (fcm_class == "conventional") {
-      inferences_for_mc_adj_matrices <- parallel::parLapply(
-        cl,
-        mc_adj_matrices,
-        function(mc_adj_matrix) {
-          infer_conventional_fcm(
-            adj_matrix = mc_adj_matrix,
-            initial_state_vector = initial_state_vector,
-            clamping_vector = clamping_vector,
-            activation = activation,
-            squashing = squashing,
-            lambda = lambda,
-            max_iter = max_iter,
-            min_error = min_error
-          )
-        }
-      )
-    } else if (fcm_class %in% c("ivfn", "tfn")) {
-      inferences_for_mc_adj_matrices <- parallel::parLapply(
-        cl,
-        mc_adj_matrices,
-        function(mc_adj_matrix) {
-          infer_ivfn_or_tfn_fcm(
-            adj_matrix = mc_adj_matrix,
-            initial_state_vector = initial_state_vector,
-            clamping_vector = clamping_vector,
-            activation = activation,
-            squashing = squashing,
-            lambda = lambda,
-            max_iter = max_iter,
-            min_error = min_error
-          )
-        }
-      )
-    }
+    inferences_for_mc_adj_matrices <- parallel::parLapply(
+      cl,
+      mc_adj_matrices,
+      function(mc_adj_matrix) {
+        infer_conventional_fcm(
+          adj_matrix = mc_adj_matrix,
+          initial_state_vector = initial_state_vector,
+          clamping_vector = clamping_vector,
+          activation = activation,
+          squashing = squashing,
+          lambda = lambda,
+          max_iter = max_iter,
+          min_error = min_error
+        )
+      }
+    )
     # inferences_for_mc_adj_matrices <- parallel::parLapply(
     #   cl,
     #   mc_adj_matrices,
@@ -388,7 +352,7 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
       warning(paste0("Input n_cores not defined by user. Assuming n_cores is the maximum available on machine: n_cores = ", max_possible_cores))
       n_cores <- max_possible_cores
     }
-    if (!is.numeric(n_cores) | (n_cores %% 2 != 0)) {
+    if (!is.numeric(n_cores) | !(n_cores %% 2 %in% c(0, 1))) {
       stop("Input Validation Error: n_cores must be an integer.")
     }
     if (n_cores > max_possible_cores) {
