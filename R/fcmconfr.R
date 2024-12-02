@@ -443,6 +443,8 @@ print.fcmconfr <- function(x, ...) {
 
   n_input_fcm <- length(x$params$adj_matrices)
 
+  # browser()
+
   if (performed_aggregate & performed_mc & performed_bootstrap) {
     n_mc_sims <- x$params$monte_carlo_sampling_draws
 

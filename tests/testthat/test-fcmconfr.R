@@ -64,6 +64,38 @@ test_that("streamlined fcmconfr works", {
 
   expect_snapshot(test)
 
+  expect_no_error(
+    invisible(capture.output(
+      test <- fcmconfr(
+        adj_matrices = test_fcms,
+        # Aggregation and Monte Carlo Sampling
+        aggregation_function = 'mean',
+        monte_carlo_sampling_draws = 100,
+        # Simulation
+        initial_state_vector = c(1, 1, 1, 1),
+        clamping_vector = c(0, 1, 0, 0),
+        activation = 'kosko',
+        squashing = 'sigmoid',
+        lambda = 1,
+        max_iter = 100,
+        min_error = 1e-05,
+        # Inference Estimation (bootstrap)
+        inference_estimation_function = "median",
+        inference_estimation_CI = 0.95,
+        inference_estimation_bootstrap_reps = 1000,
+        # Runtime Options
+        show_progress = FALSE,
+        parallel = FALSE,
+        # Additional Options
+        perform_aggregate_analysis = TRUE,
+        perform_monte_carlo_analysis = TRUE,
+        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
+        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+        include_monte_carlo_FCM_simulations_in_output = TRUE
+      )
+    ))
+  )
+
 
   # ggplot() +
   #   geom_jitter(data = test$inferences$input_fcms$inferences, aes(x = node, y = value)) +
