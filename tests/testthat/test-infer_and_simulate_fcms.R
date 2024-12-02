@@ -475,7 +475,7 @@ test_that("calculate_next_fuzzy_set_fcm_state_vector", {
   # Test w/ TFNs
   lower_adj_matrix_1 <- data.frame(
     "A" = c(0, 0),
-    "B" = c(0.25, 0)
+    "B" = c(-0.25, 0)
   )
   mode_adj_matrix_1 <- data.frame(
     "A" = c(0, 0),
@@ -491,22 +491,21 @@ test_that("calculate_next_fuzzy_set_fcm_state_vector", {
                                                                crisp_state_vector = c(1, 1),
                                                                activation = "kosko",
                                                                fcm_class = "tfn")
-  expect_equal(test_next_state, c(tfn(0, 0, 0), tfn(0.25, 0.5, 0.75)), ignore_attr = TRUE)
+  expect_equal(test_next_state, c(tfn(0, 0, 0), tfn(-0.25, 0.5, 0.75)), ignore_attr = TRUE)
 
   test_next_state <- calculate_next_fuzzy_set_fcm_state_vector(adj_matrix_w_tfns,
                                                                fuzzy_set_state_vector = c(tfn(1, 1, 1), tfn(1, 1, 1)),
-                                                               crisp_state_vector = c(1, 1),
+                                                               crisp_state_vector = c(-1, 1),
                                                                activation = "modified-kosko",
                                                                fcm_class = "tfn")
-  expect_equal(test_next_state, c(tfn(1, 1, 1), tfn(1.25, 1.5, 1.75)), ignore_attr = TRUE)
+  expect_equal(test_next_state, c(tfn(1, 1, 1), tfn(0.25, 1.5, 1.75)), ignore_attr = TRUE)
 
   test_next_state <- calculate_next_fuzzy_set_fcm_state_vector(adj_matrix_w_tfns,
                                                                fuzzy_set_state_vector = c(tfn(1, 1, 1), tfn(1, 1, 1)),
                                                                crisp_state_vector = c(1, 1),
                                                                activation = "rescale",
                                                                fcm_class = "tfn")
-  expect_equal(test_next_state, c(tfn(1, 1, 1), tfn(1.25, 1.5, 1.75)), ignore_attr = TRUE)
-
+  expect_equal(test_next_state, c(tfn(1, 1, 1), tfn(0.75, 1.5, 1.75)), ignore_attr = TRUE)
 })
 
 

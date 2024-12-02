@@ -287,28 +287,6 @@ test_that("get_mc_simulations_inference_CIs_w_bootstrap", {
 
   # Check rejects non-dataframe objects
   expect_error(get_mc_simulations_inference_CIs_w_bootstrap("a", "median", 0.95, parallel = FALSE))
-
-  # # Check when no n_cores given
-  # invisible(capture.output(
-  #   expect_warning(
-  #     get_mc_simulations_inference_CIs_w_bootstrap(test_mc_fcms_inferences$inference, "mean", 0.95, parallel = TRUE, show_progress = TRUE)
-  #   )
-  # ))
-  #
-  # # Check when n_cores > max. possible cores
-  # invisible(capture.output(
-  #   expect_warning(
-  #     get_mc_simulations_inference_CIs_w_bootstrap(test_mc_fcms_inferences$inference, "mean", 0.95, parallel = TRUE, show_progress = TRUE, n_cores = 20)
-  #   )
-  # ))
-  #
-  # # Check when invalid n_cores given
-  # invisible(capture.output(
-  #   expect_error(
-  #     get_mc_simulations_inference_CIs_w_bootstrap(test_mc_fcms_inferences$inference, "mean", 0.95, parallel = TRUE, show_progress = TRUE, n_cores = 1.5)
-  #   )
-  # ))
-
 })
 
 
@@ -376,6 +354,19 @@ test_that("get_mc_simulations_inference_CIs_w_bootstrap catches invalid parallel
         bootstrap_reps = 100,
         parallel = TRUE,
         n_cores = parallel::detectCores() + 1
+      )
+    )
+  ))
+
+  invisible(capture.output(
+    expect_warning( # When n_cores is larger than number of available cores
+      get_mc_simulations_inference_CIs_w_bootstrap(
+        mc_simulations_inference_df = test_mc_fcms_inferences$inference,
+        inference_function = "mean",
+        confidence_interval = 0.95,
+        bootstrap_reps = 100,
+        parallel = FALSE,
+        n_cores = 2
       )
     )
   ))
