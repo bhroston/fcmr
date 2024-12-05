@@ -153,6 +153,10 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   if (!adj_matrices_input_type$adj_matrices_input_is_list) {
     adj_matrices <- list(adj_matrices)
   }
+  if (identical(adj_matrices_input_type$object_types_in_list, c("conventional", "sparseMatrix"))) {
+    adj_matrices <- lapply(adj_matrices, as.matrix)
+    warning("Input Revision: Changed sparseMatrix objects in input adj_matrices to ordinary matrices.")
+  }
 
   adj_matrices_dims <- lapply(adj_matrices, dim)
   if (length(unique(unlist(adj_matrices_dims))) > 1) {
@@ -260,7 +264,8 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     aggregate_fcm_inference <- infer_fcm(aggregate_adj_matrix$adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
   }
   #
-  # # browser()
+
+  # browser()
 
   if (perform_monte_carlo_analysis) {
     # Build monte carlo models

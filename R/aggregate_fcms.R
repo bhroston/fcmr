@@ -62,6 +62,8 @@ aggregate_fcms <- function(adj_matrices = list(matrix()),
     stop("All input adjacency matrices must have the same dimensions (n x n) throughout the entire list")
   }
 
+  # browser()
+
   concepts_in_adj_matrices <- lapply(adj_matrices, function(x) get_node_IDs_from_input(x))
   node_names <- unlist(unique(concepts_in_adj_matrices))
 
@@ -148,10 +150,14 @@ aggregate_conventional_fcms <- function(adj_matrices = list(matrix()),
     )
   }
 
+  # browser()
+
   if (aggregation_function == "mean") {
     aggregate_adj_matrix <- apply(
       array(unlist(adj_matrices), c(n_nodes, n_nodes, n_maps)), 1:2,
-      function(x) mean(x, na.rm = TRUE)
+      function(x) {
+        mean(x, na.rm = TRUE)
+      }
     )
   } else if (aggregation_function == "median") {
     aggregate_adj_matrix <- apply(

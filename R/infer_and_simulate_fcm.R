@@ -502,6 +502,10 @@ simulate_fcm <- function(adj_matrix = matrix(),
   #   stop("Input adj_matrix must be an adjacency matrix with edges represented as
   #        numeric values, ivfns, or tfns")
   # }
+  # if (identical(adj_matrices_input_type$object_types_in_list, c("conventional", "sparseMatrix"))) {
+  #   adj_matrices <- lapply(adj_matrices, Matrix::Matrix, sparse = FALSE)
+  #   warning("Input Revision: Changed sparseMatrix objects in input adj_matrices to ordinary matrices.")
+  # }
 
   if (fcm_class == "conventional") {
     simulation <- simulate_conventional_fcm(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)

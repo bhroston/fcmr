@@ -159,8 +159,7 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
   classes_in_matrix_objects <- methods::is(matrix())
   classes_in_datatable_objects <- methods::is(data.table::data.table())
   classes_in_tibble_objects <- methods::is(tibble::tibble())
-
-  # browser()
+  classes_in_sparseMatrix_objects <- methods::is(Matrix::Matrix(data = 1:2, sparse = TRUE)) # add data = 1:2 to get accurate datatyps is methods::is
 
   classes_in_adj_matrix_list_input <- methods::is(adj_matrix_list_input)
   if (identical(classes_in_adj_matrix_list_input, classes_in_list_objects)) {
@@ -182,28 +181,19 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
     adj_matrix_list_input <- list(adj_matrix_list_input)
   }
 
+  # browser()
+
   if (identical(object_types_in_input_list, classes_in_dataframe_objects)) {
     object_types_in_input_list <- c("data.frame")
-    # object_types_confirmed <- TRUE
   } else if (identical(object_types_in_input_list, classes_in_matrix_objects)) {
     object_types_in_input_list <- c("matrix")
-    # object_types_confirmed <- TRUE
   } else if (identical(object_types_in_input_list, classes_in_datatable_objects)) {
     object_types_in_input_list <- c("data.table")
-    # object_types_confirmed <- TRUE
   } else if (identical(object_types_in_input_list, classes_in_tibble_objects)) {
     object_types_in_input_list <- c("tibble")
-    # object_types_confirmed <- TRUE
+  } else if (identical(object_types_in_input_list, classes_in_sparseMatrix_objects)) {
+    object_types_in_input_list <- c("sparseMatrix")
   }
-  # } else if (identical(object_types_in_input_list, "adj_matrix_w_ivfns")) {
-  #   object_types_in_input_list <- "ivfn"
-  #   object_types_confirmed <- TRUE
-  # } else if (identical(object_types_in_input_list, "adj_matrix_w_tfns")) {
-  #   object_types_in_input_list <- "tfn"
-  #   object_types_confirmed <- TRUE
-  # }
-
-  # browser()
 
   element_types_in_objects_in_input_list <- unique(
     lapply(adj_matrix_list_input,
@@ -231,47 +221,6 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
          Adjacency matrix elements must be either numeric, ivfn, or tfn, and
          all matrices must have elements of the same type.")
   }
-
-  # if (identical(object_types_in_input_list, "adj_matrix_w_ivfns")) {
-  #   object_types_in_input_list <- "ivfn"
-  #   object_types_confirmed <- TRUE
-  # } else if (identical(element_types_in_objects_in_input_list, "ivfn")) {
-  #   object_types_in_input_list <- "ivfn"
-  #   object_types_confirmed <- TRUE
-  # }
-  #
-  # if (identical(object_types_in_input_list, "adj_matrix_w_tfns")) {
-  #   object_types_in_input_list <- "tfn"
-  #   object_types_confirmed <- TRUE
-  # } else if (identical(element_types_in_objects_in_input_list, "tfn")) {
-  #   object_types_in_input_list <- "tfn"
-  #   object_types_confirmed <- TRUE
-  # }
-
-  # if (!object_types_confirmed) {
-  #   if (shiny::isRunning()) {
-  #     object_types_in_input_list <- "unavailable"
-  #   } else {
-  #     stop("The list of objects in adj. matrix list must be one of the following: 'data.frame' 'matrix' 'sparseMatrix' 'data,table' 'tibble'")
-  #   }
-  # }
-  #
-  # # browser()
-  #
-  # if (identical(object_types_in_input_list[1], "conventional")) {
-  #   adj_matrices_have_numeric_inputs <- all(
-  #     unlist(lapply(adj_matrix_list_input, function(adj_matrix) {
-  #       all(apply(adj_matrix, c(1, 2), function(x) "numeric" %in% methods::is(x)))
-  #     }))
-  #   )
-  #   if (!adj_matrices_have_numeric_inputs) {
-  #     if (shiny::isRunning()) {
-  #       object_types_in_input_list <- "unavailable"
-  #     } else {
-  #       stop("Object types in adj. matrices must be either Numerics, IVFNs, or TFNs")
-  #     }
-  #   }
-  # }
 
   list(
     adj_matrices_input_is_list = adj_matrices_input_is_list,

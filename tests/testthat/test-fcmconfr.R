@@ -334,6 +334,48 @@ test_that("pulse only fcmconfr works", {
 })
 
 
+test_that("fcmconfr works with igraph inputs", {
+  fcms_as_igraph_objects <- lapply(salinization_conventional_fcms, function(fcm) {
+    igraph::graph_from_adjacency_matrix(as.matrix(fcm), mode = "directed", weighted = TRUE)
+    }
+  )
+  fcms_from_igraph_objects <- lapply(fcms_as_igraph_objects, igraph::as_adjacency_matrix, attr = "weight")
+
+  expect_warning(
+    invisible(capture.output(
+      test <- fcmconfr(
+        adj_matrices = fcms_from_igraph_objects,
+        # Aggregation and Monte Carlo Sampling
+        aggregation_function = 'mean',
+        monte_carlo_sampling_draws = 100,
+        # Simulation
+        initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
+        clamping_vector = c(0, 1, 0, 0, 0, 0, 0, 0, 0),
+        activation = 'kosko',
+        squashing = 'sigmoid',
+        lambda = 1,
+        max_iter = 100,
+        min_error = 1e-05,
+        # Inference Estimation (bootstrap)
+        inference_estimation_function = "median",
+        inference_estimation_CI = 0.95,
+        inference_estimation_bootstrap_reps = 1000,
+        # Runtime Options
+        show_progress = TRUE,
+        parallel = TRUE,
+        n_cores = 2,
+        # Additional Options
+        perform_aggregate_analysis = TRUE,
+        perform_monte_carlo_analysis = TRUE,
+        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
+        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+        include_monte_carlo_FCM_simulations_in_output = TRUE
+      )
+    ))
+  )
+})
+
+
 test_that("fcmconfr error checks work", {
 
   # Expect error w/ different sized adj. matrices
