@@ -667,8 +667,12 @@ build_monte_carlo_fcms_from_conventional_adj_matrices <- function(adj_matrix_lis
   # browser()
   n_nodes <- unique(unlist(lapply(adj_matrix_list, dim)))
   flatten_conventional_adj_matrix <- function(adj_matrix) {
-    # browser()
-    flattened_adj_matrix <- do.call(c, as.vector(adj_matrix))
+    if (identical(methods::is(as.vector(adj_matrix)), methods::is(list()))) {
+      flattened_adj_matrix <- do.call(c, as.vector(adj_matrix))
+    } else {
+      flattened_adj_matrix <- as.vector(adj_matrix)
+    }
+
     names(flattened_adj_matrix) <- seq_along(flattened_adj_matrix)
     flattened_adj_matrix
   }
