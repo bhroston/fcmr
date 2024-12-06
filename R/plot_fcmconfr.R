@@ -18,7 +18,7 @@
 #' @param filter_limit Remove concepts whose inferences do not exceed this value
 #'
 #' @export
-get_concepts_to_plot <- function(fcmconfr_object, filter_limit = 10e-3) {
+get_concepts_to_plot <- function(fcmconfr_object, filter_limit = 10e-10) {
   # browser()
 
   fcm_clamping_vector <- fcmconfr_object$params$simulation_opts$clamping_vector
@@ -294,6 +294,7 @@ autoplot.fcmconfr <- function(object, ...) {
       ggplot2::scale_color_manual(values = c(input = "black", mc = "grey")) +
       ggplot2::scale_x_discrete(limits = concepts_to_plot) +
       ggplot2::scale_y_continuous(expand = c(0, 0), limits = c(plot_data$min_activation, plot_data$max_activation)) +
+      # ggplot2::scale_y_continuous(expand = c(0, 0), limits = c(0, plot_data$max_activation)) +
       default_theme() +
       ggplot2::coord_flip()
 
