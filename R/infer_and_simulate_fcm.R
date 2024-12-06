@@ -161,7 +161,12 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
   scenario_clamping_vector <- clamping_vector
   scenario_simulation <- simulate_fcm(adj_matrix, scenario_initial_state_vector, scenario_clamping_vector, activation, squashing, lambda, max_iter, min_error)
 
+  # browser()
+
   if (all(clamping_vector == 0)) {
+    # inference_values <- scenario_simulation$peaks
+    # rownames(inference_values) <- 1
+
     # return("all clamping_vector = 0")
     inference_state_vectors <- scenario_simulation$state_vectors
     inference_values = inference_state_vectors[nrow(inference_state_vectors), ]
@@ -172,6 +177,9 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
     baseline_initial_state_vector <- rep(1, length(initial_state_vector))
     baseline_clamping_vector <- rep(0, length(clamping_vector))
     baseline_simulation <- simulate_fcm(adj_matrix, baseline_initial_state_vector, baseline_clamping_vector, activation, squashing, lambda, max_iter, min_error)
+
+    # inference_values <- scenario_simulation$peaks - baseline_simulation$peaks
+    # rownames(inference_values) <- 1
 
     equalized_state_vector_dfs <- equalize_baseline_and_scenario_outputs(baseline_simulation$state_vectors, scenario_simulation$state_vectors)
     baseline_simulation$state_vectors <- equalized_state_vector_dfs$baseline
@@ -607,12 +615,20 @@ simulate_conventional_fcm <- function(adj_matrix = matrix(),
     )
   }
 
+  # browser()
+
   state_vectors <- clean_simulation_output(state_vectors, concept_names)
   errors <- clean_simulation_output(errors, concept_names)
+  peaks <- as.data.frame(t(apply(state_vectors, 2,
+                 function(col) {
+                   # browser()
+                   col[abs(col) == max(abs(col))]
+                 })))
 
   structure(
     .Data = list(
       state_vectors = state_vectors,
+      peaks = peaks,
       errors = errors,
       params = list(
         adj_matrix = adj_matrix,
