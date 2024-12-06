@@ -37,7 +37,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       # Simulation
       initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
       clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
-      activation = 'modified-kosko',
+      activation = 'kosko',
       squashing = 'sigmoid',
       lambda = 1,
       max_iter = 1000,
