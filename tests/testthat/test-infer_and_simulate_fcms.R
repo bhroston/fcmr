@@ -86,6 +86,28 @@ test_that("infer_fcm works", {
 
 
 test_that("infer_conventional_fcm works", {
+  adj_matrix <- data.frame(
+    A = c(0, 1, 1),
+    B = c(1, 0, -1),
+    C = c(0, -1, 0)
+  )
+  # Ensure same results as PyFCM package (https://github.com/payamaminpour/PyFCM)
+  # Kosko
+  # PyFCM & MentalModeler: infer_scenario - infer_steady()
+  PyFCM_infer <- infer_fcm(adj_matrix, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0), activation = "kosko", squashing = "sigmoid", point_of_inference = "final", lambda = 1, min_error = 0.00001)
+  expect_equal(unlist(round(PyFCM_infer$inferences, 2)), c(1, 0.07, -0.02), ignore_attr = TRUE)
+
+  # Modified-Kosko
+  # PyFCM: infer_scenario - infer_steady()
+  PyFCM_infer <- infer_fcm(adj_matrix, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0), activation = "modified-kosko", squashing = "sigmoid", point_of_inference = "final", lambda = 1, min_error = 0.00001)
+  expect_equal(unlist(round(PyFCM_infer$inferences, 2)), c(1, 0.02, -0.01), ignore_attr = TRUE)
+
+  # Rescale
+  # PyFCM: infer_scenario - infer_steady()
+  PyFCM_infer <- infer_fcm(adj_matrix, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0), activation = "rescale", squashing = "sigmoid", point_of_inference = "final", lambda = 1, max_iter = 1000,  min_error = 0.00001)
+  expect_equal(unlist(round(PyFCM_infer$inferences, 2)), c(1, 0.40, -0.29), ignore_attr = TRUE)
+
+
   # Check infer_conventional_fcm cannot take ivfn matrices
   lower_adj_matrix <- data.frame(
     "A" = c(0, 0),
@@ -276,17 +298,19 @@ test_that("equalize_baseline_and_scenario_outputs works", {
 
 
 test_that("simulate_fcm works", {
-  adj_matrix <- data.frame(
-    C1 = c(0, 0, 0, 0, 0, 0),
-    C2 = c(-0.85, 0, 0, 0.35, 0, 0),
-    C3 = c(0, 0, 0, 0, 0, 0),
-    C4 = c(-0.7, 0.6, -1, 0, -1, 0),
-    C5 = c(0.1, 0, 0, -0.8, 0, 0),
-    C6 = c(0, -0.95, 0, 0, -0.95, 0)
-  )
-  test_sim <- simulate_fcm(adj_matrix, c(1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0), activation = "kosko", squashing = "sigmoid")
-  expect_equal(round(test_sim$state_vectors[2, ], 2), data.frame(1, 1, 0.38, 0.5, 0.11, 0.33, 0.13), ignore_attr = TRUE)
-  expect_equal(round(test_sim$state_vectors[nrow(test_sim$state_vectors), ], 2), data.frame(8, 1, 0.31, 0.5, 0.18, 0.49, 0.32), ignore_attr = TRUE)
+  # See simulate_conventional_fcm tests for additional info
+
+  # adj_matrix <- data.frame(
+  #   C1 = c(0, 0, 0, 0, 0, 0),
+  #   C2 = c(-0.85, 0, 0, 0.35, 0, 0),
+  #   C3 = c(0, 0, 0, 0, 0, 0),
+  #   C4 = c(-0.7, 0.6, -1, 0, -1, 0),
+  #   C5 = c(0.1, 0, 0, -0.8, 0, 0),
+  #   C6 = c(0, -0.95, 0, 0, -0.95, 0)
+  # )
+  # test_sim <- simulate_fcm(adj_matrix, c(1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0), activation = "kosko", squashing = "sigmoid", point_of_inference = "final")
+  # expect_equal(round(test_sim$state_vectors[2, ], 2), data.frame(1, 1, 0.38, 0.5, 0.11, 0.33, 0.13), ignore_attr = TRUE)
+  # expect_equal(round(test_sim$state_vectors[nrow(test_sim$state_vectors), ], 2), data.frame(8, 1, 0.31, 0.5, 0.18, 0.49, 0.32), ignore_attr = TRUE)
 
   lower_adj_matrix <- data.frame(
     C1 = c(0, 0, 0, 0, 0, 0),
@@ -321,6 +345,51 @@ test_that("simulate_fcm works", {
 
 
 test_that("simulate_conventional_fcm works", {
+  adj_matrix <- data.frame(
+    A = c(0, 1, 1),
+    B = c(1, 0, -1),
+    C = c(0, -1, 0)
+  )
+  # Ensure same results as PyFCM package (https://github.com/payamaminpour/PyFCM)
+  # Kosko
+  # PyFCM: infer_steady() - pulse, point_of_inference = "final"
+  PyFCM_SteadyState <- simulate_fcm(adj_matrix, initial_state_vector = c(1, 1, 1), clamping_vector = c(0, 0, 0), activation = "kosko", squashing = "sigmoid", point_of_inference = "final", lambda = 1, min_error = 0.00001)
+  expect_equal(unlist(round(PyFCM_SteadyState$inferences, 2)), c(0.72, 0.59, 0.36), ignore_attr = TRUE)
+  # PyFCM: infer_scenario() - clamping, point_of_inference = "final"
+  PyFCM_ScenarioState <- simulate_fcm(adj_matrix, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0), activation = "kosko", squashing = "sigmoid", point_of_inference = "final", lambda = 1)
+  expect_equal(unlist(round(PyFCM_ScenarioState$inferences, 2)), c(1, 0.66, 0.34), ignore_attr = TRUE)
+
+  # Modified-Kosko
+  # PyFCM: infer_steady() - pulse, point_of_inference = "final"
+  PyFCM_SteadyState <- simulate_fcm(adj_matrix, initial_state_vector = c(1, 1, 1), clamping_vector = c(0, 0, 0), activation = "modified-kosko", squashing = "sigmoid", point_of_inference = "final", lambda = 1, min_error = 0.00001)
+  expect_equal(unlist(round(PyFCM_SteadyState$inferences, 2)), c(0.89, 0.78, 0.41), ignore_attr = TRUE)
+  # PyFCM: infer_scenario() - clamping, point_of_inference = "final"
+  PyFCM_ScenarioState <- simulate_fcm(adj_matrix, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0), activation = "modified-kosko", squashing = "sigmoid", point_of_inference = "final", lambda = 1)
+  expect_equal(unlist(round(PyFCM_ScenarioState$inferences, 2)), c(1, 0.80, 0.40), ignore_attr = TRUE)
+
+  # Rescale
+  # PyFCM: infer_steady() - pulse, point_of_inference = "final"
+  PyFCM_SteadyState <- simulate_fcm(adj_matrix, initial_state_vector = c(1, 1, 1), clamping_vector = c(0, 0, 0), activation = "rescale", squashing = "sigmoid", point_of_inference = "final", lambda = 1, max_iter = 1000)
+  expect_equal(unlist(round(PyFCM_SteadyState$inferences, 2)), c(0.5, 0.52, 0.48), ignore_attr = TRUE)
+  # PyFCM: infer_scenario() - clamping, point_of_inference = "final"
+  PyFCM_ScenarioState <- simulate_fcm(adj_matrix, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0), activation = "rescale", squashing = "sigmoid", point_of_inference = "final", lambda = 1)
+  expect_equal(unlist(round(PyFCM_ScenarioState$inferences, 2)), c(1, 0.92, 0.19), ignore_attr = TRUE)
+
+  # Confirm works with point_of_inference == "peak"
+  peak_SteadyState <- simulate_fcm(adj_matrix, initial_state_vector = c(1, 0, 0), clamping_vector = c(0, 0, 0), activation = "rescale", squashing = "sigmoid", point_of_inference = "peak", lambda = 1, min_error = 0.00001)
+  expect_equal(unlist(round(peak_SteadyState$inferences, 2)), c(1, 0.73, 0.5), ignore_attr = TRUE)
+  expect_warning( # For 'peak' when initial_state_vector = c(1, 1, ..., 1)
+    peak_ScenarioState <- simulate_fcm(adj_matrix, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0), activation = "rescale", squashing = "sigmoid", point_of_inference = "peak", lambda = 1, min_error = 0.00001)
+  )
+
+  # No idea why this needs 2 expect_warning()'s
+  expect_warning(expect_warning( # For act. = 'modified-kosko' and squashing = 'tanh'
+    simulate_fcm(adj_matrix, initial_state_vector = c(1, 0, 0), clamping_vector = c(0, 0, 0), activation = "modified-kosko", squashing = "tanh", point_of_inference = "peak", lambda = 0.5, max_iter = 1000, min_error = 0.00001)
+  ))
+  expect_error( # For act. = 'rescale' and squashing = 'tanh'
+    simulate_fcm(adj_matrix, initial_state_vector = c(1, 0, 0), clamping_vector = c(1, 0, 0), activation = "rescale", squashing = "tanh", point_of_inference = "peak", lambda = 0.5, min_error = 0.00001)
+  )
+
   # Check infer_conventional_fcm cannot take ivfn matrices
   lower_adj_matrix <- data.frame(
     "A" = c(0, 0),
@@ -331,28 +400,8 @@ test_that("simulate_conventional_fcm works", {
     "B" = c(0, 1)
   )
   ivfn_adj_matrix <- make_adj_matrix_w_ivfns(lower_adj_matrix, upper_adj_matrix)
-  expect_error(
-    simulate_conventional_fcm(ivfn_adj_matrix,
-                           initial_state_vector = c(1, 1),
-                           clamping_vector = c(0, 1),
-                           activation = "kosko",
-                           squashing = "sigmoid",
-                           lambda = 1)
-  )
+  expect_error(simulate_conventional_fcm(ivfn_adj_matrix, initial_state_vector = c(1, 1), clamping_vector = c(0, 1), activation = "kosko", squashing = "sigmoid", lambda = 1))
 
-  adj_matrix <- data.frame(
-    C1 = c(0, 0, 0, 0, 0, 0),
-    C2 = c(-0.85, 0, 0, 0.35, 0, 0),
-    C3 = c(0, 0, 0, 0, 0, 0),
-    C4 = c(-0.7, 0.6, -1, 0, -1, 0),
-    C5 = c(0.1, 0, 0, -0.8, 0, 0),
-    C6 = c(0, -0.95, 0, 0, -0.95, 0)
-  )
-  test_sim <- simulate_conventional_fcm(adj_matrix, c(1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0), activation = "kosko", squashing = "sigmoid")
-  expect_equal(round(test_sim$state_vectors[2, ], 2), data.frame(1, 1, 0.38, 0.5, 0.11, 0.33, 0.13), ignore_attr = TRUE)
-  expect_equal(round(test_sim$state_vectors[nrow(test_sim$state_vectors), ], 2), data.frame(8, 1, 0.31, 0.5, 0.18, 0.49, 0.32), ignore_attr = TRUE)
-
-  expect_warning(simulate_conventional_fcm(adj_matrix, c(1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0), activation = "modified-kosko", squashing = "tanh", max_iter = 5))
 })
 
 
@@ -742,77 +791,3 @@ test_that("print.infer_ivfn_or_tfn_fcm works", {
   expect_snapshot(test_sim)
 })
 
-
-
-#
-# test_that("simulate_fcm works with cumtrapz inference estimation", {
-#
-#   test_df <- data.frame(
-#     A = c(0, 0, 0.55, 0),
-#     B = c(-0.78, 0, 0, 0),
-#     C = c(0, 0.23, 0, 0),
-#     D = c(-0.38, 0.43, 0, 0)
-#   )
-#   test_df[test_df == 0] <- NA
-#   rownames(test_df) <- colnames(test_df)
-#   test_df <- apply(test_df, c(1, 2), as.character)
-#   write.csv(test_df, "test.csv", na = '""')
-#
-#   test <- infer_conventional_fcm(
-#     adj_matrix = test_df,
-#     initial_state_vector = c(1, 1, 1, 1),
-#     clamping_vector = c(1, 0, 0, 0),
-#     activation = "kosko",
-#     squashing = "tanh",
-#     lambda = 1,
-#     max_iter = 1000,
-#     min_error = 1e-5
-#   )
-#
-#   test_adj_matrix <- salinization_conventional_fcms[[1]]
-#   test_adj_matrix[test_adj_matrix == 0] <- NA
-#   rownames(test_adj_matrix) <- colnames(test_adj_matrix)
-#   write.csv(test_adj_matrix, file = "test.csv", na = "")
-#
-#   test_sim_pulse_mk <- simulate_conventional_fcm(
-#     adj_matrix = salinization_conventional_fcms[[1]],
-#     initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
-#     clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
-#     activation = "modified-kosko",
-#     squashing = "sigmoid",
-#     lambda = 1,
-#     max_iter = 1000,
-#     min_error = 1e-5
-#   )
-#
-#   test_sim_clamping_mk <- simulate_conventional_fcm(
-#     adj_matrix = salinization_conventional_fcms[[1]],
-#     initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
-#     clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
-#     activation = "kosko",
-#     squashing = "sigmoid",
-#     lambda = 1,
-#     max_iter = 5000,
-#     min_error = 1e-10
-#   )
-#
-#   fcm_test <- fcm::fcm.infer(activation_vec = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
-#                  salinization_conventional_fcms[[1]],
-#                  iter = 1000,
-#                  infer = "mk",
-#                  transform = "s",
-#                  lambda = 1,
-#                  e = 1e-5)
-#
-#   plot(test_sim_pulse_mk$state_vectors$FA.Healthy.ecosystem, type = "l")
-#   plot(test_sim_clamping_mk$state_vectors$FA.Healthy.ecosystem, type = "l")
-#
-#   plot(test_sim_pulse_mk$state_vectors$FA.Healthy.ecosystem, type = "l")
-#   plot(fcm_test$values$FA.Healthy.ecosystem, type = "l")
-#
-#   test <- test_sim_pulse$state_vectors$FA.DW.acceptance
-#
-#   result <- pracma::cumtrapz(x = seq_along(test_sim_pulse$state_vectors$FA.DW.acceptance), y = test_sim_pulse$state_vectors$FA.DW.acceptance)
-#   result <- pracma::trapz(x = seq_along(test_sim_pulse$state_vectors$FA.DW.acceptance), y = test_sim_pulse$state_vectors$FA.DW.acceptance)
-#
-# })

@@ -57,6 +57,8 @@
 #' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
 #' @param lambda A numeric value that defines the steepness of the slope of the
 #' squashing function when tanh or sigmoid are applied
+#' @param point_of_inference The point along the simulation time-series to be
+#' identified as the inference. Must be one of the following: 'peak' or 'final'
 #' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
@@ -73,17 +75,23 @@ infer_fcm <- function(adj_matrix = matrix(),
                       activation = "kosko",
                       squashing = "tanh",
                       lambda = 1,
+                      point_of_inference = c("peak", "final"),
                       max_iter = 100,
                       min_error = 1e-5) {
 
-  check_simulation_inputs(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
-
-  fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
+  checks <- check_simulation_inputs(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
+  fcm_class <- checks$fcm_class
+  adj_matrix <- checks$adj_matrix
+  initial_state_vector <- checks$initial_state_vector
+  clamping_vector <- checks$clamping_vector
+  activation <- checks$activation
+  squashing <- checks$squashing
+  point_of_inference <- checks$point_of_inference
 
   # browser()
 
   if (fcm_class == "conventional") {
-    inference <- infer_conventional_fcm(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
+    inference <- infer_conventional_fcm(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
   } else if (fcm_class %in% c("ivfn", "tfn")) {
     inference <- infer_ivfn_or_tfn_fcm(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
   }
@@ -126,6 +134,8 @@ infer_fcm <- function(adj_matrix = matrix(),
 #' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
 #' @param lambda A numeric value that defines the steepness of the slope of the
 #' squashing function when tanh or sigmoid are applied
+#' @param point_of_inference The point along the simulation time-series to be
+#' identified as the inference. Must be one of the following: 'peak' or 'final'
 #' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
@@ -142,12 +152,12 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
                                    activation = "kosko",
                                    squashing = "tanh",
                                    lambda = 1,
+                                   point_of_inference = c("peak", "final"),
                                    max_iter = 100,
                                    min_error = 1e-5) {
 
   iter <- NULL # for R CMD Check, does not impact logic
 
-  check_simulation_inputs(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
   fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
   if (!(fcm_class %in% c("conventional"))) {
     stop("Input adj_matrix must be an adjacency matrix with edges represented as
@@ -158,69 +168,94 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
 
   # Get scenario simulation
   scenario_initial_state_vector <- initial_state_vector
+  # scenario_initial_state_vector <- c(1, 0, 0)
   scenario_clamping_vector <- clamping_vector
-  scenario_simulation <- simulate_fcm(adj_matrix, scenario_initial_state_vector, scenario_clamping_vector, activation, squashing, lambda, max_iter, min_error)
+  scenario_simulation <- simulate_fcm(adj_matrix, scenario_initial_state_vector, scenario_clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
 
   # browser()
 
   if (all(clamping_vector == 0)) {
-    # inference_values <- scenario_simulation$peaks
-    # rownames(inference_values) <- 1
-
-    # return("all clamping_vector = 0")
-    inference_state_vectors <- scenario_simulation$state_vectors
-    inference_values = inference_state_vectors[nrow(inference_state_vectors), ]
-    inference_values <- subset(inference_values, select = -c(iter))
-    rownames(inference_values) <- 1
+    dummy_initial_state_vector <- rep(0, length(initial_state_vector))
+    dummy_clamping_vector <- rep(0, length(initial_state_vector))
+    # Use squashing = "tanh" to force 0's to remain 0's, rather than converting
+    # 0's to 0.5's if squashing = "sigmoid"
+    baseline_simulation <- simulate_fcm(adj_matrix, dummy_initial_state_vector, dummy_clamping_vector, activation, squashing = "tanh", lambda, point_of_inference, max_iter, min_error)
+    baseline_simulation_is_dummy <- TRUE
   } else {
     # Get baseline simulation
     baseline_initial_state_vector <- rep(1, length(initial_state_vector))
+    # baseline_initial_state_vector <- initial_state_vector
     baseline_clamping_vector <- rep(0, length(clamping_vector))
-    baseline_simulation <- simulate_fcm(adj_matrix, baseline_initial_state_vector, baseline_clamping_vector, activation, squashing, lambda, max_iter, min_error)
-
-    # inference_values <- scenario_simulation$peaks - baseline_simulation$peaks
+    baseline_simulation <- simulate_fcm(adj_matrix, baseline_initial_state_vector, baseline_clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
+    baseline_simulation_is_dummy <- FALSE
+    # equalized_state_vector_dfs <- equalize_baseline_and_scenario_outputs(baseline_simulation$state_vectors, scenario_simulation$state_vectors)
+    # baseline_simulation$state_vectors <- equalized_state_vector_dfs$baseline
+    # scenario_simulation$state_vectors <- equalized_state_vector_dfs$scenario
+    #
+    # inference_state_vectors <- data.frame(scenario_simulation$state_vectors - baseline_simulation$state_vectors)
+    # inference_state_vectors$iter <- 0:(nrow(inference_state_vectors) - 1)
+    # rownames(inference_state_vectors) <- 0:(nrow(inference_state_vectors) - 1)
+    #
+    # inference_values <- inference_state_vectors[nrow(inference_state_vectors),]
+    # inference_values <- subset(inference_values, select = -c(iter))
     # rownames(inference_values) <- 1
-
-    equalized_state_vector_dfs <- equalize_baseline_and_scenario_outputs(baseline_simulation$state_vectors, scenario_simulation$state_vectors)
-    baseline_simulation$state_vectors <- equalized_state_vector_dfs$baseline
-    scenario_simulation$state_vectors <- equalized_state_vector_dfs$scenario
-
-    inference_state_vectors <- data.frame(scenario_simulation$state_vectors - baseline_simulation$state_vectors)
-    inference_state_vectors$iter <- 0:(nrow(inference_state_vectors) - 1)
-    rownames(inference_state_vectors) <- 0:(nrow(inference_state_vectors) - 1)
-
-    inference_values <- inference_state_vectors[nrow(inference_state_vectors),]
-    inference_values <- subset(inference_values, select = -c(iter))
-    rownames(inference_values) <- 1
   }
+
+  # if (point_of_inference == "peak") {
+  #   scenario_inferences <- apply(scenario_simulation$state_vectors, 2, max)
+  #   baseline_inferences <- apply(baseline_simulation$state_vectors, 2, max)
+  # } else if (point_of_inference == "final") {
+  #   scenario_inferences <- scenario_simulation$state_vectors[nrow(scenario_simulation$state_vectors), ]
+  #   baseline_inferences <- baseline_simulation$state_vectors[nrow(baseline_simulation$state_vectors), ]
+  # }
+
+  # inferences <- data.frame(t(scenario_inferences - baseline_inferences))
+  # inferences$iter <- NULL
+  # rownames(inferences) <- "peak"
+
+  inferences <- scenario_simulation$inferences - baseline_simulation$inferences
+  inferences[clamping_vector != 0] <- clamping_vector[clamping_vector != 0]
 
   inference_plot_data <- data.frame(
-    node = colnames(inference_values),
-    value = unlist(inference_values)
+    node = colnames(inferences),
+    value = unlist(inferences)
   )
 
-  if (all(clamping_vector == 0)) {
-    structure(
-      .Data = list(
-        inference = inference_values,
-        inference_for_plotting = inference_plot_data,
-        inference_state_vectors = inference_state_vectors,
-        scenario_simulation = scenario_simulation
-      ),
-      class = "infer_conventional_fcm"
-    )
-  } else {
-    structure(
-      .Data = list(
-        inference = inference_values,
-        inference_for_plotting = inference_plot_data,
-        inference_state_vectors = inference_state_vectors,
-        scenario_simulation = scenario_simulation,
-        baseline_simulation = baseline_simulation
-      ),
-      class = "infer_conventional_fcm"
-    )
+  if (baseline_simulation_is_dummy) {
+    baseline_simulation <- NULL
   }
+
+  structure(
+    .Data = list(
+      inferences = inferences,
+      scenario_simulation = scenario_simulation,
+      baseline_simulation = baseline_simulation
+    ),
+    class = "infer_conventional_fcm"
+  )
+
+  # if (all(clamping_vector == 0)) {
+  #   structure(
+  #     .Data = list(
+  #       inference = inference_values,
+  #       inference_for_plotting = inference_plot_data,
+  #       inference_state_vectors = inference_state_vectors,
+  #       scenario_simulation = scenario_simulation
+  #     ),
+  #     class = "infer_conventional_fcm"
+  #   )
+  # } else {
+  #   structure(
+  #     .Data = list(
+  #       inference = inference_values,
+  #       inference_for_plotting = inference_plot_data,
+  #       inference_state_vectors = inference_state_vectors,
+  #       scenario_simulation = scenario_simulation,
+  #       baseline_simulation = baseline_simulation
+  #     ),
+  #     class = "infer_conventional_fcm"
+  #   )
+  # }
 
 }
 
@@ -485,6 +520,8 @@ equalize_baseline_and_scenario_outputs <- function(baseline_state_vectors,
 #' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
 #' @param lambda A numeric value that defines the steepness of the slope of the
 #' squashing function when tanh or sigmoid are applied
+#' @param point_of_inference The point along the simulation time-series to be
+#' identified as the inference. Must be one of the following: 'peak' or 'final'
 #' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
@@ -500,25 +537,23 @@ simulate_fcm <- function(adj_matrix = matrix(),
                          activation = "kosko",
                          squashing = "tanh",
                          lambda = 1,
+                         point_of_inference = c("peak", "final"),
                          max_iter = 100,
                          min_error = 1e-5) {
 
-  check_simulation_inputs(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
-
-  fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
-  # if (!(fcm_class %in% c("conventional", "ivfn", "tfn"))) {
-  #   stop("Input adj_matrix must be an adjacency matrix with edges represented as
-  #        numeric values, ivfns, or tfns")
-  # }
-  # if (identical(adj_matrices_input_type$object_types_in_list, c("conventional", "sparseMatrix"))) {
-  #   adj_matrices <- lapply(adj_matrices, Matrix::Matrix, sparse = FALSE)
-  #   warning("Input Revision: Changed sparseMatrix objects in input adj_matrices to ordinary matrices.")
-  # }
+  checks <- check_simulation_inputs(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
+  fcm_class <- checks$fcm_class
+  adj_matrix <- checks$adj_matrix
+  initial_state_vector <- checks$initial_state_vector
+  clamping_vector <- checks$clamping_vector
+  activation <- checks$activation
+  squashing <- checks$squashing
+  point_of_inference <- checks$point_of_inference
 
   if (fcm_class == "conventional") {
-    simulation <- simulate_conventional_fcm(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
+    simulation <- simulate_conventional_fcm(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
   } else if (fcm_class %in% c("ivfn", "tfn")) {
-    simulation <- simulate_ivfn_or_tfn_fcm(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
+    simulation <- simulate_ivfn_or_tfn_fcm(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
   }
 
   simulation
@@ -556,6 +591,8 @@ simulate_fcm <- function(adj_matrix = matrix(),
 #' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
 #' @param lambda A numeric value that defines the steepness of the slope of the
 #' squashing function when tanh or sigmoid are applied
+#' @param point_of_inference The point along the simulation time-series to be
+#' identified as the inference. Must be one of the following: 'peak' or 'final'
 #' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
@@ -568,16 +605,18 @@ simulate_fcm <- function(adj_matrix = matrix(),
 simulate_conventional_fcm <- function(adj_matrix = matrix(),
                                       initial_state_vector = c(),
                                       clamping_vector = c(),
-                                      activation = "kosko",
-                                      squashing = "tanh",
+                                      activation = c("kosko", "modified-kosko", "rescale"),
+                                      squashing = c("sigmoid", "tanh"),
                                       lambda = 1,
+                                      point_of_inference = c("peak", "final"),
                                       max_iter = 100,
                                       min_error = 1e-5) {
 
   fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
   if (!(fcm_class %in% c("conventional"))) {
-    stop("Input adj_matrix must be an adjacency matrix with edges represented as
-         discrete numeric values (Conventional) to call simulate_conventional_fcm")
+    stop("  Input Validation Error: Input adj_matrix must be an adjacency matrix
+         with edges represented as discrete numeric values (Conventional) to call
+         simulate_conventional_fcm")
   }
   concept_names <- colnames(adj_matrix)
 
@@ -587,15 +626,12 @@ simulate_conventional_fcm <- function(adj_matrix = matrix(),
   errors[1, ] <- 0
 
   for (i in 2:(max_iter + 1)) {
-    # browser()
     state_vector <- state_vectors[i - 1, ]
     next_state_vector <- calculate_next_conventional_fcm_state_vector(adj_matrix, state_vector, activation)
     normalized_state_vector <- squash(next_state_vector, squashing = squashing, lambda = lambda)
     normalized_state_vector[clamping_vector != 0] <- clamping_vector[clamping_vector != 0]
     state_vectors[i, ] <- normalized_state_vector
     errors[i, ] <- abs(as.matrix(state_vectors[i - 1,]) - as.matrix(state_vectors[i, ]))
-    # total_error <- sum(errors[i, ])
-    # if (total_error < min_error) {
     if (all(errors[i, ] < min_error)) {
       state_vectors <- stats::na.omit(state_vectors)
       errors <- stats::na.omit(errors)
@@ -615,20 +651,26 @@ simulate_conventional_fcm <- function(adj_matrix = matrix(),
     )
   }
 
-  # browser()
-
   state_vectors <- clean_simulation_output(state_vectors, concept_names)
   errors <- clean_simulation_output(errors, concept_names)
-  peaks <- as.data.frame(t(apply(state_vectors, 2,
-                 function(col) {
-                   # browser()
-                   col[abs(col) == max(abs(col))]
-                 })))
+
+  if (point_of_inference == "peak") {
+    inferences <- as.data.frame(t(apply(state_vectors, 2,
+                                        function(col) {
+                                          unique(col[abs(col) == max(abs(col))])
+                                        })))
+    inferences$iter <- NULL
+    rownames(inferences) <- "peak"
+  } else if (point_of_inference == "final") {
+    inferences <- state_vectors[nrow(state_vectors), ]
+    inferences$iter <- NULL
+    rownames(inferences) <- "final"
+  }
 
   structure(
     .Data = list(
+      inferences = inferences,
       state_vectors = state_vectors,
-      peaks = peaks,
       errors = errors,
       params = list(
         adj_matrix = adj_matrix,
@@ -1249,6 +1291,8 @@ clean_simulation_output <- function(output_obj, concepts) {
 #' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
 #' @param lambda A numeric value that defines the steepness of the slope of the
 #' squashing function when tanh or sigmoid are applied
+#' @param point_of_inference The point along the simulation time-series to be
+#' identified as the inference. Must be one of the following: 'peak' or 'final'
 #' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
@@ -1265,11 +1309,14 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
                                     activation = c("kosko"),
                                     squashing = c("sigmoid"),
                                     lambda = 1,
+                                    point_of_inference = c("peak"),
                                     max_iter = 100,
                                     min_error = 1e-4) {
 
+  adj_matrix_input_type <- get_adj_matrices_input_type(adj_matrix)
+
   # Check for individal adj_matrix ----
-  adj_matrix_is_list <- get_adj_matrices_input_type(adj_matrix)$adj_matrices_input_is_list
+  adj_matrix_is_list <- adj_matrix_input_type$adj_matrices_input_is_list
   if (adj_matrix_is_list) {
     stop("Input Validation Error: Input adj_matrix must be an individual adj. matrix, not a list of adj. matrices.")
   }
@@ -1280,12 +1327,18 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
   if (rows != cols) {
     stop("Failed Input Validation: Input adjacency matrix must be a square (n x n) matrix")
   }
-  # data_types_in_adj_matrix <- unique(do.call(list, (apply(adj_matrix, c(1, 2), function(x) list(methods::is(x[[1]]))))))
-  # if (length(data_types_in_adj_matrix) > 1) {
-  #   stop("Failed Input Validation: Input adjacency matrix must contain objects of the same type. Either numerics, ivfns, or tfns.")
-  # }
   n_nodes <- unique(dim(adj_matrix))
 
+  fcm_class <- adj_matrix_input_type$object_types_in_list[1]
+  if (!(fcm_class %in% c("conventional", "ivfn", "tfn"))) {
+    stop("  Input Validation Error: Input adj_matrix must be an adjacency matrix
+    with edges represented as numeric values, ivfns, or tfns")
+  }
+
+  if (identical(adj_matrix_input_type$object_types_in_list, c("conventional", "sparseMatrix"))) {
+    adj_matrix <- as.matrix(adj_matrix)
+    warning("Input Revision: Changed sparseMatrix objects in input adj_matrices to ordinary matrices.")
+  }
   # ----
 
   # Check initial_state_vector ----
@@ -1315,13 +1368,26 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
   if (!identical(data_types_in_clamping_vector, methods::is(numeric()))) {
     stop("Failed Input Validation: Input clamping_vector must only contain numeric values.")
   }
+  # if (any(clamping_vector != 0) & !all(initial_state_vector == 1)) {
+  #   stop("If any elements in input clamping_vector are set to a value other than
+  #        0, all elements in input initial_state_vector must be set to 1 to perform
+  #        the analysis correctly.")
+  # }
   # ----
 
   # Check activation and squashing ----
+  if (identical(activation, c("kosko", "modified-kosko", "rescale"))) {
+    warning("No activation function given, assuming activation = 'kosko'")
+    activation <- "kosko"
+  }
   if (!(activation %in% c("kosko", "modified-kosko", "rescale"))) {
     stop("Failed Input Validation: Input activation must be one of the following: 'kosko', 'modified-kosko', or 'rescale'")
   }
 
+  if (identical(squashing, c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"))) {
+    warning("No squashing function given, assuming squashing = 'sigmoid'")
+    squashing <- "sigmoid"
+  }
   if (!(squashing %in% c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"))) {
     stop('Failed Input Validation: Input squashing must be one of the following: "sigmoid", "tanh", "bivalent", "saturation", "trivalent"')
   }
@@ -1356,6 +1422,23 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
   }
   # ----
 
+  # Check point_of_inference ----
+  if (identical(point_of_inference, c("peak", "final"))) {
+    warning("No point_of_inference given, assuming point_of_inference = 'final'")
+    point_of_inference <- "final"
+  }
+  if (!(point_of_inference %in% c("peak", "final"))) {
+    stop("Failed Input Validation: Input point_of_inference must be one of
+       the following: 'peak' or 'final'")
+  }
+  if (point_of_inference == "peak" & all(initial_state_vector == 1)) {
+    warning("    For simulations where all concept activation levels begin
+      at 1 (i.e. initial_state_vector = c(1, 1, ..., 1)),
+      point_of_inference = 'peak' will return all 1's for the inferences
+      because the activation values may only decrease from their initial value.")
+  }
+  # ----
+
   # Check max_iter ----
   if (!is.numeric(max_iter)) {
     stop("Failed Input Validation: Input max_iter must be numeric")
@@ -1378,8 +1461,13 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
   # ----
 
   list(
+    fcm_class = fcm_class,
+    adj_matrix = adj_matrix,
     initial_state_vector = initial_state_vector,
-    clamping_vector = clamping_vector
+    clamping_vector = clamping_vector,
+    activation = activation,
+    squashing = squashing,
+    point_of_inference = point_of_inference
   )
 }
 
