@@ -172,7 +172,7 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
   scenario_clamping_vector <- clamping_vector
   scenario_simulation <- simulate_fcm(adj_matrix, scenario_initial_state_vector, scenario_clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
 
-  # browser()
+  browser()
 
   if (all(clamping_vector == 0)) {
     dummy_initial_state_vector <- rep(0, length(initial_state_vector))
@@ -614,9 +614,11 @@ simulate_conventional_fcm <- function(adj_matrix = matrix(),
 
   fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
   if (!(fcm_class %in% c("conventional"))) {
-    stop("  Input Validation Error: Input adj_matrix must be an adjacency matrix
-         with edges represented as discrete numeric values (Conventional) to call
-         simulate_conventional_fcm")
+    stop(cli::format_error(c(
+      "x" = "Error: {.var adj_matrix} must be an adjacency matrix with edges represented as
+      discrete numeric values (i.e. Conventional FCM) to call `simulate_conventional_fcm()`",
+      "+++++> {.var adj_matrix} contains {fcm_class} elements"
+    )))
   }
   concept_names <- colnames(adj_matrix)
 
@@ -639,16 +641,13 @@ simulate_conventional_fcm <- function(adj_matrix = matrix(),
     }
   }
   if (i >= max_iter) {
-    warning(
-      "\tThe simulation reached the maximum number of iterations before
-        achieving the minimum allowable error. This may signal that
-        the fcm has reached a limit-cycle or is endlessly chaotic.
-
-        It is also possible that the fcm simply requires more iterations
-        to converge within the input minimum error.
-
-        Try increasing the max_iter or min_error inputs."
-    )
+    warning(cli::format_warning(c(
+      "!" = "Warning: The simulation reached the maximum number of iterations (max_iter = {max_iter})
+      before achieving the minimum allowable error (min_error = {min_error})",
+      "~~~~~ It is possible that the simulation requires more iterations to converge within the input {.var min_error}",
+      "~~~~~ Try increasing {.var max_iter} or {min_error}", " ",
+      "~~~~~ Also possible that the simulation reached a limit-cycle or is endlessly chaotic."
+    )))
   }
 
   state_vectors <- clean_simulation_output(state_vectors, concept_names)
@@ -719,6 +718,8 @@ simulate_conventional_fcm <- function(adj_matrix = matrix(),
 #' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
 #' @param lambda A numeric value that defines the steepness of the slope of the
 #' squashing function when tanh or sigmoid are applied
+#' @param point_of_inference The point along the simulation time-series to be
+#' identified as the inference. Must be one of the following: 'peak' or 'final'
 #' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
@@ -734,13 +735,17 @@ simulate_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
                                      activation = "kosko",
                                      squashing = "tanh",
                                      lambda = 1,
+                                     point_of_inference = c("peak", "final"),
                                      max_iter = 100,
                                      min_error = 1e-5) {
 
   fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
   if (!(fcm_class %in% c("ivfn", "tfn"))) {
-    stop("Input adj_matrix must be an adjacency matrix with edges represented as
-         ivfns, or tfns to call simulate_ivfn_or_tfn_fcm")
+    stop(cli::format_error(c(
+      "x" = "Error: {.var adj_matrix} must be an adjacency matrix with edges represented as
+      ivfns or tfns to call `simulate_ivfn_or_tfn_fcm()`",
+      "+++++> {.var adj_matrix} contains {fcm_class} elements"
+    )))
   }
   concept_names <- colnames(adj_matrix)
 
@@ -812,16 +817,13 @@ simulate_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
     }
   }
   if (i >= max_iter) {
-    warning(
-      "\tThe simulation reached the maximum number of iterations before
-        achieving the minimum allowable error. This may signal that
-        the fcm has reached a limit-cycle or is endlessly chaotic.
-
-        It is also possible that the fcm simply requires more iterations
-        to converge within the input minimum error.
-
-        Try increasing the max_iter or min_error inputs."
-    )
+    warning(cli::format_warning(c(
+      "!" = "Warning: The simulation reached the maximum number of iterations (max_iter = {max_iter})
+      before achieving the minimum allowable error (min_error = {min_error})",
+      "~~~~~ It is possible that the simulation requires more iterations to converge within the input {.var min_error}",
+      "~~~~~ Try increasing {.var max_iter} or {min_error}", " ",
+      "~~~~~ Also possible that the simulation reached a limit-cycle or is endlessly chaotic."
+    )))
   }
 
   # Clean output objects
@@ -830,8 +832,51 @@ simulate_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
   crisp_state_vectors <- clean_simulation_output(crisp_state_vectors, concept_names)
   crisp_errors <- clean_simulation_output(crisp_errors, concept_names)
 
+  if (point_of_inference == "peak") {
+    fuzzy_set_state_vectors_upper_values <- apply(
+      fuzzy_set_state_vectors, c(1, 2),
+      function(element) {
+        ifelse((methods::is(element[[1]]) %in% c("ivfn", "tfn")), element[[1]]$upper, element[[1]])
+      }
+    )
+
+    max_value_indexes <- data.frame(matrix(data = NA, nrow = 2, ncol = ncol(fuzzy_set_state_vectors)))
+    max_value_indexes[1, ] <- 0:(ncol(max_value_indexes) - 1)
+    max_value_indexes[2, ] <- apply(
+      fuzzy_set_state_vectors_upper_values, 2,
+      function(column) {
+        column <- unlist(column)
+        which(column == unique(column[abs(column) == max(abs(column))]))[[1]]
+      }, simplify = FALSE
+    )
+    colnames(max_value_indexes) <- c("iter", concept_names)
+    rownames(max_value_indexes) <- c("node_number", "max_value_index")
+    max_value_indexes$iter <- NULL
+
+    raw_inferences <- apply(
+      max_value_indexes, 2,
+      function(index_info) {
+        node_index <- index_info[1] + 1 # Since there's an extra 'iter' column in fuzzy_set_state_vectors
+        max_value_index <- index_info[2]
+        # print(c(node_index, max_value_index))
+        fuzzy_set_state_vectors[max_value_index, node_index][[1]]
+      }
+    )
+    inferences <- data.frame(matrix(data = list(), nrow = 1, ncol = length(concept_names)))
+    for (i in seq_along(raw_inferences)) {
+      inferences[1, i][[1]] <- raw_inferences[i]
+    }
+    colnames(inferences) <- concept_names
+    rownames(inferences) <- "peak"
+  } else if (point_of_inference == "final") {
+    inferences <- fuzzy_set_state_vectors[nrow(fuzzy_set_state_vectors), ]
+    inferences$iter <- NULL
+    rownames(inferences) <- "final"
+  }
+
   structure(
     .Data = list(
+      inferences = inferences,
       state_vectors = fuzzy_set_state_vectors,
       crisp_state_vectors = crisp_state_vectors,
       errors = fuzzy_set_errors,
@@ -1084,7 +1129,6 @@ squash <- function(value = numeric(),
 }
 
 
-
 #' Defuzz (IVFN or TFN)
 #'
 #' @description
@@ -1113,42 +1157,6 @@ defuzz_ivfn_or_tfn <- function(fuzzy_number) {
   }
   crisp_value
 }
-
-
-
-#' #' Defuzz (IVFN)
-#' #'
-#' #' @description
-#' #' Convert a fuzzy number to a crisp value. For IVFNs, return the average of the
-#' #' upper and lower bounds.
-#' #'
-#' #' @param ivfn_variable A fuzzy number object. Either an ivfn or tfn
-#' #'
-#' #' @returns A crisp value representative of the input IVFN
-#' #'
-#' #' @export
-#' #' @examples  defuzz(ivfn(-1, 1))
-#' defuzz.ivfn <- function(ivfn_variable) {
-#'   (ivfn_variable$lower + ivfn_variable$upper)/2
-#' }
-
-
-
-#' #' Defuzz (TFN)
-#' #'
-#' #' @description
-#' #' Convert a fuzzy number to a crisp value. For TFNs, return the average of the lower bound, the
-#' #' mode, and the upper bound.
-#' #'
-#' #' @param tfn_variable A fuzzy number object. Either an ivfn or tfn
-#' #'
-#' #' @returns A crisp value representative of the input TFN
-#' #'
-#' #' @export
-#' #' @examples defuzz(tfn(-1, 0, 1))
-#' defuzz.tfn <- function(tfn_variable) {
-#'   (tfn_variable$lower + tfn_variable$upper)/2
-#' }
 
 
 #' Convert Value to IVFN or TFN if Value is Numeric

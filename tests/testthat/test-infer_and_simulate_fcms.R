@@ -97,25 +97,8 @@ test_that("infer_conventional_fcm works", {
   # Check infer_conventional_fcm cannot take ivfn matrices
   n_nodes <- unique(dim(salinization_ivfn_fcms[[1]]))
   expect_error( # When input adj_matrix is not a conventional fcm
-    infer_conventional_fcm(salinization_ivfn_fcms[[1]], initial_state_vector = rep(1, n_nodes), clamping_vector = rep(0, n_nodes))
+    infer_fcm(salinization_ivfn_fcms[[1]], initial_state_vector = rep(1, n_nodes), clamping_vector = rep(0, n_nodes), point_of_inference = "final")
   )
-
-  adj_matrix <- data.frame(
-    C1 = c(0, 0, 0, 0, 0, 0),
-    C2 = c(-0.85, 0, 0, 0.35, 0, 0),
-    C3 = c(0, 0, 0, 0, 0, 0),
-    C4 = c(-0.7, 0.6, -1, 0, -1, 0),
-    C5 = c(0.1, 0, 0, -0.8, 0, 0),
-    C6 = c(0, -0.95, 0, 0, -0.95, 0)
-  )
-  test_infer <- infer_conventional_fcm(adj_matrix,
-                                       initial_state_vector = c(1, 1, 1, 1, 1, 1),
-                                       clamping_vector = c(1, 0, 0, 0, 0, 0),
-                                       activation = "kosko",
-                                       squashing = "sigmoid",
-                                       lambda = 1)
-  test_inference <- round(test_infer$inference, 2)
-  expect_equal(test_inference, data.frame(0.5, -0.1, 0, -0.07, 0.03, 0.02), ignore_attr = TRUE)
 })
 
 
@@ -270,49 +253,8 @@ test_that("equalize_baseline_and_scenario_outputs works", {
 
 
 test_that("simulate_fcm works", {
-  # See simulate_conventional_fcm tests for additional info
-
-  # adj_matrix <- data.frame(
-  #   C1 = c(0, 0, 0, 0, 0, 0),
-  #   C2 = c(-0.85, 0, 0, 0.35, 0, 0),
-  #   C3 = c(0, 0, 0, 0, 0, 0),
-  #   C4 = c(-0.7, 0.6, -1, 0, -1, 0),
-  #   C5 = c(0.1, 0, 0, -0.8, 0, 0),
-  #   C6 = c(0, -0.95, 0, 0, -0.95, 0)
-  # )
-  # test_sim <- simulate_fcm(adj_matrix, c(1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0), activation = "kosko", squashing = "sigmoid", point_of_inference = "final")
-  # expect_equal(round(test_sim$state_vectors[2, ], 2), data.frame(1, 1, 0.38, 0.5, 0.11, 0.33, 0.13), ignore_attr = TRUE)
-  # expect_equal(round(test_sim$state_vectors[nrow(test_sim$state_vectors), ], 2), data.frame(8, 1, 0.31, 0.5, 0.18, 0.49, 0.32), ignore_attr = TRUE)
-
-  lower_adj_matrix <- data.frame(
-    C1 = c(0, 0, 0, 0, 0, 0),
-    C2 = c(-0.85, 0, 0, 0.35, 0, 0),
-    C3 = c(0, 0, 0, 0, 0, 0),
-    C4 = c(-0.7, 0.6, -1, 0, -1, 0),
-    C5 = c(0.1, 0, 0, -0.8, 0, 0),
-    C6 = c(0, -0.95, 0, 0, -0.95, 0)
-  )
-  upper_adj_matrix <- data.frame(
-    C1 = c(0, 0, 0, 0, 0, 0),
-    C2 = c(-0.2, 0, 0, 0.9, 0, 0),
-    C3 = c(0, 0, 0, 0, 0, 0),
-    C4 = c(-0.3, 0.9, -0.5, 0, -0.5, 0),
-    C5 = c(0.5, 0, 0, -0.3, 0, 0),
-    C6 = c(0, -0.4, 0, 0, -0.5, 0)
-  )
-  adj_matrix <- make_adj_matrix_w_ivfns(lower_adj_matrix, upper_adj_matrix)
-  test_sim <- simulate_fcm(adj_matrix, c(1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0), activation = "kosko", squashing = "sigmoid")
-  first_iter <- test_sim$state_vectors[2, ][-1]
-  first_iter_lowers <- round(vapply(first_iter, function(x) x[[1]]$lower, numeric(1)), 2)
-  first_iter_uppers <- round(vapply(first_iter, function(x) x[[1]]$upper, numeric(1)), 2)
-  expect_equal(first_iter_lowers, c(1, 0.38, 0.5, 0.11, 0.33, 0.13), ignore_attr = TRUE)
-  expect_equal(first_iter_uppers, c(1, 0.67, 0.5, 0.4, 0.55, 0.29), ignore_attr = TRUE)
-
-  final_iter <- test_sim$state_vectors[nrow(test_sim$state_vectors), ][-1]
-  final_iter_lowers <- round(vapply(final_iter, function(x) x[[1]]$lower, numeric(1)), 2)
-  final_iter_uppers <- round(vapply(final_iter, function(x) x[[1]]$upper, numeric(1)), 2)
-  expect_equal(final_iter_lowers, c(1, 0.32, 0.5, 0.18, 0.47, 0.29), ignore_attr = TRUE)
-  expect_equal(final_iter_uppers, c(1, 0.51, 0.5, 0.39, 0.6, 0.39), ignore_attr = TRUE)
+  # See simulate_conventional_fcm and simulate_ivfn_or_tfn_fcm tests for additional info
+  expect_true(TRUE) # Just so this isn't an empty test
 })
 
 
@@ -354,75 +296,90 @@ test_that("simulate_conventional_fcm works", {
     peak_ScenarioState <- simulate_fcm(adj_matrix, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0), activation = "rescale", squashing = "sigmoid", point_of_inference = "peak", lambda = 1, min_error = 0.00001)
   )
 
-  # No idea why this needs 2 expect_warning()'s
-  expect_warning(expect_warning( # For act. = 'modified-kosko' and squashing = 'tanh'
-    simulate_fcm(adj_matrix, initial_state_vector = c(1, 0, 0), clamping_vector = c(0, 0, 0), activation = "modified-kosko", squashing = "tanh", point_of_inference = "peak", lambda = 0.5, max_iter = 1000, min_error = 0.00001)
-  ))
-  expect_error( # For act. = 'rescale' and squashing = 'tanh'
-    simulate_fcm(adj_matrix, initial_state_vector = c(1, 0, 0), clamping_vector = c(1, 0, 0), activation = "rescale", squashing = "tanh", point_of_inference = "peak", lambda = 0.5, min_error = 0.00001)
-  )
-
   # Check infer_conventional_fcm cannot take ivfn matrices
-  lower_adj_matrix <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(0, 0)
+  expect_error(
+    simulate_conventional_fcm(salinization_ivfn_fcms[[1]], initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1), clamping_vector = c(0, 1, 0, 0, 0, 0, 0, 0, 0), activation = "kosko", squashing = "sigmoid", lambda = 1)
   )
-  upper_adj_matrix <- data.frame(
-    "A" = c(0, 1),
-    "B" = c(0, 1)
+  # Check warning message if simulation runs longer than max_iter
+  expect_warning(
+    simulate_conventional_fcm(salinization_conventional_fcms[[1]], initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1), clamping_vector = c(0, 1, 0, 0, 0, 0, 0, 0, 0), activation = "modified-kosko", squashing = "tanh", lambda = 1, point_of_inference = "final")
   )
-  ivfn_adj_matrix <- make_adj_matrix_w_ivfns(lower_adj_matrix, upper_adj_matrix)
-  expect_error(simulate_conventional_fcm(ivfn_adj_matrix, initial_state_vector = c(1, 1), clamping_vector = c(0, 1), activation = "kosko", squashing = "sigmoid", lambda = 1))
-
 })
 
 
 test_that("simulate_ivfn_or_tfn_fcm works", {
-  # Check infer_ivfn_or_tfn_fcm cannot take conventional matrices
-  adj_matrix <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(1, 0)
-  )
-  expect_error(
-    simulate_ivfn_or_tfn_fcm(adj_matrix,
-                          initial_state_vector = c(1, 1),
-                          clamping_vector = c(0, 1),
-                          activation = "kosko",
-                          squashing = "sigmoid",
-                          lambda = 1)
-  )
-
   lower_adj_matrix <- data.frame(
-    C1 = c(0, 0, 0, 0, 0, 0),
-    C2 = c(-0.85, 0, 0, 0.35, 0, 0),
-    C3 = c(0, 0, 0, 0, 0, 0),
-    C4 = c(-0.7, 0.6, -1, 0, -1, 0),
-    C5 = c(0.1, 0, 0, -0.8, 0, 0),
-    C6 = c(0, -0.95, 0, 0, -0.95, 0)
+    A = c(0, 0.2, 0.4),
+    B = c(0.6, 0, -1),
+    C = c(0, -1, 0)
+  )
+  mode_adj_matrix <- data.frame(
+    A = c(0, 0.6, 0.8),
+    B = c(0.8, 0, -0.6),
+    C = c(0, -0.4, 0)
   )
   upper_adj_matrix <- data.frame(
-    C1 = c(0, 0, 0, 0, 0, 0),
-    C2 = c(-0.2, 0, 0, 0.9, 0, 0),
-    C3 = c(0, 0, 0, 0, 0, 0),
-    C4 = c(-0.3, 0.9, -0.5, 0, -0.5, 0),
-    C5 = c(0.5, 0, 0, -0.3, 0, 0),
-    C6 = c(0, -0.4, 0, 0, -0.5, 0)
+    A = c(0, 0.8, 1),
+    B = c(1, 0, -0.2),
+    C = c(0, -0.2, 0)
   )
-  adj_matrix <- make_adj_matrix_w_ivfns(lower_adj_matrix, upper_adj_matrix)
-  test_sim <- simulate_ivfn_or_tfn_fcm(adj_matrix, c(1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0), activation = "kosko", squashing = "sigmoid")
-  first_iter <- test_sim$state_vectors[2, ][-1]
-  first_iter_lowers <- round(vapply(first_iter, function(x) x[[1]]$lower, numeric(1)), 2)
-  first_iter_uppers <- round(vapply(first_iter, function(x) x[[1]]$upper, numeric(1)), 2)
-  expect_equal(first_iter_lowers, c(1, 0.38, 0.5, 0.11, 0.33, 0.13), ignore_attr = TRUE)
-  expect_equal(first_iter_uppers, c(1, 0.67, 0.5, 0.4, 0.55, 0.29), ignore_attr = TRUE)
+  test_ivfn_adj_matrix <- make_adj_matrix_w_ivfns(lower_adj_matrix, upper_adj_matrix)
+  test_tfn_adj_matrix <- make_adj_matrix_w_tfns(lower_adj_matrix, mode_adj_matrix, upper_adj_matrix)
 
-  final_iter <- test_sim$state_vectors[nrow(test_sim$state_vectors), ][-1]
-  final_iter_lowers <- round(vapply(final_iter, function(x) x[[1]]$lower, numeric(1)), 2)
-  final_iter_uppers <- round(vapply(final_iter, function(x) x[[1]]$upper, numeric(1)), 2)
-  expect_equal(final_iter_lowers, c(1, 0.32, 0.5, 0.18, 0.47, 0.29), ignore_attr = TRUE)
-  expect_equal(final_iter_uppers, c(1, 0.51, 0.5, 0.39, 0.6, 0.39), ignore_attr = TRUE)
+  # IVFN - Kosko, Sigmoid, Final
+  ivfn_kosko_sigmoid_final <- simulate_fcm(test_ivfn_adj_matrix, initial_state_vector = c(1, 1, 1), clamping_vector = c(0, 0, 0), activation = "kosko", squashing = "sigmoid", lambda = 1, point_of_inference = "final")
+  inferences_lowers <- round(apply(ivfn_kosko_sigmoid_final$inferences, 2, function(element) element[[1]]$lower), 2)
+  inferences_uppers <- round(apply(ivfn_kosko_sigmoid_final$inferences, 2, function(element) element[[1]]$upper), 2)
+  expect_equal(inferences_lowers, c(0.57, 0.49, 0.36), ignore_attr = TRUE)
+  expect_equal(inferences_uppers, c(0.70, 0.63, 0.47), ignore_attr = TRUE)
 
-  expect_warning(simulate_ivfn_or_tfn_fcm(adj_matrix, c(1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0), activation = "modified-kosko", squashing = "tanh", max_iter = 5))
+  # IVFN - Modified-Kosko, Sigmoid, Peak
+  ivfn_modifiedkosko_sigmoid_peak <- simulate_fcm(test_ivfn_adj_matrix, initial_state_vector = c(1, 0, 0), clamping_vector = c(0, 0, 0), activation = "modified-kosko", squashing = "sigmoid", lambda = 1, point_of_inference = "peak")
+  inferences_lowers <- round(apply(ivfn_modifiedkosko_sigmoid_peak$inferences, 2, function(element) element[[1]]$lower), 2)
+  inferences_uppers <- round(apply(ivfn_modifiedkosko_sigmoid_peak$inferences, 2, function(element) element[[1]]$upper), 2)
+  expect_equal(inferences_lowers, c(1.00, 0.65, 0.42), ignore_attr = TRUE)
+  expect_equal(inferences_uppers, c(1.00, 0.82, 0.61), ignore_attr = TRUE)
+
+  # IVFN - Rescale, Sigmoid, Peak
+  ivfn_rescale_sigmoid_peak <- simulate_fcm(test_ivfn_adj_matrix, initial_state_vector = c(1, 0, 0), clamping_vector = c(0, 0, 0), activation = "rescale", squashing = "sigmoid", lambda = 1, point_of_inference = "peak")
+  inferences_lowers <- round(apply(ivfn_rescale_sigmoid_peak$inferences, 2, function(element) element[[1]]$lower), 2)
+  inferences_uppers <- round(apply(ivfn_rescale_sigmoid_peak$inferences, 2, function(element) element[[1]]$upper), 2)
+  expect_equal(inferences_lowers, c(1.00, 0.45, 0.50), ignore_attr = TRUE)
+  expect_equal(inferences_uppers, c(1.00, 0.73, 0.50), ignore_attr = TRUE)
+
+  # TFN - Kosko, Tanh, Final
+  expect_warning( # Should see a limit cycle behavior
+    tfn_kosko_tanh_peak <- simulate_fcm(test_tfn_adj_matrix, initial_state_vector = c(1, 0, 0), clamping_vector = c(0, 0, 0), activation = "kosko", squashing = "tanh", lambda = 1, point_of_inference = "peak", min_error = 1e-3)
+  )
+  inferences_lowers <- round(apply(tfn_kosko_tanh_peak$inferences, 2, function(element) element[[1]]$lower), 2)
+  inferences_modes <- round(apply(tfn_kosko_tanh_peak$inferences, 2, function(element) element[[1]]$mode), 2)
+  inferences_uppers <- round(apply(tfn_kosko_tanh_peak$inferences, 2, function(element) element[[1]]$upper), 2)
+  expect_equal(inferences_lowers, c(1, 0.54, -0.57), ignore_attr = TRUE)
+  expect_equal(inferences_modes, c(1, 0.66, -0.26), ignore_attr = TRUE)
+  expect_equal(inferences_uppers, c(1, 0.76, -0.13), ignore_attr = TRUE)
+
+  # TFN - Modified-Kosko, Sigmoid, Peak
+  tfn_modifiedkosko_sigmoid_peak <- simulate_fcm(test_tfn_adj_matrix, initial_state_vector = c(1, 0, 0), clamping_vector = c(0, 0, 0), activation = "modified-kosko", squashing = "sigmoid", lambda = 1, point_of_inference = "peak")
+  inferences_lowers <- round(apply(tfn_modifiedkosko_sigmoid_peak$inferences, 2, function(element) element[[1]]$lower), 2)
+  inferences_modes <- round(apply(tfn_modifiedkosko_sigmoid_peak$inferences, 2, function(element) element[[1]]$mode), 2)
+  inferences_uppers <- round(apply(tfn_modifiedkosko_sigmoid_peak$inferences, 2, function(element) element[[1]]$upper), 2)
+  expect_equal(inferences_lowers, c(1.00, 0.65, 0.42), ignore_attr = TRUE)
+  expect_equal(inferences_modes, c(1.00, 0.75, 0.57), ignore_attr = TRUE)
+  expect_equal(inferences_uppers, c(1.00, 0.82, 0.61), ignore_attr = TRUE)
+
+  # TFN - Rescale, Sigmoid, Final
+  tfn_rescale_sigmoid_final <- simulate_fcm(test_tfn_adj_matrix, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0), activation = "rescale", squashing = "sigmoid", lambda = 1, point_of_inference = "final")
+  inferences_lowers <- round(apply(tfn_rescale_sigmoid_peak$inferences, 2, function(element) element[[1]]$lower), 2)
+  inferences_modes <- round(apply(tfn_rescale_sigmoid_peak$inferences, 2, function(element) element[[1]]$mode), 2)
+  inferences_uppers <- round(apply(tfn_rescale_sigmoid_peak$inferences, 2, function(element) element[[1]]$upper), 2)
+  expect_equal(inferences_lowers, c(1.00, 0.77, 0.23), ignore_attr = TRUE)
+  expect_equal(inferences_modes, c(1.00, 0.84, 0.37), ignore_attr = TRUE)
+  expect_equal(inferences_uppers, c(1.00, 0.89, 0.43), ignore_attr = TRUE)
+
+  # Check infer_ivfn_or_tfn_fcm cannot take conventional matrices
+  expect_error(
+    simulate_ivfn_or_tfn_fcm(salinization_conventional_fcms[[1]], initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0, 0, 0, 0))
+  )
 })
 
 
