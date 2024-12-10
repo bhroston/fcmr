@@ -1306,10 +1306,10 @@ clean_simulation_output <- function(output_obj, concepts) {
 check_simulation_inputs <- function(adj_matrix = matrix(),
                                     initial_state_vector = c(),
                                     clamping_vector = c(),
-                                    activation = c("kosko"),
-                                    squashing = c("sigmoid"),
+                                    activation = c("kosko", "modified-kosko", "rescale"),
+                                    squashing = c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"),
                                     lambda = 1,
-                                    point_of_inference = c("peak"),
+                                    point_of_inference = c("peak", "final"),
                                     max_iter = 100,
                                     min_error = 1e-4) {
 
@@ -1331,7 +1331,6 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
     stop(cli::format_error(c(
       "x" = "Error: {.var adj_matrix} must be a square (n x n) matrix"
     )))
-    # stop("Failed Input Validation: Input adjacency matrix must be a square (n x n) matrix")
   }
   n_nodes <- unique(dim(adj_matrix))
 
@@ -1340,7 +1339,6 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
     warning(cli::format_warning(c(
       "!" = "Warning: Changed {.var adj_matrix} from sparseMatrix to an ordinary matrix (i.e. using as.matrix)"
     )))
-    # warning("Input Revision: Changed sparseMatrix objects in input adj_matrices to ordinary matrices.")
   }
   # # browser()
   # fcm_class <- adj_matrix_input_type$fcm_class
@@ -1357,120 +1355,185 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
 
   # Check initial_state_vector ----
   if (identical(initial_state_vector, c())) {
-    warning("No initial_state_vector input given. Assuming all nodes have an initial state of 1.")
+    warning(cli::format_warning(c(
+      "!" = "Warning: No {.var initial_state_vector} given",
+      "~~~~~ Assuming all nodes have an initial state of 1; i.e. initial_state_vector = c(1, 1, ..., 1)"
+    )))
     initial_state_vector <- rep(1, nrow(adj_matrix))
   }
   if (length(initial_state_vector) != n_nodes) {
-    stop("Failed Input Validation: Input initial_state_vector must have the same length as the number of nodes in the adj. matrix.")
+    stop(cli::format_error(c(
+      "x" = "Error: {.var initial_state_vector} must be the same length as the number of nodes in input {.var adj_matrix}",
+      "+++++ Length of {.var initial_state_vector} is {length(initial_state_vector)}, but should be {n_nodes}"
+    )))
   }
   data_types_in_initial_state_vector <- unlist(unique(sapply(initial_state_vector, methods::is, simplify = FALSE)))
   if (!identical(data_types_in_initial_state_vector, methods::is(numeric()))) {
-    stop("Failed Input Validation: Input initial_state_vector must only contain numeric values.")
+    invalid_indexes <- is.na(suppressWarnings(as.numeric(initial_state_vector)))
+    stop(cli::format_error(c(
+      "x" = "Error: {.var initial_state_vector} must contain only numeric values.",
+      "+++++ Invalid element(s): {initial_state_vector[invalid_indexes]}"
+    )))
   }
 
   # ----
 
   # Check clamping_vector ----
   if (identical(clamping_vector, c())) {
-    warning("No clamping_vector input given. Assuming no values are clamped.")
+    warning(cli::format_warning(c(
+      "!" = "Warning: No {.var initial_state_vector} given",
+      "~~~~~ Assuming no nodes are clamped; i.e. clamping_vector = c(0, 0, ..., 0)"
+    )))
     clamping_vector <- rep(0, length(initial_state_vector))
   }
+
   if (length(clamping_vector) != n_nodes) {
-    stop("Failed Input Validation: Input clamping_vector must have the same length as the number of nodes in the adj. matrix.")
+    stop(cli::format_error(c(
+      "x" = "Error: {.var clamping_vector} must be the same length as the number of nodes in input {.var adj_matrix}",
+      "+++++ Length of {.var clamping_vector} is {length(clamping_vector)}, but should be {n_nodes}"
+    )))
   }
+
   data_types_in_clamping_vector <- unlist(unique(sapply(clamping_vector, methods::is, simplify = FALSE)))
   if (!identical(data_types_in_clamping_vector, methods::is(numeric()))) {
-    stop("Failed Input Validation: Input clamping_vector must only contain numeric values.")
+    invalid_indexes <- is.na(suppressWarnings(as.numeric(clamping_vector)))
+    stop(cli::format_error(c(
+      "x" = "Error: {.var clamping_vector} must contain only numeric values.",
+      "+++++ Invalid element(s): {clamping_vector[invalid_indexes]}"
+    )))
   }
-  # if (any(clamping_vector != 0) & !all(initial_state_vector == 1)) {
-  #   stop("If any elements in input clamping_vector are set to a value other than
-  #        0, all elements in input initial_state_vector must be set to 1 to perform
-  #        the analysis correctly.")
-  # }
+
+  if (any(clamping_vector != 0) & !all(initial_state_vector == 1)) {
+    stop(cli::format_error(c(
+      "x" = "Error: If any nodes are clamped (i.e. {.var clamping_vector} contains non-zero elements),
+      all elements in {.var initial_state_vector} must be seet to 1 to perform the analysis correctly; i.e. initial_state_vector = c(1, 1, ..., 1)"
+    )))
+  }
   # ----
 
   # Check activation and squashing ----
   if (identical(activation, c("kosko", "modified-kosko", "rescale"))) {
-    warning("No activation function given, assuming activation = 'kosko'")
+    warning(cli::format_warning(c(
+      "!" = "Warning: No {.var activation_function} given",
+      "~~~~~ Assuming activation = 'kosko'"
+    )))
     activation <- "kosko"
   }
   if (!(activation %in% c("kosko", "modified-kosko", "rescale"))) {
-    stop("Failed Input Validation: Input activation must be one of the following: 'kosko', 'modified-kosko', or 'rescale'")
+    stop(cli::format_error(c(
+      "x" = "Error: {.var activation} must be one of the following: 'kosko', 'modified-kosko', or 'rescale'",
+      "+++++ Input {.var activation} was '{activation}'"
+    )))
   }
 
   if (identical(squashing, c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"))) {
-    warning("No squashing function given, assuming squashing = 'sigmoid'")
+    warning(cli::format_warning(c(
+      "!" = "Warning: No {.var squashing_function} given",
+      "~~~~~ Assuming squashing = 'sigmoid'"
+    )))
     squashing <- "sigmoid"
   }
   if (!(squashing %in% c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"))) {
-    stop('Failed Input Validation: Input squashing must be one of the following: "sigmoid", "tanh", "bivalent", "saturation", "trivalent"')
+    stop(cli::format_error(c(
+      "x" = "Error: {.var squashing} must be one of the following: 'sigmoid', 'tanh', 'bivalent', 'saturation', 'trivalent'",
+      "+++++ Input {.var squashing} was '{squashing}'"
+    )))
   }
   if (activation == "rescale" & squashing != "sigmoid") {
-    stop(
-      paste0(
-        "   !!!Please use the sigmoid squashing function with the rescale activation function!!!
-
-          The rescale activation function is designed to optimize performance
-          with the sigmoid squashing function. Results are unreliable if
-          using a different squashing function.\n",
-
-        "\n          Input squashing function: ", squashing)
-    )
+    stop(cli::format_error(c(
+      "x" = "Error: '{squashing}' is not compatible with the 'rescale' activation function",
+      "+++++ The 'rescale' activation function is designed to optimize performance of the sigmoid squashing function",
+      "+++++ Results are unreliable with incompatible squashing functions."
+    )))
   } else if (activation == "modified-kosko" & squashing == "tanh") {
-    warning(
-      paste0(
-        "          The Tanh squashing functions performs poorly with the
-          Modified-kosko activation function because simulation inference values
-          tend to approach 0 as the number of iterations increases."
-      )
-    )
+    warning(cli::format_warning(c(
+      "!" = "Warning: The 'tanh' squashing function performs poorly with the 'modified-kosko' activation function",
+      "~~~~~ Simulation inference values tend to approach 0 as the number of simulation iterations increases"
+    )))
   }
   # ----
 
   # Check lambda ----
   if (!is.numeric(lambda)) {
-    stop("Failed Input Validation: Input lambda must be numeric")
+    stop(cli::format_error(c(
+      "x" = "Error: {.var lambda} must be numeric",
+      "+++++ Input {.var lambda} was {lambda}"
+    )))
   }
   if (lambda <= 0) {
-    stop("Failed Input Validation: Input lambda must be greater than 0")
+    stop(cli::format_error(c(
+      "x" = "Error: {.var lambda} must be greater than 0",
+      "+++++ Input {.var lambda} was {lambda}"
+    )))
+  }
+  if (lambda > 10) {
+    warning(cli::format_warning(c(
+      "!" = "Warning: {.var lambda} is typically less than 10 and greater than 0, with 1 being the typical value",
+      "~~~~~ Input {.var lambda} was {lambda}"
+    )))
   }
   # ----
 
   # Check point_of_inference ----
   if (identical(point_of_inference, c("peak", "final"))) {
-    warning("No point_of_inference given, assuming point_of_inference = 'final'")
+    warning(cli::format_warning(c(
+      "!" = "Warning: No {.var point_of_inference} given",
+      "~~~~~ Assuming point_of_inference = 'final'"
+    )))
     point_of_inference <- "final"
   }
   if (!(point_of_inference %in% c("peak", "final"))) {
-    stop("Failed Input Validation: Input point_of_inference must be one of
-       the following: 'peak' or 'final'")
+    stop(cli::format_error(c(
+      "x" = "Error: {.var point_of_inference} must be one of the following: 'peak' or 'final'",
+      "+++++ Input {.var point_of_inference} was '{point_of_inference}'"
+    )))
   }
   if (point_of_inference == "peak" & all(initial_state_vector == 1)) {
-    warning("    For simulations where all concept activation levels begin
-      at 1 (i.e. initial_state_vector = c(1, 1, ..., 1)),
-      point_of_inference = 'peak' will return all 1's for the inferences
-      because the activation values may only decrease from their initial value.")
+    warning(cli::format_warning(c(
+      "!" = "Warning: Simulation inferences will return all 1's if {.var point_of_difference} = 'peak' and all concept activation levels start at 1; i.e. initial_state_vector = c(1, 1, ..., 1) "
+    )))
   }
   # ----
 
   # Check max_iter ----
   if (!is.numeric(max_iter)) {
-    stop("Failed Input Validation: Input max_iter must be numeric")
+    stop(cli::format_error(c(
+      "x" = "Error: {.var max_iter} must be a positive integer",
+      "+++++ Input {.var max_iter} was {max_iter}"
+    )))
   }
   if (!(max_iter == round(max_iter))) {
-    stop("Failed Input Validation: Input max_iter must be a positive integer")
+    stop(cli::format_error(c(
+      "x" = "Error: {.var max_iter} must be a positive integer",
+      "+++++ Input {.var max_iter} was {max_iter}"
+    )))
   }
   if (max_iter <= 0) {
-    stop("Failed Input Validation: Input max_iter must be a positive integer")
+    stop(cli::format_error(c(
+      "x" = "Error: {.var max_iter} must be a positive integer",
+      "+++++ Input {.var max_iter} was {max_iter}"
+    )))
   }
   # ----
 
   # Check min_error ----
   if (!is.numeric(min_error)) {
-    stop("Failed Input Validation: Input min_error must be numeric")
+    stop(cli::format_error(c(
+      "x" = "Error: {.var min_error} must be a positive number",
+      "+++++ Input {.var min_error} was {min_error}"
+    )))
   }
   if (min_error <= 0) {
-    stop("Failed Input Validation: Input min_error must be greater than 0")
+    stop(cli::format_error(c(
+      "x" = "Error: {.var min_error} must be a positive number",
+      "+++++ Input {.var min_error} was {min_error}"
+    )))
+  }
+  if (min_error >= 1) {
+    warning(cli::format_warning(c(
+      "!" = "Warning: {.var point_of_inference} value of {point_of_inference} may be too high.",
+      "~~~~~ Typically {.var min_error} < 0.001, but greater than 0"
+    )))
   }
   # ----
 
