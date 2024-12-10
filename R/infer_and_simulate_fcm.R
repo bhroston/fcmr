@@ -158,13 +158,13 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
 
   iter <- NULL # for R CMD Check, does not impact logic
 
-  fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
-  if (!(fcm_class %in% c("conventional"))) {
-    stop("Input adj_matrix must be an adjacency matrix with edges represented as
-         discrete numeric values (Conventional) only")
-  }
-
-  # browser()
+  # fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
+  # if (!(fcm_class %in% c("conventional"))) {
+  #   stop(cli::format_error(c(
+  #     "x" = "{.var adj_matrix} must be an adjacency matrix with edges represented as discrete numeric values (Conventional) only",
+  #     "+++++> Edges in input {.var adj_matrix} are represented as {fcm_class}'s"
+  #   )))
+  # }
 
   # Get scenario simulation
   scenario_initial_state_vector <- initial_state_vector
@@ -1318,27 +1318,41 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
   # Check for individal adj_matrix ----
   adj_matrix_is_list <- adj_matrix_input_type$adj_matrices_input_is_list
   if (adj_matrix_is_list) {
-    stop("Input Validation Error: Input adj_matrix must be an individual adj. matrix, not a list of adj. matrices.")
+    stop(cli::format_error(c(
+      "x" = "Error: {.var adj_matrix} must be an individual adj. matrix",
+      "+++++> Input {.var adj_matrix} is a list of adj_matrices"
+    )))
   }
 
   # Check adj_matrix ----
   rows <- nrow(adj_matrix)
   cols <- ncol(adj_matrix)
   if (rows != cols) {
-    stop("Failed Input Validation: Input adjacency matrix must be a square (n x n) matrix")
+    stop(cli::format_error(c(
+      "x" = "Error: {.var adj_matrix} must be a square (n x n) matrix"
+    )))
+    # stop("Failed Input Validation: Input adjacency matrix must be a square (n x n) matrix")
   }
   n_nodes <- unique(dim(adj_matrix))
 
-  fcm_class <- adj_matrix_input_type$object_types_in_list[1]
-  if (!(fcm_class %in% c("conventional", "ivfn", "tfn"))) {
-    stop("  Input Validation Error: Input adj_matrix must be an adjacency matrix
-    with edges represented as numeric values, ivfns, or tfns")
-  }
-
   if (identical(adj_matrix_input_type$object_types_in_list, c("conventional", "sparseMatrix"))) {
     adj_matrix <- as.matrix(adj_matrix)
-    warning("Input Revision: Changed sparseMatrix objects in input adj_matrices to ordinary matrices.")
+    warning(cli::format_warning(c(
+      "!" = "Warning: Changed {.var adj_matrix} from sparseMatrix to an ordinary matrix (i.e. using as.matrix)"
+    )))
+    # warning("Input Revision: Changed sparseMatrix objects in input adj_matrices to ordinary matrices.")
   }
+  # # browser()
+  # fcm_class <- adj_matrix_input_type$fcm_class
+  # if (!(fcm_class %in% c("conventional", "ivfn", "tfn"))) {
+  #   stop(cli::format_error(c(
+  #     "x" = "{.var adj_matrix} must be an adjacency matrix with edges represented as either numeric values, ivfns, or tfns"
+  #   )))
+  #   # stop("  Input Validation Error: Input adj_matrix must be an adjacency matrix
+  #   # with edges represented as numeric values, ivfns, or tfns")
+  # }
+
+
   # ----
 
   # Check initial_state_vector ----
@@ -1461,7 +1475,7 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
   # ----
 
   list(
-    fcm_class = fcm_class,
+    fcm_class = adj_matrix_input_type$fcm_class,
     adj_matrix = adj_matrix,
     initial_state_vector = initial_state_vector,
     clamping_vector = clamping_vector,
