@@ -489,6 +489,7 @@ test_that("check_simulation_inputs works", {
   expect_error(
     check_simulation_inputs(adj_matrix = salinization_conventional_fcms, initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0, 0, 0, 0))
   )
+  # ----
 
   # Check adj_matrices ----
   expect_error(

@@ -398,9 +398,6 @@ check_fcmconfr_inputs <- function(adj_matrices = list(matrix()),
       "!" = "Warning: Cannot estimate CIs of monte carlo inferences if monte carlo analysis is not being performed",
       "~~~~~ Skipping CI bound estimation; i.e. setting {.var perform_monte_carlo_inference_bootstrap_analysis} to FALSE"
     )))
-    # warning("  Cannot estimate CIs of monte carlo inferences if monte carlo analysis is not being performed.
-    # Skipping CI bound estimation. Additionally, cannot estimate inferences using monte carlo methods if
-    # analysing an individual, conventional FCM.")
     perform_monte_carlo_inference_bootstrap_analysis <- FALSE
   }
 
@@ -494,11 +491,9 @@ check_fcmconfr_inputs <- function(adj_matrices = list(matrix()),
   }
   # ----
 
-  # inference_estimation_function
-
   # Check Monte Carlo and Bootstrap Inputs ----
   if (perform_monte_carlo_inference_bootstrap_analysis) {
-    mcbs_checks <- check_monte_carlo_bootstrap_inputs(inference_estimation_function, inference_estimation_CI, inference_estimation_bootstrap_reps)
+    mcbs_checks <- check_monte_carlo_bootstrap_inputs(inference_estimation_function, inference_estimation_CI, inference_estimation_bootstrap_reps, parallel, n_cores, show_progress)
     inference_estimation_function <- mcbs_checks$inference_estimation_function
   }
   # ----
@@ -567,8 +562,6 @@ check_fcmconfr_inputs <- function(adj_matrices = list(matrix()),
 organize_fcmconfr_output <- function(...) {
   variables <- as.list(...)
 
-  # browser()
-
   fcmconfr_output <- structure(
     .Data = list(
       fcm_class = variables$fcm_class,
@@ -596,9 +589,7 @@ organize_fcmconfr_output <- function(...) {
     class = "fcmconfr"
   )
 
-
   if (variables$perform_aggregate_analysis) {
-    #browser()
     fcmconfr_output$aggregate_adj_matrix <- variables$aggregate_adj_matrix
     fcmconfr_output$inferences$aggregate_fcm = list(
       inferences = variables$aggregate_fcm_inference$inference,
@@ -634,7 +625,6 @@ organize_fcmconfr_output <- function(...) {
   }
 
   if (variables$perform_monte_carlo_analysis & variables$perform_monte_carlo_inference_bootstrap_analysis) {
-    #browser()
     fcmconfr_output$inferences$monte_carlo_fcms$bootstrap = list(
       CI_estimation_function = variables$inference_estimation_function,
       CIs_and_quantiles_by_node = variables$CIs_of_expected_values_of_mc_simulation_inferences$CIs_and_quantiles_by_node,
@@ -645,8 +635,6 @@ organize_fcmconfr_output <- function(...) {
       inference_estimation_bootstrap_reps = variables$inference_estimation_bootstrap_reps
     )
   }
-
-  # browser()
 
   fcmconfr_output
 }
@@ -679,8 +667,6 @@ print.fcmconfr <- function(x, ...) {
 
   n_input_fcm <- length(x$params$adj_matrices)
 
-  # browser()
-
   if (performed_aggregate & performed_mc & performed_bootstrap) {
     n_mc_sims <- x$params$monte_carlo_sampling_draws
 
@@ -712,7 +698,6 @@ print.fcmconfr <- function(x, ...) {
         paste0("\n  - additional_opts: ", "Perform Aggregate Analysis = ", x$params$additional_opts$perform_aggregate_analysis, "; Perform MC Analysis = ", x$params$additional_opts$perform_monte_carlo_analysis)
     )
   } else if (!performed_aggregate & performed_mc & performed_bootstrap) {
-    # browser()
     n_mc_sims <- x$params$monte_carlo_sampling_draws
 
     cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),

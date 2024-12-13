@@ -172,9 +172,9 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
   if (all(clamping_vector == 0)) {
     dummy_initial_state_vector <- rep(0, length(initial_state_vector))
     dummy_clamping_vector <- rep(0, length(initial_state_vector))
-    # Use squashing = "tanh" to force 0's to remain 0's, rather than converting
+    # Use activation = "kosko" and squashing = "tanh" to force 0's to remain 0's, rather than converting
     # 0's to 0.5's if squashing = "sigmoid"
-    baseline_simulation <- simulate_fcm(adj_matrix, dummy_initial_state_vector, dummy_clamping_vector, activation, squashing = "tanh", lambda, point_of_inference, max_iter, min_error)
+    baseline_simulation <- simulate_fcm(adj_matrix, dummy_initial_state_vector, dummy_clamping_vector, activation = "kosko", squashing = "tanh", lambda, point_of_inference, max_iter, min_error)
     baseline_simulation_is_dummy <- TRUE
   } else {
     # Get baseline simulation

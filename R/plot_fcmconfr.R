@@ -85,6 +85,7 @@ get_concepts_to_plot <- function(fcmconfr_object, filter_limit = 10e-10) {
 #' @export
 get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
 
+  # browser()
   nodes_to_plot <- get_concepts_to_plot(fcmconfr_object, filter_limit)
 
   if (length(nodes_to_plot$name) == 0) {
@@ -134,7 +135,7 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
     )
   }
   if (fcmconfr_object$params$additional_opts$perform_monte_carlo_inference_bootstrap_analysis) {
-    mc_inference_CIs <- as.data.frame(fcmconfr_object$inferences$monte_carlo_fcms$bootstrap$CIs_by_node)
+    mc_inference_CIs <- as.data.frame(fcmconfr_object$inferences$monte_carlo_fcms$bootstrap$CIs_and_quantiles_by_node)
     mc_inference_CIs <- data.frame(
       mc_inference_CIs[nodes_to_plot$index, ]
     )
@@ -270,13 +271,13 @@ autoplot.fcmconfr <- function(object, ...) {
       ) +
       ggplot2::geom_crossbar(
         data = ggplot2::remove_missing(plot_data$mc_inference_CIs),
-        aes(x = .data$name, ymin = .data$lower_0.025, y = .data$lower_0.025, ymax = .data$lower_0.025),
+        aes(x = .data$name, ymin = .data$X0.025_CI, y = .data$X0.025_CI, ymax = .data$X0.025_CI), # Lower CI in 8th column of df
         #aes(x = .data$name, ymin = .data$lower_0.025, y = .data$lower_0.025, ymax = .data$lower_0.025),
         linetype = "dotted", linewidth = 0.2, width = 0.8, na.rm = FALSE
       ) +
       ggplot2::geom_crossbar(
         data = ggplot2::remove_missing(plot_data$mc_inference_CIs),
-        aes(x = .data$name, ymin = .data$upper_0.975, y = .data$upper_0.975, ymax = .data$upper_0.975),
+        aes(x = .data$name, ymin = .data$X0.975_CI, y = .data$X0.975_CI, ymax = .data$X0.975_CI), # Upper CI in 8th column of df
         linetype = "dotted",, linewidth = 0.2, width = 0.8, na.rm = TRUE
       ) +
       ggplot2::geom_point(

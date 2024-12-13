@@ -113,7 +113,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
   }
   if (!parallel & !identical(n_cores, integer())) {
     warning(cli::format_warning(c(
-      "!" = "Warning: {.var n_cores} is ignored since {.var parallel} = FALSE",
+      "!" = "Warning: {.var n_cores} is ignored since {.var parallel} = FALSE"
     )))
   }
 
@@ -322,17 +322,14 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
          (inference)")
   }
 
-  #
   # Check function inputs
-  #
+  mcbc_checks <- check_monte_carlo_bootstrap_inputs(inference_function, confidence_interval, bootstrap_reps, parallel, n_cores, show_progress)
+  inference_estimation_function <- mcbc_checks$inference_estimation_function
+  parallel <- mcbc_checks$parallel
+  n_cores <- mcbc_checks$n_cores
+  show_progress <- mcbc_checks$show_progress
+
   bootstrap_draws_per_rep <- nrow(mc_simulations_inference_df)
-  check_monte_carlo_bootstrap_inputs(inference_function, confidence_interval, bootstrap_reps)
-
-  # Confirm necessary packages are available. If not, warn user and change run options
-  show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
-  parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
-
-  #
 
   if (parallel) {
     max_possible_cores <- parallel::detectCores()
@@ -352,7 +349,7 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
   }
   if (!parallel & !identical(n_cores, integer())) {
     warning(cli::format_warning(c(
-      "!" = "Warning: {.var n_cores} is ignored since {.var parallel} = FALSE",
+      "!" = "Warning: {.var n_cores} is ignored since {.var parallel} = FALSE"
     )))
   }
 
@@ -907,23 +904,25 @@ check_monte_carlo_inputs <- function(mc_adj_matrices = list(matrix()),
   # Check Runtime Options ----
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
   parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
-  if (!is.numeric(n_nodes)) {
-    stop(cli::format_error(c(
-      "x" = "Error: {.var n_nodes} must be a positive integer",
-      "+++++ Input {.var n_nodes} was {n_nodes}"
-    )))
-  }
-  if (!(n_nodes == round(n_nodes))) {
-    stop(cli::format_error(c(
-      "x" = "Error: {.var n_nodes} must be a positive integer",
-      "+++++ Input {.var n_nodes} was {n_nodes}"
-    )))
-  }
-  if (n_nodes <= 0) {
-    stop(cli::format_error(c(
-      "x" = "Error: {.var n_nodes} must be a positive integer",
-      "+++++ Input {.var n_nodes} was {n_nodes}"
-    )))
+  if (parallel) {
+    if (!is.numeric(n_cores)) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var n_cores} must be a positive integer",
+        "+++++ Input {.var n_cores} was '{n_cores}'"
+      )))
+    }
+    if (!(n_cores == round(n_cores))) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var n_cores} must be a positive integer",
+        "+++++ Input {.var n_cores} was {n_cores}"
+      )))
+    }
+    if (n_cores <= 0) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var n_cores} must be a positive integer",
+        "+++++ Input {.var n_cores} was {n_cores}"
+      )))
+    }
   }
   # ----
 
@@ -983,7 +982,7 @@ check_build_monte_carlo_fcms_inputs <- function(adj_matrix_list,
     )))
   }
 
-  if (N_samples %% 2 != 0) {
+  if (!(N_samples == round(N_samples))) {
     stop(cli::format_error(c(
       "x" = "Error: {.var N_samples} must be a positive integer",
       "+++++> Input {.var N_samples} was {N_samples}"
@@ -994,7 +993,7 @@ check_build_monte_carlo_fcms_inputs <- function(adj_matrix_list,
   # Check include_zeroes
   if (!is.logical(include_zeroes)) {
     stop(cli::format_error(c(
-      "x" = "Error: {.var include_zeroes} must be logical (include_zeroes)",
+      "x" = "Error: {.var include_zeroes} must be logical (TRUE/FALSE)",
       "+++++> Input {.var include_zeroes} was {include_zeroes}"
     )))
   }
@@ -1019,6 +1018,11 @@ check_build_monte_carlo_fcms_inputs <- function(adj_matrix_list,
 #' @param inference_estimation_CI What are of the distribution should be bounded by the
 #' confidence intervals? (e.g. 0.95)
 #' @param inference_estimation_bootstrap_reps Repetitions for bootstrap process, if chosen
+#' @param parallel TRUE/FALSE Whether to perform the function using parallel processing
+#' @param n_cores Number of cores to use in parallel processing. If no input given,
+#' will use all available cores in the machine.
+#' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
+#' from the pbapply package as the underlying function.
 #'
 #' @returns NULL; Errors if checks fail
 #'
@@ -1027,9 +1031,12 @@ check_build_monte_carlo_fcms_inputs <- function(adj_matrix_list,
 #' NULL
 check_monte_carlo_bootstrap_inputs <- function(inference_estimation_function = c("mean", "median"),
                                                inference_estimation_CI = 0.95,
-                                               inference_estimation_bootstrap_reps = 1000) {
+                                               inference_estimation_bootstrap_reps = 1000,
+                                               parallel = TRUE,
+                                               n_cores = integer(),
+                                               show_progress = TRUE) {
 
-  # Check inference_function ----
+  # Check inference_estimation_function ----
   if (identical(inference_estimation_function, c("mean", "median"))) {
     warning(cli::format_warning(c(
       "!" = "Warning: No {.var inference_estimation_function} given",
@@ -1040,17 +1047,17 @@ check_monte_carlo_bootstrap_inputs <- function(inference_estimation_function = c
   if (!(inference_estimation_function %in% c("mean", "median"))) {
     stop(cli::format_error(c(
       "x" = "Error: {.var inference_estimation_function} must be one of the following: 'mean' or 'median'",
-      "+++++> Input {.var inference_estimation_function} was {inference_estimation_function}"
+      "+++++> Input {.var inference_estimation_function} was '{inference_estimation_function}'"
     )))
   }
   # ----
 
-  # Check confidence_interval ----
+  # Check inference_estimation_CI ----
 
   if (!is.numeric(inference_estimation_CI)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var inference_estimation_CI} must be a positive value between 0 and 1",
-      "+++++> Input {.var inference_estimation_CI} was {inference_estimation_CI}"
+      "+++++> Input {.var inference_estimation_CI} was '{inference_estimation_CI}'"
     )))
   }
 
@@ -1062,24 +1069,58 @@ check_monte_carlo_bootstrap_inputs <- function(inference_estimation_function = c
   }
   # ----
 
-  # Check bootstrap_reps
+  # Check inference_estimation_bootstrap_reps
   if (!is.numeric(inference_estimation_bootstrap_reps)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var inference_estimation_bootstrap_reps} must be a positive integer, typically greater than 1000",
+      "+++++> Input {.var inference_estimation_bootstrap_reps} was '{inference_estimation_bootstrap_reps}'"
+    )))
+  }
+
+  if (!(inference_estimation_bootstrap_reps == round(inference_estimation_bootstrap_reps))) {
     stop(cli::format_error(c(
       "x" = "Error: {.var inference_estimation_bootstrap_reps} must be a positive integer, typically greater than 1000",
       "+++++> Input {.var inference_estimation_bootstrap_reps} was {inference_estimation_bootstrap_reps}"
     )))
   }
-
-  if (inference_estimation_bootstrap_reps %% 2 != 0) {
+  if (inference_estimation_bootstrap_reps <= 0) {
     stop(cli::format_error(c(
-      "x" = "Error: {.var inference_estimation_bootstrap_reps} must be a positive integer, typically greater than 1000",
+      "x" = "Error: {.var inference_estimation_bootstrap_reps} must be a positive value (typically > 1000)",
       "+++++> Input {.var inference_estimation_bootstrap_reps} was {inference_estimation_bootstrap_reps}"
     )))
   }
   # ----
 
+  # Check Runtime Options ----
+  show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
+  parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
+  if (parallel) {
+    if (!is.numeric(n_cores)) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var n_cores} must be a positive integer",
+        "+++++ Input {.var n_cores} was '{n_cores}'"
+      )))
+    }
+    if (!(n_cores == round(n_cores))) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var n_cores} must be a positive integer",
+        "+++++ Input {.var n_cores} was {n_cores}"
+      )))
+    }
+    if (n_cores <= 0) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var n_cores} must be a positive integer",
+        "+++++ Input {.var n_cores} was {n_cores}"
+      )))
+    }
+  }
+  # ----
+
   list(
-    inference_estimation_function = inference_estimation_function
+    inference_estimation_function = inference_estimation_function,
+    parallel = parallel,
+    n_cores = n_cores,
+    show_progress = show_progress
   )
 }
 

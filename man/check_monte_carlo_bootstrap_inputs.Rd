@@ -7,7 +7,10 @@
 check_monte_carlo_bootstrap_inputs(
   inference_estimation_function = c("mean", "median"),
   inference_estimation_CI = 0.95,
-  inference_estimation_bootstrap_reps = 1000
+  inference_estimation_bootstrap_reps = 1000,
+  parralel = TRUE,
+  n_cores = integer(),
+  show_progress = TRUE
 )
 }
 \arguments{
@@ -18,6 +21,14 @@ inferences from the monte carlo simulations}
 confidence intervals? (e.g. 0.95)}
 
 \item{inference_estimation_bootstrap_reps}{Repetitions for bootstrap process, if chosen}
+
+\item{n_cores}{Number of cores to use in parallel processing. If no input given,
+will use all available cores in the machine.}
+
+\item{show_progress}{TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
+from the pbapply package as the underlying function.}
+
+\item{parallel}{TRUE/FALSE Whether to perform the function using parallel processing}
 }
 \value{
 NULL; Errors if checks fail
