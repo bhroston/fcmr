@@ -342,111 +342,6 @@ check_fcmconfr_inputs <- function(adj_matrices = list(matrix()),
     adj_matrices <- list(adj_matrices)
   }
 
-  # Check adj_matrices ----
-  adj_matrices_dims <- lapply(adj_matrices, dim)
-  if (length(unique(unlist(adj_matrices_dims))) > 1) {
-    stop(cli::format_error(c(
-      "x" = "Error: {.var adj_matrices} are either different sizes or contain non-square matrices",
-      "+++++> Call standardize_adj_matrices() to standardize the sizes of {.var adj. matrices}"
-    )))
-  }
-  n_nodes <- unique(unlist(adj_matrices_dims))
-  dummy_adj_matrix <- matrix(0, n_nodes, n_nodes)
-
-  identified_concepts <- unique(lapply(adj_matrices, colnames))
-  if (length(identified_concepts) != 1) {
-    stop(cli::format_error(c(
-      "x" = "Error: {.var adj_matrices} must have the same concepts",
-      "+++++> Call standardize_adj_matrices() to standardize concepts across {.var adj. matrices}"
-    )))
-  } else {
-    concept_names <- unlist(identified_concepts)
-  }
-
-  if (identical(adj_matrices_input_type$object_types_in_list, c("conventional", "sparseMatrix"))) {
-    adj_matrices <- lapply(adj_matrices, as.matrix)
-    warning(cli::format_warning(c(
-      "!" = "Warning: Changed {.var adj_matrices} from sparseMatrix to an ordinary matrix (i.e. using as.matrix)"
-    )))
-  }
-  # ----
-
-  # Check Simulation Inputs ----
-  sim_checks <- check_simulation_inputs(dummy_adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
-  initial_state_vector <- sim_checks$initial_state_vector
-  clamping_vector <- sim_checks$clamping_vector
-  activation <- sim_checks$activation
-  squashing <- sim_checks$squashing
-  point_of_inference <- sim_checks$point_of_inference
-  # ----
-
-  # Aggregation ----
-  if (identical(aggregation_function, c("mean", "median"))) {
-    warning(cli::format_warning(c(
-      "!" = "Warning: No {.var aggregation_function} given",
-      "~~~~~ Assuming {.var aggregation_function} is 'mean'"
-    )))
-    aggregation_function <- "mean"
-  }
-  if (!(aggregation_function %in% c("mean", "median"))) {
-    stop(cli::format_error(c(
-      "x" = "Error: {.var aggregation_function} must be one of the following: 'mean' or 'median'",
-      "+++++> Input {.var aggregation_function} was {aggregation_function}"
-    )))
-  }
-  # ----
-
-  # Monte Carlo ----
-  if (!is.numeric(monte_carlo_sampling_draws)) {
-    stop(cli::format_error(c(
-      "x" = "Error: {.var monte_carlo_sampling_draws} must be a positive integer",
-      "+++++ Input {.var monte_carlo_sampling_draws} was {monte_carlo_sampling_draws}"
-    )))
-  }
-  if (!(monte_carlo_sampling_draws == round(monte_carlo_sampling_draws))) {
-    stop(cli::format_error(c(
-      "x" = "Error: {.var monte_carlo_sampling_draws} must be a positive integer",
-      "+++++ Input {.var monte_carlo_sampling_draws} was {monte_carlo_sampling_draws}"
-    )))
-  }
-  if (monte_carlo_sampling_draws <= 0) {
-    stop(cli::format_error(c(
-      "x" = "Error: {.var monte_carlo_sampling_draws} must be a positive integer",
-      "+++++ Input {.var monte_carlo_sampling_draws} was {monte_carlo_sampling_draws}"
-    )))
-  }
-  # ----
-
-  # inference_estimation_function
-
-  # Check Monte Carlo and Bootstrap Inputs ----
-  mc_checks <- check_monte_carlo_bootstrap_inputs(inference_estimation_function, inference_estimation_CI, inference_estimation_bootstrap_reps)
-  inference_estimation_function <- mc_checks$inference_estimation_function
-  # ----
-
-  # Confirm necessary packages are available. If not, warn user and change run options; Also Check n_cores ----
-  show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
-  parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
-  if (!is.numeric(n_nodes)) {
-    stop(cli::format_error(c(
-      "x" = "Error: {.var n_nodes} must be a positive integer",
-      "+++++ Input {.var n_nodes} was {n_nodes}"
-    )))
-  }
-  if (!(n_nodes == round(n_nodes))) {
-    stop(cli::format_error(c(
-      "x" = "Error: {.var n_nodes} must be a positive integer",
-      "+++++ Input {.var n_nodes} was {n_nodes}"
-    )))
-  }
-  if (n_nodes <= 0) {
-    stop(cli::format_error(c(
-      "x" = "Error: {.var n_nodes} must be a positive integer",
-      "+++++ Input {.var n_nodes} was {n_nodes}"
-    )))
-  }
-  # ----
-
   # Check Additional Options ----
   if (!is.logical(perform_aggregate_analysis)) {
     stop(cli::format_error(c(
@@ -517,6 +412,117 @@ check_fcmconfr_inputs <- function(adj_matrices = list(matrix()),
       )))
     }
     inference_estimation_function <- 'mean'
+  }
+  # ----
+
+  # Check adj_matrices ----
+  adj_matrices_dims <- lapply(adj_matrices, dim)
+  if (length(unique(unlist(adj_matrices_dims))) > 1) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var adj_matrices} are either different sizes or contain non-square matrices",
+      "+++++> Call standardize_adj_matrices() to standardize the sizes of {.var adj. matrices}"
+    )))
+  }
+  n_nodes <- unique(unlist(adj_matrices_dims))
+  dummy_adj_matrix <- matrix(0, n_nodes, n_nodes)
+
+  identified_concepts <- unique(lapply(adj_matrices, colnames))
+  if (length(identified_concepts) != 1) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var adj_matrices} must have the same concepts",
+      "+++++> Call standardize_adj_matrices() to standardize concepts across {.var adj. matrices}"
+    )))
+  } else {
+    concept_names <- unlist(identified_concepts)
+  }
+
+  if (identical(adj_matrices_input_type$object_types_in_list, c("conventional", "sparseMatrix"))) {
+    adj_matrices <- lapply(adj_matrices, as.matrix)
+    warning(cli::format_warning(c(
+      "!" = "Warning: Changed {.var adj_matrices} from sparseMatrix to an ordinary matrix (i.e. using as.matrix)"
+    )))
+  }
+  # ----
+
+  # Check Simulation Inputs ----
+  sim_checks <- check_simulation_inputs(dummy_adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
+  initial_state_vector <- sim_checks$initial_state_vector
+  clamping_vector <- sim_checks$clamping_vector
+  activation <- sim_checks$activation
+  squashing <- sim_checks$squashing
+  point_of_inference <- sim_checks$point_of_inference
+  # ----
+
+  # Aggregation ----
+  if (perform_aggregate_analysis) {
+    if (identical(aggregation_function, c("mean", "median"))) {
+      warning(cli::format_warning(c(
+        "!" = "Warning: No {.var aggregation_function} given",
+        "~~~~~ Assuming {.var aggregation_function} is 'mean'"
+      )))
+      aggregation_function <- "mean"
+    }
+    if (!(aggregation_function %in% c("mean", "median"))) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var aggregation_function} must be one of the following: 'mean' or 'median'",
+        "+++++> Input {.var aggregation_function} was {aggregation_function}"
+      )))
+    }
+  }
+  # ----
+
+  # Monte Carlo ----
+  if (perform_monte_carlo_analysis) {
+    if (!is.numeric(monte_carlo_sampling_draws)) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var monte_carlo_sampling_draws} must be a positive integer",
+        "+++++ Input {.var monte_carlo_sampling_draws} was {monte_carlo_sampling_draws}"
+      )))
+    }
+    if (!(monte_carlo_sampling_draws == round(monte_carlo_sampling_draws))) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var monte_carlo_sampling_draws} must be a positive integer",
+        "+++++ Input {.var monte_carlo_sampling_draws} was {monte_carlo_sampling_draws}"
+      )))
+    }
+    if (monte_carlo_sampling_draws <= 0) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var monte_carlo_sampling_draws} must be a positive integer",
+        "+++++ Input {.var monte_carlo_sampling_draws} was {monte_carlo_sampling_draws}"
+      )))
+    }
+  }
+  # ----
+
+  # inference_estimation_function
+
+  # Check Monte Carlo and Bootstrap Inputs ----
+  if (perform_monte_carlo_inference_bootstrap_analysis) {
+    mcbs_checks <- check_monte_carlo_bootstrap_inputs(inference_estimation_function, inference_estimation_CI, inference_estimation_bootstrap_reps)
+    inference_estimation_function <- mcbs_checks$inference_estimation_function
+  }
+  # ----
+
+  # Confirm necessary packages are available. If not, warn user and change run options; Also Check n_cores ----
+  show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
+  parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
+  if (!is.numeric(n_nodes)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var n_nodes} must be a positive integer",
+      "+++++ Input {.var n_nodes} was {n_nodes}"
+    )))
+  }
+  if (!(n_nodes == round(n_nodes))) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var n_nodes} must be a positive integer",
+      "+++++ Input {.var n_nodes} was {n_nodes}"
+    )))
+  }
+  if (n_nodes <= 0) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var n_nodes} must be a positive integer",
+      "+++++ Input {.var n_nodes} was {n_nodes}"
+    )))
   }
   # ----
 

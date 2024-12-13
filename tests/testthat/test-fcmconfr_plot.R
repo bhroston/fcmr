@@ -143,11 +143,12 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       activation = 'modified-kosko',
       squashing = 'sigmoid',
       lambda = 1,
+      point_of_inference = "final",
       max_iter = 1000,
       min_error = 1e-05,
       # Runtime Options
       show_progress = TRUE,
-      parallel = FALSE,
+      parallel = TRUE,
       n_cores = 2,
       # Additional Options
       perform_aggregate_analysis = TRUE,
