@@ -12,11 +12,12 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       activation = 'kosko',
       squashing = 'sigmoid',
       lambda = 1,
+      point_of_inference = "final",
       max_iter = 1000,
       min_error = 1e-05,
       # Runtime Options
       show_progress = TRUE,
-      parallel = TRUE,
+      parallel = FALSE,
       n_cores = 2,
       # Additional Options
       perform_aggregate_analysis = FALSE,
@@ -211,15 +212,16 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       activation = 'modified-kosko',
       squashing = 'sigmoid',
       lambda = 0.5,
+      point_of_inference = "final",
       max_iter = 1000,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)
-      inference_estimation_function = mean,
+      inference_estimation_function = "mean",
       inference_estimation_CI = 0.95,
       inference_estimation_bootstrap_reps = 1000,
       # Runtime Options
       show_progress = TRUE,
-      parallel = TRUE,
+      parallel = FALSE,
       n_cores = 2,
       # Additional Options
       perform_aggregate_analysis = TRUE,

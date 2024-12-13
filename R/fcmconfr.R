@@ -179,8 +179,6 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   perform_monte_carlo_inference_bootstrap_analysis <- checks$perform_monte_carlo_inference_bootstrap_analysis
   # ----
 
-  # browser()
-
   # Individual Adj. Matrices Simulations ----
   print("Simulating Input FCMs")
   if (show_progress) {
@@ -418,6 +416,8 @@ check_fcmconfr_inputs <- function(adj_matrices = list(matrix()),
     )))
   }
   # ----
+
+  # inference_estimation_function
 
   # Check Monte Carlo and Bootstrap Inputs ----
   mc_checks <- check_monte_carlo_bootstrap_inputs(inference_estimation_function, inference_estimation_CI, inference_estimation_bootstrap_reps)

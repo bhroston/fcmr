@@ -8,7 +8,6 @@
 #   - infer_fcm
 #   - infer_conventional_fcm
 #   - infer_ivfn_or_tfn_fcm
-#   - equalize_baseline_and_scenario_outputs
 #   - simulate_fcm
 #   - simulate_conventional_fcm
 #   - simulate_ivfn_or_tfn_fcm
