@@ -98,18 +98,23 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
   if (parallel) {
     max_possible_cores <- parallel::detectCores()
     if (identical(n_cores, integer())) {
-      warning(paste0("Input n_cores not defined by user. Assuming n_cores is the maximum available on machine: n_cores = ", max_possible_cores))
+      warning(cli::format_warning(c(
+        "!" = "Warning: {.var n_cores} not defined",
+        "~~~~~ Assuming {.var n_cores} is the maximum available on the machine: n_cores = {max_possible_cores}"
+      )))
       n_cores <- max_possible_cores
     }
-    if (!is.numeric(n_cores) | !(n_cores %% 2 %in% c(0, 1))) {
-      stop("Input Validation Error: n_cores must be an integer.")
-    }
     if (n_cores > max_possible_cores) {
-      warning(paste0(" Input n_cores is greater than the available cores on this machine.\n   Reducing to ", max_possible_cores))
+      warning(cli::format_warning(c(
+        "!" = "Warning: {.var n_cores} is {n_cores} which is greater than the max. cores available on the machine (n = {max_possible_cores})",
+        "~~~~~ Reducing {.var n_cores} to {max_possible_cores}"
+      )))
     }
   }
   if (!parallel & !identical(n_cores, integer())) {
-    warning(paste0(" Input n_cores is ignored since parallel = FALSE" ))
+    warning(cli::format_warning(c(
+      "!" = "Warning: {.var n_cores} is ignored since {.var parallel} = FALSE",
+    )))
   }
 
   if (parallel & show_progress) {
