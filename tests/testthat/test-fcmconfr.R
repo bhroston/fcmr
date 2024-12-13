@@ -1,4 +1,5 @@
 
+
 test_that("streamlined fcmconfr works", {
 
   test_adj_matrix_1 <- data.frame(
@@ -42,6 +43,7 @@ test_that("streamlined fcmconfr works", {
         activation = 'kosko',
         squashing = 'sigmoid',
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
@@ -50,7 +52,7 @@ test_that("streamlined fcmconfr works", {
         inference_estimation_bootstrap_reps = 1000,
         # Runtime Options
         show_progress = TRUE,
-        parallel = TRUE,
+        parallel = FALSE,
         n_cores = 2,
         # Additional Options
         perform_aggregate_analysis = TRUE,

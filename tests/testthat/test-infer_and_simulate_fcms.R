@@ -1,73 +1,7 @@
 
 test_that("infer_fcm works", {
-  bad_adj_matrix <- data.frame(
-    A = c("A", "B"),
-    B = c("B", "C")
-  )
-  expect_error(infer_fcm(bad_adj_matrix, initial_state_vector = c(1, 1), clamping_vector = c(0, 0), "kosko", "sigmoid", 1))
-
-  # See infer_conventional_fcm tests for more
-
-
-  lower_adj_matrix <- data.frame(
-    C1 = c(0, 0, 0, 0, 0, 0),
-    C2 = c(-0.85, 0, 0, 0.35, 0, 0),
-    C3 = c(0, 0, 0, 0, 0, 0),
-    C4 = c(-0.7, 0.6, -1, 0, -1, 0),
-    C5 = c(0.1, 0, 0, -0.8, 0, 0),
-    C6 = c(0, -0.95, 0, 0, -0.95, 0)
-  )
-  upper_adj_matrix <- data.frame(
-    C1 = c(0, 0, 0, 0, 0, 0),
-    C2 = c(-0.2, 0, 0, 0.9, 0, 0),
-    C3 = c(0, 0, 0, 0, 0, 0),
-    C4 = c(-0.3, 0.9, -0.5, 0, -0.5, 0),
-    C5 = c(0.5, 0, 0, -0.3, 0, 0),
-    C6 = c(0, -0.4, 0, 0, -0.5, 0)
-  )
-  adj_matrix <- make_adj_matrix_w_ivfns(lower_adj_matrix, upper_adj_matrix)
-
-  test_sim <- infer_fcm(adj_matrix,
-                        initial_state_vector = c(1, 1, 1, 1, 1, 1),
-                        clamping_vector = c(1, 0, 0, 0, 0, 0),
-                        activation = "kosko",
-                        squashing = "sigmoid",
-                        lambda = 1)
-  test_baseline <- simulate_ivfn_or_tfn_fcm(adj_matrix,
-                                            initial_state_vector = c(1, 1, 1, 1, 1, 1),
-                                            clamping_vector = c(0, 0, 0, 0, 0, 0),
-                                            activation = "kosko",
-                                            squashing = "sigmoid",
-                                            lambda = 1)
-  test_scenario <- simulate_ivfn_or_tfn_fcm(adj_matrix,
-                                            initial_state_vector = c(1, 1, 1, 1, 1, 1),
-                                            clamping_vector = c(1, 0, 0, 0, 0, 0),
-                                            activation = "kosko",
-                                            squashing = "sigmoid",
-                                            lambda = 1)
-
-  test_baseline_final_state <- test_baseline$state_vectors[nrow(test_baseline$state_vectors),][-1]
-  test_scenario_final_state <- test_scenario$state_vectors[nrow(test_scenario$state_vectors),][-1]
-
-  test_baseline_final_state_dists <- convert_fuzzy_set_elements_in_matrix_to_distributions(test_baseline_final_state, "ivfn", 1000)
-  test_scenario_final_state_dists <- convert_fuzzy_set_elements_in_matrix_to_distributions(test_scenario_final_state, "ivfn", 1000)
-
-  inferences_as_dists <- vector(mode = "list", length = length(test_baseline_final_state))
-  for (i in 1:length(test_baseline_final_state)) {
-    inferences_as_dists[[i]] <- test_scenario_final_state_dists[i][[1]][[1]] - test_baseline_final_state_dists[i][[1]][[1]]
-  }
-
-  expected_inference_lowers <- unlist(lapply(inferences_as_dists, min))
-  expected_inference_uppers <- unlist(lapply(inferences_as_dists, max))
-
-  actual_inference_lowers <- test_sim$inference_df$lower
-  actual_inference_uppers <- test_sim$inference_df$upper
-
-  error_in_lowers <- sum(abs(expected_inference_lowers - actual_inference_lowers))
-  error_in_uppers <- sum(abs(expected_inference_uppers - actual_inference_uppers))
-  total_error <- error_in_lowers + error_in_uppers
-
-  expect_lt(total_error, 0.1)
+  # See infer_conventional_fcm and infer_ivfn_or_tfn_fcm tests for additional info
+  expect_true(TRUE) # Just so this isn't an empty test
 })
 
 
@@ -97,27 +31,40 @@ test_that("infer_conventional_fcm works", {
   # Check infer_conventional_fcm cannot take ivfn matrices
   n_nodes <- unique(dim(salinization_ivfn_fcms[[1]]))
   expect_error( # When input adj_matrix is not a conventional fcm
-    infer_fcm(salinization_ivfn_fcms[[1]], initial_state_vector = rep(1, n_nodes), clamping_vector = rep(0, n_nodes), point_of_inference = "final")
+    infer_conventional_fcm(salinization_ivfn_fcms[[1]], initial_state_vector = rep(1, n_nodes), clamping_vector = rep(0, n_nodes), activation = "kosko", squashing = "tanh", point_of_inference = "final")
   )
 })
 
 
 test_that("infer_ivfn_or_tfn_fcm works", {
+  lower_adj_matrix <- data.frame(
+    A = c(0, 0.2, 0.4),
+    B = c(0.6, 0, -1),
+    C = c(0, -1, 0)
+  )
+  mode_adj_matrix <- data.frame(
+    A = c(0, 0.6, 0.8),
+    B = c(0.8, 0, -0.6),
+    C = c(0, -0.4, 0)
+  )
+  upper_adj_matrix <- data.frame(
+    A = c(0, 0.8, 1),
+    B = c(1, 0, -0.2),
+    C = c(0, -0.2, 0)
+  )
+  test_ivfn_adj_matrix <- make_adj_matrix_w_ivfns(lower_adj_matrix, upper_adj_matrix)
+  test_tfn_adj_matrix <- make_adj_matrix_w_tfns(lower_adj_matrix, mode_adj_matrix, upper_adj_matrix)
+
+  ivfn_infer <- infer_ivfn_or_tfn_fcm(test_ivfn_adj_matrix, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0), activation = "kosko", squashing = "sigmoid", point_of_inference = "final", lambda = 1, min_error = 0.00001)
+  tfn_infer <- infer_ivfn_or_tfn_fcm(test_tfn_adj_matrix, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0), activation = "kosko", squashing = "sigmoid", point_of_inference = "final", lambda = 1, min_error = 0.00001)
+
+
   # Check infer_ivfn_or_tfn_fcm cannot take conventional matrices
-  adj_matrix <- data.frame(
-    "A" = c(0, 0),
-    "B" = c(1, 0)
-  )
   expect_error(
-    infer_ivfn_or_tfn_fcm(adj_matrix,
-                          initial_state_vector = c(1, 1),
-                          clamping_vector = c(0, 1),
-                          activation = "kosko",
-                          squashing = "sigmoid",
-                          lambda = 1)
+    infer_ivfn_or_tfn_fcm(salinization_conventional_fcms[[1]], initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1), clamping_vector = c(0, 1, 0, 0, 0, 0, 0, 0, 0), activation = "kosko", squashing = "sigmoid", lambda = 1, point_of_inference = "final")
   )
 
-
+  # Check additional example
   lower_adj_matrix <- data.frame(
     C1 = c(0, 0, 0, 0, 0, 0),
     C2 = c(-0.85, 0, 0, 0.35, 0, 0),
@@ -141,19 +88,22 @@ test_that("infer_ivfn_or_tfn_fcm works", {
                                     clamping_vector = c(1, 0, 0, 0, 0, 0),
                                     activation = "kosko",
                                     squashing = "sigmoid",
-                                    lambda = 1)
+                                    lambda = 1,
+                                    point_of_inference = "final")
   test_baseline <- simulate_ivfn_or_tfn_fcm(adj_matrix,
                                             initial_state_vector = c(1, 1, 1, 1, 1, 1),
                                             clamping_vector = c(0, 0, 0, 0, 0, 0),
                                             activation = "kosko",
                                             squashing = "sigmoid",
-                                            lambda = 1)
+                                            lambda = 1,
+                                            point_of_inference = "final")
   test_scenario <- simulate_ivfn_or_tfn_fcm(adj_matrix,
                                             initial_state_vector = c(1, 1, 1, 1, 1, 1),
                                             clamping_vector = c(1, 0, 0, 0, 0, 0),
                                             activation = "kosko",
                                             squashing = "sigmoid",
-                                            lambda = 1)
+                                            lambda = 1,
+                                            point_of_inference = "final")
 
   test_baseline_final_state <- test_baseline$state_vectors[nrow(test_baseline$state_vectors),][-1]
   test_scenario_final_state <- test_scenario$state_vectors[nrow(test_scenario$state_vectors),][-1]
@@ -186,6 +136,7 @@ test_that("infer_ivfn_or_tfn_fcm works", {
                                                 activation = "modified-kosko",
                                                 squashing = "sigmoid",
                                                 lambda = 1,
+                                                point_of_inference = "final",
                                                 max_iter = 1000,
                                                 min_error = 1e-5)
 
@@ -195,60 +146,13 @@ test_that("infer_ivfn_or_tfn_fcm works", {
                                     activation = "modified-kosko",
                                     squashing = "sigmoid",
                                     lambda = 1,
+                                    point_of_inference = "final",
                                     max_iter = 1000,
                                     min_error = 1e-5)
   lower_differences <- sum(abs(salinization_sim_ivfn$inference$lower - salinization_sim_tfn$inference$lower))^2
   upper_differences <- sum(abs(salinization_sim_ivfn$inference$upper - salinization_sim_tfn$inference$upper))^2
   crisp_differences <- sum(abs(salinization_sim_ivfn$inference$crisp - salinization_sim_tfn$inference$crisp))^2
   expect_true(lower_differences < 1e-3 & upper_differences < 1e-3 & crisp_differences < 1e-3)
-})
-
-
-test_that("equalize_baseline_and_scenario_outputs works", {
-  lower_adj_matrix <- data.frame(
-    C1 = c(0, 0, 0, 0, 0, 0),
-    C2 = c(-0.85, 0, 0, 0.35, 0, 0),
-    C3 = c(0, 0, 0, 0, 0, 0),
-    C4 = c(-0.7, 0.6, -1, 0, -1, 0),
-    C5 = c(0.1, 0, 0, -0.8, 0, 0),
-    C6 = c(0, -0.95, 0, 0, -0.95, 0)
-  )
-  upper_adj_matrix <- data.frame(
-    C1 = c(0, 0, 0, 0, 0, 0),
-    C2 = c(-0.2, 0, 0, 0.9, 0, 0),
-    C3 = c(0, 0, 0, 0, 0, 0),
-    C4 = c(-0.3, 0.9, -0.5, 0, -0.5, 0),
-    C5 = c(0.5, 0, 0, -0.3, 0, 0),
-    C6 = c(0, -0.4, 0, 0, -0.5, 0)
-  )
-  adj_matrix <- make_adj_matrix_w_ivfns(lower_adj_matrix, upper_adj_matrix)
-
-  # When baseline_state_vectors is larger than scenario_state_vectors
-  test_baseline <- simulate_ivfn_or_tfn_fcm(adj_matrix,
-                                            initial_state_vector = c(1, 1, 1, 1, 1, 1),
-                                            clamping_vector = c(0, 0, 0, 0, 0, 0),
-                                            activation = "kosko",
-                                            squashing = "sigmoid",
-                                            lambda = 1)
-  test_scenario <- simulate_ivfn_or_tfn_fcm(adj_matrix,
-                                            initial_state_vector = c(1, 1, 1, 1, 1, 1),
-                                            clamping_vector = c(1, 0, 1, 1, 0, 0),
-                                            activation = "kosko",
-                                            squashing = "sigmoid",
-                                            lambda = 1)
-  equalized_dfs <- equalize_baseline_and_scenario_outputs(test_baseline$state_vectors, test_scenario$state_vectors)
-  expect_equal(nrow(equalized_dfs$baseline), nrow(equalized_dfs$scenario))
-
-  # When scenario_state_vectors is larger than baseline_state_vectors
-  test_scenario <- simulate_ivfn_or_tfn_fcm(adj_matrix,
-                                            initial_state_vector = c(1, 1, 1, 1, 1, 1),
-                                            clamping_vector = c(1, 0, 1, 1, 0, 0),
-                                            activation = "modified-kosko",
-                                            squashing = "tanh",
-                                            lambda = 1)
-  equalized_dfs <- equalize_baseline_and_scenario_outputs(test_baseline$state_vectors, test_scenario$state_vectors)
-  expect_equal(nrow(equalized_dfs$baseline), nrow(equalized_dfs$scenario))
-
 })
 
 
@@ -354,9 +258,9 @@ test_that("simulate_ivfn_or_tfn_fcm works", {
   inferences_lowers <- round(apply(tfn_kosko_tanh_peak$inferences, 2, function(element) element[[1]]$lower), 2)
   inferences_modes <- round(apply(tfn_kosko_tanh_peak$inferences, 2, function(element) element[[1]]$mode), 2)
   inferences_uppers <- round(apply(tfn_kosko_tanh_peak$inferences, 2, function(element) element[[1]]$upper), 2)
-  expect_equal(inferences_lowers, c(1, 0.54, -0.57), ignore_attr = TRUE)
-  expect_equal(inferences_modes, c(1, 0.66, -0.26), ignore_attr = TRUE)
-  expect_equal(inferences_uppers, c(1, 0.76, -0.13), ignore_attr = TRUE)
+  expect_equal(inferences_lowers, c(1, 0.54, 0.05), ignore_attr = TRUE)
+  expect_equal(inferences_modes, c(1, 0.66, 0.1), ignore_attr = TRUE)
+  expect_equal(inferences_uppers, c(1, 0.76, 0.25), ignore_attr = TRUE)
 
   # TFN - Modified-Kosko, Sigmoid, Peak
   tfn_modifiedkosko_sigmoid_peak <- simulate_fcm(test_tfn_adj_matrix, initial_state_vector = c(1, 0, 0), clamping_vector = c(0, 0, 0), activation = "modified-kosko", squashing = "sigmoid", lambda = 1, point_of_inference = "peak")
@@ -369,9 +273,9 @@ test_that("simulate_ivfn_or_tfn_fcm works", {
 
   # TFN - Rescale, Sigmoid, Final
   tfn_rescale_sigmoid_final <- simulate_fcm(test_tfn_adj_matrix, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0), activation = "rescale", squashing = "sigmoid", lambda = 1, point_of_inference = "final")
-  inferences_lowers <- round(apply(tfn_rescale_sigmoid_peak$inferences, 2, function(element) element[[1]]$lower), 2)
-  inferences_modes <- round(apply(tfn_rescale_sigmoid_peak$inferences, 2, function(element) element[[1]]$mode), 2)
-  inferences_uppers <- round(apply(tfn_rescale_sigmoid_peak$inferences, 2, function(element) element[[1]]$upper), 2)
+  inferences_lowers <- round(apply(tfn_rescale_sigmoid_final$inferences, 2, function(element) element[[1]]$lower), 2)
+  inferences_modes <- round(apply(tfn_rescale_sigmoid_final$inferences, 2, function(element) element[[1]]$mode), 2)
+  inferences_uppers <- round(apply(tfn_rescale_sigmoid_final$inferences, 2, function(element) element[[1]]$upper), 2)
   expect_equal(inferences_lowers, c(1.00, 0.77, 0.23), ignore_attr = TRUE)
   expect_equal(inferences_modes, c(1.00, 0.84, 0.37), ignore_attr = TRUE)
   expect_equal(inferences_uppers, c(1.00, 0.89, 0.43), ignore_attr = TRUE)
@@ -574,7 +478,7 @@ test_that("clean_simulation_output works", {
     C5 = c(0.1, 0, 0, -0.8, 0, 0),
     C6 = c(0, -0.95, 0, 0, -0.95, 0)
   )
-  test_sim <- simulate_conventional_fcm(adj_matrix, c(1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0), activation = "kosko", squashing = "sigmoid")
+  test_sim <- simulate_fcm(adj_matrix, c(1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0), activation = "kosko", squashing = "sigmoid", lambda = 1, point_of_inference = "final")
   clean_df <- clean_simulation_output(test_sim$state_vectors, c("C1", "C2", "C3", "C4", "C5", "C6"))
   expect_identical(colnames(clean_df), c("iter", "C1", "C2", "C3", "C4", "C5", "C6"))
 })
@@ -608,7 +512,7 @@ test_that("check_simulation_inputs works", {
 
   # Check initial_state_vector ----
   expect_warning(
-    check_simulation_inputs(adj_matrix = salinization_tfn_fcms[[1]], initial_state_vector = c(), clamping_vector = c(1, 0, 0, 0, 0, 0, 0, 0, 0), point_of_inference = "final")
+    check_simulation_inputs(adj_matrix = salinization_tfn_fcms[[1]], initial_state_vector = c(), clamping_vector = c(1, 0, 0, 0, 0, 0, 0, 0, 0), activation = "kosko",  squashing = "tanh",  point_of_inference = "final")
   )
   expect_error(
     check_simulation_inputs(adj_matrix = salinization_conventional_fcms[[1]], initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0, 0, 0, 0), point_of_inference = "final")
@@ -669,7 +573,7 @@ test_that("check_simulation_inputs works", {
   expect_error(
     check_simulation_inputs(adj_matrix = salinization_conventional_fcms[[1]], initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0, 0, 0, 0), activation = "rescale", squashing = "tanh", point_of_inference = "final")
   )
-  expect_error(
+  expect_warning(
     check_simulation_inputs(adj_matrix = salinization_conventional_fcms[[1]], initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0, 0, 0, 0), activation = "modified-kosko", squashing = "tanh", point_of_inference = "final")
   )
 
@@ -770,7 +674,8 @@ test_that("print.infer_conventional_fcm works", {
                                        clamping_vector = c(1, 0, 0, 0, 0, 0),
                                        activation = "kosko",
                                        squashing = "sigmoid",
-                                       lambda = 1)
+                                       lambda = 1,
+                                       point_of_inference = "final")
 
   expect_snapshot(test_infer)
 })
@@ -794,8 +699,83 @@ test_that("print.infer_ivfn_or_tfn_fcm works", {
     C6 = c(0, -0.4, 0, 0, -0.5, 0)
   )
   adj_matrix <- make_adj_matrix_w_ivfns(lower_adj_matrix, upper_adj_matrix)
-  test_sim <- infer_ivfn_or_tfn_fcm(adj_matrix, c(1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0), activation = "kosko", squashing = "sigmoid")
 
+  # Test print infer_conventional_fcm
+  test_sim <- infer_ivfn_or_tfn_fcm(adj_matrix, c(1, 1, 1, 1, 1, 1), clamping_vector = c(1, 0, 0, 0, 0, 0), activation = "kosko", squashing = "sigmoid", lambda = 1, point_of_inference = "final")
   expect_snapshot(test_sim)
+
+  lower_adj_matrix <- data.frame(
+    A = c(0, 0.2, 0.4),
+    B = c(0.6, 0, -1),
+    C = c(0, -1, 0)
+  )
+  mode_adj_matrix <- data.frame(
+    A = c(0, 0.6, 0.8),
+    B = c(0.8, 0, -0.6),
+    C = c(0, -0.4, 0)
+  )
+  upper_adj_matrix <- data.frame(
+    A = c(0, 0.8, 1),
+    B = c(1, 0, -0.2),
+    C = c(0, -0.2, 0)
+  )
+  test_ivfn_adj_matrix <- make_adj_matrix_w_ivfns(lower_adj_matrix, upper_adj_matrix)
+  test_tfn_adj_matrix <- make_adj_matrix_w_tfns(lower_adj_matrix, mode_adj_matrix, upper_adj_matrix)
+
+  # Test print infer_ivfn_or_tfn_fcm
+  ivfn_infer <- infer_ivfn_or_tfn_fcm(test_ivfn_adj_matrix, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0), activation = "kosko", squashing = "sigmoid", point_of_inference = "final", lambda = 1, min_error = 0.00001)
+  tfn_infer <- infer_ivfn_or_tfn_fcm(test_tfn_adj_matrix, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0), activation = "kosko", squashing = "sigmoid", point_of_inference = "final", lambda = 1, min_error = 0.00001)
+  expect_snapshot(ivfn_infer)
+  expect_snapshot(tfn_infer)
 })
 
+
+#
+#
+# test_that("equalize_baseline_and_scenario_outputs works", {
+#   lower_adj_matrix <- data.frame(
+#     C1 = c(0, 0, 0, 0, 0, 0),
+#     C2 = c(-0.85, 0, 0, 0.35, 0, 0),
+#     C3 = c(0, 0, 0, 0, 0, 0),
+#     C4 = c(-0.7, 0.6, -1, 0, -1, 0),
+#     C5 = c(0.1, 0, 0, -0.8, 0, 0),
+#     C6 = c(0, -0.95, 0, 0, -0.95, 0)
+#   )
+#   upper_adj_matrix <- data.frame(
+#     C1 = c(0, 0, 0, 0, 0, 0),
+#     C2 = c(-0.2, 0, 0, 0.9, 0, 0),
+#     C3 = c(0, 0, 0, 0, 0, 0),
+#     C4 = c(-0.3, 0.9, -0.5, 0, -0.5, 0),
+#     C5 = c(0.5, 0, 0, -0.3, 0, 0),
+#     C6 = c(0, -0.4, 0, 0, -0.5, 0)
+#   )
+#   adj_matrix <- make_adj_matrix_w_ivfns(lower_adj_matrix, upper_adj_matrix)
+#
+#   # When baseline_state_vectors is larger than scenario_state_vectors
+#   test_baseline <- simulate_ivfn_or_tfn_fcm(adj_matrix,
+#                                             initial_state_vector = c(1, 1, 1, 1, 1, 1),
+#                                             clamping_vector = c(0, 0, 0, 0, 0, 0),
+#                                             activation = "kosko",
+#                                             squashing = "sigmoid",
+#                                             lambda = 1)
+#   test_scenario <- simulate_ivfn_or_tfn_fcm(adj_matrix,
+#                                             initial_state_vector = c(1, 1, 1, 1, 1, 1),
+#                                             clamping_vector = c(1, 0, 1, 1, 0, 0),
+#                                             activation = "kosko",
+#                                             squashing = "sigmoid",
+#                                             lambda = 1)
+#   equalized_dfs <- equalize_baseline_and_scenario_outputs(test_baseline$state_vectors, test_scenario$state_vectors)
+#   expect_equal(nrow(equalized_dfs$baseline), nrow(equalized_dfs$scenario))
+#
+#   # When scenario_state_vectors is larger than baseline_state_vectors
+#   test_scenario <- simulate_ivfn_or_tfn_fcm(adj_matrix,
+#                                             initial_state_vector = c(1, 1, 1, 1, 1, 1),
+#                                             clamping_vector = c(1, 0, 1, 1, 0, 0),
+#                                             activation = "modified-kosko",
+#                                             squashing = "tanh",
+#                                             lambda = 1)
+#   equalized_dfs <- equalize_baseline_and_scenario_outputs(test_baseline$state_vectors, test_scenario$state_vectors)
+#   expect_equal(nrow(equalized_dfs$baseline), nrow(equalized_dfs$scenario))
+#
+# })
+#

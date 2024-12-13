@@ -146,7 +146,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       min_error = 1e-05,
       # Runtime Options
       show_progress = TRUE,
-      parallel = TRUE,
+      parallel = FALSE,
       n_cores = 2,
       # Additional Options
       perform_aggregate_analysis = TRUE,

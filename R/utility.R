@@ -181,8 +181,6 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
     adj_matrix_list_input <- list(adj_matrix_list_input)
   }
 
-  # browser()
-
   if (identical(object_types_in_input_list, classes_in_dataframe_objects)) {
     object_types_in_input_list <- c("data.frame")
   } else if (identical(object_types_in_input_list, classes_in_matrix_objects)) {
@@ -202,8 +200,6 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
            })
   )[[1]]
 
-  # browser()
-
   if (identical(element_types_in_objects_in_input_list, methods::is(numeric()))) {
     fcm_class <- "conventional"
     object_types_in_input_list <- c("conventional", object_types_in_input_list)
@@ -217,19 +213,14 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
     if (shiny::isRunning()) {
       object_types_in_input_list <- "unavailable"
     } else {
-      # browser()
       stop(cli::format_error(c(
         "x" = "Error: {.var adj_matrix} must be an adjacency matrix with edges represented as either numeric values, ivfns, or tfns"
       )))
-      # stop("Object types in adj. matrices must be either Numerics, IVFNs, or TFNs")
     }
     stop(cli::format_error(c(
       "x" = "Error: Unrecognized element types in input matrices.",
       "+++++> Adjacency matrix elements must be either numeric, ivfn, or tfn, and all matrices must have elements of the same type."
     )))
-    # stop("Input Validation Error: Unrecognized element types in input matrices.
-    #      Adjacency matrix elements must be either numeric, ivfn, or tfn, and
-    #     all matrices must have elements of the same type.")
   }
 
   list(
