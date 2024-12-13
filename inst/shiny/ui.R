@@ -105,7 +105,7 @@ shiny_ui <- function() {
           ),
           shiny::column(
             width = 7, align = "left",
-            shinyWidgets::radioGroupButtons("squashing", "", choices = c("sigmoid", "tanh"))
+            shinyWidgets::radioGroupButtons("squashing", "",choiceNames = c("Sigmoid", "Tanh"),  choiceValues = c("sigmoid", "tanh"), selected = "sigmoid")
           )
         ),
         shiny::fluidRow(
@@ -116,6 +116,16 @@ shiny_ui <- function() {
           shiny::column(
             width = 3, align = "left",
             shiny::numericInput("lambda", "", 1, min = 1, max = 10, step = 0.05)
+          )
+        ),
+        shiny::fluidRow(
+          shiny::column(
+            width = 5, align = "right",
+            shiny::h5("Point of Inference", style = "padding: 28px;")
+          ),
+          shiny::column(
+            width = 3, align = "left",
+            shinyWidgets::radioGroupButtons("point_of_inference", "", choiceNames = c("Peak", "Final"), choiceValues = c("peak", "final"), selected = "final")
           )
         ),
         shiny::fluidRow(
