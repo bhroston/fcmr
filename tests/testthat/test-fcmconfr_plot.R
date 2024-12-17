@@ -9,7 +9,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       # Simulation
       initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
       clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
-      activation = 'kosko',
+      activation = 'modified-kosko',
       squashing = 'sigmoid',
       lambda = 1,
       point_of_inference = "final",
@@ -36,11 +36,12 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
     conventional_pulse_inputs_only <- fcmconfr(
       adj_matrices = salinization_conventional_fcms,
       # Simulation
-      initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+      initial_state_vector = c(1, 0, 0, 0, 0, 0, 0, 0, 0),
       clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
       activation = 'kosko',
       squashing = 'sigmoid',
       lambda = 1,
+      point_of_inference = "peak",
       max_iter = 1000,
       min_error = 1e-05,
       # Runtime Options
@@ -78,7 +79,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       # Simulation
       initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
       clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
-      activation = 'modified-kosko',
+      activation = 'rescale',
       squashing = 'sigmoid',
       lambda = 0.5,
       point_of_inference = "final",
@@ -92,7 +93,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       perform_aggregate_analysis = TRUE,
       perform_monte_carlo_analysis = FALSE,
       perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
       include_monte_carlo_FCM_simulations_in_output = FALSE
     )
   ))
@@ -178,7 +179,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
       activation = 'modified-kosko',
       squashing = 'sigmoid',
-      lambda = 0.5,
+      lambda = 1,
       max_iter = 1000,
       min_error = 1e-05,
       # Runtime Options
@@ -211,12 +212,12 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       # initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
       # clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
       initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
-      clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
-      activation = 'modified-kosko',
-      squashing = 'sigmoid',
+      clamping_vector = c(0, 1, 0, 0, 0, 0, 0, 0, 0),
+      activation = 'kosko',
+      squashing = 'tanh',
       lambda = 0.5,
       point_of_inference = "final",
-      max_iter = 1000,
+      max_iter = 10000,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)
       inference_estimation_function = "mean",
@@ -250,11 +251,12 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       # Simulation
       # initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
       # clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
-      initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+      initial_state_vector = c(0, 1, 0, 0, 0, 0, 0, 0, 0),
       clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
-      activation = 'modified-kosko',
+      activation = 'kosko',
       squashing = 'sigmoid',
-      lambda = 0.5,
+      lambda = 1,
+      point_of_inference = "peak",
       max_iter = 1000,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)

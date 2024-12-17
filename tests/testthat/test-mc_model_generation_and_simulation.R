@@ -253,6 +253,7 @@ test_that("get_mc_simulations_inference_CIs_w_bootstrap", {
       activation = "kosko",
       squashing = "sigmoid",
       lambda = 1,
+      point_of_inference = "final",
       max_iter = 1000,
       min_error = 1e-5,
       parallel = TRUE,
@@ -685,7 +686,7 @@ test_that("check_build_monte_carlo_fcms_inputs works", {
 test_that("check_monte_carlo_bootstrap_inputs works", {
   # Check inference_estimation_function ----
   expect_warning(
-    check_monte_carlo_bootstrap_inputs(inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 100)
+    check_monte_carlo_bootstrap_inputs(inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 100, n_cores = 2)
   )
   expect_error(
     check_monte_carlo_bootstrap_inputs(inference_estimation_function = "wrong", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 100)
@@ -713,8 +714,16 @@ test_that("check_monte_carlo_bootstrap_inputs works", {
   )
   # ----
 
+  # Check n_cores
+  expect_warning(
+    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 100)
+  )
+  expect_error(
+    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 100, n_cores = 200)
+  )
+
   expect_no_error(
-    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 10000)
+    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 10000, n_cores = 2)
   )
 })
 

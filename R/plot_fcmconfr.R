@@ -235,7 +235,6 @@ autoplot.fcmconfr <- function(object, ...) {
                               # mc_fill = "#f7e3dd",
 
   # .data <- NULL # Only here to satisfy R CMD Check
-  # browser()
 
   additional_inputs <- list(...)[[1]]
   filter_limit <- additional_inputs$filter_limit
@@ -262,7 +261,7 @@ autoplot.fcmconfr <- function(object, ...) {
       ggplot2::geom_jitter(
         data = ggplot2::remove_missing(plot_data$mc_inferences),
         aes(x = .data$name, y = .data$value, color = .data$analysis_source),
-        size = 0.7, alpha = 0.3, width = 0.2, shape = 16, na.rm = FALSE
+        size = 0.7, alpha = 0.7, width = 0.2, shape = 16, na.rm = FALSE
       ) +
       ggplot2::geom_boxplot(
         data = ggplot2::remove_missing(plot_data$mc_inferences),

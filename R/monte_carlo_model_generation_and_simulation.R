@@ -905,6 +905,13 @@ check_monte_carlo_inputs <- function(mc_adj_matrices = list(matrix()),
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
   parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
   if (parallel) {
+    if (identical(n_cores, integer())) {
+      warning(cli::format_warning(c(
+        "!" = "Warning: N {.var n_cores} given.",
+        "~~~~~ Assuming {.var n_cores} is {parallel::detectCores() - 1} (i.e. the max available cores minus 1)"
+      )))
+      n_cores <- parallel::detectCores() - 1
+    }
     if (!is.numeric(n_cores)) {
       stop(cli::format_error(c(
         "x" = "Error: {.var n_cores} must be a positive integer",
@@ -920,6 +927,12 @@ check_monte_carlo_inputs <- function(mc_adj_matrices = list(matrix()),
     if (n_cores <= 0) {
       stop(cli::format_error(c(
         "x" = "Error: {.var n_cores} must be a positive integer",
+        "+++++ Input {.var n_cores} was {n_cores}"
+      )))
+    }
+    if (n_cores > parallel::detectCores()) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var n_cores} must be a positive integer less than or equal to {parallel::detectCores()} (i.e. the max available cores on your machine)",
         "+++++ Input {.var n_cores} was {n_cores}"
       )))
     }
@@ -1095,6 +1108,13 @@ check_monte_carlo_bootstrap_inputs <- function(inference_estimation_function = c
   show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
   parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
   if (parallel) {
+    if (identical(n_cores, integer())) {
+      warning(cli::format_warning(c(
+        "!" = "Warning: N {.var n_cores} given.",
+        "~~~~~ Assuming {.var n_cores} is {parallel::detectCores() - 1} (i.e. the max available cores minus 1)"
+      )))
+      n_cores <- parallel::detectCores() - 1
+    }
     if (!is.numeric(n_cores)) {
       stop(cli::format_error(c(
         "x" = "Error: {.var n_cores} must be a positive integer",
@@ -1110,6 +1130,12 @@ check_monte_carlo_bootstrap_inputs <- function(inference_estimation_function = c
     if (n_cores <= 0) {
       stop(cli::format_error(c(
         "x" = "Error: {.var n_cores} must be a positive integer",
+        "+++++ Input {.var n_cores} was {n_cores}"
+      )))
+    }
+    if (n_cores > parallel::detectCores()) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var n_cores} must be a positive integer less than or equal to {parallel::detectCores()} (i.e. the max available cores on your machine)",
         "+++++ Input {.var n_cores} was {n_cores}"
       )))
     }
