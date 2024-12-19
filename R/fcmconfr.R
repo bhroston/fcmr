@@ -85,6 +85,8 @@
 #' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
 #' @param lambda A numeric value that defines the steepness of the slope of the
 #' squashing function when tanh or sigmoid are applied
+#' @param point_of_inference The point along the simulation time-series to be
+#' identified as the inference. Must be one of the following: 'peak' or 'final'
 #' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
@@ -128,6 +130,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
                      activation = c("kosko", "modified-kosko", "rescale"),
                      squashing = c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"),
                      lambda = 1,
+                     point_of_inference = c("peak", "final"),
                      max_iter = 100,
                      min_error = 1e-5,
                      # Inference Estimation (bootstrap)
@@ -145,76 +148,44 @@ fcmconfr <- function(adj_matrices = list(matrix()),
                      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
                      include_monte_carlo_FCM_simulations_in_output = TRUE) {
 
-  # Perform Checks ----
-  # browser()
-
-  adj_matrices_input_type <- get_adj_matrices_input_type(adj_matrices)
-  fcm_class <- adj_matrices_input_type$object_types_in_list[1]
-  if (!adj_matrices_input_type$adj_matrices_input_is_list) {
-    adj_matrices <- list(adj_matrices)
-  }
-  if (identical(adj_matrices_input_type$object_types_in_list, c("conventional", "sparseMatrix"))) {
-    adj_matrices <- lapply(adj_matrices, as.matrix)
-    warning("Input Revision: Changed sparseMatrix objects in input adj_matrices to ordinary matrices.")
-  }
-
-  adj_matrices_dims <- lapply(adj_matrices, dim)
-  if (length(unique(unlist(adj_matrices_dims))) > 1) {
-    stop("Input Validation Error: Input adj. matrices are either different sizes or contain non-square matrices
-       !! Call standardize_adj_matrices() to standardize the size of the list of adj. matrices")
-  }
-  n_nodes <- unique(unlist(adj_matrices_dims))
-
-
-  if (identical(initial_state_vector, c())) {
-    warning("No initial_state_vector input given. Assuming all nodes have an initial state of 1.")
-    initial_state_vector <- rep(1, n_nodes)
-  }
-  if (identical(clamping_vector, c())) {
-    warning("No clamping_vector input given. Assuming no values are clamped.")
-    clamping_vector <- rep(0, n_nodes)
-  }
-  if (any(clamping_vector != 0) & !all(initial_state_vector == 1)) {
-    stop("If any elements in input clamping_vector are set to a value other than
-         0, all elements in input initial_state_vector must be set to 1 to perform
-         the analysis correctly.")
-  }
-
-  if (identical(activation, c("kosko", "modified-kosko", "rescale"))) {
-    warning("No activation function given, assuming activation = 'kosko'")
-    activation <- "kosko"
-  }
-  if (identical(squashing, c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"))) {
-    warning("No squashing function given, assuming squashing = 'sigmoid'")
-    squashing <- "sigmoid"
-  }
-
-  # Perform checks
-  checks <- lapply(adj_matrices, check_simulation_inputs, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
-  identified_concepts <- unique(lapply(adj_matrices, colnames))
-  if (length(identified_concepts) != 1) {
-    stop("All input adjacency matrices must have the same concepts")
-  } else {
-    concepts <- unlist(identified_concepts)
-  }
-
+  # Perform input checks ----
+  checks <- check_fcmconfr_inputs(
+    adj_matrices,
+    # Aggregation and Monte Carlo Sampling
+    aggregation_function, monte_carlo_sampling_draws,
+    # Simulation
+    initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error,
+    # Inference Estimation (bootstrap)
+    inference_estimation_function, inference_estimation_CI, inference_estimation_bootstrap_reps,
+    # Runtime Options
+    show_progress, parallel, n_cores, perform_aggregate_analysis,
+    # Additional Options
+    perform_monte_carlo_analysis, perform_monte_carlo_inference_bootstrap_analysis, include_zero_weighted_edges_in_aggregation_and_mc_sampling, include_monte_carlo_FCM_simulations_in_output
+  )
+  fcm_class <- checks$fcm_class
+  adj_matrices <- checks$adj_matrices
+  concepts <- checks$concept_names
+  aggregation_function <- checks$aggregation_function
+  initial_state_vector <- checks$initial_state_vector
+  clamping_vector <- checks$clamping_vector
+  activation <- checks$activation
+  squashing <- checks$squashing
+  point_of_inference <- checks$point_of_inference
+  inference_estimation_function <- checks$inference_estimation_function
+  show_progress <- checks$show_progress
+  parallel <- checks$parallel
+  perform_aggregate_analysis <- checks$perform_aggregate_analysis
+  perform_monte_carlo_analysis <- checks$perform_monte_carlo_analysis
+  perform_monte_carlo_inference_bootstrap_analysis <- checks$perform_monte_carlo_inference_bootstrap_analysis
   # ----
-
-  # Confirm necessary packages are available. If not, warn user and change run options
-  # browser()
-  show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
-  parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
-
-  # browser()
 
   # Individual Adj. Matrices Simulations ----
   print("Simulating Input FCMs")
   if (show_progress) {
-    individual_adj_matrices_inferences <- pbapply::pblapply(adj_matrices, infer_fcm, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
+    individual_adj_matrices_inferences <- pbapply::pblapply(adj_matrices, infer_fcm, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
   } else {
-    individual_adj_matrices_inferences <- lapply(adj_matrices, infer_fcm, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
+    individual_adj_matrices_inferences <- lapply(adj_matrices, infer_fcm, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
   }
-  # browser()
 
   if (fcm_class == "conventional") {
     individual_adj_matrices_inferences_df <- do.call(rbind, lapply(individual_adj_matrices_inferences, function(inference) inference$inference))
@@ -224,62 +195,28 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     names(individual_adj_matrices_inferences_df) <- paste0("adj_matrix_", 1:length(adj_matrices))
   }
   names(individual_adj_matrices_inferences) <- paste0("adj_matrix_", 1:length(adj_matrices))
+  # ----
 
-  # Aggregation and Monte Carlo Simulations ----
-  if (fcm_class == "conventional" & length(adj_matrices) == 1 & (perform_monte_carlo_analysis | perform_aggregate_analysis)) {
-    perform_monte_carlo_analysis = FALSE
-    perform_aggregate_analysis = FALSE
-    warning("  Cannot aggregate or generate monte carlo samples from a single adj. matrix.
-    Skipping aggregation and monte carlo analyses.")
-  }
-  else if ((fcm_class %in% c("ivfn", "tfn")) & length(adj_matrices) == 1 & (perform_aggregate_analysis)) {
-    perform_aggregate_analysis = FALSE
-    warning("  Cannot aggregate from a single adj. matrix.
-    Skipping aggregation analysis.")
-  }
-
-  if (!perform_monte_carlo_analysis & perform_monte_carlo_inference_bootstrap_analysis) {
-    warning("  Cannot estimate CIs of monte carlo inferences if monte carlo analysis is not being performed.
-    Skipping CI bound estimation. Additionally, cannot estimate inferences using monte carlo methods if
-    analysing an individual, conventional FCM.")
-    perform_monte_carlo_inference_bootstrap_analysis <- FALSE
-  }
-
-  if (perform_aggregate_analysis & identical(aggregation_function, c("mean", "median"))) {
-    warning("No aggregation_function given, assuming aggregation_function = 'mean'")
-    aggregation_function <- 'mean'
-  }
-
-  if (perform_monte_carlo_analysis & perform_monte_carlo_inference_bootstrap_analysis) {
-    if (identical(inference_estimation_function, c("mean", "median"))) {
-      warning("No inference_estimation_function given, assuming inference_estimation_function = 'mean'")
-    }
-    inference_estimation_function <- 'mean'
-  }
-
+  # Aggregation Analysis ----
   if (perform_aggregate_analysis) {
     # Build aggregate adj_matrix
     aggregate_adj_matrix <- aggregate_fcms(adj_matrices, aggregation_function, include_zero_weighted_edges_in_aggregation_and_mc_sampling)
     # Infer aggregate adj_matrix
-    aggregate_fcm_inference <- infer_fcm(aggregate_adj_matrix$adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, max_iter, min_error)
+    aggregate_fcm_inference <- infer_fcm(aggregate_adj_matrix$adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
   }
-  #
 
-  # browser()
-
+  # Monte Carlo Analysis
   if (perform_monte_carlo_analysis) {
     # Build monte carlo models
     mc_adj_matrices <- build_monte_carlo_fcms(adj_matrices, monte_carlo_sampling_draws, include_zero_weighted_edges_in_aggregation_and_mc_sampling, show_progress)
-    mc_adj_matrices <- lapply(mc_adj_matrices,
-                              function(sampled_adj_matrix) {
-                                colnames(sampled_adj_matrix) <- concepts
-                                rownames(sampled_adj_matrix) <- concepts
-                                sampled_adj_matrix
-                              })
+    mc_adj_matrices <- lapply(
+      mc_adj_matrices,
+      function(sampled_adj_matrix) {
+        colnames(sampled_adj_matrix) <- concepts
+        rownames(sampled_adj_matrix) <- concepts
+        sampled_adj_matrix
+      })
 
-    # browser()
-
-    # Infer monte carlo models with clamping
     mc_inferences <- infer_monte_carlo_fcm_set(
       mc_adj_matrices = mc_adj_matrices,
       initial_state_vector = initial_state_vector,
@@ -287,6 +224,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
       activation = activation,
       squashing = squashing,
       lambda = lambda,
+      point_of_inference = point_of_inference,
       max_iter = max_iter,
       min_error = min_error,
       parallel = parallel,
@@ -295,23 +233,311 @@ fcmconfr <- function(adj_matrices = list(matrix()),
       include_simulations_in_output = include_monte_carlo_FCM_simulations_in_output
     )
 
-    # browser()
-
     if (perform_monte_carlo_inference_bootstrap_analysis) {
-      # browser()
       CIs_of_expected_values_of_mc_simulation_inferences <- get_mc_simulations_inference_CIs_w_bootstrap(mc_inferences$inference, inference_estimation_function, inference_estimation_CI, inference_estimation_bootstrap_reps, parallel, n_cores, show_progress)
     }
   }
-
-  # browser()
-
   # ----
 
   # Organize Output
   env_variables <- as.list(environment())
-  confr_output <- organize_fcmconfr_output(env_variables)
+  fcmconfr_output <- organize_fcmconfr_output(env_variables)
 
-  confr_output
+  fcmconfr_output
+}
+
+
+#' [INTENDED FOR DEVELOPER USE ONLY] Check fcmconfr Inputs
+#'
+#' @description
+#' Confirm that all inputs will work with the \code{\link{fcmconfr}} function and return
+#' appropriate error messages where necessary
+#'
+#' @details
+#' INTENDED FOR DEVELOPER USE ONLY
+#'
+#' This checks that all inputs for the \code{\link{fcmconfr}} function are of an appropriate
+#' format, and also fills in missing inputs for initial_state_vector, clamping_vector,
+#' and IDs when appropriate.
+#'
+#' @param adj_matrices A list of adjacency matrices (n x n) representing FCMs. This
+#' can also be an individual adjacency matrix.Adj. Matrices can be conventional FCMs,
+#' FCMs with edge weights as Interval Value Fuzzy Numbers (IVFNs) or FCMs with edge
+#' weights as Triangular Fuzzy Numbers (TFNs)
+#' @param aggregation_function Aggregate the adj. matrices into a single FCM by taking
+#' either the mean or median of the edge weights for edges included in multiple maps
+#' @param monte_carlo_sampling_draws The number of FCMs to generate via monte carlo
+#' sampling from the input adj. matrices
+#' @param initial_state_vector A list state values at the start of an fcm simulation
+#' @param clamping_vector A list of values representing specific actions taken to
+#' control the behavior of an FCM. Specifically, non-zero values defined in this vector
+#' will remain constant throughout the entire simulation as if they were "clamped" at those values.
+#' @param activation The activation function to be applied. Must be one of the following:
+#' 'kosko', 'modified-kosko', or 'papageorgiou'.
+#' @param squashing A squashing function to apply. Must be one of the following:
+#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' @param lambda A numeric value that defines the steepness of the slope of the
+#' squashing function when tanh or sigmoid are applied
+#' @param point_of_inference The point along the simulation time-series to be
+#' identified as the inference. Must be one of the following: 'peak' or 'final'
+#' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
+#' @param min_error The lowest error (sum of the absolute value of the current state
+#' vector minus the previous state vector) at which no more iterations are necessary
+#' and the simulation will stop
+#' @param inference_estimation_function Estimate confidence intervals about the "mean" or "median" of
+#' inferences from the monte carlo simulations
+#' @param inference_estimation_CI The confidence interval to estimate for the inferences
+#' of each concept across all monte carlo FCMs (via bootstrap)
+#' @param inference_estimation_bootstrap_reps The number of bootstraps to perform in
+#' estimating the confidence interval for the inferences of each concept across all monte
+#' carlo FCMs
+#' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
+#' from the pbapply package as the underlying function.
+#' @param parallel TRUE/FALSE Whether to utilize parallel processing
+#' @param n_cores Number of cores to use in parallel processing. If no input given,
+#' will use all available cores in the machine.
+#' @param perform_aggregate_analysis TRUE/FALSE Run the code to generate and simulate an aggregate FCM generated from the input adj_matrices
+#' @param perform_monte_carlo_analysis TRUE/FALSE Run the code to generate and simulate monte carlo-generated FCM sampled from the input adj_matrices
+#' @param perform_monte_carlo_inference_bootstrap_analysis TRUE/FALSE Run the code to estimate the 95 percent CI bounds about the means of the inferences of the monte carlo adj matrices
+#' @param include_zero_weighted_edges_in_aggregation_and_mc_sampling TRUE/FALSE Whether to incorporate zeroes as intentionally-defined edge weights or ignore
+#' them when aggregating adj. matrices and sampling for monte carlo FCMs
+#' @param include_monte_carlo_FCM_simulations_in_output TRUE/FALSE Whether to include simulations of monte carlo FCMs. Switch to FALSE if concerned
+#' about the size of the output of fcmconfr (simulations are necessary and will run regardless)
+#'
+#' @returns A list of resolved inputs to pass to \code{\link{fcmconfr}}
+#'
+#' @export
+check_fcmconfr_inputs <- function(adj_matrices = list(matrix()),
+                                  # Aggregation and Monte Carlo Sampling
+                                  aggregation_function = c("mean", "median"),
+                                  monte_carlo_sampling_draws = 1000,
+                                  # Simulation
+                                  initial_state_vector = c(),
+                                  clamping_vector = c(),
+                                  activation = c("kosko", "modified-kosko", "rescale"),
+                                  squashing = c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"),
+                                  lambda = 1,
+                                  point_of_inference = c("peak", "final"),
+                                  max_iter = 100,
+                                  min_error = 1e-5,
+                                  # Inference Estimation (bootstrap)
+                                  inference_estimation_function = c("mean", "median"),
+                                  inference_estimation_CI = 0.95,
+                                  inference_estimation_bootstrap_reps = 5000,
+                                  # Runtime Options
+                                  show_progress = TRUE,
+                                  parallel = TRUE,
+                                  n_cores = integer(),
+                                  # Additional Options
+                                  perform_aggregate_analysis = TRUE,
+                                  perform_monte_carlo_analysis = TRUE,
+                                  perform_monte_carlo_inference_bootstrap_analysis = TRUE,
+                                  include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+                                  include_monte_carlo_FCM_simulations_in_output = TRUE) {
+
+  # Perform Checks ----
+  adj_matrices_input_type <- get_adj_matrices_input_type(adj_matrices)
+  fcm_class <- adj_matrices_input_type$fcm_class
+  if (!adj_matrices_input_type$adj_matrices_input_is_list) {
+    adj_matrices <- list(adj_matrices)
+  }
+
+  # Check Additional Options ----
+  if (!is.logical(perform_aggregate_analysis)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var perform_aggregate_analysis} must be logical (TRUE/FALSE)",
+      "+++++> Input {.var perform_aggregate_analysis} was {perform_aggregate_analysis}"
+    )))
+  }
+  if (!is.logical(perform_monte_carlo_analysis)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var perform_monte_carlo_analysis} must be logical (TRUE/FALSE)",
+      "+++++> Input {.var perform_monte_carlo_analysis} was {perform_monte_carlo_analysis}"
+    )))
+  }
+  if (!is.logical(perform_monte_carlo_inference_bootstrap_analysis)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var perform_monte_carlo_inference_bootstrap_analysis} must be logical (TRUE/FALSE)",
+      "+++++> Input {.var perform_monte_carlo_inference_bootstrap_analysis} was {perform_monte_carlo_inference_bootstrap_analysis}"
+    )))
+  }
+  if (!is.logical(include_zero_weighted_edges_in_aggregation_and_mc_sampling)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var include_zero_weighted_edges_in_aggregation_and_mc_sampling} must be logical (TRUE/FALSE)",
+      "+++++> Input {.var include_zero_weighted_edges_in_aggregation_and_mc_sampling} was {include_zero_weighted_edges_in_aggregation_and_mc_sampling}"
+    )))
+  }
+  if (!is.logical(include_monte_carlo_FCM_simulations_in_output)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var include_monte_carlo_FCM_simulations_in_output} must be logical (TRUE/FALSE)",
+      "+++++> Input {.var include_monte_carlo_FCM_simulations_in_output} was {include_monte_carlo_FCM_simulations_in_output}"
+    )))
+  }
+  # ----
+
+  # Confirm Monte Carlo and Bootstrap Function Calls are Viable ----
+  if (fcm_class == "conventional" & length(adj_matrices) == 1 & (perform_monte_carlo_analysis | perform_aggregate_analysis)) {
+    warning(cli::format_warning(c(
+      "!" = "Warning: Cannot aggregate or generate monte carlo samples from a single (conventional) adj. matrix",
+      "~~~~~ Skipping aggregate analysis; i.e. setting {.var perform_aggregate_analysis} to FALSE",
+      "~~~~~ Skipping monte carlo analysis; i.e. setting {.var perform_monte_carlo_analysis} to FALSE"
+    )))
+    perform_monte_carlo_analysis = FALSE
+    perform_aggregate_analysis = FALSE
+  }
+  else if ((fcm_class %in% c("ivfn", "tfn")) & length(adj_matrices) == 1 & (perform_aggregate_analysis)) {
+    warning(cli::format_warning(c(
+      "!" = "Warning: Cannot generate aggregate fcm from a single adj. matrix",
+      "~~~~~ Skipping aggregate analysis; i.e. setting {.var perform_aggregate_analysis} to FALSE"
+    )))
+    perform_aggregate_analysis = FALSE
+  }
+
+  if (!perform_monte_carlo_analysis & perform_monte_carlo_inference_bootstrap_analysis) {
+    warning(cli::format_warning(c(
+      "!" = "Warning: Cannot estimate CIs of monte carlo inferences if monte carlo analysis is not being performed",
+      "~~~~~ Skipping CI bound estimation; i.e. setting {.var perform_monte_carlo_inference_bootstrap_analysis} to FALSE"
+    )))
+    perform_monte_carlo_inference_bootstrap_analysis <- FALSE
+  }
+
+  if (perform_monte_carlo_analysis & perform_monte_carlo_inference_bootstrap_analysis) {
+    if (identical(inference_estimation_function, c("mean", "median"))) {
+      warning(cli::format_warning(c(
+        "!" = "Warning: No {.var inference_estimation_function} given",
+        "~~~~~ Assuming {.var inference_estimation_function} is 'mean'"
+      )))
+    }
+    inference_estimation_function <- 'mean'
+  }
+  # ----
+
+  # Check adj_matrices ----
+  adj_matrices_dims <- lapply(adj_matrices, dim)
+  if (length(unique(unlist(adj_matrices_dims))) > 1) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var adj_matrices} are either different sizes or contain non-square matrices",
+      "+++++> Call standardize_adj_matrices() to standardize the sizes of {.var adj. matrices}"
+    )))
+  }
+  n_nodes <- unique(unlist(adj_matrices_dims))
+  dummy_adj_matrix <- matrix(0, n_nodes, n_nodes)
+
+  identified_concepts <- unique(lapply(adj_matrices, colnames))
+  if (length(identified_concepts) != 1) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var adj_matrices} must have the same concepts",
+      "+++++> Call standardize_adj_matrices() to standardize concepts across {.var adj. matrices}"
+    )))
+  } else {
+    concept_names <- unlist(identified_concepts)
+  }
+
+  if (identical(adj_matrices_input_type$object_types_in_list, c("conventional", "sparseMatrix"))) {
+    adj_matrices <- lapply(adj_matrices, as.matrix)
+    warning(cli::format_warning(c(
+      "!" = "Warning: Changed {.var adj_matrices} from sparseMatrix to an ordinary matrix (i.e. using as.matrix)"
+    )))
+  }
+  # ----
+
+  # Check Simulation Inputs ----
+  sim_checks <- check_simulation_inputs(dummy_adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
+  initial_state_vector <- sim_checks$initial_state_vector
+  clamping_vector <- sim_checks$clamping_vector
+  activation <- sim_checks$activation
+  squashing <- sim_checks$squashing
+  point_of_inference <- sim_checks$point_of_inference
+  # ----
+
+  # Aggregation ----
+  if (perform_aggregate_analysis) {
+    if (identical(aggregation_function, c("mean", "median"))) {
+      warning(cli::format_warning(c(
+        "!" = "Warning: No {.var aggregation_function} given",
+        "~~~~~ Assuming {.var aggregation_function} is 'mean'"
+      )))
+      aggregation_function <- "mean"
+    }
+    if (!(aggregation_function %in% c("mean", "median"))) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var aggregation_function} must be one of the following: 'mean' or 'median'",
+        "+++++> Input {.var aggregation_function} was {aggregation_function}"
+      )))
+    }
+  }
+  # ----
+
+  # Monte Carlo ----
+  if (perform_monte_carlo_analysis) {
+    if (!is.numeric(monte_carlo_sampling_draws)) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var monte_carlo_sampling_draws} must be a positive integer",
+        "+++++ Input {.var monte_carlo_sampling_draws} was {monte_carlo_sampling_draws}"
+      )))
+    }
+    if (!(monte_carlo_sampling_draws == round(monte_carlo_sampling_draws))) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var monte_carlo_sampling_draws} must be a positive integer",
+        "+++++ Input {.var monte_carlo_sampling_draws} was {monte_carlo_sampling_draws}"
+      )))
+    }
+    if (monte_carlo_sampling_draws <= 0) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var monte_carlo_sampling_draws} must be a positive integer",
+        "+++++ Input {.var monte_carlo_sampling_draws} was {monte_carlo_sampling_draws}"
+      )))
+    }
+  }
+  # ----
+
+  # Check Monte Carlo and Bootstrap Inputs ----
+  if (perform_monte_carlo_inference_bootstrap_analysis) {
+    mcbs_checks <- check_monte_carlo_bootstrap_inputs(inference_estimation_function, inference_estimation_CI, inference_estimation_bootstrap_reps, parallel, n_cores, show_progress)
+    inference_estimation_function <- mcbs_checks$inference_estimation_function
+  }
+  # ----
+
+  # Confirm necessary packages are available. If not, warn user and change run options; Also Check n_cores ----
+  show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
+  parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
+  if (!is.numeric(n_nodes)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var n_nodes} must be a positive integer",
+      "+++++ Input {.var n_nodes} was {n_nodes}"
+    )))
+  }
+  if (!(n_nodes == round(n_nodes))) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var n_nodes} must be a positive integer",
+      "+++++ Input {.var n_nodes} was {n_nodes}"
+    )))
+  }
+  if (n_nodes <= 0) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var n_nodes} must be a positive integer",
+      "+++++ Input {.var n_nodes} was {n_nodes}"
+    )))
+  }
+  # ----
+
+  list(
+    fcm_class = fcm_class,
+    adj_matrices = adj_matrices,
+    concept_names = concept_names,
+    aggregation_function = aggregation_function,
+    initial_state_vector = initial_state_vector,
+    clamping_vector = clamping_vector,
+    activation = activation,
+    squashing = squashing,
+    point_of_inference = point_of_inference,
+    inference_estimation_function = inference_estimation_function,
+    show_progress = show_progress,
+    parallel = parallel,
+    perform_aggregate_analysis = perform_aggregate_analysis,
+    perform_monte_carlo_analysis = perform_monte_carlo_analysis,
+    perform_monte_carlo_inference_bootstrap_analysis = perform_monte_carlo_inference_bootstrap_analysis
+  )
 }
 
 
@@ -335,8 +561,6 @@ fcmconfr <- function(adj_matrices = list(matrix()),
 #' NULL
 organize_fcmconfr_output <- function(...) {
   variables <- as.list(...)
-
-  # browser()
 
   fcmconfr_output <- structure(
     .Data = list(
@@ -365,9 +589,7 @@ organize_fcmconfr_output <- function(...) {
     class = "fcmconfr"
   )
 
-
   if (variables$perform_aggregate_analysis) {
-    #browser()
     fcmconfr_output$aggregate_adj_matrix <- variables$aggregate_adj_matrix
     fcmconfr_output$inferences$aggregate_fcm = list(
       inferences = variables$aggregate_fcm_inference$inference,
@@ -403,7 +625,6 @@ organize_fcmconfr_output <- function(...) {
   }
 
   if (variables$perform_monte_carlo_analysis & variables$perform_monte_carlo_inference_bootstrap_analysis) {
-    #browser()
     fcmconfr_output$inferences$monte_carlo_fcms$bootstrap = list(
       CI_estimation_function = variables$inference_estimation_function,
       CIs_and_quantiles_by_node = variables$CIs_of_expected_values_of_mc_simulation_inferences$CIs_and_quantiles_by_node,
@@ -414,8 +635,6 @@ organize_fcmconfr_output <- function(...) {
       inference_estimation_bootstrap_reps = variables$inference_estimation_bootstrap_reps
     )
   }
-
-  # browser()
 
   fcmconfr_output
 }
@@ -448,8 +667,6 @@ print.fcmconfr <- function(x, ...) {
 
   n_input_fcm <- length(x$params$adj_matrices)
 
-  # browser()
-
   if (performed_aggregate & performed_mc & performed_bootstrap) {
     n_mc_sims <- x$params$monte_carlo_sampling_draws
 
@@ -481,7 +698,6 @@ print.fcmconfr <- function(x, ...) {
         paste0("\n  - additional_opts: ", "Perform Aggregate Analysis = ", x$params$additional_opts$perform_aggregate_analysis, "; Perform MC Analysis = ", x$params$additional_opts$perform_monte_carlo_analysis)
     )
   } else if (!performed_aggregate & performed_mc & performed_bootstrap) {
-    # browser()
     n_mc_sims <- x$params$monte_carlo_sampling_draws
 
     cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),

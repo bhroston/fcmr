@@ -132,7 +132,6 @@ check_if_local_machine_has_access_to_show_progress_functionalities <- function(u
 #'  2. This function identifies the 'class' of the input adj. matrices from the
 #'     following options: 'conventional' 'ivfn' 'tfn' or 'unavailable'
 #'
-#'
 #'      - 'conventional' means that the adj. matrices contain only numeric objects
 #'
 #'      - 'ivfn' means that the adj. matrices contain only 'ivfn' objects (interval-
@@ -181,8 +180,6 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
     adj_matrix_list_input <- list(adj_matrix_list_input)
   }
 
-  # browser()
-
   if (identical(object_types_in_input_list, classes_in_dataframe_objects)) {
     object_types_in_input_list <- c("data.frame")
   } else if (identical(object_types_in_input_list, classes_in_matrix_objects)) {
@@ -215,14 +212,18 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
     if (shiny::isRunning()) {
       object_types_in_input_list <- "unavailable"
     } else {
-      stop("Object types in adj. matrices must be either Numerics, IVFNs, or TFNs")
+      stop(cli::format_error(c(
+        "x" = "Error: {.var adj_matrix} must be an adjacency matrix with edges represented as either numeric values, ivfns, or tfns"
+      )))
     }
-    stop("Input Validation Error: Unrecognized element types in input matrices.
-         Adjacency matrix elements must be either numeric, ivfn, or tfn, and
-         all matrices must have elements of the same type.")
+    stop(cli::format_error(c(
+      "x" = "Error: Unrecognized element types in input matrices.",
+      "+++++> Adjacency matrix elements must be either numeric, ivfn, or tfn, and all matrices must have elements of the same type."
+    )))
   }
 
   list(
+    fcm_class = fcm_class,
     adj_matrices_input_is_list = adj_matrices_input_is_list,
     object_types_in_list = object_types_in_input_list
   )
