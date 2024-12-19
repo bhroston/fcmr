@@ -21,4 +21,8 @@ PackageUseDevtools: Yes
 PackageInstallArgs: --no-multiarch --with-keep.source
 PackageRoxygenize: rd,collate,namespace
 
+PythonType: conda
+PythonVersion: 3.13.0
+PythonPath: ~/anaconda3/envs/fcm/bin/python3.13
+
 ProjectName: fcmconfr

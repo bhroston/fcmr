@@ -58,10 +58,12 @@ shiny_server <- function(input, output, session) {
           shiny::HTML("<p><small><b>Activation Function</b> The activation
           function to be applied.</small></p>
           <small><b>Squashing Function:</b> The squashing (also known as
-          transformation or threshold) function to apply. </small></p>
+          transformation or threshold) function to apply </small></p>
           <small><b>Lambda:</b> A numeric value that defines the steepness of
           the slope of the squashing function when tanh or sigmoid are
           applied</small></p>
+          <small><b>Point of Inference:</b> The point along the simulation
+          time-series to be identified as the inference</small></p>
           <small><b>Max Iterations per Sim:</b> The maximum number of iterations
           to run if the minimum error value is not achieved</small></p>
           <small><b>Min. Acceptable Error:</b> The lowest error (sum of the
@@ -563,19 +565,61 @@ shiny_server <- function(input, output, session) {
   })
   # ----
 
+  output$activation_function_formulae <- shiny::renderUI({
+    if (input$activation == "kosko") {
+      formula <- "$$
+        \\begin{gather}
+          A_{i}^{( t+1)} =f\\left(\\sum _{ \\begin{array}{l}
+          j\ =\\ i\\
+          i\ \\neq \ j
+          \\end{array}}^{M} w_{ji} A_{j}^{( t)}\\right)
+        \\end{gather}
+      $$"
+    } else if (input$activation == "modified-kosko") {
+      formula <- "$$
+        \\begin{gather}
+          A_{i}^{( t+1)} =f\\left(\\sum _{ \\begin{array}{l}
+          j\\ =\\ i\\\
+          i\\ \\neq \\ j
+          \\end{array}}^{M} w_{ji} A_{j}^{( t)} +A_{i}^{( t)}\\right)
+        \\end{gather}
+      $$"
+    } else if (input$activation == "rescale") {
+      formula <- "$$
+        \\begin{gather}
+          A_{i}^{( t+1)} =f\\left(\\sum _{ \\begin{array}{l}
+          j\\ =\\ i\\\
+          i\\ \\neq \\ j
+          \\end{array}}^{M} w_{ji}\\left( 2A_{j}^{( t)} -1\\right) +\\left( 2A_{i}^{( t)} -1\\right)\\right)
+        \\end{gather}
+      $$"
+    }
+    shiny::fluidRow(
+      shiny::column(
+        width = 12, align = "center",
+        shiny::withMathJax(tags$p(formula))
+      )
+    )
+  })
+
   # Warn users about using tanh with rescale activation
-  output$rescale_tanh_warning_text <- shiny::renderUI({
-    if (input$activation == "rescale") {
+  output$tanh_warning_text <- shiny::renderUI({
+    if (input$activation == "rescale" & input$squashing == "tanh") {
       shiny::fluidRow(
         shiny::column(
-          width = 5, align = "right",
-          shiny::h5("", style = "padding: 35px;")
-        ),
-        shiny::column(
-          width = 7, align = "left",
-          shiny::p("The Rescale activation function is designed to work with
+          width = 12, align = "center",
+          shiny::p("WARNING: The Rescale activation function is designed to work with
                    the sigmoid squashing function only!"),
           shiny::p("Using tanh will produce illogical results.")
+        )
+      )
+    } else if (input$activation == "modified-kosko" & input$squashing == "tanh") {
+      shiny::fluidRow(
+        shiny::column(
+          width = 12, align = "center",
+          shiny::p("WARNING: It is unconventional to pair Modified-Kosko with Tanh because simulation inference values
+          tend to approach 0 as the number of iterations increases!"),
+          shiny::p("Using tanh may produce inconsistent results.")
         )
       )
     } else {
@@ -624,8 +668,6 @@ shiny_server <- function(input, output, session) {
 
   shiny::onStop(
     function() {
-      #browser()
-      #env_frame_index <- which(unlist(lapply(sys.frames(), function(frame) frame$shiny_env_check)) == 1)
       assign(
         x = "fcmconfr_gui_input",
         value = structure(.Data = shiny::isolate(form_data()), class = "fcmconfr_gui_input"),
