@@ -52,7 +52,7 @@ test_that("streamlined fcmconfr works", {
         inference_estimation_bootstrap_reps = 1000,
         # Runtime Options
         show_progress = TRUE,
-        parallel = FALSE,
+        parallel = TRUE,
         n_cores = 2,
         # Additional Options
         perform_aggregate_analysis = TRUE,
@@ -79,6 +79,7 @@ test_that("streamlined fcmconfr works", {
         activation = 'kosko',
         squashing = 'sigmoid',
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
@@ -137,6 +138,7 @@ test_that("streamlined fcmconfr works", {
         activation = 'kosko',
         squashing = 'sigmoid',
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
@@ -204,6 +206,7 @@ test_that("streamlined fcmconfr works", {
         activation = 'kosko',
         squashing = 'sigmoid',
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
@@ -271,6 +274,7 @@ test_that("pulse only fcmconfr works", {
         activation = 'modified-kosko',
         squashing = 'sigmoid',
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 1000,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
@@ -307,6 +311,7 @@ test_that("pulse only fcmconfr works", {
         activation = 'kosko',
         squashing = 'tanh',
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 100,
         min_error = 1e-03,
         # Inference Estimation (bootstrap)
@@ -356,6 +361,7 @@ test_that("fcmconfr works with igraph inputs", {
         activation = 'kosko',
         squashing = 'sigmoid',
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
@@ -415,6 +421,7 @@ test_that("fcmconfr error checks work", {
         activation = 'kosko',
         squashing = 'sigmoid',
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
@@ -471,6 +478,7 @@ test_that("fcmconfr error checks work", {
         activation = 'kosko',
         squashing = 'sigmoid',
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
@@ -505,6 +513,7 @@ test_that("fcmconfr error checks work", {
         activation = 'kosko',
         squashing = 'sigmoid',
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
@@ -538,6 +547,7 @@ test_that("fcmconfr error checks work", {
         clamping_vector = c(0, 1, 0, 0),
         squashing = 'sigmoid',
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
@@ -571,6 +581,7 @@ test_that("fcmconfr error checks work", {
         clamping_vector = c(0, 1, 0, 0),
         activation = "kosko",
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
@@ -605,6 +616,7 @@ test_that("fcmconfr error checks work", {
         activation = 'kosko',
         squashing = 'sigmoid',
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
@@ -660,6 +672,7 @@ test_that("fcmconfr error checks work", {
         activation = 'kosko',
         squashing = 'sigmoid',
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
@@ -701,6 +714,7 @@ test_that("fcmconfr error checks work", {
         activation = 'kosko',
         squashing = 'sigmoid',
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
@@ -744,6 +758,7 @@ test_that("fcmconfr error checks work", {
         activation = 'kosko',
         squashing = 'sigmoid',
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
@@ -793,6 +808,7 @@ test_that("fcmconfr error checks work", {
         activation = 'kosko',
         squashing = 'sigmoid',
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
@@ -826,6 +842,7 @@ test_that("fcmconfr error checks work", {
         activation = 'kosko',
         squashing = 'sigmoid',
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
@@ -861,6 +878,7 @@ test_that("fcmconfr error checks work", {
         activation = 'kosko',
         squashing = 'sigmoid',
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
@@ -923,6 +941,7 @@ test_that("print.fcmconfr works", {
       activation = 'kosko',
       squashing = 'sigmoid',
       lambda = 1,
+      point_of_inference = "final",
       max_iter = 100,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)
@@ -956,6 +975,7 @@ test_that("print.fcmconfr works", {
       activation = 'kosko',
       squashing = 'sigmoid',
       lambda = 1,
+      point_of_inference = "final",
       max_iter = 100,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)
@@ -989,6 +1009,7 @@ test_that("print.fcmconfr works", {
       activation = 'kosko',
       squashing = 'sigmoid',
       lambda = 1,
+      point_of_inference = "final",
       max_iter = 100,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)
@@ -1022,6 +1043,7 @@ test_that("print.fcmconfr works", {
       activation = 'kosko',
       squashing = 'sigmoid',
       lambda = 1,
+      point_of_inference = "final",
       max_iter = 100,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)
@@ -1055,6 +1077,7 @@ test_that("print.fcmconfr works", {
       activation = 'kosko',
       squashing = 'sigmoid',
       lambda = 1,
+      point_of_inference = "final",
       max_iter = 100,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)
@@ -1088,6 +1111,7 @@ test_that("print.fcmconfr works", {
       activation = 'kosko',
       squashing = 'sigmoid',
       lambda = 1,
+      point_of_inference = "final",
       max_iter = 100,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)

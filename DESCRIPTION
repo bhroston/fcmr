@@ -24,6 +24,7 @@ RdMacros: Rdpack
 Imports: 
     Rdpack (>= 2.6.1),
     rlang (>= 1.1.4),
+    cli (>= 3.6.3),
     methods (>= 4.3.2),
     data.table (>= 1.15.4),
     stats (>= 4.3.2),

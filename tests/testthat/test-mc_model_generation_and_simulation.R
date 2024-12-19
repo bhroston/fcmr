@@ -201,6 +201,7 @@ test_that("infer_monte_carlo_fcm_set catches invalid parallel processing inputs"
         activation = "kosko",
         squashing = "sigmoid",
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 100,
         min_error = 1e-5,
         parallel = FALSE,

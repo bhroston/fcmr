@@ -119,63 +119,29 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
 
   if (parallel & show_progress) {
     print("Initializing cluster", quote = FALSE)
-    cl <- parallel::makeCluster(n_cores)
-
-    # Have to store variables in new env that can be accessed by parLapply. There
-    # is surely a better way to do this, but this way works
-    # start <- Sys.time()
-    vars <- list(
-      "infer_fcm", "infer_conventional_fcm", "simulate_fcm", "simulate_conventional_fcm",
-      "calculate_next_conventional_fcm_state_vector", "check_simulation_inputs", "get_adj_matrices_input_type",
-      "squash",  "clean_simulation_output", "check_simulation_inputs",
-      "mc_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
-      "squashing", "lambda", "point_of_inference",  "max_iter", "min_error"
+    cl <- parallel::makeForkCluster(n_cores)
+    inferences_for_mc_adj_matrices <- pbapply::pblapply(
+      mc_adj_matrices,
+      function(adj_matrix) {
+        infer_fcm(
+          adj_matrix = adj_matrix,
+          initial_state_vector = initial_state_vector,
+          clamping_vector = clamping_vector,
+          activation = activation,
+          squashing = squashing,
+          lambda = lambda,
+          point_of_inference = point_of_inference,
+          max_iter = max_iter,
+          min_error = min_error
+        )
+      },
+      cl = cl
     )
-
-    parallel::clusterExport(cl, varlist = vars, envir = environment())
-
-    doSNOW::registerDoSNOW(cl)
-    invisible(utils::capture.output(pb <- utils::txtProgressBar(min = 0, max = length(mc_adj_matrices)/n_cores, style = 3, width = 50)))
-    progress <- function(n) utils::setTxtProgressBar(pb, n)
-    # cat("\n")
-    print("Running simulations. There may be an additional wait for larger sets.", quote = FALSE)
-    opts <- list(progress = progress)
-
-    inferences_for_mc_adj_matrices <- foreach::foreach(
-      i = seq_along(mc_adj_matrices), .options.snow = opts
-    ) %dopar% {
-      infer_fcm(
-        adj_matrix = mc_adj_matrices[[i]],
-        initial_state_vector = initial_state_vector,
-        clamping_vector = clamping_vector,
-        activation = activation,
-        squashing = squashing,
-        lambda = lambda,
-        point_of_inference = point_of_inference,
-        max_iter = max_iter,
-        min_error = min_error
-      )
-    }
-    close(pb)
     names(inferences_for_mc_adj_matrices) <- paste0("mc_", 1:length(inferences_for_mc_adj_matrices))
     parallel::stopCluster(cl)
   } else if (parallel & !show_progress) {
     print("Initializing cluster", quote = FALSE)
-    cl <- parallel::makeCluster(n_cores)
-
-    # Have to store variables in new env that can be accessed by parLapply. There
-    # is surely a better way to do this, but this way works
-    # start <- Sys.time()
-    vars <- list(
-      "infer_fcm", "infer_conventional_fcm", "simulate_fcm", "simulate_conventional_fcm",
-      "calculate_next_conventional_fcm_state_vector", "check_simulation_inputs", "get_adj_matrices_input_type",
-      "squash",  "clean_simulation_output", "check_simulation_inputs",
-      "mc_adj_matrices", "initial_state_vector", "clamping_vector", "activation",
-      "squashing", "lambda", "point_of_inference",  "max_iter", "min_error"
-    )
-
-    parallel::clusterExport(cl, varlist = vars, envir = environment())
-
+    cl <- parallel::makeForkCluster(n_cores) # Only makeForkCluster works. Socket Cluster use old function versions for some reason?
     cat("\n")
     print("Running simulations", quote = FALSE)
     inferences_for_mc_adj_matrices <- parallel::parLapply(

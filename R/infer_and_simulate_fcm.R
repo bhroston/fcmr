@@ -78,6 +78,8 @@ infer_fcm <- function(adj_matrix = matrix(),
                       max_iter = 100,
                       min_error = 1e-5) {
 
+  # return(check_simulation_inputs)
+
   checks <- check_simulation_inputs(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
   fcm_class <- checks$fcm_class
   adj_matrix <- checks$adj_matrix
@@ -153,15 +155,23 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
                                    max_iter = 100,
                                    min_error = 1e-5) {
 
+
   iter <- NULL # for R CMD Check, does not impact logic
 
+  # return(get_adj_matrices_input_type)
+
+  # return(evaluate::evaluate(get_adj_matrices_input_type(adj_matrix)))
+
   fcm_class <- get_adj_matrices_input_type(adj_matrix)$fcm_class
+  # return(get_adj_matrices_input_type(adj_matrix))
   if (!(fcm_class %in% c("conventional"))) {
     stop(cli::format_error(c(
       "x" = "{.var adj_matrix} must be an adjacency matrix with edges represented as discrete numeric values (Conventional) only",
       "+++++> Edges in input {.var adj_matrix} are represented as {fcm_class}'s"
     )))
   }
+
+  # return("Got here after fcm_class") - definitely did not get here
 
   # Get scenario simulation
   scenario_initial_state_vector <- initial_state_vector
@@ -1256,6 +1266,8 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
                                     min_error = 1e-4) {
 
   adj_matrix_input_type <- get_adj_matrices_input_type(adj_matrix)
+
+  # return(adj_matrix_input_type)
 
   # Check for individal adj_matrix ----
   adj_matrix_is_list <- adj_matrix_input_type$adj_matrices_input_is_list

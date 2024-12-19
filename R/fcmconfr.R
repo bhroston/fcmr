@@ -163,7 +163,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     perform_monte_carlo_analysis, perform_monte_carlo_inference_bootstrap_analysis, include_zero_weighted_edges_in_aggregation_and_mc_sampling, include_monte_carlo_FCM_simulations_in_output
   )
   fcm_class <- checks$fcm_class
-  adj_matrix <- checks$adj_matrices
+  adj_matrices <- checks$adj_matrices
   concepts <- checks$concept_names
   aggregation_function <- checks$aggregation_function
   initial_state_vector <- checks$initial_state_vector

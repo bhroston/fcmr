@@ -27,7 +27,6 @@
 </defs>
 <g clip-path='url(#cpMTM5LjgwfDY4MC4xNXwzNy4yM3w1MDQuMDY=)'>
 <rect x='139.80' y='37.23' width='540.35' height='466.83' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
-<line x1='441.91' y1='504.06' x2='441.91' y2='37.23' style='stroke-width: 1.07; stroke-dasharray: 1.42,4.27; stroke-linecap: butt;' />
 <circle cx='484.73' cy='476.08' r='2.49' style='stroke-width: 0.71; stroke: none; fill: #000000;' />
 <circle cx='484.73' cy='475.94' r='2.49' style='stroke-width: 0.71; stroke: none; fill: #000000;' />
 <circle cx='484.73' cy='475.79' r='2.49' style='stroke-width: 0.71; stroke: none; fill: #000000;' />
@@ -384,13 +383,15 @@
 <text x='381.49' y='515.05' text-anchor='middle' style='font-size: 8.80px; fill: #4D4D4D; font-family: sans;' textLength='12.23px' lengthAdjust='spacingAndGlyphs'>0.4</text>
 <text x='502.33' y='515.05' text-anchor='middle' style='font-size: 8.80px; fill: #4D4D4D; font-family: sans;' textLength='12.23px' lengthAdjust='spacingAndGlyphs'>0.6</text>
 <text x='623.17' y='515.05' text-anchor='middle' style='font-size: 8.80px; fill: #4D4D4D; font-family: sans;' textLength='12.23px' lengthAdjust='spacingAndGlyphs'>0.8</text>
-<rect x='360.85' y='527.84' width='98.26' height='28.24' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
-<circle cx='380.45' cy='541.96' r='1.10' style='stroke-width: 0.71; stroke: none; fill: #000000; fill-opacity: 0.30;' />
-<circle cx='380.45' cy='541.96' r='2.49' style='stroke-width: 0.71; stroke: none; fill: #000000;' />
-<circle cx='427.77' cy='541.96' r='1.10' style='stroke-width: 0.71; stroke: none; fill: #BEBEBE; fill-opacity: 0.30;' />
-<circle cx='427.77' cy='541.96' r='2.49' style='stroke-width: 0.71; stroke: none; fill: #BEBEBE;' />
-<text x='394.57' y='544.98' style='font-size: 8.80px; font-family: sans;' textLength='19.08px' lengthAdjust='spacingAndGlyphs'>input</text>
-<text x='441.89' y='544.98' style='font-size: 8.80px; font-family: sans;' textLength='11.74px' lengthAdjust='spacingAndGlyphs'>mc</text>
+<rect x='338.60' y='527.84' width='142.76' height='28.24' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
+<circle cx='358.20' cy='541.96' r='1.42' style='stroke-width: 0.71; stroke: none; fill: #000000; fill-opacity: 0.80;' />
+<circle cx='358.20' cy='541.96' r='2.49' style='stroke-width: 0.71; stroke: none; fill: #000000;' />
+<circle cx='358.20' cy='541.96' r='2.49' style='stroke-width: 0.71; stroke: none; fill: #000000;' />
+<polygon points='424.58,539.74 426.50,543.06 422.67,543.06 ' style='stroke-width: 0.71; stroke: none; fill: #FF0000; fill-opacity: 0.80;' />
+<polygon points='424.58,538.09 427.93,543.89 421.23,543.89 ' style='stroke-width: 0.71; stroke: none; fill: #FF0000;' />
+<polygon points='424.58,538.09 427.93,543.89 421.23,543.89 ' style='stroke-width: 0.71; stroke: none; fill: #FF0000;' />
+<text x='372.32' y='544.98' style='font-size: 8.80px; font-family: sans;' textLength='38.15px' lengthAdjust='spacingAndGlyphs'>Ind FCMs</text>
+<text x='438.70' y='544.98' style='font-size: 8.80px; font-family: sans;' textLength='37.17px' lengthAdjust='spacingAndGlyphs'>Agg FCM</text>
 <text x='139.80' y='29.01' style='font-size: 13.20px; font-family: sans;' textLength='206.24px' lengthAdjust='spacingAndGlyphs'>Conventional Pulse Inputs and Agg</text>
 </g>
 </svg>

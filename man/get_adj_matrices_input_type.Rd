@@ -23,7 +23,6 @@ This function performs two actions:
  2. This function identifies the 'class' of the input adj. matrices from the
     following options: 'conventional' 'ivfn' 'tfn' or 'unavailable'
 
-
      - 'conventional' means that the adj. matrices contain only numeric objects
 
      - 'ivfn' means that the adj. matrices contain only 'ivfn' objects (interval-
