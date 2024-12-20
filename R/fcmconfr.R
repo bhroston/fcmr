@@ -188,10 +188,10 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   }
 
   if (fcm_class == "conventional") {
-    individual_adj_matrices_inferences_df <- do.call(rbind, lapply(individual_adj_matrices_inferences, function(inference) inference$inference))
+    individual_adj_matrices_inferences_df <- do.call(rbind, lapply(individual_adj_matrices_inferences, function(inference) inference$inferences))
     individual_adj_matrices_inferences_df <- cbind(input = paste0("adj_matrix_", 1:length(adj_matrices)), individual_adj_matrices_inferences_df)
   } else if (fcm_class %in% c("ivfn", "tfn")) {
-    individual_adj_matrices_inferences_df <- lapply(individual_adj_matrices_inferences, function(inference) inference$inference)
+    individual_adj_matrices_inferences_df <- lapply(individual_adj_matrices_inferences, function(inference) inference$inferences)
     names(individual_adj_matrices_inferences_df) <- paste0("adj_matrix_", 1:length(adj_matrices))
   }
   names(individual_adj_matrices_inferences) <- paste0("adj_matrix_", 1:length(adj_matrices))
@@ -591,10 +591,7 @@ organize_fcmconfr_output <- function(...) {
 
   if (variables$perform_aggregate_analysis) {
     fcmconfr_output$aggregate_adj_matrix <- variables$aggregate_adj_matrix
-    fcmconfr_output$inferences$aggregate_fcm = list(
-      inferences = variables$aggregate_fcm_inference$inference,
-      simulation = variables$aggregate_fcm_inference
-    )
+    fcmconfr_output$inferences$aggregate_fcm = variables$aggregate_fcm_inference
     fcmconfr_output$params$aggregation_function = variables$aggregation_function
     fcmconfr_output$params$additional_opts <- list(
       include_zero_weighted_edges_in_aggregation_and_mc_sampling = variables$include_zero_weighted_edges_in_aggregation_and_mc_sampling,

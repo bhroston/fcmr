@@ -293,7 +293,7 @@ infer_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
     dummy_clamping_vector <- rep(0, length(initial_state_vector))
     # Use squashing = "tanh" to force 0's to remain 0's, rather than converting
     # 0's to 0.5's if squashing = "sigmoid"
-    baseline_simulation <- simulate_fcm(adj_matrix, dummy_initial_state_vector, dummy_clamping_vector, activation, squashing = "tanh", lambda, point_of_inference, max_iter, min_error)
+    baseline_simulation <- simulate_fcm(adj_matrix, dummy_initial_state_vector, dummy_clamping_vector, activation = "kosko", squashing = "tanh", lambda, point_of_inference, max_iter, min_error)
     baseline_simulation_is_dummy <- TRUE
   } else {
     # Get baseline simulation
@@ -1267,8 +1267,6 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
 
   adj_matrix_input_type <- get_adj_matrices_input_type(adj_matrix)
 
-  # return(adj_matrix_input_type)
-
   # Check for individal adj_matrix ----
   adj_matrix_is_list <- adj_matrix_input_type$adj_matrices_input_is_list
   if (adj_matrix_is_list) {
@@ -1354,6 +1352,27 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
   }
   # ----
 
+  # Check point_of_inference ----
+  if (identical(point_of_inference, c("peak", "final"))) {
+    warning(cli::format_warning(c(
+      "!" = "Warning: No {.var point_of_inference} given",
+      "~~~~~ Assuming point_of_inference = 'final'"
+    )))
+    point_of_inference <- "final"
+  }
+  if (!(point_of_inference %in% c("peak", "final"))) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var point_of_inference} must be one of the following: 'peak' or 'final'",
+      "+++++ Input {.var point_of_inference} was '{point_of_inference}'"
+    )))
+  }
+  if (point_of_inference == "peak" & all(initial_state_vector == 1)) {
+    warning(cli::format_warning(c(
+      "!" = "Warning: Simulation inferences will return all 1's if {.var point_of_difference} = 'peak' and all concept activation levels start at 1; i.e. initial_state_vector = c(1, 1, ..., 1) "
+    )))
+  }
+  # ----
+
   # Check activation and squashing ----
   if (identical(activation, c("kosko", "modified-kosko", "rescale"))) {
     warning(cli::format_warning(c(
@@ -1417,26 +1436,6 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
   }
   # ----
 
-  # Check point_of_inference ----
-  if (identical(point_of_inference, c("peak", "final"))) {
-    warning(cli::format_warning(c(
-      "!" = "Warning: No {.var point_of_inference} given",
-      "~~~~~ Assuming point_of_inference = 'final'"
-    )))
-    point_of_inference <- "final"
-  }
-  if (!(point_of_inference %in% c("peak", "final"))) {
-    stop(cli::format_error(c(
-      "x" = "Error: {.var point_of_inference} must be one of the following: 'peak' or 'final'",
-      "+++++ Input {.var point_of_inference} was '{point_of_inference}'"
-    )))
-  }
-  if (point_of_inference == "peak" & all(initial_state_vector == 1)) {
-    warning(cli::format_warning(c(
-      "!" = "Warning: Simulation inferences will return all 1's if {.var point_of_difference} = 'peak' and all concept activation levels start at 1; i.e. initial_state_vector = c(1, 1, ..., 1) "
-    )))
-  }
-  # ----
 
   # Check max_iter ----
   if (!is.numeric(max_iter)) {
