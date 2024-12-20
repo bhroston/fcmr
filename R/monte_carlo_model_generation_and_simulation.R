@@ -120,6 +120,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
   if (parallel & show_progress) {
     print("Initializing cluster", quote = FALSE)
     cl <- parallel::makeForkCluster(n_cores)
+    print("Simulating Monte Carlo FCMs", quote = FALSE)
     inferences_for_mc_adj_matrices <- pbapply::pblapply(
       mc_adj_matrices,
       function(adj_matrix) {
@@ -578,7 +579,7 @@ build_monte_carlo_fcms <- function(adj_matrix_list = list(matrix()),
 
   checks <- check_build_monte_carlo_fcms_inputs(adj_matrix_list, N_samples, include_zeroes, show_progress)
   adj_matrix_list_class <- checks$adj_matrix_list_class
-  show_progress = checks$show_progress
+  show_progress <- checks$show_progress
 
   if (adj_matrix_list_class == "conventional") {
     sampled_adj_matrices <- build_monte_carlo_fcms_from_conventional_adj_matrices(adj_matrix_list, N_samples, include_zeroes, show_progress)
@@ -704,7 +705,6 @@ build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_mat
                                                                include_zeroes = FALSE,
                                                                show_progress = TRUE) {
 
-  #
   if (!(fuzzy_set_adj_matrix_list_class %in% c("conventional", "ivfn", "tfn"))) {
     stop("Input fuzzy_set_adj_matrix_list_class must be one of the following: 'conventional', 'ivfn', or 'tfn'")
   }
@@ -717,6 +717,8 @@ build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_mat
 
   if (!include_zeroes) {
     flattened_fuzzy_set_adj_matrix_list_w_distributions <- apply(flattened_fuzzy_set_adj_matrix_list_w_distributions, c(1, 2), function(element) ifelse(element[[1]][[1]] == 0, NA, element[[1]][[1]]), simplify = FALSE)
+  } else {
+    flattened_fuzzy_set_adj_matrix_list_w_distributions <- apply(flattened_fuzzy_set_adj_matrix_list_w_distributions, c(1, 2), function(element) element[[1]][[1]], simplify = FALSE)
   }
 
   if (show_progress) {
@@ -724,7 +726,6 @@ build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_mat
     column_samples <- pbapply::pbapply(
       flattened_fuzzy_set_adj_matrix_list_w_distributions, 2,
       function(column_vec) {
-        #
         # sample_list_of_vectors_ignoring_NAs
         na_omit_column_vec <- stats::na.omit(do.call(c, column_vec))
         if (length(na_omit_column_vec) != 0) {
@@ -738,6 +739,7 @@ build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_mat
       }
     })
     cat(print("Constructing monte carlo fcms from samples", quote = FALSE))
+    # browser()
     sampled_adj_matrices <- pbapply::pbapply(column_samples, 1, function(row_vec) matrix(row_vec, nrow = n_nodes, ncol = n_nodes), simplify = FALSE)
   } else {
     column_samples <- apply(flattened_fuzzy_set_adj_matrix_list_w_distributions, 2, function(column_vec) {
