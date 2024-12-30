@@ -353,32 +353,12 @@ autoplot.fcmconfr <- function(object, ...) {
         aes(y = .data$name, xmin = .data$lower, x = .data$lower, xmax = .data$upper, color = .data$analysis_source),
         linewidth = 0.6, key_glyph = ggplot2::draw_key_path # ggplot2::draw_key_linerange
       ) +
-      # ggplot2::geom_point(
-      #   data = ggplot2::remove_missing(plot_data$aggregate_inferences),
-      #   aes(y = .data$name, x = .data$lower, color = .data$analysis_source),
-      #   size = 0.8, shape = 17, color = "red"#, key_glyph = ggplot2::draw_key_blank,
-      # ) +
-      # ggplot2::geom_point(
-      #   data = ggplot2::remove_missing(plot_data$aggregate_inferences),
-      #   aes(y = .data$name, x = .data$upper, color = .data$analysis_source),
-      #   size = 0.8, shape = 17, color = "red"#, key_glyph = ggplot2::draw_key_blank,
-      # ) +
       # Individual FCMs
       ggplot2::geom_linerange(
         data = ggplot2::remove_missing(plot_data$input_inferences),
         aes(y = .data$name, xmin = .data$lower, x = .data$lower, xmax = .data$upper, color = .data$analysis_source),
         position = ggplot2::position_dodge2(width = 0.5), linewidth = 0.1, key_glyph = ggplot2::draw_key_path
-      ) #+
-      # ggplot2::geom_point(
-      #   data = ggplot2::remove_missing(plot_data$input_inferences),
-      #   aes(y = .data$name, x = .data$lower, color = .data$analysis_source),
-      #   position = ggplot2::position_dodge2(width = 0.5), size = 0.5, key_glyph = ggplot2::draw_key_blank
-      # ) +
-      # ggplot2::geom_point(
-      #   data = ggplot2::remove_missing(plot_data$input_inferences),
-      #   aes(y = .data$name, x = .data$upper, color = .data$analysis_source),
-      #   position = ggplot2::position_dodge2(width = 0.5), size = 0.5, key_glyph = ggplot2::draw_key_blank
-      # )
+      )
   }
 
 
@@ -476,6 +456,72 @@ theme_custom <- function(...) {
 default_theme <- function() {
   theme_custom()
 }
+
+
+
+# } else if (object$fcm_class == "ivfn") {
+#   ggplot_main <- ggplot2::ggplot() +
+#     # MC CIs
+#     ggplot2::geom_crossbar(
+#       data = ggplot2::remove_missing(plot_data$mc_inference_CIs),
+#       aes(y = .data$name, xmin = .data$lower_CI, x = .data$lower_CI, xmax = .data$lower_CI, linetype = .data$analysis_source),
+#       width = 0.8, color = "blue", linewidth = 0.2, na.rm = FALSE, key_glyph = ggplot2::draw_key_vline
+#     ) +
+#     ggplot2::geom_crossbar(
+#       data = ggplot2::remove_missing(plot_data$mc_inference_CIs),
+#       aes(y = .data$name, xmin = .data$upper_CI, x = .data$upper_CI, xmax = .data$upper_CI, linetype = .data$analysis_source),
+#       width = 0.8, color = "blue", linewidth = 0.2, na.rm = TRUE, key_glyph = ggplot2::draw_key_vline
+#     ) +
+#     # MC FCMs
+#     ggplot2::geom_point(
+#       data = ggplot2::remove_missing(plot_data$mc_inferences),
+#       aes(y = .data$name, x = .data$value, shape = .data$analysis_source),
+#       color = "blue", position = ggplot2::position_dodge2(width = 0.1),
+#       #size = 1,
+#       alpha = 0.8, na.rm = FALSE
+#     ) +
+#     # ggplot2::geom_boxplot(
+#     #   data = ggplot2::remove_missing(plot_data$mc_inferences),
+#     #   aes(y = .data$name, x = .data$value, color = .data$analysis_source,  linewidth = .data$analysis_source),
+#     #   # outlier.color = "darkgrey", outlier.shape = 0, outlier.size = 1.75,
+#     #   na.rm = TRUE, fill = NA
+#     # ) +
+#     # Aggregate FCM
+#     ggplot2::geom_linerange(
+#       data = ggplot2::remove_missing(plot_data$aggregate_inferences),
+#       aes(y = .data$name, xmin = .data$lower, x = .data$lower, xmax = .data$upper, color = .data$analysis_source),
+#       linewidth = 0.6, key_glyph = ggplot2::draw_key_path # ggplot2::draw_key_linerange
+#     ) +
+#     # ggplot2::geom_point(
+#     #   data = ggplot2::remove_missing(plot_data$aggregate_inferences),
+#     #   aes(y = .data$name, x = .data$lower, color = .data$analysis_source),
+#     #   size = 0.8, shape = 17, color = "red"#, key_glyph = ggplot2::draw_key_blank,
+#     # ) +
+#     # ggplot2::geom_point(
+#     #   data = ggplot2::remove_missing(plot_data$aggregate_inferences),
+#     #   aes(y = .data$name, x = .data$upper, color = .data$analysis_source),
+#     #   size = 0.8, shape = 17, color = "red"#, key_glyph = ggplot2::draw_key_blank,
+#     # ) +
+#     # Individual FCMs
+#     ggplot2::geom_linerange(
+#       data = ggplot2::remove_missing(plot_data$input_inferences),
+#       aes(y = .data$name, xmin = .data$lower, x = .data$lower, xmax = .data$upper, color = .data$analysis_source),
+#       position = ggplot2::position_dodge2(width = 0.5), linewidth = 0.1, key_glyph = ggplot2::draw_key_path
+#     ) #+
+#   # ggplot2::geom_point(
+#   #   data = ggplot2::remove_missing(plot_data$input_inferences),
+#   #   aes(y = .data$name, x = .data$lower, color = .data$analysis_source),
+#   #   position = ggplot2::position_dodge2(width = 0.5), size = 0.5, key_glyph = ggplot2::draw_key_blank
+#   # ) +
+#   # ggplot2::geom_point(
+#   #   data = ggplot2::remove_missing(plot_data$input_inferences),
+#   #   aes(y = .data$name, x = .data$upper, color = .data$analysis_source),
+#   #   position = ggplot2::position_dodge2(width = 0.5), size = 0.5, key_glyph = ggplot2::draw_key_blank
+#   # )
+# }
+
+
+
 
 
 

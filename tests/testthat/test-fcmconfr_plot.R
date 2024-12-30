@@ -356,7 +356,7 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       perform_aggregate_analysis = TRUE,
       perform_monte_carlo_analysis = FALSE,
       perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
       include_monte_carlo_FCM_simulations_in_output = FALSE
     )
   ))
@@ -468,10 +468,10 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       # initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
       # clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
       initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
-      clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
-      activation = 'modified-kosko',
+      clamping_vector = c(1, 0, 0, 0, 0, 0, 0, 0, 0),
+      activation = 'rescale',
       squashing = 'sigmoid',
-      lambda = 0.5,
+      lambda = 1,
       point_of_inference = "final",
       max_iter = 1000,
       min_error = 1e-05,
