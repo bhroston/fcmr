@@ -105,8 +105,8 @@ test_that("infer_ivfn_or_tfn_fcm works", {
                                             lambda = 1,
                                             point_of_inference = "final")
 
-  test_baseline_final_state <- test_baseline$state_vectors[nrow(test_baseline$state_vectors),][-1]
-  test_scenario_final_state <- test_scenario$state_vectors[nrow(test_scenario$state_vectors),][-1]
+  test_baseline_final_state <- test_baseline$inferences
+  test_scenario_final_state <- test_scenario$inferences
 
   test_baseline_final_state_dists <- convert_fuzzy_set_elements_in_matrix_to_distributions(test_baseline_final_state, "ivfn", 1000)
   test_scenario_final_state_dists <- convert_fuzzy_set_elements_in_matrix_to_distributions(test_scenario_final_state, "ivfn", 1000)
@@ -127,6 +127,22 @@ test_that("infer_ivfn_or_tfn_fcm works", {
   total_error <- error_in_lowers + error_in_uppers
 
   expect_lt(total_error, 0.1)
+
+  # Check inference function with all 0's in clamping vector is same as baseline simulation
+  zero_clamping_vector_inference <- infer_ivfn_or_tfn_fcm(adj_matrix,
+                        initial_state_vector = c(1, 1, 1, 1, 1, 1),
+                        clamping_vector = c(0, 0, 0, 0, 0, 0),
+                        activation = "kosko",
+                        squashing = "sigmoid",
+                        lambda = 1,
+                        point_of_inference = "final")
+  inference_lowers <- vapply(zero_clamping_vector_inference$inferences, function(x) x[[1]]$lower, numeric(1))
+  simulation_lowers <- vapply(test_baseline$inferences, function(x) x[[1]]$lower, numeric(1))
+  expect_identical(inference_lowers, simulation_lowers)
+
+  inference_uppers <- vapply(zero_clamping_vector_inference$inferences, function(x) x[[1]]$upper, numeric(1))
+  simulation_uppers <- vapply(test_baseline$inferences, function(x) x[[1]]$upper, numeric(1))
+  expect_identical(inference_uppers, simulation_uppers)
 
 
   # Compare Ex. Matrices IVFN and TFN Sim Results
@@ -153,6 +169,7 @@ test_that("infer_ivfn_or_tfn_fcm works", {
   upper_differences <- sum(abs(salinization_sim_ivfn$inference$upper - salinization_sim_tfn$inference$upper))^2
   crisp_differences <- sum(abs(salinization_sim_ivfn$inference$crisp - salinization_sim_tfn$inference$crisp))^2
   expect_true(lower_differences < 1e-3 & upper_differences < 1e-3 & crisp_differences < 1e-3)
+
 })
 
 
