@@ -1,4 +1,18 @@
 
+#' sample_fcms
+#'
+#' An example fcm dataset collected by collecting stakeholder perceptions of
+#' rising salinization in a socio-ecological system. To reduce file size and
+#' protect stakeholder anonymity, the provided adjacency matrices contain a
+#' subset of nodes and edges across the data used in the cited paper.
+#'
+#' Given in Rippy et al, (In Review)
+#'
+#' @format ## `salinization_conventional_fcms`
+#' A list of conventional fcm adjacency matrices
+#'
+"sample_fcms"
+
 #' salinization_conventional_fcms
 #'
 #' An example fcm dataset collected by collecting stakeholder perceptions of
