@@ -11,6 +11,7 @@ infer_monte_carlo_fcm_set(
   activation = c("kosko", "modified-kosko", "rescale"),
   squashing = c("sigmoid", "tanh"),
   lambda = 1,
+  point_of_inference = c("peak", "final"),
   max_iter = 100,
   min_error = 1e-05,
   parallel = TRUE,
@@ -36,6 +37,9 @@ will remain constant throughout the entire simulation as if they were "clamped" 
 
 \item{lambda}{A numeric value that defines the steepness of the slope of the
 squashing function when tanh or sigmoid are applied}
+
+\item{point_of_inference}{The point along the simulation time-series to be
+identified as the inference. Must be one of the following: 'peak' or 'final'}
 
 \item{max_iter}{The maximum number of iterations to run if the minimum error value is not achieved}
 
@@ -110,6 +114,7 @@ mc_fcms_inferences <- infer_monte_carlo_fcm_set(
   activation = "kosko",
   squashing = "sigmoid",
   lambda = 1,
+  point_of_inference = "final",
   max_iter = 1000,
   min_error = 1e-5,
   parallel = FALSE,
@@ -168,6 +173,7 @@ mc_fcms_inferences <- infer_monte_carlo_fcm_set(
   activation = "kosko",
   squashing = "sigmoid",
   lambda = 1,
+  point_of_inference = "final",
   max_iter = 100,
   min_error = 1e-5,
   parallel = FALSE,
@@ -248,6 +254,7 @@ mc_fcms_inferences <- infer_monte_carlo_fcm_set(
   activation = "kosko",
   squashing = "sigmoid",
   lambda = 1,
+  point_of_inference = "final",
   max_iter = 100,
   min_error = 1e-5,
   parallel = FALSE,
@@ -259,7 +266,9 @@ Other monte-carlo-model-generation-and-simulation:
 \code{\link{build_monte_carlo_fcms}()},
 \code{\link{build_monte_carlo_fcms_from_conventional_adj_matrices}()},
 \code{\link{build_monte_carlo_fcms_from_fuzzy_set_adj_matrices}()},
-\code{\link{get_mc_simulations_inference_CIs_w_bootstrap}()},
-\code{\link{monte_carlo_bootstrap_checks}()}
+\code{\link{check_build_monte_carlo_fcms_inputs}()},
+\code{\link{check_monte_carlo_bootstrap_inputs}()},
+\code{\link{check_monte_carlo_inputs}()},
+\code{\link{get_mc_simulations_inference_CIs_w_bootstrap}()}
 }
 \concept{monte-carlo-model-generation-and-simulation}

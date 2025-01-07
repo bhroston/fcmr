@@ -8,9 +8,10 @@ infer_fcm(
   adj_matrix = matrix(),
   initial_state_vector = c(),
   clamping_vector = c(),
-  activation = "kosko",
-  squashing = "tanh",
+  activation = c("kosko", "modified-kosko", "rescale"),
+  squashing = c("sigmoid", "tanh"),
   lambda = 1,
+  point_of_inference = c("peak", "final"),
   max_iter = 100,
   min_error = 1e-05
 )
@@ -32,6 +33,9 @@ will remain constant throughout the entire simulation as if they were "clamped" 
 
 \item{lambda}{A numeric value that defines the steepness of the slope of the
 squashing function when tanh or sigmoid are applied}
+
+\item{point_of_inference}{The point along the simulation time-series to be
+identified as the inference. Must be one of the following: 'peak' or 'final'}
 
 \item{max_iter}{The maximum number of iterations to run if the minimum error value is not achieved}
 
@@ -76,7 +80,8 @@ infer_fcm(adj_matrix,
           clamping_vector = c(1, 0, 0, 0, 0, 0),
           activation = "kosko",
           squashing = "sigmoid",
-          lambda = 1)
+          lambda = 1,
+          point_of_inference = "final")
 
 # To simulate an fcm without clamping (i.e. don't calculate the difference
 # from steady-state), change the values in the initial_state_vector while
@@ -86,7 +91,8 @@ infer_fcm(adj_matrix,
           clamping_vector = c(0, 0, 0, 0, 0, 0),
           activation = "kosko",
           squashing = "sigmoid",
-          lambda = 1)
+          lambda = 1,
+          point_of_inference = "final")
 
 
 # Inference w/ Interval-Valued Fuzzy Numbers (IVFNs)
@@ -113,7 +119,8 @@ infer_fcm(adj_matrix,
           clamping_vector = c(1, 0, 0, 0, 0, 0),
           activation = "kosko",
           squashing = "sigmoid",
-          lambda = 1)
+          lambda = 1,
+          point_of_inference = "final")
 
 
 # Inference w/ Triangular Fuzzy Numbers (TFNs)
@@ -150,5 +157,6 @@ infer_fcm(adj_matrix,
           clamping_vector = c(1, 0, 0, 0, 0, 0),
           activation = "kosko",
           squashing = "sigmoid",
-          lambda = 1)
+          lambda = 1,
+          point_of_inference = "final")
 }

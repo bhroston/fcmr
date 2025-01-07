@@ -4,7 +4,7 @@
 \alias{get_concepts_to_plot}
 \title{Get Concepts in fcmconfr Object to Include in Plot}
 \usage{
-get_concepts_to_plot(fcmconfr_object, filter_limit = 0.01)
+get_concepts_to_plot(fcmconfr_object, filter_limit = 1e-09)
 }
 \arguments{
 \item{fcmconfr_object}{A direct output of the \code{\link{fcmconfr}} function}

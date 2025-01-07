@@ -2,37 +2,7 @@
 % Please edit documentation in R/infer_and_simulate_fcm.R
 \name{convert_element_to_ivfn_or_tfn_if_numeric}
 \alias{convert_element_to_ivfn_or_tfn_if_numeric}
-\title{#' Defuzz (IVFN)
-#'
-#' @description
-#' Convert a fuzzy number to a crisp value. For IVFNs, return the average of the
-#' upper and lower bounds.
-#'
-#' @param ivfn_variable A fuzzy number object. Either an ivfn or tfn
-#'
-#' @returns A crisp value representative of the input IVFN
-#'
-#' @export
-#' @examples  defuzz(ivfn(-1, 1))
-defuzz.ivfn <- function(ivfn_variable) {
-  (ivfn_variable$lower + ivfn_variable$upper)/2
-}
-#' Defuzz (TFN)
-#'
-#' @description
-#' Convert a fuzzy number to a crisp value. For TFNs, return the average of the lower bound, the
-#' mode, and the upper bound.
-#'
-#' @param tfn_variable A fuzzy number object. Either an ivfn or tfn
-#'
-#' @returns A crisp value representative of the input TFN
-#'
-#' @export
-#' @examples defuzz(tfn(-1, 0, 1))
-defuzz.tfn <- function(tfn_variable) {
-  (tfn_variable$lower + tfn_variable$upper)/2
-}
-Convert Value to IVFN or TFN if Value is Numeric}
+\title{Convert Value to IVFN or TFN if Value is Numeric}
 \usage{
 convert_element_to_ivfn_or_tfn_if_numeric(
   element,

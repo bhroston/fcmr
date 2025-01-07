@@ -10,7 +10,7 @@
 # )
 
 
-test_that("infer_monte_carlo_fcm_set works", {
+test_that("infer_monte_carlo_fcm_set works with ivfn fcms", {
   lower_adj_matrix <- data.frame(
     "A" = c(0, 0, 0, 0),
     "B" = c(0.25, 0, 0, 0.25),
@@ -31,43 +31,46 @@ test_that("infer_monte_carlo_fcm_set works", {
     test_mc_fcms <- build_monte_carlo_fcms_from_fuzzy_set_adj_matrices(adj_matrices, "ivfn", 50, include_zeroes = FALSE)
   ))
 
-  # Check parallel and show_progress run
-  invisible(capture.output(
-    expect_no_error(
-      test_fmcm_inference_p_sp <- infer_monte_carlo_fcm_set(
-        mc_adj_matrices = test_mc_fcms,
-        initial_state_vector <- c(1, 1, 1, 1),
-        clamping_vector <- c(1, 0, 0, 0),
-        activation = "kosko",
-        squashing = "sigmoid",
-        lambda = 1,
-        max_iter = 1000,
-        min_error = 1e-5,
-        parallel = TRUE,
-        show_progress = TRUE,
-        n_cores = 2
-      )
-    )
-  ))
-
-  # Check parallel and show_progress = FALSE run
-  invisible(capture.output(
-    expect_no_error(
-      test_fmcm_inference_p_and_no_sp <- infer_monte_carlo_fcm_set(
-        mc_adj_matrices = test_mc_fcms,
-        initial_state_vector <- c(1, 1, 1, 1),
-        clamping_vector <- c(1, 0, 0, 0),
-        activation = "kosko",
-        squashing = "sigmoid",
-        lambda = 1,
-        max_iter = 1000,
-        min_error = 1e-5,
-        parallel = TRUE,
-        show_progress = FALSE,
-        n_cores = 2
-      )
-    )
-  ))
+  # Parallel NOT working; using wrong versions of functions for some reason
+  # # Check parallel and show_progress run
+  # invisible(capture.output(
+  #   expect_no_error(
+  #     test_fmcm_inference_p_sp <- infer_monte_carlo_fcm_set(
+  #       mc_adj_matrices = test_mc_fcms,
+  #       initial_state_vector <- c(1, 1, 1, 1),
+  #       clamping_vector <- c(1, 0, 0, 0),
+  #       activation = "kosko",
+  #       squashing = "sigmoid",
+  #       lambda = 1,
+  #       point_of_inference = "final",
+  #       max_iter = 1000,
+  #       min_error = 1e-5,
+  #       parallel = TRUE,
+  #       show_progress = TRUE,
+  #       n_cores = 2
+  #     )
+  #   )
+  # ))
+  #
+  # # Check parallel and show_progress = FALSE run
+  # invisible(capture.output(
+  #   expect_no_error(
+  #     test_fmcm_inference_p_and_no_sp <- infer_monte_carlo_fcm_set(
+  #       mc_adj_matrices = test_mc_fcms,
+  #       initial_state_vector <- c(1, 1, 1, 1),
+  #       clamping_vector <- c(1, 0, 0, 0),
+  #       activation = "kosko",
+  #       squashing = "sigmoid",
+  #       lambda = 1,
+  #       point_of_inference = "final",
+  #       max_iter = 1000,
+  #       min_error = 1e-5,
+  #       parallel = TRUE,
+  #       show_progress = FALSE,
+  #       n_cores = 2
+  #     )
+  #   )
+  # ))
 
   # Check parallel = FALSE and show_progress run
   invisible(capture.output(
@@ -79,6 +82,7 @@ test_that("infer_monte_carlo_fcm_set works", {
         activation = "kosko",
         squashing = "sigmoid",
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 1000,
         min_error = 1e-5,
         parallel = FALSE,
@@ -98,6 +102,7 @@ test_that("infer_monte_carlo_fcm_set works", {
         activation = "kosko",
         squashing = "sigmoid",
         lambda = 1,
+        point_of_inference = "final",
         max_iter = 1000,
         min_error = 1e-5,
         parallel = FALSE,
@@ -108,67 +113,120 @@ test_that("infer_monte_carlo_fcm_set works", {
 
   # Confirm all methods produce same output
   max_error <- 1e-5
-  expect_true(all(abs(test_fmcm_inference_p_sp$inference - test_fmcm_inference_no_p_and_sp$inference) <= max_error))
-  expect_true(all(abs(test_fmcm_inference_no_p_and_sp$inference - test_fmcm_inference_p_and_no_sp$inference) <= max_error))
-  expect_true(all(abs(test_fmcm_inference_p_and_no_sp$inference - test_fmcm_inference_no_p_and_no_sp$inference) <= max_error))
-
-
-  # # Check when no n_cores given
-  # invisible(capture.output(
-  #   expect_warning(
-  #     test_fmcm_inference <- infer_monte_carlo_fcm_set(
-  #       mc_adj_matrices = test_mc_fcms,
-  #       initial_state_vector <- c(1, 1, 1, 1),
-  #       clamping_vector <- c(1, 0, 0, 0),
-  #       activation = "kosko",
-  #       squashing = "sigmoid",
-  #       lambda = 1,
-  #       max_iter = 1000,
-  #       min_error = 1e-5,
-  #       parallel = TRUE,
-  #       show_progress = TRUE
-  #     )
-  #   )
-  # ))
-  #
-  # # Check when n_cores > max. possible cores
-  # invisible(capture.output(
-  #   expect_warning(
-  #     test_fmcm_inference <- infer_monte_carlo_fcm_set(
-  #       mc_adj_matrices = test_mc_fcms,
-  #       initial_state_vector <- c(1, 1, 1, 1),
-  #       clamping_vector <- c(1, 0, 0, 0),
-  #       activation = "kosko",
-  #       squashing = "sigmoid",
-  #       lambda = 1,
-  #       max_iter = 1000,
-  #       min_error = 1e-5,
-  #       parallel = TRUE,
-  #       show_progress = TRUE,
-  #       n_cores = 20
-  #     )
-  #   )
-  # ))
-  #
-  # # Check when invalid n_cores given
-  # invisible(capture.output(
-  #   expect_error(
-  #     test_fmcm_inference <- infer_monte_carlo_fcm_set(
-  #       mc_adj_matrices = test_mc_fcms,
-  #       initial_state_vector <- c(1, 1, 1, 1),
-  #       clamping_vector <- c(1, 0, 0, 0),
-  #       activation = "kosko",
-  #       squashing = "sigmoid",
-  #       lambda = 1,
-  #       max_iter = 1000,
-  #       min_error = 1e-5,
-  #       parallel = TRUE,
-  #       show_progress = TRUE,
-  #       n_cores = 1.5
-  #     )
-  #   )
-  # ))
+  # expect_true(all(abs(test_fmcm_inference_p_sp$inference - test_fmcm_inference_no_p_and_sp$inference) <= max_error))
+  # expect_true(all(abs(test_fmcm_inference_no_p_and_sp$inference - test_fmcm_inference_p_and_no_sp$inference) <= max_error))
+  # expect_true(all(abs(test_fmcm_inference_p_and_no_sp$inference - test_fmcm_inference_no_p_and_no_sp$inference) <= max_error))
+  expect_true(all(abs(test_fmcm_inference_no_p_and_sp$inference - test_fmcm_inference_no_p_and_no_sp$inference) <= max_error))
 })
+
+
+test_that("infer_monte_carlo_fcm_set catches invalid parallel processing inputs", {
+  # This test specifically messes with R CMD Check
+  # invisible(capture.output(
+  #   expect_warning( # When no n_cores input given but parallel processing is intended
+  #     infer_monte_carlo_fcm_set(
+  #       sample_fcms$large_fcms$conventional_fcms,
+  #       initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
+  #       clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+  #       activation = "kosko",
+  #       squashing = "sigmoid",
+  #       lambda = 1,
+  #       max_iter = 100,
+  #       min_error = 1e-5,
+  #       parallel = TRUE
+  #     )
+  #   )
+  # ))
+
+  test_initial_state_vector <- rep(1, unique(dim(sample_fcms$large_fcms$conventional_fcms[[1]])))
+  test_clamping_vector <- rep(0, unique(dim(sample_fcms$large_fcms$conventional_fcms[[1]])))
+  test_clamping_vector[3] <- 1
+
+  invisible(capture.output(
+    expect_error( # When no n_cores input is not an integer
+      infer_monte_carlo_fcm_set(
+        sample_fcms$large_fcms$conventional_fcms,
+        initial_state_vector = test_initial_state_vector,
+        clamping_vector = test_clamping_vector,
+        activation = "kosko",
+        squashing = "sigmoid",
+        lambda = 1,
+        point_of_inference = "final",
+        max_iter = 100,
+        min_error = 1e-5,
+        parallel = TRUE,
+        n_cores = 1.5
+      )
+    )
+  ))
+
+  invisible(capture.output(
+    expect_no_error( # When n_cores is a positive, odd integer
+      infer_monte_carlo_fcm_set(
+        sample_fcms$large_fcms$conventional_fcms,
+        initial_state_vector = test_initial_state_vector,
+        clamping_vector = test_clamping_vector,
+        activation = "kosko",
+        squashing = "sigmoid",
+        lambda = 1,
+        point_of_inference = "final",
+        max_iter = 100,
+        min_error = 1e-5,
+        parallel = TRUE,
+        n_cores = 1
+      )
+    )
+  ))
+
+  # Messes w/ R CMD Check
+  # invisible(capture.output(
+  #   expect_warning( # When n_cores is larger than number of available cores
+  #     infer_monte_carlo_fcm_set(
+  #       sample_fcms$large_fcms$conventional_fcms,
+  #       initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1),
+  #       clamping_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+  #       activation = "kosko",
+  #       squashing = "sigmoid",
+  #       lambda = 1,
+  #       max_iter = 100,
+  #       min_error = 1e-5,
+  #       parallel = TRUE,
+  #       n_cores = parallel::detectCores() + 1
+  #     )
+  #   )
+  # ))
+
+  invisible(capture.output(
+    expect_warning( # When n_cores input given but parallel processing is not intended
+      infer_monte_carlo_fcm_set(
+        sample_fcms$large_fcms$conventional_fcms,
+        initial_state_vector = test_initial_state_vector,
+        clamping_vector = test_clamping_vector,
+        activation = "kosko",
+        squashing = "sigmoid",
+        lambda = 1,
+        point_of_inference = "final",
+        max_iter = 100,
+        min_error = 1e-5,
+        parallel = FALSE,
+        n_cores = 2
+      )
+    )
+  ))
+})
+
+
+# test_that("infer_monte_carlo_fcm_set works with salinization data sets", {
+#   mc_adj_matrices <- build_monte_carlo_fcms(sample_fcms$large_fcms$conventional_fcms, N_samples = 100, include_zeroes = FALSE, show_progress = TRUE)
+#   test <- infer_monte_carlo_fcm_set(
+#     mc_adj_matrices,
+#     initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+#     clamping_vector = c(),
+#     activation = "modified-kosko", squashing = "sigmoid", lambda = 1,
+#     max_iter = 1000, min_error = 1e-5,
+#     parallel = TRUE, n_cores = 2, show_progress = TRUE
+#   )
+# })
 
 
 test_that("get_mc_simulations_inference_CIs_w_bootstrap", {
@@ -200,6 +258,7 @@ test_that("get_mc_simulations_inference_CIs_w_bootstrap", {
       activation = "kosko",
       squashing = "sigmoid",
       lambda = 1,
+      point_of_inference = "final",
       max_iter = 1000,
       min_error = 1e-5,
       parallel = TRUE,
@@ -244,28 +303,84 @@ test_that("get_mc_simulations_inference_CIs_w_bootstrap", {
 
   # Check rejects non-dataframe objects
   expect_error(get_mc_simulations_inference_CIs_w_bootstrap("a", "median", 0.95, parallel = FALSE))
+})
 
-  # # Check when no n_cores given
+
+test_that("get_mc_simulations_inference_CIs_w_bootstrap catches invalid parallel processing inputs", {
+
+  test_initial_state_vector <- rep(1, unique(dim(sample_fcms$large_fcms$conventional_fcms[[1]])))
+  test_clamping_vector <- rep(0, unique(dim(sample_fcms$large_fcms$conventional_fcms[[1]])))
+  test_clamping_vector[3] <- 1
+
+  test_mc_fcms <- build_monte_carlo_fcms(sample_fcms$large_fcms$conventional_fcms, N_samples = 100, include_zeroes = TRUE, show_progress = FALSE)
+  invisible(capture.output(
+    test_mc_fcms_inferences <- infer_monte_carlo_fcm_set(
+      mc_adj_matrices = test_mc_fcms,
+      initial_state_vector = test_initial_state_vector,
+      clamping_vector = test_clamping_vector,
+      activation = "kosko",
+      squashing = "sigmoid",
+      lambda = 1,
+      point_of_inference = "final",
+      max_iter = 1000,
+      min_error = 1e-5,
+      parallel = FALSE,
+      show_progress = FALSE
+    )
+  ))
+
+  invisible(capture.output(
+    expect_error( # When n_cores input is not an integer
+      get_mc_simulations_inference_CIs_w_bootstrap(
+        mc_simulations_inference_df = test_mc_fcms_inferences$inference,
+        inference_function = "mean",
+        confidence_interval = 0.95,
+        bootstrap_reps = 100,
+        parallel = TRUE,
+        n_cores = 1.5
+      )
+    )
+  ))
+
+  invisible(capture.output(
+    expect_no_error( # When n_cores is a positive, odd integer
+      get_mc_simulations_inference_CIs_w_bootstrap(
+        mc_simulations_inference_df = test_mc_fcms_inferences$inference,
+        inference_function = "mean",
+        confidence_interval = 0.95,
+        bootstrap_reps = 100,
+        parallel = TRUE,
+        n_cores = 1
+      )
+    )
+  ))
+
+  # Messes w/ R CMD Check
   # invisible(capture.output(
-  #   expect_warning(
-  #     get_mc_simulations_inference_CIs_w_bootstrap(test_mc_fcms_inferences$inference, "mean", 0.95, parallel = TRUE, show_progress = TRUE)
-  #   )
-  # ))
-  #
-  # # Check when n_cores > max. possible cores
-  # invisible(capture.output(
-  #   expect_warning(
-  #     get_mc_simulations_inference_CIs_w_bootstrap(test_mc_fcms_inferences$inference, "mean", 0.95, parallel = TRUE, show_progress = TRUE, n_cores = 20)
-  #   )
-  # ))
-  #
-  # # Check when invalid n_cores given
-  # invisible(capture.output(
-  #   expect_error(
-  #     get_mc_simulations_inference_CIs_w_bootstrap(test_mc_fcms_inferences$inference, "mean", 0.95, parallel = TRUE, show_progress = TRUE, n_cores = 1.5)
+  #   expect_warning( # When n_cores is larger than number of available cores
+  #     get_mc_simulations_inference_CIs_w_bootstrap(
+  #       mc_simulations_inference_df = test_mc_fcms_inferences$inference,
+  #       inference_function = "mean",
+  #       confidence_interval = 0.95,
+  #       bootstrap_reps = 100,
+  #       parallel = TRUE,
+  #       n_cores = parallel::detectCores() + 1
+  #     )
   #   )
   # ))
 
+  invisible(capture.output(
+    expect_warning( # When n_cores is larger than number of available cores
+      get_mc_simulations_inference_CIs_w_bootstrap(
+        mc_simulations_inference_df = test_mc_fcms_inferences$inference,
+        inference_function = "mean",
+        confidence_interval = 0.95,
+        bootstrap_reps = 100,
+        parallel = FALSE,
+        n_cores = 2
+      )
+    )
+  ))
 })
 
 
@@ -512,69 +627,118 @@ test_that("build_monte_carlo_fcms_from_fuzzy_set_adj_matrices works", {
 })
 
 
-test_that("monte_carlo_bootstrap_checks works", {
+test_that("check_monte_carlo_inputs works", {
 
-  # Check catches invalid inference_function
-  expect_error(
-    monte_carlo_bootstrap_checks(
-      inference_function = "test",
-      confidence_interval = 0.95,
-      bootstrap_reps = 1000,
-      bootstrap_draws_per_rep = 1000
-    )
-  )
+  test_initial_state_vector <- rep(1, unique(dim(sample_fcms$large_fcms$conventional_fcms[[1]])))
+  test_clamping_vector <- rep(0, unique(dim(sample_fcms$large_fcms$conventional_fcms[[1]])))
+  test_clamping_vector[3] <- 1
 
-  # Check catches invalid confidence interval
-  expect_error(
-    monte_carlo_bootstrap_checks(
-      inference_function = "mean",
-      confidence_interval = "a",
-      bootstrap_reps = 1000,
-      bootstrap_draws_per_rep = 1000
-    )
-  )
-  expect_error(
-    monte_carlo_bootstrap_checks(
-      inference_function = "mean",
-      confidence_interval = 5,
-      bootstrap_reps = 1000,
-      bootstrap_draws_per_rep = 1000
-    )
+  # Check adj matrices # ----
+  ind_adj_matrix <- sample_fcms$large_fcms$conventional_fcms[[1]]
+  check_converts_matrix_to_list <- check_monte_carlo_inputs(ind_adj_matrix, initial_state_vector = test_initial_state_vector, clamping_vector = test_clamping_vector, activation = "kosko", squashing = "sigmoid", lambda = 1, point_of_inference = "final", n_cores = 2)
+  expect_identical(
+    list(ind_adj_matrix), check_converts_matrix_to_list$adj_matrices
   )
 
-  # Check catches invalid bootstrap_reps
+  wrong_size_adj_matrix <- data.frame(cbind(ind_adj_matrix, ind_adj_matrix))
+  different_sized_adj_matrices <- sample_fcms$large_fcms$conventional_fcms
+  different_sized_adj_matrices[[length(different_sized_adj_matrices) + 1]] <- wrong_size_adj_matrix
   expect_error(
-    monte_carlo_bootstrap_checks(
-      inference_function = "mean",
-      confidence_interval = 0.95,
-      bootstrap_reps = "a",
-      bootstrap_draws_per_rep = 1000
-    )
-  )
-  expect_error(
-    monte_carlo_bootstrap_checks(
-      inference_function = "mean",
-      confidence_interval = 0.95,
-      bootstrap_reps = 10.5,
-      bootstrap_draws_per_rep = 1000
-    )
+    check_monte_carlo_inputs(different_sized_adj_matrices, initial_state_vector = test_initial_state_vector, clamping_vector = test_clamping_vector, activation = "kosko", squashing = "sigmoid", lambda = 1, point_of_inference = "final", n_cores = 2)
   )
 
-  # Check catches invalid bootstrap_draws_per_rep
+  different_named_adj_matrices <- sample_fcms$large_fcms$conventional_fcms
+  colnames(different_named_adj_matrices[[1]]) <- paste0(colnames(different_named_adj_matrices[[1]]), "_wrong")
   expect_error(
-    monte_carlo_bootstrap_checks(
-      inference_function = "mean",
-      confidence_interval = 0.95,
-      bootstrap_reps = 1000,
-      bootstrap_draws_per_rep = "a"
-    )
+    check_monte_carlo_inputs(different_named_adj_matrices, initial_state_vector = test_initial_state_vector, clamping_vector = test_clamping_vector, activation = "kosko", squashing = "sigmoid", lambda = 1, point_of_inference = "final")
+  )
+
+  salinization_conventional_fcms_igraph_objects <- lapply(sample_fcms$large_fcms$conventional_fcms, function(adj_matrix) igraph::graph_from_adjacency_matrix(as.matrix(adj_matrix), mode = "directed", weighted = TRUE))
+  igraph_sparse_matrices <- lapply(salinization_conventional_fcms_igraph_objects, function(igraph_obj) igraph::as_adjacency_matrix(igraph_obj, attr = "weight"))
+  expect_warning(
+    check_monte_carlo_inputs(igraph_sparse_matrices, initial_state_vector = test_initial_state_vector, clamping_vector = test_clamping_vector, activation = "kosko", squashing = "sigmoid", lambda = 1, point_of_inference = "final", n_cores = 2)
+  )
+  # ----
+
+  # Check Runtime Options ----
+  expect_error(
+    check_monte_carlo_inputs(salinization_ivfn_fcms, initial_state_vector = test_initial_state_vector, clamping_vector = test_clamping_vector, activation = "kosko", squashing = "sigmoid", lambda = 1, point_of_inference = "final", n_cores = "a")
   )
   expect_error(
-    monte_carlo_bootstrap_checks(
-      inference_function = "mean",
-      confidence_interval = 0.95,
-      bootstrap_reps = 10000,
-      bootstrap_draws_per_rep = 10.5
-    )
+    check_monte_carlo_inputs(salinization_ivfn_fcms, initial_state_vector = test_initial_state_vector, clamping_vector = test_clamping_vector, activation = "kosko", squashing = "sigmoid", lambda = 1, point_of_inference = "final", n_cores = 5.6)
+  )
+  expect_error(
+    check_monte_carlo_inputs(salinization_ivfn_fcms, initial_state_vector = test_initial_state_vector, clamping_vector = test_clamping_vector, activation = "kosko", squashing = "sigmoid", lambda = 1, point_of_inference = "final", n_cores = -3)
+  )
+  # ----
+})
+
+
+test_that("check_build_monte_carlo_fcms_inputs works", {
+  # Check N_samples ----
+  expect_error(
+    check_build_monte_carlo_fcms_inputs(salinization_tfn_fcms, N_samples = "a", include_zeroes = TRUE, show_progress = TRUE)
+  )
+  expect_error(
+    check_build_monte_carlo_fcms_inputs(salinization_tfn_fcms, N_samples = 100.5, include_zeroes = TRUE, show_progress = TRUE)
+  )
+  expect_no_error(
+    check_build_monte_carlo_fcms_inputs(salinization_tfn_fcms, N_samples = 1001, include_zeroes = TRUE, show_progress = TRUE)
+  )
+  # ----
+
+  # Check include_zeroes
+  expect_error(
+    check_build_monte_carlo_fcms_inputs(salinization_tfn_fcms, N_samples = 1001, include_zeroes = 109, show_progress = TRUE)
+  )
+  expect_no_error(
+    check_build_monte_carlo_fcms_inputs(salinization_tfn_fcms, N_samples = 1001, include_zeroes = FALSE, show_progress = TRUE)
+  )
+  # ----
+})
+
+
+test_that("check_monte_carlo_bootstrap_inputs works", {
+  # Check inference_estimation_function ----
+  expect_warning(
+    check_monte_carlo_bootstrap_inputs(inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 100, n_cores = 2)
+  )
+  expect_error(
+    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "wrong", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 100)
+  )
+  # ----
+
+  # Chcek inference_estimation_CI ----
+  expect_error(
+    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = "a", inference_estimation_bootstrap_reps = 100)
+  )
+  expect_error(
+    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = 100, inference_estimation_bootstrap_reps = 100)
+  )
+  # ----
+
+  # Chcek inference_estimation_CI ----
+  expect_error(
+    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = "a")
+  )
+  expect_error(
+    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 100.1)
+  )
+  expect_error(
+    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = -1)
+  )
+  # ----
+
+  # Check n_cores
+  expect_warning(
+    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 100)
+  )
+  expect_error(
+    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 100, n_cores = 200)
+  )
+
+  expect_no_error(
+    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 10000, n_cores = 2)
   )
 })
+

@@ -13,6 +13,7 @@ fcmconfr(
   activation = c("kosko", "modified-kosko", "rescale"),
   squashing = c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"),
   lambda = 1,
+  point_of_inference = c("peak", "final"),
   max_iter = 100,
   min_error = 1e-05,
   inference_estimation_function = c("mean", "median"),
@@ -54,6 +55,9 @@ will remain constant throughout the entire simulation as if they were "clamped" 
 
 \item{lambda}{A numeric value that defines the steepness of the slope of the
 squashing function when tanh or sigmoid are applied}
+
+\item{point_of_inference}{The point along the simulation time-series to be
+identified as the inference. Must be one of the following: 'peak' or 'final'}
 
 \item{max_iter}{The maximum number of iterations to run if the minimum error value is not achieved}
 
@@ -197,6 +201,7 @@ ex_conventional_fcmconfr <- fcmconfr(
   activation = 'kosko',
   squashing = 'sigmoid',
   lambda = 1,
+  point_of_inference = "final",
   max_iter = 100,
   min_error = 1e-05,
   # Inference Estimation (bootstrap)
@@ -251,6 +256,7 @@ ex_ivfn_fcmconfr <- fcmconfr(
   activation = 'kosko',
   squashing = 'sigmoid',
   lambda = 1,
+  point_of_inference = "final",
   max_iter = 100,
   min_error = 1e-05,
   # Inference Estimation (bootstrap)
@@ -315,6 +321,7 @@ ex_tfn_fcmconfr <- fcmconfr(
   activation = 'kosko',
   squashing = 'sigmoid',
   lambda = 1,
+  point_of_inference = "final",
   max_iter = 100,
   min_error = 1e-05,
   # Inference Estimation (bootstrap)

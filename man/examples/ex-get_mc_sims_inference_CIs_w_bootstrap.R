@@ -37,6 +37,7 @@ mc_fcms_inferences <- infer_monte_carlo_fcm_set(
   activation = "kosko",
   squashing = "sigmoid",
   lambda = 1,
+  point_of_inference = "final",
   max_iter = 1000,
   min_error = 1e-5,
   parallel = FALSE,
