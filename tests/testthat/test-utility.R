@@ -47,7 +47,7 @@ test_that("get_adj_matrices_input_type works", {
   expect_identical(input_type$object_types_in_list, c("conventional", "data.frame"))
 
   # Incorrect data type in Adj. Matrix
-  bad_adj_matrix <- salinization_conventional_fcms[[1]]
+  bad_adj_matrix <- data.frame(sample_fcms$large_fcms$conventional_fcms[[1]])
   bad_adj_matrix[2, 4] <- "a"
   expect_error(
     get_adj_matrices_input_type(bad_adj_matrix)
