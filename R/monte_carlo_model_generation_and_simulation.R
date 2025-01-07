@@ -207,7 +207,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
   }
 
   inference_values_by_sim <- lapply(inferences_for_mc_adj_matrices, function(sim) sim$inference)
-  inference_values_by_sim <- data.frame(do.call(rbind, inference_values_by_sim))
+  inference_values_by_sim <- do.call(rbind, inference_values_by_sim)
   rownames(inference_values_by_sim) <- 1:nrow(inference_values_by_sim)
 
   inference_plot_data <- data.frame(
@@ -297,6 +297,8 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
   show_progress <- mcbc_checks$show_progress
 
   bootstrap_draws_per_rep <- nrow(mc_simulations_inference_df)
+
+  node_names <- colnames(mc_simulations_inference_df)
 
   if (parallel) {
     max_possible_cores <- parallel::detectCores()
@@ -476,13 +478,12 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
   }
 
   if (inference_function == "mean") {
-    bootstrapped_expectations_of_inference_by_node <- data.frame(do.call(rbind, bootstrapped_means_of_inference_by_node))
+    bootstrapped_expectations_of_inference_by_node <- do.call(rbind, bootstrapped_means_of_inference_by_node)
   } else if (inference_function == "median") {
-    bootstrapped_expectations_of_inference_by_node <- data.frame(do.call(rbind, bootstrapped_medians_of_inference_by_node))
+    bootstrapped_expectations_of_inference_by_node <- do.call(rbind, bootstrapped_medians_of_inference_by_node)
   }
+  colnames(bootstrapped_expectations_of_inference_by_node) <- node_names
   expected_value_of_inference_by_node <- apply(bootstrapped_expectations_of_inference_by_node, 2, mean)
-
-  #
 
   # print("Getting upper and lower quantile estimates of mean", quote = FALSE)
   lower_CI <- (1 - confidence_interval)/2
@@ -491,8 +492,6 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
   upper_CIs_by_node <- data.frame(apply(bootstrapped_expectations_of_inference_by_node, 2, function(bootstrapped_expectations) stats::quantile(bootstrapped_expectations, upper_CI), simplify = FALSE))
 
   nodes <- ifelse(colnames(lower_CIs_by_node) == colnames(upper_CIs_by_node), colnames(lower_CIs_by_node), stop("Error with quantiles calculation"))
-
-
 
   CIs_by_node <- data.frame(
     node = nodes,
