@@ -64,13 +64,13 @@ get_concepts_to_plot <- function(fcmconfr_object, filter_limit = 10e-10) {
   fcmconfr_inferences_across_analyses <- data.frame(do.call(rbind, fcmconfr_inferences[non_null_inference_dfs]))
 
   if (identical(fcmconfr_object$fcm_class, "conventional")) {
-    max_inference_by_node <- apply(fcmconfr_inferences_across_analyses, 2, max)
+    abs_max_inference_by_node <- apply(fcmconfr_inferences_across_analyses, 2, function(col) max(abs(col)))
   } else if (identical(fcmconfr_object$fcm_class, "ivfn")) {
     # upper_values_of_inferences <- apply(fcmconfr_inferences_across_analyses[, 2:ncol(fcmconfr_inferences_across_analyses)], c(1, 2), function(element) element[[1]]$upper)
-    max_inference_by_node <- apply(fcmconfr_inferences_across_analyses, 2, max)
+    abs_max_inference_by_node <- apply(fcmconfr_inferences_across_analyses, 2, function(col) max(abs(col)))
   }
 
-  nodes_to_plot_indexes <-  which(max_inference_by_node > filter_limit & !(fcm_nodes %in% clamped_nodes))
+  nodes_to_plot_indexes <-  which(abs_max_inference_by_node > filter_limit & !(fcm_nodes %in% clamped_nodes))
   nodes_to_plot <- fcm_nodes[nodes_to_plot_indexes]
 
   list(
