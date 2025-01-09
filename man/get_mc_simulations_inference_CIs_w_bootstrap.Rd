@@ -2,14 +2,13 @@
 % Please edit documentation in R/monte_carlo_model_generation_and_simulation.R
 \name{get_mc_simulations_inference_CIs_w_bootstrap}
 \alias{get_mc_simulations_inference_CIs_w_bootstrap}
-\title{Calculate Inferences (w/ Confidence Intervals via Bootstrap) of MC FCM Simulations}
+\title{[INTENDED FOR DEVELOPER USE ONLY] Calculate Inferences (w/ Confidence Intervals via Bootstrap) of MC FCM Simulations}
 \usage{
 get_mc_simulations_inference_CIs_w_bootstrap(
   mc_simulations_inference_df = data.frame(),
   inference_function = "mean",
   confidence_interval = 0.95,
   bootstrap_reps = 1000,
-  bootstrap_draws_per_rep = 1000,
   parallel = TRUE,
   n_cores = integer(),
   show_progress = TRUE
@@ -25,9 +24,6 @@ inferences from the monte carlo simulations}
 confidence intervals? (e.g. 0.95)}
 
 \item{bootstrap_reps}{Repetitions for bootstrap process, if chosen}
-
-\item{bootstrap_draws_per_rep}{Number of samples to draw (with replacement) from
-the data per bootstrap_rep}
 
 \item{parallel}{TRUE/FALSE Whether to perform the function using parallel processing}
 
@@ -87,13 +83,14 @@ mc_fcms <- build_monte_carlo_fcms_from_conventional_adj_matrices(
   ex_fcms, N_samples = 100, include_zeroes = FALSE, show_progress = TRUE
 )
 
-mc_fcms_inferences <- infer_monte_carlo_fcm_set(
+mc_fcms_inferences <- infer_fcm_set(
   mc_adj_matrices = mc_fcms,
   initial_state_vector <- c(1, 1, 1, 1),
   clamping_vector <- c(1, 0, 0, 0),
   activation = "kosko",
   squashing = "sigmoid",
   lambda = 1,
+  point_of_inference = "final",
   max_iter = 1000,
   min_error = 1e-5,
   parallel = FALSE,
@@ -110,7 +107,9 @@ Other monte-carlo-model-generation-and-simulation:
 \code{\link{build_monte_carlo_fcms}()},
 \code{\link{build_monte_carlo_fcms_from_conventional_adj_matrices}()},
 \code{\link{build_monte_carlo_fcms_from_fuzzy_set_adj_matrices}()},
-\code{\link{infer_monte_carlo_fcm_set}()},
-\code{\link{monte_carlo_bootstrap_checks}()}
+\code{\link{check_build_monte_carlo_fcms_inputs}()},
+\code{\link{check_infer_fcm_set_inputs}()},
+\code{\link{check_monte_carlo_bootstrap_inputs}()},
+\code{\link{infer_fcm_set}()}
 }
 \concept{monte-carlo-model-generation-and-simulation}

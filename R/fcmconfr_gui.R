@@ -25,13 +25,16 @@ fcmconfr_gui <- function() {
   shiny_env_check <- 1
 
   shiny::runApp(appDir = system.file('shiny', package = 'fcmconfr'))
+  # shiny_app <- shiny::shinyAppDir(appDir = system.file('shiny', package = 'fcmconfr'))
+  #shiny::runGadget(shiny_app, viewer = shiny::dialogViewer("", width = 1400, height = 1200))
 
   fcmconfr_gui_vars <- names(fcmconfr_gui_input)
 
-  # browser()
-
   if (identical(fcmconfr_gui_input$adj_matrices, "")) {
-    stop("No adj matrix list was selected. Please call gui again for selection.")
+    stop(cli::format_error(c(
+      "x" = "Error: No adj matrix list was selected.",
+      "+++++ Please call fcmconfr_gui() again to make a selection."
+    )))
   }
 
   if (!("clamping_vector" %in% fcmconfr_gui_vars)) {
@@ -58,12 +61,6 @@ fcmconfr_gui <- function() {
     fcmconfr_gui_input$mc_inference_bootstrap_reps <- 1000
   }
 
-  if (!("mc_inference_bootstrap_draws_per_rep" %in% fcmconfr_gui_vars)) {
-    fcmconfr_gui_input$mc_inference_bootstrap_draws_per_rep <- 1000
-  }
-
-  # browser()
-
   if (!("n_cores" %in% fcmconfr_gui_vars)) {
     fcmconfr_gui_input$n_cores <- 2
   }
@@ -84,8 +81,6 @@ fcmconfr_gui <- function() {
     .Data = fcmconfr_gui_input,
     class = "fcmconfr_gui_input"
   )
-
-  # browser()
 
   fcmconfr_gui_inputs
 }
@@ -126,6 +121,7 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "  activation = ", paste0("'", x$activation, "'"), ",\n",
       "  squashing = ",  paste0("'", x$squashing, "'"), ",\n",
       "  lambda = ", x$lambda, ",\n",
+      "  point_of_inference = ", paste0("'", x$point_of_inference, "'"), ",\n",
       "  max_iter = ", x$max_iter, ",\n",
       "  min_error = ", x$min_error, ",\n",
       "  # Runtime Options", "\n",
@@ -150,6 +146,7 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "  activation = ", paste0("'", x$activation, "'"), ",\n",
       "  squashing = ",  paste0("'", x$squashing, "'"), ",\n",
       "  lambda = ", x$lambda, ",\n",
+      "  point_of_inference = ", paste0("'", x$point_of_inference, "'"), ",\n",
       "  max_iter = ", x$max_iter, ",\n",
       "  min_error = ", x$min_error, ",\n",
       "  # Runtime Options", "\n",
@@ -177,13 +174,13 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "  activation = ", paste0("'", x$activation, "'"), ",\n",
       "  squashing = ",  paste0("'", x$squashing, "'"), ",\n",
       "  lambda = ", x$lambda, ",\n",
+      "  point_of_inference = ", paste0("'", x$point_of_inference, "'"), ",\n",
       "  max_iter = ", x$max_iter, ",\n",
       "  min_error = ", x$min_error, ",\n",
       "  # Inference Estimation (bootstrap)", "\n",
-      "  inference_estimation_function = ", x$mc_inference_estimation_function, ",\n",
+      "  inference_estimation_function = ", paste0("'", x$mc_inference_estimation_function, "'"), ",\n",
       "  inference_estimation_CI = ", x$mc_inference_estimation_CI, ",\n",
       "  inference_estimation_bootstrap_reps = ", x$mc_inference_bootstrap_reps, ",\n",
-      "  inference_estimation_bootstrap_draws_per_rep = ", x$mc_inference_bootstrap_draws_per_rep, ",\n",
       "  # Runtime Options", "\n",
       "  show_progress = ", x$show_progress, ",\n",
       "  parallel = ", x$parallel, ",\n",
@@ -208,6 +205,7 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "  activation = ", paste0("'", x$activation, "'"), ",\n",
       "  squashing = ",  paste0("'", x$squashing, "'"), ",\n",
       "  lambda = ", x$lambda, ",\n",
+      "  point_of_inference = ", paste0("'", x$point_of_inference, "'"), ",\n",
       "  max_iter = ", x$max_iter, ",\n",
       "  min_error = ", x$min_error, ",\n",
       "  # Runtime Options", "\n",
@@ -234,13 +232,13 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "  activation = ", paste0("'", x$activation, "'"), ",\n",
       "  squashing = ",  paste0("'", x$squashing, "'"), ",\n",
       "  lambda = ", x$lambda, ",\n",
+      "  point_of_inference = ", paste0("'", x$point_of_inference, "'"), ",\n",
       "  max_iter = ", x$max_iter, ",\n",
       "  min_error = ", x$min_error, ",\n",
       "  # Inference Estimation (bootstrap)", "\n",
-      "  inference_estimation_function = ", x$mc_inference_estimation_function, ",\n",
+      "  inference_estimation_function = ", paste0("'", x$mc_inference_estimation_function, "'"), ",\n",
       "  inference_estimation_CI = ", x$mc_inference_estimation_CI, ",\n",
       "  inference_estimation_bootstrap_reps = ", x$mc_inference_bootstrap_reps, ",\n",
-      "  inference_estimation_bootstrap_draws_per_rep = ", x$mc_inference_bootstrap_draws_per_rep, ",\n",
       "  # Runtime Options", "\n",
       "  show_progress = ", x$show_progress, ",\n",
       "  parallel = ", x$parallel, ",\n",
@@ -263,6 +261,7 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "  activation = ", paste0("'", x$activation, "'"), ",\n",
       "  squashing = ",  paste0("'", x$squashing, "'"), ",\n",
       "  lambda = ", x$lambda, ",\n",
+      "  point_of_inference = ", paste0("'", x$point_of_inference, "'"), ",\n",
       "  max_iter = ", x$max_iter, ",\n",
       "  min_error = ", x$min_error, ",\n",
       "  # Runtime Options", "\n",

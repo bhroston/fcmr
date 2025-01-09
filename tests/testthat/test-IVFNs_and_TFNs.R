@@ -185,7 +185,10 @@ test_that("make_adj_matrix_w_tfns works", {
     C1 = c(0, 0),
     C2 = c(-0.1, 0)
   )
-  expect_error(make_adj_matrix_w_tfns(lower_adj_matrix, mode_adj_matrix, upper_adj_matrix))
+
+  invisible(capture.output(
+    expect_error(make_adj_matrix_w_tfns(lower_adj_matrix, mode_adj_matrix, upper_adj_matrix))
+  ))
 })
 
 

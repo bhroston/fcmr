@@ -132,7 +132,6 @@ check_if_local_machine_has_access_to_show_progress_functionalities <- function(u
 #'  2. This function identifies the 'class' of the input adj. matrices from the
 #'     following options: 'conventional' 'ivfn' 'tfn' or 'unavailable'
 #'
-#'
 #'      - 'conventional' means that the adj. matrices contain only numeric objects
 #'
 #'      - 'ivfn' means that the adj. matrices contain only 'ivfn' objects (interval-
@@ -159,6 +158,7 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
   classes_in_matrix_objects <- methods::is(matrix())
   classes_in_datatable_objects <- methods::is(data.table::data.table())
   classes_in_tibble_objects <- methods::is(tibble::tibble())
+  classes_in_sparseMatrix_objects <- methods::is(Matrix::Matrix(data = 1:2, sparse = TRUE)) # add data = 1:2 to get accurate datatyps is methods::is
 
   classes_in_adj_matrix_list_input <- methods::is(adj_matrix_list_input)
   if (identical(classes_in_adj_matrix_list_input, classes_in_list_objects)) {
@@ -170,9 +170,11 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
   if (adj_matrices_input_is_list) {
     num_object_types_in_input_list <- length(unique(lapply(adj_matrix_list_input, methods::is)))
     if (shiny::isRunning() & num_object_types_in_input_list != 1) {
-      object_types_in_list = "unavailable"
+      object_types_in_input_list = "unavailable"
     } else if (!shiny::isRunning() & num_object_types_in_input_list != 1) {
-      stop("All objects in adj matrix list must be of the same type.")
+      stop(cli::format_error(c(
+        "x" = "Error: All objects in {.var adj_matrix_list} must be of the same type."
+      )))
     }
     object_types_in_input_list <- unique(lapply(adj_matrix_list_input, methods::is))[[1]]
   } else {
@@ -181,45 +183,51 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
   }
 
   if (identical(object_types_in_input_list, classes_in_dataframe_objects)) {
-    object_types_in_list <- c("conventional", "data.frame")
+    object_types_in_input_list <- c("data.frame")
   } else if (identical(object_types_in_input_list, classes_in_matrix_objects)) {
-    object_types_in_list <- c("conventional", "matrix")
+    object_types_in_input_list <- c("matrix")
   } else if (identical(object_types_in_input_list, classes_in_datatable_objects)) {
-    object_types_in_list <- c("conventional", "data.table")
+    object_types_in_input_list <- c("data.table")
   } else if (identical(object_types_in_input_list, classes_in_tibble_objects)) {
-    object_types_in_list <- c("conventional", "tibble")
-  } else if (identical(object_types_in_input_list, "adj_matrix_w_ivfns")) {
-    object_types_in_list <- "ivfn"
-  } else if (identical(object_types_in_input_list, "adj_matrix_w_tfns")) {
-    object_types_in_list <- "tfn"
-  } else {
-    if (shiny::isRunning()) {
-      object_types_in_list <- "unavailable"
-    } else {
-      stop("The list of objects in adj. matrix list must be one of the following: 'data.frame' 'matrix' 'sparseMatrix' 'data,table' 'tibble'")
-    }
+    object_types_in_input_list <- c("tibble")
+  } else if (identical(object_types_in_input_list, classes_in_sparseMatrix_objects)) {
+    object_types_in_input_list <- c("sparseMatrix")
   }
 
-  # browser()
+  element_types_in_objects_in_input_list <- unique(
+    lapply(adj_matrix_list_input,
+           function(adj_matrix) {
+             unique(as.vector(as.matrix(apply(adj_matrix, c(1, 2), function(x) methods::is(x[[1]])))))
+           })
+  )[[1]]
 
-  if (identical(object_types_in_list[1], "conventional")) {
-    adj_matrices_have_numeric_inputs <- all(
-      unlist(lapply(adj_matrix_list_input, function(adj_matrix) {
-        all(apply(adj_matrix, c(1, 2), function(x) "numeric" %in% methods::is(x)))
-      }))
-    )
-    if (!adj_matrices_have_numeric_inputs) {
-      if (shiny::isRunning()) {
-        object_types_in_list <- "unavailable"
-      } else {
-        stop("Object types in adj. matrices must be either Numerics, IVFNs, or TFNs")
-      }
+  if (identical(element_types_in_objects_in_input_list, methods::is(numeric()))) {
+    fcm_class <- "conventional"
+    object_types_in_input_list <- c("conventional", object_types_in_input_list)
+  } else if (identical(element_types_in_objects_in_input_list, "ivfn")) {
+    fcm_class <- "ivfn"
+    object_types_in_input_list <- "ivfn"
+  } else if (identical(element_types_in_objects_in_input_list, "tfn")) {
+    fcm_class <- "tfn"
+    object_types_in_input_list <- "tfn"
+  } else {
+    if (shiny::isRunning()) {
+      object_types_in_input_list <- "unavailable"
+    } else {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var adj_matrix} must be an adjacency matrix with edges represented as either numeric values, ivfns, or tfns"
+      )))
     }
+    stop(cli::format_error(c(
+      "x" = "Error: Unrecognized element types in input matrices.",
+      "+++++> Adjacency matrix elements must be either numeric, ivfn, or tfn, and all matrices must have elements of the same type."
+    )))
   }
 
   list(
+    fcm_class = fcm_class,
     adj_matrices_input_is_list = adj_matrices_input_is_list,
-    object_types_in_list = object_types_in_list
+    object_types_in_list = object_types_in_input_list
   )
 }
 

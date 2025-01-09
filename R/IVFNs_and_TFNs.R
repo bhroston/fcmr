@@ -182,6 +182,8 @@ ivfn <- function(lower = double(), upper = double()) {
 #' subtract_ivfn(ivfn(-0.5, 0.3), ivfn(0.4, 0.6))
 #' subtract_ivfn(ivfn(-1, 1), ivfn(-0.5, 0.5))
 subtract_ivfn <- function(ivfn_1 = ivfn(), ivfn_2 = ivfn()) {
+  # browser()
+
   if ((!identical(methods::is(ivfn_1), "ivfn")) | (!identical(methods::is(ivfn_2), "ivfn"))) {
     stop("Input Error: Both inputs must be valid ivfn objects")
   }
