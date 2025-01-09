@@ -58,19 +58,53 @@ get_concepts_to_plot <- function(fcmconfr_object, filter_limit = 10e-10) {
       upper_agg = aggregate_inferences$upper_inference_values,
       mc = fcmconfr_object$inferences$monte_carlo_fcms$all_inferences
     )
+  } else if (identical(fcmconfr_object$fcm_class, "tfn")) {
+    raw_input_inferences <- fcmconfr_object$inferences$input_fcms$inferences
+    adj_matrix_labels <- names(raw_input_inferences)
+    input_inferences_as_tfns <- do.call(rbind, raw_input_inferences)
+    rownames(input_inferences_as_tfns) <- NULL
+    input_inferences_as_ivfns <- input_inferences_as_tfns[, !(colnames(input_inferences_as_tfns) %in% c("adj_matrix"))]
+    input_inferences <- list(
+      lower_inference_values = cbind(adj_matrix = adj_matrix_labels, data.frame(apply(input_inferences_as_tfns, c(1, 2), function(element) element[[1]]$lower))),
+      mode_inference_values = cbind(adj_matrix = adj_matrix_labels, data.frame(apply(input_inferences_as_tfns, c(1, 2), function(element) element[[1]]$mode))),
+      upper_inference_values = cbind(adj_matrix = adj_matrix_labels, data.frame(apply(input_inferences_as_tfns, c(1, 2), function(element) element[[1]]$upper)))
+    )
+
+    agg_inferences_df <- fcmconfr_object$inferences$aggregate_fcm$inferences_df
+    lower_agg_inference_values <- agg_inferences_df$lower
+    names(lower_agg_inference_values) <- agg_inferences_df$concept
+    mode_agg_inference_values <- agg_inferences_df$mode
+    names(mode_agg_inference_values) <- agg_inferences_df$concept
+    upper_agg_inference_values <- agg_inferences_df$upper
+    names(upper_agg_inference_values) <- agg_inferences_df$concept
+    aggregate_inferences <- list(
+      lower_inference_values = lower_agg_inference_values,
+      mode_inference_values = mode_agg_inference_values,
+      upper_inference_values = upper_agg_inference_values
+    )
+
+    fcmconfr_inferences = list(
+      lower_input = input_inferences$lower_inference_values[, -1],
+      mode_input = input_inferences$mode_inference_values[, -1],
+      upper_input = input_inferences$upper_inference_values[, -1],
+      lower_agg = aggregate_inferences$lower_inference_values,
+      mode_agg = aggregate_inferences$mode_inference_values,
+      upper_agg = aggregate_inferences$upper_inference_values,
+      mc = fcmconfr_object$inferences$monte_carlo_fcms$all_inferences
+    )
   }
 
   non_null_inference_dfs <- !(unlist(lapply(fcmconfr_inferences, is.null)))
   fcmconfr_inferences_across_analyses <- data.frame(do.call(rbind, fcmconfr_inferences[non_null_inference_dfs]))
 
-  if (identical(fcmconfr_object$fcm_class, "conventional")) {
-    max_inference_by_node <- apply(fcmconfr_inferences_across_analyses, 2, max)
-  } else if (identical(fcmconfr_object$fcm_class, "ivfn")) {
-    # upper_values_of_inferences <- apply(fcmconfr_inferences_across_analyses[, 2:ncol(fcmconfr_inferences_across_analyses)], c(1, 2), function(element) element[[1]]$upper)
-    max_inference_by_node <- apply(fcmconfr_inferences_across_analyses, 2, max)
-  }
+  # if (identical(fcmconfr_object$fcm_class, "conventional")) {
+  abs_max_inference_by_node <- apply(fcmconfr_inferences_across_analyses, 2, function(col) max(abs(col)))
+  # } else if (identical(fcmconfr_object$fcm_class, "ivfn")) {
+  #   # upper_values_of_inferences <- apply(fcmconfr_inferences_across_analyses[, 2:ncol(fcmconfr_inferences_across_analyses)], c(1, 2), function(element) element[[1]]$upper)
+  #   abs_max_inference_by_node <- apply(fcmconfr_inferences_across_analyses, 2, function(col) max(abs(col)))
+  # }
 
-  nodes_to_plot_indexes <-  which(max_inference_by_node > filter_limit & !(fcm_nodes %in% clamped_nodes))
+  nodes_to_plot_indexes <-  which(abs_max_inference_by_node > filter_limit & !(fcm_nodes %in% clamped_nodes))
   nodes_to_plot <- fcm_nodes[nodes_to_plot_indexes]
 
   list(
@@ -117,6 +151,20 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
       upper_inference_values = cbind(adj_matrix = adj_matrix_labels, data.frame(apply(input_inferences_as_ivfns, c(1, 2), function(element) element[[1]]$upper)))
     )
     input_inferences$lower_inference_values <- input_inferences$lower_inference_values[, c(1, nodes_to_plot$index + 1)] # Add + 1 to match column indexes in input_fcms$inferences dataframe
+    input_inferences$upper_inference_values <- input_inferences$upper_inference_values[, c(1, nodes_to_plot$index + 1)] # Add + 1 to match column indexes in input_fcms$inferences dataframe
+  } else if (identical(fcmconfr_object$fcm_class, "tfn")) {
+    raw_input_inferences <- fcmconfr_object$inferences$input_fcms$inferences
+    adj_matrix_labels <- names(raw_input_inferences)
+    input_inferences_as_tfns <- do.call(rbind, raw_input_inferences)
+    rownames(input_inferences_as_tfns) <- NULL
+    input_inferences_as_tfns <- input_inferences_as_tfns[, !(colnames(input_inferences_as_tfns) %in% c("adj_matrix"))]
+    input_inferences <- list(
+      lower_inference_values = cbind(adj_matrix = adj_matrix_labels, data.frame(apply(input_inferences_as_tfns, c(1, 2), function(element) element[[1]]$lower))),
+      mode_inference_values = cbind(adj_matrix = adj_matrix_labels, data.frame(apply(input_inferences_as_tfns, c(1, 2), function(element) element[[1]]$mode))),
+      upper_inference_values = cbind(adj_matrix = adj_matrix_labels, data.frame(apply(input_inferences_as_tfns, c(1, 2), function(element) element[[1]]$upper)))
+    )
+    input_inferences$lower_inference_values <- input_inferences$lower_inference_values[, c(1, nodes_to_plot$index + 1)] # Add + 1 to match column indexes in input_fcms$inferences dataframe
+    input_inferences$mode_inference_values <- input_inferences$mode_inference_values[, c(1, nodes_to_plot$index + 1)] # Add + 1 to match column indexes in input_fcms$inferences dataframe
     input_inferences$upper_inference_values <- input_inferences$upper_inference_values[, c(1, nodes_to_plot$index + 1)] # Add + 1 to match column indexes in input_fcms$inferences dataframe
   }
 
@@ -211,6 +259,34 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
     mc_inference_CIs$analysis_source <- "CIs"
   } else if (fcmconfr_object$fcm_class == "tfn") {
     fcm_class_subtitle <- "TFN FCM"
+
+    lower_input_inferences_longer <- tidyr::pivot_longer(input_inferences$lower_inference_values, cols = 2:ncol(input_inferences$lower_inference_values), values_to = "lower")
+    mode_input_inferences_longer <- tidyr::pivot_longer(input_inferences$mode_inference_values, cols = 2:ncol(input_inferences$mode_inference_values), values_to = "mode")
+    upper_input_inferences_longer <- tidyr::pivot_longer(input_inferences$upper_inference_values, cols = 2:ncol(input_inferences$upper_inference_values), values_to = "upper")
+    input_inferences_longer <- Reduce(function(x, y) merge(x, y, all=TRUE), list(lower_input_inferences_longer, mode_input_inferences_longer, upper_input_inferences_longer))
+    #input_inferences_longer <- merge(lower_input_inferences_longer, mode_input_inferences_longer, upper_input_inferences_longer, all = TRUE)
+    input_inferences_longer$analysis_source <- "Ind FCMs"
+
+    lower_aggregate_inferences <- vapply(aggregate_inferences, function(element) ifelse(identical(methods::is(element[[1]]), "tfn"), element[[1]]$lower, NA), numeric(1))
+    mode_aggregate_inferences <- vapply(aggregate_inferences, function(element) ifelse(identical(methods::is(element[[1]]), "tfn"), element[[1]]$mode, NA), numeric(1))
+    upper_aggregate_inferences <- vapply(aggregate_inferences, function(element) ifelse(identical(methods::is(element[[1]]), "tfn"), element[[1]]$upper, NA), numeric(1))
+    aggregate_inferences_longer <- data.frame(
+      name = names(lower_aggregate_inferences),
+      lower = lower_aggregate_inferences,
+      mode = mode_aggregate_inferences,
+      upper = upper_aggregate_inferences
+    )
+
+    mc_inferences_longer <- tidyr::pivot_longer(mc_inferences, cols = 1:ncol(mc_inferences))
+
+    max_y <- max(max(input_inferences_longer$upper), max(mc_inferences_longer$value), max(aggregate_inferences_longer$upper), na.rm = TRUE)
+    max_y <- (ceiling(max_y*1000))/1000
+    min_y <- min(min(input_inferences_longer$lower), min(mc_inferences_longer$value), min(aggregate_inferences_longer$lower), na.rm = TRUE)
+    min_y <- (floor(min_y*1000))/1000
+
+    aggregate_inferences_longer$analysis_source <- "Agg FCM"
+    mc_inferences_longer$analysis_source <- "MC FCMs"
+    mc_inference_CIs$analysis_source <- "CIs"
   }
 
   list(
@@ -274,8 +350,6 @@ autoplot.fcmconfr <- function(object, ...) {
   inputs_agg_and_mc_no_bs <- (!(identical(plot_data$aggregate_inferences$name, "blank")) & !(identical(plot_data$mc_inferences$name, "blank")) & identical(plot_data$mc_inference_CIs$name, "blank"))
   inputs_agg_and_mc_w_bs <- (!(identical(plot_data$aggregate_inferences$name, "blank")) & !(identical(plot_data$mc_inferences$name, "blank")) & !(identical(plot_data$mc_inference_CIs$name, "blank")))
 
-  # browser()
-
   if (object$fcm_class == "conventional") {
     ggplot_main <- ggplot() +
       # ggplot2::geom_hline(yintercept = zero_intercept, linetype = "dotted") +
@@ -293,22 +367,15 @@ autoplot.fcmconfr <- function(object, ...) {
       # MC FCMs
       ggplot2::geom_point(
         data = ggplot2::remove_missing(plot_data$mc_inferences),
-        aes(y = .data$name, x = .data$value, color = .data$analysis_source, shape = .data$analysis_source),
-        position = ggplot2::position_dodge2(width = 0.4),
-        size = 1, alpha = 1, width = 0.2, na.rm = FALSE
+        aes(y = .data$name, x = .data$value, color = .data$analysis_source),#, shape = .data$analysis_source),
+        position = ggplot2::position_dodge2(width = 0.4), shape = 3, size = 1, alpha = 1, width = 0.2, na.rm = FALSE
       ) +
-      ggplot2::geom_boxplot(
-        data = ggplot2::remove_missing(plot_data$mc_inferences),
-        aes(y = .data$name, x = .data$value, linewidth = .data$analysis_source, color = .data$analysis_source),
-        # outlier.color = "darkgrey", outlier.shape = 3, outlier.size = 1.75,
-        width = 0.6, na.rm = TRUE, fill = NA
-      ) +
-      # Agg FCM
-      ggplot2::geom_point(
-        data = ggplot2::remove_missing(plot_data$aggregate_inferences),
-        aes(y = .data$name, x = .data$value, color = .data$analysis_source, shape = .data$analysis_source),
-        size = 2,
-      ) +
+      # ggplot2::geom_boxplot(
+      #   data = ggplot2::remove_missing(plot_data$mc_inferences),
+      #   aes(y = .data$name, x = .data$value, linewidth = .data$analysis_source, color = .data$analysis_source),
+      #   # outlier.color = "darkgrey", outlier.shape = 3, outlier.size = 1.75,
+      #   width = 0.6, na.rm = TRUE, fill = NA
+      # ) +
       # Ind FCMs
       ggplot2::geom_point(
         data = ggplot2::remove_missing(plot_data$input_inferences),
@@ -317,10 +384,55 @@ autoplot.fcmconfr <- function(object, ...) {
         aes(y = .data$name, x = .data$value, color = .data$analysis_source, shape = .data$analysis_source),
         size = 2, na.rm = TRUE
       ) +
-      ggplot2::scale_y_discrete(limits = concepts_to_plot) +
-      ggplot2::scale_x_continuous(expand = c(0, 0), limits = c(plot_data$min_activation, plot_data$max_activation))
+      # Agg FCM
+      ggplot2::geom_point(
+        data = ggplot2::remove_missing(plot_data$aggregate_inferences),
+        aes(y = .data$name, x = .data$value, color = .data$analysis_source, shape = .data$analysis_source),
+        size = 2,
+      )
+      # ggplot2::scale_y_discrete(limits = concepts_to_plot) +
+      # ggplot2::scale_x_continuous(expand = c(0, 0), limits = c(plot_data$min_activation, plot_data$max_activation))
       # ggplot2::scale_y_continuous(expand = c(0, 0), limits = c(0, plot_data$max_activation)) +
   } else if (object$fcm_class == "ivfn") {
+    ggplot_main <- ggplot2::ggplot() +
+      # MC CIs
+      ggplot2::geom_crossbar(
+        data = ggplot2::remove_missing(plot_data$mc_inference_CIs),
+        aes(y = .data$name, xmin = .data$lower_CI, x = .data$lower_CI, xmax = .data$lower_CI, linetype = .data$analysis_source),
+        width = 0.8, color = "blue", linewidth = 0.2, na.rm = FALSE, key_glyph = ggplot2::draw_key_vline
+      ) +
+      ggplot2::geom_crossbar(
+        data = ggplot2::remove_missing(plot_data$mc_inference_CIs),
+        aes(y = .data$name, xmin = .data$upper_CI, x = .data$upper_CI, xmax = .data$upper_CI, linetype = .data$analysis_source),
+        width = 0.8, color = "blue", linewidth = 0.2, na.rm = TRUE, key_glyph = ggplot2::draw_key_vline
+      )
+    # MC FCMs
+    if (inputs_agg_and_mc_no_bs | inputs_agg_and_mc_w_bs) {
+      ggplot_main <- ggplot_main +
+        ggplot2::geom_point(
+          data = ggplot2::remove_missing(plot_data$mc_inferences),
+          aes(y = .data$name, x = .data$value, color = .data$analysis_source),#, shape = .data$analysis_source),
+          position = ggplot2::position_dodge2(width = 0.25), alpha = 0.8, shape = 3,
+          na.rm = FALSE
+        )
+    }
+    # Individual FCMs
+    ggplot_main <- ggplot_main +
+      ggplot2::geom_linerange(
+      data = ggplot2::remove_missing(plot_data$input_inferences),
+      aes(y = .data$name, xmin = .data$lower, x = .data$lower, xmax = .data$upper, color = .data$analysis_source),
+      position = ggplot2::position_dodge2(width = 0.5), linewidth = 0.1
+    )
+    # Aggregate FCM
+    if (!inputs_only) {
+      ggplot_main <- ggplot_main +
+        ggplot2::geom_linerange(
+          data = ggplot2::remove_missing(plot_data$aggregate_inferences),
+          aes(y = .data$name, xmin = .data$lower, x = .data$lower, xmax = .data$upper, color = .data$analysis_source),
+          linewidth = 0.6
+        )
+    }
+  } else if (object$fcm_class == "tfn") {
     ggplot_main <- ggplot2::ggplot() +
       # MC CIs
       ggplot2::geom_crossbar(
@@ -336,58 +448,66 @@ autoplot.fcmconfr <- function(object, ...) {
       # MC FCMs
       ggplot2::geom_point(
         data = ggplot2::remove_missing(plot_data$mc_inferences),
-        aes(y = .data$name, x = .data$value, shape = .data$analysis_source),
-        color = "blue", position = ggplot2::position_dodge2(width = 0.1),
-        #size = 1,
-        alpha = 0.8, na.rm = FALSE
-      ) +
-      # ggplot2::geom_boxplot(
-      #   data = ggplot2::remove_missing(plot_data$mc_inferences),
-      #   aes(y = .data$name, x = .data$value, color = .data$analysis_source,  linewidth = .data$analysis_source),
-      #   # outlier.color = "darkgrey", outlier.shape = 0, outlier.size = 1.75,
-      #   na.rm = TRUE, fill = NA
-      # ) +
-      # Aggregate FCM
-      ggplot2::geom_linerange(
-        data = ggplot2::remove_missing(plot_data$aggregate_inferences),
-        aes(y = .data$name, xmin = .data$lower, x = .data$lower, xmax = .data$upper, color = .data$analysis_source),
-        linewidth = 0.6, key_glyph = ggplot2::draw_key_path # ggplot2::draw_key_linerange
+        aes(y = .data$name, x = .data$value, color = .data$analysis_source),#, shape = .data$analysis_source),
+        position = ggplot2::position_dodge2(width = 0.25), alpha = 0.8, shape = 3, na.rm = FALSE
       ) +
       # Individual FCMs
-      ggplot2::geom_linerange(
+      ggplot2::geom_pointrange(
         data = ggplot2::remove_missing(plot_data$input_inferences),
-        aes(y = .data$name, xmin = .data$lower, x = .data$lower, xmax = .data$upper, color = .data$analysis_source),
-        position = ggplot2::position_dodge2(width = 0.5), linewidth = 0.1, key_glyph = ggplot2::draw_key_path
+        aes(y = .data$name, xmin = .data$lower, x = .data$mode, xmax = .data$upper, color = .data$analysis_source),#, shape = .data$analysis_source),
+        position = ggplot2::position_dodge2(width = 0.5), fatten = 0.6, linewidth = 0.1
       )
+    # Aggregate FCM - Have to separate this because it's the only clean way to
+    # make the legend's key look right
+    if (!inputs_only) {
+      ggplot_main <- ggplot_main +
+        ggplot2::geom_pointrange(
+          data = ggplot2::remove_missing(plot_data$aggregate_inferences),
+          aes(y = .data$name, xmin = .data$lower, x = .data$mode, xmax = .data$upper, color = .data$analysis_source),#, shape = .data$analysis_source),
+          fatten = 2, linewidth = 0.4
+        )
+    }
   }
 
+  if  (inputs_only) {
+    ggplot_main <- ggplot_main +
+      ggplot2::scale_color_manual(values = c("Ind FCMs" = "black")) +#, guide = ggplot2::guide_legend(override.aes = list(shape = 16)))
+      ggplot2::scale_shape_manual(values = c("Ind FCMs" = 16))
+  } else if (inputs_and_agg) {
+    ggplot_main <- ggplot_main +
+      ggplot2::scale_color_manual(
+        values = c("Ind FCMs" = "black", "Agg FCM" = "red"),
+        breaks = c("Ind FCMs", "Agg FCM"),
+        guide = ggplot2::guide_legend(override.aes = list(linewidth = c(0.1, 0.5)))
+        ) +
+      ggplot2::scale_shape_manual(values = c("Ind FCMs" = 16, "Agg FCM" = 17), breaks = c("Ind FCMs", "Agg FCM"))
+  } else if (inputs_agg_and_mc_no_bs) {
+    ggplot_main <- ggplot_main +
+      ggplot2::scale_color_manual(
+        values = c("Ind FCMs" = "black", "MC FCMs" = "blue", "Agg FCM" = "red"),
+        breaks = c("Ind FCMs", "MC FCMs", "Agg FCM"),
+        guide = ggplot2::guide_legend(override.aes = list(shape = c(16, 3, 17), linewidth = c(0.5, NA, 0.5)))
+      ) +
+      ggplot2::scale_shape_manual(values = c("Ind FCMs" = 16, "MC FCMs" = 3, "Agg FCM" = 17), breaks = c("Ind FCMs", "MC FCMs", "Agg FCM"))
+  } else if (inputs_agg_and_mc_w_bs) {
+    ggplot_main <- ggplot_main +
+      # ggplot2::scale_color_manual(values = c("Ind FCMs" = "black", "Agg FCM" = "red", "MC FCMs" = "blue", "CIs" = "blue"), breaks = c("MC FCMs", "Ind FCMs", "Agg FCM", "CIs")) +
+      ggplot2::scale_color_manual(
+        values = c("Ind FCMs" = "black", "MC FCMs" = "blue", "Agg FCM" = "red"),
+        breaks = c("Ind FCMs", "MC FCMs", "Agg FCM"),
+        guide = ggplot2::guide_legend(override.aes = list(shape = c(16, 3, 17), linewidth = c(0.5, NA, 0.5)))
+      ) +
+      # ggplot2::guides(color = ggplot2::guide_legend(nrow = 3)) +
+      # ggplot2::scale_shape_manual(values = c("Ind FCMs" = 16, "Agg FCM" = 17, "MC FCMs" = 3), breaks = c("MC FCMs", "Ind FCMs", "Agg FCM", "CIs")) +
+      ggplot2::scale_linetype_manual(values = c("Ind FCMs" = "blank", "MC FCMs" = "blank", "Agg FCM" = "blank", "CIs" = "dotted"), breaks = c("MC FCMs", "Ind FCMs", "Agg FCM", "CIs")) #+
+      # ggplot2::scale_linewidth_manual(values = c("Ind FCMs" = NA, "MC FCMs" = 0.2, "Agg FCM" = NA, "CIs" = NA), breaks = c("MC FCMs", "Ind FCMs", "Agg FCM", "CIs"))
+  }
 
-    if  (inputs_only) {
-      ggplot_main <- ggplot_main +
-        ggplot2::scale_color_manual(values = c("Ind FCMs" = "black"))
-    } else if (inputs_and_agg) {
-      ggplot_main <- ggplot_main +
-        ggplot2::scale_color_manual(values = c("Ind FCMs" = "black", "Agg FCM" = "red"), breaks = c("Ind FCMs", "Agg FCM")) +
-        ggplot2::scale_shape_manual(values = c("Ind FCMs" = 16, "Agg FCM" = 17), breaks = c("Ind FCMs", "Agg FCM"))
-    } else if (inputs_agg_and_mc_no_bs) {
-      ggplot_main <- ggplot_main +
-        ggplot2::scale_color_manual(values = c("Ind FCMs" = "black", "MC FCMs" = "lightgrey", "Agg FCM" = "red"), breaks = c("Ind FCMs", "MC FCMs", "Agg FCM")) +
-        ggplot2::scale_shape_manual(values = c("Ind FCMs" = 16, "MC FCMs" = 3, "Agg FCM" = 17), breaks = c("Ind FCMs", "MC FCMs", "Agg FCM")) +
-        ggplot2::scale_linewidth_manual(values = c("Ind FCMs" = NA, "MC FCMs" = 0.2, "Agg FCM" = NA, "CIs" = NA), breaks = c("MC FCMs", "Ind FCMs", "Agg FCM", "CIs"))
-    } else if (inputs_agg_and_mc_w_bs) {
-      ggplot_main <- ggplot_main +
-        ggplot2::scale_color_manual(values = c("Ind FCMs" = "black", "Agg FCM" = "red", "MC FCMs" = "blue", "CIs" = "blue"), breaks = c("MC FCMs", "Ind FCMs", "Agg FCM", "CIs")) +
-        ggplot2::guides(color = ggplot2::guide_legend(nrow = 3)) +
-        ggplot2::scale_shape_manual(values = c("Ind FCMs" = 16, "Agg FCM" = 17, "MC FCMs" = 3), breaks = c("MC FCMs", "Ind FCMs", "Agg FCM", "CIs")) +
-        ggplot2::scale_linetype_manual(values = c("Ind FCMs" = "blank", "MC FCMs" = "blank", "Agg FCM" = "blank", "CIs" = "dotted"), breaks = c("MC FCMs", "Ind FCMs", "Agg FCM", "CIs")) +
-        ggplot2::scale_linewidth_manual(values = c("Ind FCMs" = NA, "MC FCMs" = 0.2, "Agg FCM" = NA, "CIs" = NA), breaks = c("MC FCMs", "Ind FCMs", "Agg FCM", "CIs"))
-    }
-
-    if (coord_flip) {
-      fcmconfr_plot <- ggplot_main + default_theme()
-    } else {
-      fcmconfr_plot <- ggplot_main + default_theme() + ggplot2::coord_flip()
-    }
+  if (coord_flip) {
+    fcmconfr_plot <- ggplot_main + default_theme()
+  } else {
+    fcmconfr_plot <- ggplot_main + default_theme() + ggplot2::coord_flip()
+  }
 
     # browser()
   fcmconfr_plot
@@ -456,243 +576,3 @@ theme_custom <- function(...) {
 default_theme <- function() {
   theme_custom()
 }
-
-
-
-# } else if (object$fcm_class == "ivfn") {
-#   ggplot_main <- ggplot2::ggplot() +
-#     # MC CIs
-#     ggplot2::geom_crossbar(
-#       data = ggplot2::remove_missing(plot_data$mc_inference_CIs),
-#       aes(y = .data$name, xmin = .data$lower_CI, x = .data$lower_CI, xmax = .data$lower_CI, linetype = .data$analysis_source),
-#       width = 0.8, color = "blue", linewidth = 0.2, na.rm = FALSE, key_glyph = ggplot2::draw_key_vline
-#     ) +
-#     ggplot2::geom_crossbar(
-#       data = ggplot2::remove_missing(plot_data$mc_inference_CIs),
-#       aes(y = .data$name, xmin = .data$upper_CI, x = .data$upper_CI, xmax = .data$upper_CI, linetype = .data$analysis_source),
-#       width = 0.8, color = "blue", linewidth = 0.2, na.rm = TRUE, key_glyph = ggplot2::draw_key_vline
-#     ) +
-#     # MC FCMs
-#     ggplot2::geom_point(
-#       data = ggplot2::remove_missing(plot_data$mc_inferences),
-#       aes(y = .data$name, x = .data$value, shape = .data$analysis_source),
-#       color = "blue", position = ggplot2::position_dodge2(width = 0.1),
-#       #size = 1,
-#       alpha = 0.8, na.rm = FALSE
-#     ) +
-#     # ggplot2::geom_boxplot(
-#     #   data = ggplot2::remove_missing(plot_data$mc_inferences),
-#     #   aes(y = .data$name, x = .data$value, color = .data$analysis_source,  linewidth = .data$analysis_source),
-#     #   # outlier.color = "darkgrey", outlier.shape = 0, outlier.size = 1.75,
-#     #   na.rm = TRUE, fill = NA
-#     # ) +
-#     # Aggregate FCM
-#     ggplot2::geom_linerange(
-#       data = ggplot2::remove_missing(plot_data$aggregate_inferences),
-#       aes(y = .data$name, xmin = .data$lower, x = .data$lower, xmax = .data$upper, color = .data$analysis_source),
-#       linewidth = 0.6, key_glyph = ggplot2::draw_key_path # ggplot2::draw_key_linerange
-#     ) +
-#     # ggplot2::geom_point(
-#     #   data = ggplot2::remove_missing(plot_data$aggregate_inferences),
-#     #   aes(y = .data$name, x = .data$lower, color = .data$analysis_source),
-#     #   size = 0.8, shape = 17, color = "red"#, key_glyph = ggplot2::draw_key_blank,
-#     # ) +
-#     # ggplot2::geom_point(
-#     #   data = ggplot2::remove_missing(plot_data$aggregate_inferences),
-#     #   aes(y = .data$name, x = .data$upper, color = .data$analysis_source),
-#     #   size = 0.8, shape = 17, color = "red"#, key_glyph = ggplot2::draw_key_blank,
-#     # ) +
-#     # Individual FCMs
-#     ggplot2::geom_linerange(
-#       data = ggplot2::remove_missing(plot_data$input_inferences),
-#       aes(y = .data$name, xmin = .data$lower, x = .data$lower, xmax = .data$upper, color = .data$analysis_source),
-#       position = ggplot2::position_dodge2(width = 0.5), linewidth = 0.1, key_glyph = ggplot2::draw_key_path
-#     ) #+
-#   # ggplot2::geom_point(
-#   #   data = ggplot2::remove_missing(plot_data$input_inferences),
-#   #   aes(y = .data$name, x = .data$lower, color = .data$analysis_source),
-#   #   position = ggplot2::position_dodge2(width = 0.5), size = 0.5, key_glyph = ggplot2::draw_key_blank
-#   # ) +
-#   # ggplot2::geom_point(
-#   #   data = ggplot2::remove_missing(plot_data$input_inferences),
-#   #   aes(y = .data$name, x = .data$upper, color = .data$analysis_source),
-#   #   position = ggplot2::position_dodge2(width = 0.5), size = 0.5, key_glyph = ggplot2::draw_key_blank
-#   # )
-# }
-
-
-
-
-
-
-
-# input_inferences <- fcmconfr_object$inferences$input_fcms$inferences[2:ncol(fcmconfr_object$inferences$input_fcms$inferences)]
-# input_inferences_greater_than_filter_limit <- apply(input_inferences, 2, function(x) x > filter_limit)
-# nodes_with_inferences_greater_than_filter_limit <- apply(input_inferences_greater_than_filter_limit, 2, function(column) any(column))
-# nodes_of_interest_indexes <- which(nodes_with_inferences_greater_than_filter_limit)
-# nodes_of_interest_indexes <- nodes_of_interest_indexes[which(names(nodes_of_interest_indexes) != clamped_nodes)]
-# nodes_of_interest <- names(nodes_of_interest_indexes)
-
-# mc_inference_CIs_longer$analysis_source <- "mc_CIs"
-# mc_CIs$analysis_source <- "mc"
-
-# aggregate_inferences_longer <- tidyr::pivot_longer(fcmconfr_object$inferences$aggregate_fcm$inferences, cols = 1:ncol(fcmconfr_object$inferences$aggregate_fcm$inferences))
-
-# mc_CIs <- fcmconfr_object$inferences$monte_carlo_fcms$bootstrap$CIs_by_node
-
-
-# Remove clamped_nodes from plot data frames
-# aggregate_inferences_longer <- aggregate_inferences_longer[!(aggregate_inferences_longer$name %in% clamped_nodes), ]
-# mc_CIs <- mc_CIs[!(mc_CIs$node %in% clamped_nodes), ]
-#
-# aggregate_inferences_longer <- aggregate_inferences_longer[aggregate_inferences_longer$value >= 0.001, ]
-# mc_CIs <- mc_CIs[mc_CIs$node %in% aggregate_inferences_longer$name, ]
-#
-# max_y <- max(max(mc_CIs$upper_0.975), max(aggregate_inferences_longer$value))
-# max_y <- (ceiling(max_y*1000)/1000)
-# min_y <- min(min(mc_CIs$lower_0.025), min(aggregate_inferences_longer$value))
-# min_y <- (floor(min_y*1000)/1000)
-
-# aggregate_inferences_longer <- aggregate_inferences_longer[!(aggregate_inferences_longer$name %in% clamped_nodes), ]
-# # aggregate_inferences_longer <- aggregate_inferences_longer[aggregate_inferences_longer$value >= 0.001, ]
-# mc_inferences_longer <- mc_inferences_longer[!(mc_inferences_longer$name %in% aggregate_inferences_longer$name), ]
-
-# browser()
-
-
-#
-# ggplot() +
-#   # geom_col(
-#   #   data = plot_data$mc_CIs,
-#   #   aes(x = .data$node, y = .data$value,
-#   #       fill = .data$analysis_source),
-#   #   alpha = mc_alpha,
-#   #   width = 0.7
-#   # ) +
-#   ggplot2::geom_crossbar(
-#     data = plot_data$mc_CIs,
-#     aes(x = .data$node, y = .data$expected_value, ymin = .data$lower_0.025, ymax = .data$upper_0.975,
-#         fill = plot_data$mc_CIs$analysis_source),
-#     color = mc_fill,
-#     width = 0.5,
-#     linewidth = 0.2
-#   ) +
-#   geom_point(
-#     data = plot_data$aggregate_inferences,
-#     aes(x = .data$name, y = .data$value,
-#         fill = plot_data$aggregate_inferences$analysis_source),
-#     shape = 21,
-#     size = 1,
-#     stroke = 0.5
-#   ) +
-#   scale_fill_manual(
-#     values = c(mc = mc_fill, aggregate = aggregate_fill),
-#     labels = c(mc = "Monte Carlo Average", aggregate = "Aggregate")
-#   ) +
-#   # scale_color_manual(
-#   #   values = c(mc = "black"),
-#   #   labels = c(mc = "Monte Carlo CIs")
-#   # ) +
-#   scale_y_continuous(
-#     expand = c(0, 0),
-#     limits = c(plot_data$min_activation, plot_data$max_activation)
-#   ) +
-#   guides(alpha = "none", color = guide_legend(order = 1), shape = guide_legend(order = 2)) +
-#   expand_limits(y = 0) +
-#   labs(
-#     x = "Inference Value",
-#     y = "Concept (Node)",
-#     # caption = plot_data$fcm_class_subtitle
-#   ) +
-#   default_theme() +
-#   coord_flip()
-#
-# # 247, 227, 221
-
-
-
-# ggplot() +
-#   geom_col(
-#     data = plot_data$mc_CIs,
-#     aes(x = .data$node, y = .data$expected_value,
-#         fill = .data$analysis_source),
-#     alpha = mc_alpha,
-#     width = 0.7
-#   ) +
-#   geom_errorbar(
-#     data = plot_data$mc_CIs,
-#     aes(x = .data$node, ymin = .data$lower_0.025, ymax = .data$upper_0.975,
-#         color = plot_data$mc_CIs$analysis_source),
-#     width = 0.5,
-#     linewidth = 0.5
-#   ) +
-#   geom_point(
-#     data = plot_data$aggregate_inferences,
-#     aes(x = .data$name, y = .data$value,
-#         fill = plot_data$aggregate_inferences$analysis_source),
-#     #color = "black",
-#     color = aggregate_fill,
-#     shape = 21,
-#     size = 2,
-#     stroke = 0.5
-#   ) +
-#   scale_fill_manual(
-#     values = c(mc = mc_fill, aggregate = aggregate_fill),
-#     labels = c(mc = "Monte Carlo Average", aggregate = "Aggregate")
-#   ) +
-#   scale_color_manual(
-#     values = c(mc = "black"),
-#     labels = c(mc = "Monte Carlo CIs")
-#   ) +
-#   scale_y_continuous(
-#     expand = c(0, 0),
-#     limits = c(plot_data$min_activation, plot_data$max_activation)
-#   ) +
-#   guides(alpha = "none", color = guide_legend(order = 1), shape = guide_legend(order = 2)) +
-#   expand_limits(y = 0) +
-#   labs(
-#     x = "Inference Value",
-#     y = "Concept (Node)",
-#     # caption = plot_data$fcm_class_subtitle
-#   ) +
-#   default_theme() +
-#   coord_flip()
-
-
-
-
-
-
-# ggplot_main <- ggplot() +
-#   geom_col(
-#     data = plot_data$aggregate_inferences,
-#     aes(x = .data$name, y = .data$value,
-#         fill = .data$analysis_source, color = .data$analysis_source),
-#     color = aggregate_color, alpha = aggregate_alpha,
-#     width = 0.8
-#   ) +
-#   geom_errorbar(
-#     data = plot_data$mc_CIs,
-#     aes(x = .data$node, ymin = .data$lower_0.025, ymax = .data$upper_0.975,
-#         color = plot_data$mc_CIs$analysis_source),
-#     width = 0.5, alpha = 0.7,
-#     linewidth = 0.5
-#   ) +
-#   scale_fill_manual(
-#     values = c(mc = mc_fill, aggregate = aggregate_fill),
-#     labels = c(mc = "Monte Carlo Average", aggregate = "Aggregate")
-#   ) +
-#   scale_color_manual(
-#     values = c(mc = "black"),
-#     labels = c(mc = "Monte Carlo CIs")
-#   ) +
-#   scale_y_continuous(
-#     expand = c(0, 0),
-#     limits = c(plot_data$min_activation, plot_data$max_activation)
-#   ) +
-#   guides(alpha = "none", color = guide_legend(order = 1), shape = guide_legend(order = 2)) +
-#   expand_limits(y = 0) +
-#   labs(
-#     x = "Inference Value",
-#     y = "Concept (Node)"
-#   )

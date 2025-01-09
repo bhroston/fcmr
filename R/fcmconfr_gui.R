@@ -25,6 +25,8 @@ fcmconfr_gui <- function() {
   shiny_env_check <- 1
 
   shiny::runApp(appDir = system.file('shiny', package = 'fcmconfr'))
+  # shiny_app <- shiny::shinyAppDir(appDir = system.file('shiny', package = 'fcmconfr'))
+  #shiny::runGadget(shiny_app, viewer = shiny::dialogViewer("", width = 1400, height = 1200))
 
   fcmconfr_gui_vars <- names(fcmconfr_gui_input)
 

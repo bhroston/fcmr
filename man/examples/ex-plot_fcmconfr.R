@@ -37,6 +37,7 @@ ex_conventional_fcmconfr <- fcmconfr(
   activation = 'kosko',
   squashing = 'sigmoid',
   lambda = 1,
+  point_of_inference = "final",
   max_iter = 100,
   min_error = 1e-05,
   # Inference Estimation (bootstrap)
@@ -95,6 +96,7 @@ ex_ivfn_fcmconfr <- fcmconfr(
   activation = 'kosko',
   squashing = 'sigmoid',
   lambda = 1,
+  point_of_inference = "final",
   max_iter = 100,
   min_error = 1e-05,
   # Inference Estimation (bootstrap)
@@ -161,6 +163,7 @@ ex_tfn_fcmconfr <- fcmconfr(
   activation = 'kosko',
   squashing = 'sigmoid',
   lambda = 1,
+  point_of_inference = "final",
   max_iter = 100,
   min_error = 1e-05,
   # Inference Estimation (bootstrap)

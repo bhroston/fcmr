@@ -81,7 +81,8 @@ infer_conventional_fcm(adj_matrix,
           clamping_vector = c(1, 0, 0, 0, 0, 0),
           activation = "kosko",
           squashing = "sigmoid",
-          lambda = 1)
+          lambda = 1,
+          point_of_inference = "final")
 
 # To simulate an fcm without clamping (i.e. don't calculate the difference
 # from steady-state), change the values in the initial_state_vector while
@@ -91,5 +92,6 @@ infer_conventional_fcm(adj_matrix,
           clamping_vector = c(0, 0, 0, 0, 0, 0),
           activation = "kosko",
           squashing = "sigmoid",
-          lambda = 1)
+          lambda = 1,
+          point_of_inference = "final")
 }

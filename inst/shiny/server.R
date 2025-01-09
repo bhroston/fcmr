@@ -206,9 +206,30 @@ shiny_server <- function(input, output, session) {
 
   # Initial State Vector ====
   output$initial_state_vector_numeric_inputs <- shiny::renderUI({
-    lapply(concepts(), function(i) {
-      shiny::numericInput(paste0("initial_state_", i), label = i, value = 1, min = -1, max = 1, step = 0.05)
-    })
+
+    shiny::fluidRow(
+      # tags$head(
+      #   tags$style(type = "text/css","label{ display: table-cell; text-align: center;vertical-align: middle; } .form-group { display: table-row;}")
+      # ),
+      lapply(
+        concepts(),
+        function(concept) {
+          shiny::fluidRow(
+            shiny::column(width = 3, shiny::numericInput(paste0('initial_state_', concept), label = '', value = 1, min = -1, max = 1, step = 0.05)),
+            shiny::column(width = 9, align = "left", shiny::p(concept, style = "padding-top:25px;"))
+          )
+#
+#           tags$tr(
+#            # tags$style(type = "text/css", "label{text-align: center;vertical-align: middle; }"),
+#            tags$td(shiny::numericInput(paste0('initial_state_', concept), label = '', value = 1, min = -1, max = 1, step = 0.05, width = '100px')),
+#            tags$td(concept), div(style = "font-size:12px; padding-top:28px;")
+#           )
+        }
+      )
+    )
+    #lapply(concepts(), function(i) {
+      # shiny::numericInput(paste0("initial_state_", i), label = i, value = 1, min = -1, max = 1, step = 0.05)
+    #})
   })
 
   initial_state_vector <- reactive({
@@ -223,7 +244,7 @@ shiny_server <- function(input, output, session) {
         "Value" = initial_state_vector()
       )
     )
-  }, align = "c", spacing = "xs")
+  }, align = "l", spacing = "xs")
 
   output$initial_state_vector_input_ui <- shiny::renderUI({
     if (!accepted_adj_matrices_input()) {
@@ -263,9 +284,23 @@ shiny_server <- function(input, output, session) {
 
   # Clamping Vector ====
   output$clamping_vector_numeric_inputs <- shiny::renderUI({
-    lapply(concepts(), function(i) {
-      shiny::numericInput(paste0("clamping_", i), label = i, value = 0, min = -1, max = 1, step = 0.05)
-    })
+    shiny::fluidPage(
+      # tags$head(
+      #   tags$style(type = "text/css","label{ display: table-cell; text-align: center;vertical-align: middle; } .form-group { display: table-row;}")
+      # ),
+      lapply(
+        concepts(),
+        function(concept) {
+          shiny::fluidRow(
+            shiny::column(width = 3, shiny::numericInput(paste0('initial_state_', concept), label = '', value = 1, min = -1, max = 1, step = 0.05)),
+            shiny::column(width = 9, align = "left", shiny::p(concept, style = "padding-top:25px;"))
+          )
+        }
+      )
+    )
+    # lapply(concepts(), function(i) {
+    #   shiny::numericInput(paste0("clamping_", i), label = i, value = 0, min = -1, max = 1, step = 0.05)
+    # })
   })
 
   clamping_vector <- reactive({
@@ -280,7 +315,7 @@ shiny_server <- function(input, output, session) {
         "Value" = clamping_vector()
       )
     )
-  }, align = "c", spacing = "xs")
+  }, align = "l", spacing = "xs")
 
   output$clamping_vector_input_ui <- shiny::renderUI({
     if (!accepted_adj_matrices_input()) {

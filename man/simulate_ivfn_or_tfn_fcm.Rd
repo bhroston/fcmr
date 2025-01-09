@@ -89,7 +89,8 @@ simulate_fcm(adj_matrix,
              clamping_vector = c(1, 0, 0, 0, 0, 0),
              activation = "kosko",
              squashing = "sigmoid",
-             lambda = 1)
+             lambda = 1,
+             point_of_inference = "final")
 
 
 # Inference w/ Triangular Fuzzy Numbers (TFNs)
@@ -126,5 +127,6 @@ simulate_fcm(adj_matrix,
              clamping_vector = c(1, 0, 0, 0, 0, 0),
              activation = "kosko",
              squashing = "sigmoid",
-             lambda = 1)
+             lambda = 1,
+             point_of_inference = "final")
 }
