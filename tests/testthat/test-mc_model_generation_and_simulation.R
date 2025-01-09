@@ -677,22 +677,22 @@ test_that("check_monte_carlo_inputs works", {
 test_that("check_build_monte_carlo_fcms_inputs works", {
   # Check N_samples ----
   expect_error(
-    check_build_monte_carlo_fcms_inputs(salinization_tfn_fcms, N_samples = "a", include_zeroes = TRUE, show_progress = TRUE)
+    check_build_monte_carlo_fcms_inputs(sample_fcms$large_fcms$tfn_fcms, N_samples = "a", include_zeroes = TRUE, show_progress = TRUE)
   )
   expect_error(
-    check_build_monte_carlo_fcms_inputs(salinization_tfn_fcms, N_samples = 100.5, include_zeroes = TRUE, show_progress = TRUE)
+    check_build_monte_carlo_fcms_inputs(sample_fcms$large_fcms$tfn_fcms, N_samples = 100.5, include_zeroes = TRUE, show_progress = TRUE)
   )
   expect_no_error(
-    check_build_monte_carlo_fcms_inputs(salinization_tfn_fcms, N_samples = 1001, include_zeroes = TRUE, show_progress = TRUE)
+    check_build_monte_carlo_fcms_inputs(sample_fcms$large_fcms$tfn_fcms, N_samples = 1001, include_zeroes = TRUE, show_progress = TRUE)
   )
   # ----
 
   # Check include_zeroes
   expect_error(
-    check_build_monte_carlo_fcms_inputs(salinization_tfn_fcms, N_samples = 1001, include_zeroes = 109, show_progress = TRUE)
+    check_build_monte_carlo_fcms_inputs(sample_fcms$large_fcms$tfn_fcms, N_samples = 1001, include_zeroes = 109, show_progress = TRUE)
   )
   expect_no_error(
-    check_build_monte_carlo_fcms_inputs(salinization_tfn_fcms, N_samples = 1001, include_zeroes = FALSE, show_progress = TRUE)
+    check_build_monte_carlo_fcms_inputs(sample_fcms$large_fcms$tfn_fcms, N_samples = 1001, include_zeroes = FALSE, show_progress = TRUE)
   )
   # ----
 })
