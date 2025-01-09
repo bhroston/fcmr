@@ -41,7 +41,7 @@
 ---
 
     Code
-      ivfn_infer
+      print(ivfn_infer)
     Output
       infer_fcm: ivfn 
        $inferences_df
@@ -58,7 +58,7 @@
 ---
 
     Code
-      tfn_infer
+      print(tfn_infer)
     Output
       infer_fcm: tfn 
        $inferences_df
