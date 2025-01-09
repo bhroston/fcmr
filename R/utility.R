@@ -172,7 +172,9 @@ get_adj_matrices_input_type <- function(adj_matrix_list_input) {
     if (shiny::isRunning() & num_object_types_in_input_list != 1) {
       object_types_in_input_list = "unavailable"
     } else if (!shiny::isRunning() & num_object_types_in_input_list != 1) {
-      stop("All objects in adj matrix list must be of the same type.")
+      stop(cli::format_error(c(
+        "x" = "Error: All objects in {.var adj_matrix_list} must be of the same type."
+      )))
     }
     object_types_in_input_list <- unique(lapply(adj_matrix_list_input, methods::is))[[1]]
   } else {

@@ -305,27 +305,27 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
 
   node_names <- colnames(mc_simulations_inference_df)
 
-  if (parallel) {
-    max_possible_cores <- parallel::detectCores()
-    if (identical(n_cores, integer())) {
-      warning(cli::format_warning(c(
-        "!" = "Warning: {.var n_cores} not defined",
-        "~~~~~ Assuming {.var n_cores} is the maximum available on the machine: n_cores = {max_possible_cores}"
-      )))
-      n_cores <- max_possible_cores
-    }
-    if (n_cores > max_possible_cores) {
-      warning(cli::format_warning(c(
-        "!" = "Warning: {.var n_cores} is {n_cores} which is greater than the max. cores available on the machine (n = {max_possible_cores})",
-        "~~~~~ Reducing {.var n_cores} to {max_possible_cores}"
-      )))
-    }
-  }
-  if (!parallel & !identical(n_cores, integer())) {
-    warning(cli::format_warning(c(
-      "!" = "Warning: {.var n_cores} is ignored since {.var parallel} = FALSE"
-    )))
-  }
+  # if (parallel) {
+  #   max_possible_cores <- parallel::detectCores()
+  #   if (identical(n_cores, integer())) {
+  #     warning(cli::format_warning(c(
+  #       "!" = "Warning: {.var n_cores} not defined",
+  #       "~~~~~ Assuming {.var n_cores} is the maximum available on the machine: n_cores = {max_possible_cores}"
+  #     )))
+  #     n_cores <- max_possible_cores
+  #   }
+  #   if (n_cores > max_possible_cores) {
+  #     warning(cli::format_warning(c(
+  #       "!" = "Warning: {.var n_cores} is {n_cores} which is greater than the max. cores available on the machine (n = {max_possible_cores})",
+  #       "~~~~~ Reducing {.var n_cores} to {max_possible_cores}"
+  #     )))
+  #   }
+  # }
+  # if (!parallel & !identical(n_cores, integer())) {
+  #   warning(cli::format_warning(c(
+  #     "!" = "Warning: {.var n_cores} is ignored since {.var parallel} = FALSE"
+  #   )))
+  # }
 
   if (parallel & show_progress) {
     print("Performing bootstrap simulations", quote = FALSE)
@@ -1088,7 +1088,7 @@ check_monte_carlo_bootstrap_inputs <- function(inference_estimation_function = c
   if (parallel) {
     if (identical(n_cores, integer())) {
       warning(cli::format_warning(c(
-        "!" = "Warning: N {.var n_cores} given.",
+        "!" = "Warning: No {.var n_cores} given.",
         "~~~~~ Assuming {.var n_cores} is {parallel::detectCores() - 1} (i.e. the max available cores minus 1)"
       )))
       n_cores <- parallel::detectCores() - 1
@@ -1117,6 +1117,12 @@ check_monte_carlo_bootstrap_inputs <- function(inference_estimation_function = c
         "+++++ Input {.var n_cores} was {n_cores}"
       )))
     }
+  }
+  if (!parallel & !identical(n_cores, integer())) {
+    warning(cli::format_warning(c(
+      "!" = "Warning: {.var n_cores} given but {.var parallel} = FALSE.",
+      "~~~~~ Ignoring {.var n_cores} input."
+    )))
   }
   # ----
 
