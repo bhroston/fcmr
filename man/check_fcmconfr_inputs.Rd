@@ -109,3 +109,6 @@ This checks that all inputs for the \code{\link{fcmconfr}} function are of an ap
 format, and also fills in missing inputs for initial_state_vector, clamping_vector,
 and IDs when appropriate.
 }
+\examples{
+NULL
+}
