@@ -308,6 +308,8 @@ fcmconfr <- function(adj_matrices = list(matrix()),
 #' @returns A list of resolved inputs to pass to \code{\link{fcmconfr}}
 #'
 #' @export
+#' @examples
+#' NULL
 check_fcmconfr_inputs <- function(adj_matrices = list(matrix()),
                                   # Aggregation and Monte Carlo Sampling
                                   aggregation_function = c("mean", "median"),
@@ -383,8 +385,8 @@ check_fcmconfr_inputs <- function(adj_matrices = list(matrix()),
       "~~~~~ Skipping aggregate analysis; i.e. setting {.var perform_aggregate_analysis} to FALSE",
       "~~~~~ Skipping monte carlo analysis; i.e. setting {.var perform_monte_carlo_analysis} to FALSE"
     )))
-    perform_monte_carlo_analysis = FALSE
-    perform_aggregate_analysis = FALSE
+    perform_monte_carlo_analysis <- FALSE
+    perform_aggregate_analysis <- FALSE
   }
   else if ((fcm_class %in% c("ivfn", "tfn")) & length(adj_matrices) == 1 & (perform_aggregate_analysis)) {
     warning(cli::format_warning(c(
@@ -592,8 +594,8 @@ organize_fcmconfr_output <- function(...) {
 
   if (variables$perform_aggregate_analysis) {
     fcmconfr_output$aggregate_adj_matrix <- variables$aggregate_adj_matrix
-    fcmconfr_output$inferences$aggregate_fcm = variables$aggregate_fcm_inference
-    fcmconfr_output$params$aggregation_function = variables$aggregation_function
+    fcmconfr_output$inferences$aggregate_fcm <- variables$aggregate_fcm_inference
+    fcmconfr_output$params$aggregation_function <- variables$aggregation_function
     fcmconfr_output$params$additional_opts <- list(
       include_zero_weighted_edges_in_aggregation_and_mc_sampling = variables$include_zero_weighted_edges_in_aggregation_and_mc_sampling,
       perform_monte_carlo_inference_bootstrap_analysis = variables$perform_monte_carlo_inference_bootstrap_analysis,
@@ -746,266 +748,3 @@ print.fcmconfr <- function(x, ...) {
     )
   }
 }
-
-#'
-#' #' Plot fcmconfr Output
-#' #'
-#' #' @description
-#' #' This function plots the primary results of the \code{\link{fcmconfr}}
-#' #' output. The plot features the results of the input fcm inferences,
-#' #' aggregate analysis inferences, and the monte carlo analysis bulk inference
-#' #' confidence intervals. This function takes \code{\link{fcmconfr}} outputs
-#' #' generated from Conventional FCMs, Interval-Value Fuzzy Number (IVFN) FCMs,
-#' #' and Triangular Fuzzy Number (TFN) FCMs as inputs.
-#' #'
-#' #' @details
-#' #' Plots generated using ggplot2
-#' #'
-#' #' @param fcmconfr_output Output directly from fcmconfr
-#' #' @param swap_axes Switch x and y axes. Preferable when concepts have longer names
-#' #' @param aggregate_point_fill Hex code value for the aggregate point fill
-#' #' @param monte_carlo_col_fill Hex code value for the columns/bars representing monte carlo data
-#' #' @param monte_carlo_col_alpha Between 0 and 1, the opacity of the monte_carlo_col_fill
-#' #'
-#' #' @returns A plot of the results generated from fcmconfr
-#' #'
-#' #' @export
-#' #' @example man/examples/ex-fcmconfr_plot.R
-#' fcmconfr_plot <- function(fcmconfr_output,
-#'                           swap_axes = FALSE,
-#'                           aggregate_point_fill = "#fb0009",
-#'                           monte_carlo_col_fill = "#fcdbd0",
-#'                           monte_carlo_col_alpha = 0.6) {
-#'
-#'   if (fcmconfr_output$fcm_class == "conventional") {
-#'     fcmconfr_plot <- plot_conventional_fcmconfr(fcmconfr_output, swap_axes, aggregate_point_fill, monte_carlo_col_fill, monte_carlo_col_alpha)
-#'   } else if (fcmconfr_output$fcm_class == "ivfn" | fcmconfr_output$fcm_class == "tfn") {
-#'     fcmconfr_plot <- plot_ivfn_or_tfn_fcmconfr(fcmconfr_output, swap_axes, aggregate_point_fill, monte_carlo_col_fill, monte_carlo_col_alpha)
-#'   }
-#'
-#'   fcmconfr_plot
-#' }
-
-#'
-#' #' Plot fcmconfr Output (Conventional FCMs)
-#' #'
-#' #' @description
-#' #' This function plots the primary results of the \code{\link{fcmconfr}}
-#' #' output. The plot features the results of the input fcm inferences,
-#' #' aggregate analysis inferences, and the monte carlo analysis bulk inference
-#' #' confidence intervals. This function takes \code{\link{fcmconfr}} outputs
-#' #' generated from Conventional FCMs.
-#' #'
-#' #' @details
-#' #' Plots generated using ggplot2
-#' #'
-#' #' @param conventional_fcmconfr_output Output directly from fcmconfr (for conventional fcms as inputs)
-#' #' @param swap_axes Switch x and y axes. Preferable when concepts have longer names
-#' #' @param aggregate_point_fill Hex code value for the aggregate point fill
-#' #' @param monte_carlo_col_fill Hex code value for the columns/bars representing monte carlo data
-#' #' @param monte_carlo_col_alpha Between 0 and 1, the opacity of the monte_carlo_col_fill
-#' #'
-#' #' @importFrom ggplot2 aes ggplot geom_col geom_segment geom_errorbar geom_point
-#' #' scale_fill_manual scale_color_manual scale_y_continuous guides guide_legend
-#' #' expand_limits ggtitle labs xlab ylab theme_classic theme margin element_text
-#' #' element_blank unit scale_x_discrete coord_flip
-#' #'
-#' #' @returns A plot of the results generated from fcmconfr for a set of
-#' #' Conventional FCMs
-#' #'
-#' #' @export
-#' #' @example man/examples/ex-plot_conventional_fcmconfr.R
-#' plot_conventional_fcmconfr <- function(conventional_fcmconfr_output,
-#'                                        swap_axes = FALSE,
-#'                                        aggregate_point_fill = "#fb0009",
-#'                                        monte_carlo_col_fill = "#fcdbd0",
-#'                                        monte_carlo_col_alpha = 0.6) {
-#'   #browser()
-#'
-#'   # Pre-defining values for R CMD Check. Does no effect logic.
-#'   node <- NULL
-#'   name <- NULL
-#'   value <- NULL
-#'   expected_value <- NULL
-#'   analysis_source <- NULL
-#'   concept <- NULL
-#'   lower <- NULL
-#'   upper <- NULL
-#'   lower_0.025 <- NULL
-#'   upper_0.975 <- NULL
-#'   #
-#'
-#'   fcm_class_subtitle <- "Conventional FCMs"
-#'   fcm_clamping_vector <- conventional_fcmconfr_output$params$simulation_opts$clamping_vector
-#'   fcm_nodes <- unique(lapply(conventional_fcmconfr_output$params$adj_matrices, colnames))[[1]]
-#'   clamped_nodes <- fcm_nodes[fcm_clamping_vector != 0]
-#'
-#'   agg_function <- conventional_fcmconfr_output$params$aggregation_function
-#'   if (agg_function == "mean") {
-#'     fcm_agg_function_subtitle <- "Aggregate and Monte Carlo Generated from MEAN of Input FCMs"
-#'   } else if (agg_function == "median") {
-#'     fcm_agg_function_subtitle <- "Aggregate and Monte Carlo Generated from MEDIAN of Input FCMs"
-#'   }
-#'
-#'   aggregate_inferences_longer <- tidyr::pivot_longer(conventional_fcmconfr_output$inferences$aggregate_fcm$inferences, cols = 1:ncol(conventional_fcmconfr_output$inferences$aggregate_fcm$inferences))
-#'   aggregate_inferences_longer$analysis_source <- "aggregate"
-#'   mc_CIs <- conventional_fcmconfr_output$inferences$monte_carlo_fcms$bootstrap$CIs_by_node
-#'   mc_CIs$analysis_source <- "mc"
-#'
-#'   # Remove clamped_nodes from plot data frames
-#'   aggregate_inferences_longer <- aggregate_inferences_longer[!(aggregate_inferences_longer$name %in% clamped_nodes), ]
-#'   mc_CIs <- mc_CIs[!(mc_CIs$node %in% clamped_nodes), ]
-#'
-#'   max_y <- max(max(mc_CIs$upper_0.975), max(aggregate_inferences_longer$value))
-#'   max_y <- (ceiling(max_y*1000)/1000)
-#'   min_y <- min(min(mc_CIs$lower_0.025), min(aggregate_inferences_longer$value))
-#'   min_y <- (floor(min_y*1000)/1000)
-#'
-#'   aggregate_inferences_longer <- aggregate_inferences_longer[aggregate_inferences_longer$value >= 0.001, ]
-#'   mc_CIs <- mc_CIs[mc_CIs$node %in% aggregate_inferences_longer$name, ]
-#'
-#'   fcmconfr_plot <- ggplot() +
-#'     geom_col(data = mc_CIs, aes(x = node, y = expected_value, fill = analysis_source, color = monte_carlo_col_fill), width = 0.5, alpha = monte_carlo_col_alpha, linewidth = 0.3) +
-#'     geom_errorbar(data = mc_CIs, aes(x = node, ymin = lower_0.025, ymax = upper_0.975, color = analysis_source), width = 0.5, linewidth = 0.5) +
-#'     geom_point(data = aggregate_inferences_longer, aes(x = name, y = value, fill = analysis_source), color = "black", shape = 21, size = 3, stroke = 0.5) +
-#'     scale_fill_manual(values = c(mc = monte_carlo_col_fill, aggregate = aggregate_point_fill), labels = c(mc = "Monte Carlo Average", aggregate = "Aggregate")) +
-#'     scale_color_manual(values = c(mc = "black"), labels = c(mc = "Monte Carlo CIs")) +
-#'     scale_y_continuous(expand = c(0, 0), limits = c(min_y, max_y)) +
-#'     guides(alpha = "none", color = guide_legend(order = 1), shape = guide_legend(order = 2)) +
-#'     expand_limits(y = 0) +
-#'     ggtitle("FCMconfR Inferences", subtitle = paste(fcm_class_subtitle)) +
-#'     labs(caption = fcm_agg_function_subtitle) +
-#'     xlab("Inference Value") +
-#'     ylab("Concept (Node)") +
-#'     theme_classic() +
-#'     theme(
-#'       plot.margin = margin(t = 20, r = 40, b = 20, l = 20),
-#'       plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
-#'       plot.subtitle = element_text(hjust = 0.5, margin = margin(b = 10)),
-#'       plot.caption = element_text(hjust = 0.5, margin = margin(t = 15)),
-#'       axis.title = element_text(size = 12),
-#'       axis.title.x = element_text(margin = margin(t = 10)),
-#'       axis.title.y = element_text(margin = margin(r = 10)),
-#'       axis.text = element_text(size = 12),
-#'       legend.position = "bottom",
-#'       legend.title = element_blank(),
-#'       legend.spacing = unit(0.001, 'cm'),
-#'       legend.text = element_text(size = 10)
-#'     )
-#'
-#'   if (swap_axes) {
-#'     fcmconfr_plot <- fcmconfr_plot + scale_x_discrete(limits = rev) + coord_flip()
-#'   }
-#'
-#'   fcmconfr_plot
-#' }
-#'
-#'
-#'
-#' #' Plot fcmconfr Output (IVFN FCMs or TFN FCMs)
-#' #'
-#' #' @description
-#' #' This function plots the primary results of the \code{\link{fcmconfr}}
-#' #' output. The plot features the results of the input fcm inferences,
-#' #' aggregate analysis inferences, and the monte carlo analysis bulk inference
-#' #' confidence intervals. This function takes \code{\link{fcmconfr}} outputs
-#' #' generated from Interval-Value Fuzzy Number (IVFN) FCMs,
-#' #' and Triangular Fuzzy Number (TFN) FCMs as inputs.
-#' #'
-#' #' @details
-#' #' Plots generated using ggplot2
-#' #'
-#' #' @param ivfn_or_tfn_fcmconfr_output Output directly from fcmconfr (for ivfn or tfn fcms as inputs)
-#' #' @param swap_axes Switch x and y axes. Preferable when concepts have longer names
-#' #' @param aggregate_point_fill Hex code value for the aggregate point fill
-#' #' @param monte_carlo_col_fill Hex code value for the columns/bars representing monte carlo data
-#' #' @param monte_carlo_col_alpha Between 0 and 1, the opacity of the monte_carlo_col_fill
-#' #'
-#' #' @importFrom ggplot2 aes ggplot geom_col geom_segment geom_errorbar geom_point
-#' #' scale_fill_manual scale_color_manual scale_y_continuous guides guide_legend
-#' #' expand_limits ggtitle labs xlab ylab theme_classic theme margin element_text
-#' #' element_blank unit scale_x_discrete coord_flip
-#' #'
-#' #' @returns A plot of the results generated from fcmconfr for a set of
-#' #' IVFN or TFN FCMs
-#' #'
-#' #' @export
-#' #' @example man/examples/ex-plot_ivfn_or_tfn_fcmconfr.R
-#' plot_ivfn_or_tfn_fcmconfr <- function(ivfn_or_tfn_fcmconfr_output,
-#'                                       swap_axes = FALSE,
-#'                                       aggregate_point_fill = "#fb0009",
-#'                                       monte_carlo_col_fill = "#fcdbd0",
-#'                                       monte_carlo_col_alpha = 0.6) {
-#'   # browser()
-#'   # Pre-defining values for R CMD Check. Does no effect logic.
-#'   node <- NULL
-#'   name <- NULL
-#'   value <- NULL
-#'   expected_value <- NULL
-#'   analysis_source <- NULL
-#'   concept <- NULL
-#'   lower <- NULL
-#'   upper <- NULL
-#'   lower_0.025 <- NULL
-#'   upper_0.975 <- NULL
-#'   #
-#'
-#'   fcm_class <- ivfn_or_tfn_fcmconfr_output$fcm_class
-#'   if (fcm_class == "ivfn") {
-#'     fcm_class_subtitle <- "Interval-Value Fuzzy Number FCMs"
-#'   } else if (fcm_class == "tfn") {
-#'     fcm_class_subtitle <- "Triangular Fuzzy Number FCMs"
-#'   }
-#'
-#'   agg_function <- ivfn_or_tfn_fcmconfr_output$params$aggregation_function
-#'   if (agg_function == "mean") {
-#'     fcm_agg_function_subtitle <- "Aggregate and Monte Carlo Generated from MEAN of Input FCMs"
-#'   } else if (agg_function == "median") {
-#'     fcm_agg_function_subtitle <- "Aggregate and Monte Carlo Generated from MEDIAN of Input FCMs"
-#'   }
-#'
-#'   #aggregate_inferences_longer <- tidyr::pivot_longer(ivfn_or_tfn_fcmconfr_output$inferences$aggregate_fcm$inferences, cols = 3:ncol(ivfn_or_tfn_fcmconfr_output$inferences$aggregate_fcm$inferences))
-#'   aggregate_inferences <- ivfn_or_tfn_fcmconfr_output$inferences$aggregate_fcm$inferences
-#'   aggregate_inferences$analysis_source <- "aggregate"
-#'   mc_CIs <- ivfn_or_tfn_fcmconfr_output$inferences$monte_carlo_fcms$bootstrap$CIs_by_node
-#'   mc_CIs$analysis_source <- "mc"
-#'
-#'   max_y <- max(max(mc_CIs$upper_0.975), max(aggregate_inferences$upper))
-#'
-#'   # browser()
-#'
-#'   fcmconfr_plot <- ggplot() +
-#'     geom_col(data = mc_CIs, aes(x = node, y = expected_value, fill = analysis_source, color = monte_carlo_col_fill), width = 0.5, alpha = monte_carlo_col_alpha, linewidth = 0.3) +
-#'     geom_segment(data = aggregate_inferences, aes(x = concept, xend = concept, y = lower, yend = upper, color = analysis_source), lineend = "round", linewidth = 2) +
-#'     geom_errorbar(data = mc_CIs, aes(x = node, ymin = lower_0.025, ymax = upper_0.975, color = analysis_source), width = 0.5, linewidth = 0.5) +
-#'     scale_fill_manual(values = c(mc = monte_carlo_col_fill, aggregate = aggregate_point_fill), labels = c(mc = "Monte Carlo Average", aggregate = "Aggregate")) +
-#'     scale_color_manual(values = c(mc = "black", aggregate = aggregate_point_fill), labels = c(mc = "Monte Carlo CIs", aggregate = "Aggregate")) +
-#'     scale_y_continuous(expand = c(0, 0), limits = c(0, max_y + 0.05)) +
-#'     guides(alpha = "none", color = guide_legend(order = 1), shape = guide_legend(order = 2)) +
-#'     expand_limits(y = 0) +
-#'     ggtitle("FCMconfR Inferences", subtitle = paste(fcm_class_subtitle)) +
-#'     labs(caption = fcm_agg_function_subtitle) +
-#'     xlab("Inference Value") +
-#'     ylab("Concept (Node)") +
-#'     theme_classic() +
-#'     theme(
-#'       plot.margin = margin(t = 20, r = 40, b = 20, l = 20),
-#'       plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
-#'       plot.subtitle = element_text(hjust = 0.5, margin = margin(b = 10)),
-#'       plot.caption = element_text(hjust = 0.5, margin = margin(t = 15)),
-#'       axis.title = element_text(size = 12),
-#'       axis.title.x = element_text(margin = margin(t = 10)),
-#'       axis.title.y = element_text(margin = margin(r = 10)),
-#'       axis.text = element_text(size = 12),
-#'       legend.position = "bottom",
-#'       legend.title = element_blank(),
-#'       legend.spacing = unit(0.001, 'cm'),
-#'       legend.text = element_text(size = 10)
-#'     )
-#'
-#'   if (swap_axes) {
-#'     fcmconfr_plot <- fcmconfr_plot + scale_x_discrete(limits = rev) + coord_flip()
-#'   }
-#'
-#'   fcmconfr_plot
-#' }

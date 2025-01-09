@@ -759,6 +759,11 @@ test_that("print.infer_ivfn_or_tfn_fcm works", {
   # Test print infer_ivfn_or_tfn_fcm
   ivfn_infer <- infer_ivfn_or_tfn_fcm(test_ivfn_adj_matrix, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0), activation = "kosko", squashing = "sigmoid", point_of_inference = "final", lambda = 1, min_error = 0.00001)
   tfn_infer <- infer_ivfn_or_tfn_fcm(test_tfn_adj_matrix, initial_state_vector = c(1, 1, 1), clamping_vector = c(1, 0, 0), activation = "kosko", squashing = "sigmoid", point_of_inference = "final", lambda = 1, min_error = 0.00001)
+
+  # Adding to make sure these get caught by covr
+  print(ivfn_infer)
+  print(tfn_infer)
+
   expect_snapshot(print(ivfn_infer))
   expect_snapshot(print(tfn_infer))
 })

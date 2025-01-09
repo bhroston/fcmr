@@ -588,10 +588,10 @@ test_that("fcmconfr_plot works with TFN FCMs", {
   # test_pulse_clamping_vector <- rep(0, unique(dim(sample_fcms$large_fcms$conventional_fcms[[1]])))
   # test_clamping_vector[5] <- 1 # Activate Guidance Docs
 
-  test_initial_state_vector = c(1, 1, 1, 1, 1, 1, 1)
-  test_pulse_initial_state_vector = c(1, 0, 0, 0, 0, 0, 0)
-  test_clamping_vector = c(1, 0, 0, 0, 0, 0, 0)
-  test_pulse_clamping_vector = c(0, 0, 0, 0, 0, 0, 0)
+  test_initial_state_vector <- c(1, 1, 1, 1, 1, 1, 1)
+  test_pulse_initial_state_vector <- c(1, 0, 0, 0, 0, 0, 0)
+  test_clamping_vector <- c(1, 0, 0, 0, 0, 0, 0)
+  test_pulse_clamping_vector <- c(0, 0, 0, 0, 0, 0, 0)
 
   # Clamping: Inputs Only
   invisible(capture.output(
