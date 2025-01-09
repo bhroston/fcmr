@@ -180,12 +180,13 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   # ----
 
   # Individual Adj. Matrices Simulations ----
-  print("Simulating Input FCMs")
-  if (show_progress) {
-    individual_adj_matrices_inferences <- pbapply::pblapply(adj_matrices, infer_fcm, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
-  } else {
-    individual_adj_matrices_inferences <- lapply(adj_matrices, infer_fcm, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
-  }
+  print("Simulating Input FCMs", quote = FALSE)
+  individual_adj_matrices_inferences <- infer_fcm_set(adj_matrices, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error, parallel, n_cores, show_progress, include_simulations_in_output = TRUE)$sims
+  # } else if (show_progress & !parallel) {
+  #   individual_adj_matrices_inferences <- pbapply::pblapply(adj_matrices, infer_fcm, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
+  # } else {
+  #   individual_adj_matrices_inferences <- lapply(adj_matrices, infer_fcm, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
+  # }
 
   if (fcm_class == "conventional") {
     individual_adj_matrices_inferences_df <- do.call(rbind, lapply(individual_adj_matrices_inferences, function(inference) inference$inferences))
@@ -217,7 +218,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
         sampled_adj_matrix
       })
 
-    mc_inferences <- infer_monte_carlo_fcm_set(
+    mc_inferences <- infer_fcm_set(
       mc_adj_matrices = mc_adj_matrices,
       initial_state_vector = initial_state_vector,
       clamping_vector = clamping_vector,
