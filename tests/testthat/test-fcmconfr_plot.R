@@ -289,14 +289,16 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
 test_that("fcmconfr_plot works with IVFN FCMs", {
   set.seed(100)
 
-  # test_initial_state_vector <- rep(1, unique(dim(sample_fcms$simple_fcms$conventional_fcms[[1]])))
-  # test_pulse_initial_state_vector <- rep(0, unique(dim(sample_fcms$simple_fcms$conventional_fcms[[1]])))
+  # Large IVFN FCMs Inputs
+  # test_initial_state_vector <- rep(1, unique(dim(sample_fcms$large_fcms$conventional_fcms[[1]])))
+  # test_pulse_initial_state_vector <- rep(0, unique(dim(sample_fcms$large_fcms$conventional_fcms[[1]])))
   # test_pulse_initial_state_vector[5] <- 1 # Activate Guidance Docs
   #
-  # test_clamping_vector <- rep(0, unique(dim(sample_fcms$simple_fcms$conventional_fcms[[1]])))
-  # test_pulse_clamping_vector <- rep(0, unique(dim(sample_fcms$simple_fcms$conventional_fcms[[1]])))
+  # test_clamping_vector <- rep(0, unique(dim(sample_fcms$large_fcms$conventional_fcms[[1]])))
+  # test_pulse_clamping_vector <- rep(0, unique(dim(sample_fcms$large_fcms$conventional_fcms[[1]])))
   # test_clamping_vector[5] <- 1 # Activate Guidance Docs
 
+  # Small IVFN FCMs inputs
   test_initial_state_vector = c(1, 1, 1, 1, 1, 1, 1)
   test_pulse_initial_state_vector = c(1, 0, 0, 0, 0, 0, 0)
   test_clamping_vector = c(1, 0, 0, 0, 0, 0, 0)
@@ -578,12 +580,12 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
 test_that("fcmconfr_plot works with TFN FCMs", {
   set.seed(100)
 
-  # test_initial_state_vector <- rep(1, unique(dim(sample_fcms$simple_fcms$conventional_fcms[[1]])))
-  # test_pulse_initial_state_vector <- rep(0, unique(dim(sample_fcms$simple_fcms$conventional_fcms[[1]])))
+  # test_initial_state_vector <- rep(1, unique(dim(sample_fcms$large_fcms$conventional_fcms[[1]])))
+  # test_pulse_initial_state_vector <- rep(0, unique(dim(sample_fcms$large_fcms$conventional_fcms[[1]])))
   # test_pulse_initial_state_vector[5] <- 1 # Activate Guidance Docs
   #
-  # test_clamping_vector <- rep(0, unique(dim(sample_fcms$simple_fcms$conventional_fcms[[1]])))
-  # test_pulse_clamping_vector <- rep(0, unique(dim(sample_fcms$simple_fcms$conventional_fcms[[1]])))
+  # test_clamping_vector <- rep(0, unique(dim(sample_fcms$large_fcms$conventional_fcms[[1]])))
+  # test_pulse_clamping_vector <- rep(0, unique(dim(sample_fcms$large_fcms$conventional_fcms[[1]])))
   # test_clamping_vector[5] <- 1 # Activate Guidance Docs
 
   test_initial_state_vector = c(1, 1, 1, 1, 1, 1, 1)

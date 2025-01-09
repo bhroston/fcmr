@@ -83,7 +83,7 @@ mc_fcms <- build_monte_carlo_fcms_from_conventional_adj_matrices(
   ex_fcms, N_samples = 100, include_zeroes = FALSE, show_progress = TRUE
 )
 
-mc_fcms_inferences <- infer_monte_carlo_fcm_set(
+mc_fcms_inferences <- infer_fcm_set(
   mc_adj_matrices = mc_fcms,
   initial_state_vector <- c(1, 1, 1, 1),
   clamping_vector <- c(1, 0, 0, 0),
@@ -108,8 +108,8 @@ Other monte-carlo-model-generation-and-simulation:
 \code{\link{build_monte_carlo_fcms_from_conventional_adj_matrices}()},
 \code{\link{build_monte_carlo_fcms_from_fuzzy_set_adj_matrices}()},
 \code{\link{check_build_monte_carlo_fcms_inputs}()},
+\code{\link{check_infer_fcm_set_inputs}()},
 \code{\link{check_monte_carlo_bootstrap_inputs}()},
-\code{\link{check_monte_carlo_inputs}()},
-\code{\link{infer_monte_carlo_fcm_set}()}
+\code{\link{infer_fcm_set}()}
 }
 \concept{monte-carlo-model-generation-and-simulation}
