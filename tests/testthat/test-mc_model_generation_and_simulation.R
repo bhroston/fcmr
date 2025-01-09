@@ -686,6 +686,9 @@ test_that("check_infer_fcm_set_inputs works", {
   expect_error(
     check_infer_fcm_set_inputs(sample_fcms$large_fcms$ivfn_fcms, initial_state_vector = test_initial_state_vector, clamping_vector = test_clamping_vector, activation = "kosko", squashing = "sigmoid", lambda = 1, point_of_inference = "final", n_cores = 2, include_simulations_in_output = 2)
   )
+  expect_error(
+    check_infer_fcm_set_inputs(sample_fcms$large_fcms$ivfn_fcms, initial_state_vector = test_initial_state_vector, clamping_vector = test_clamping_vector, activation = "kosko", squashing = "sigmoid", lambda = 1, point_of_inference = "final", n_cores = 1000)
+  )
   # ----
 })
 
