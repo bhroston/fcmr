@@ -237,13 +237,13 @@
 <line x1='467.58' y1='62.62' x2='467.58' y2='62.62' style='stroke-width: 0.21; stroke-linecap: butt;' />
 <line x1='467.58' y1='61.54' x2='467.58' y2='61.54' style='stroke-width: 0.21; stroke-linecap: butt;' />
 <line x1='467.58' y1='60.46' x2='467.58' y2='60.46' style='stroke-width: 0.21; stroke-linecap: butt;' />
-<line x1='467.58' y1='400.32' x2='541.29' y2='400.32' style='stroke-width: 1.28; stroke: #FF0000; stroke-linecap: butt;' />
-<line x1='480.10' y1='270.65' x2='576.94' y2='270.65' style='stroke-width: 1.28; stroke: #FF0000; stroke-linecap: butt;' />
-<line x1='349.66' y1='76.13' x2='454.66' y2='76.13' style='stroke-width: 1.28; stroke: #FF0000; stroke-linecap: butt;' />
-<line x1='256.61' y1='140.97' x2='399.94' y2='140.97' style='stroke-width: 1.28; stroke: #FF0000; stroke-linecap: butt;' />
-<line x1='403.58' y1='465.16' x2='553.86' y2='465.16' style='stroke-width: 1.28; stroke: #FF0000; stroke-linecap: butt;' />
-<line x1='467.58' y1='335.48' x2='533.97' y2='335.48' style='stroke-width: 1.28; stroke: #FF0000; stroke-linecap: butt;' />
-<line x1='237.79' y1='205.81' x2='585.60' y2='205.81' style='stroke-width: 1.28; stroke: #FF0000; stroke-linecap: butt;' />
+<line x1='467.58' y1='400.32' x2='541.29' y2='400.32' style='stroke-width: 0.85; stroke: #FF0000; stroke-linecap: butt;' />
+<line x1='480.10' y1='270.65' x2='576.94' y2='270.65' style='stroke-width: 0.85; stroke: #FF0000; stroke-linecap: butt;' />
+<line x1='349.66' y1='76.13' x2='454.66' y2='76.13' style='stroke-width: 0.85; stroke: #FF0000; stroke-linecap: butt;' />
+<line x1='256.61' y1='140.97' x2='399.94' y2='140.97' style='stroke-width: 0.85; stroke: #FF0000; stroke-linecap: butt;' />
+<line x1='403.58' y1='465.16' x2='553.86' y2='465.16' style='stroke-width: 0.85; stroke: #FF0000; stroke-linecap: butt;' />
+<line x1='467.58' y1='335.48' x2='533.97' y2='335.48' style='stroke-width: 0.85; stroke: #FF0000; stroke-linecap: butt;' />
+<line x1='237.79' y1='205.81' x2='585.60' y2='205.81' style='stroke-width: 0.85; stroke: #FF0000; stroke-linecap: butt;' />
 </g>
 <g clip-path='url(#cpMC4wMHw3MjAuMDB8MC4wMHw1NzYuMDA=)'>
 <polyline points='201.94,504.06 201.94,37.23 ' style='stroke-width: 1.07; stroke-linecap: butt;' />
@@ -271,8 +271,8 @@
 <text x='511.59' y='515.05' text-anchor='middle' style='font-size: 8.80px; fill: #4D4D4D; font-family: sans;' textLength='12.23px' lengthAdjust='spacingAndGlyphs'>0.6</text>
 <text x='662.70' y='515.05' text-anchor='middle' style='font-size: 8.80px; fill: #4D4D4D; font-family: sans;' textLength='12.23px' lengthAdjust='spacingAndGlyphs'>0.7</text>
 <rect x='369.67' y='527.84' width='142.76' height='28.24' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
-<line x1='382.36' y1='541.96' x2='396.18' y2='541.96' style='stroke-width: 0.21; stroke-linecap: butt;' />
-<line x1='382.36' y1='541.96' x2='396.18' y2='541.96' style='stroke-width: 0.21; stroke-linecap: butt;' />
+<line x1='382.36' y1='541.96' x2='396.18' y2='541.96' style='stroke-width: 1.07; stroke-linecap: butt;' />
+<line x1='382.36' y1='541.96' x2='396.18' y2='541.96' style='stroke-width: 1.07; stroke-linecap: butt;' />
 <line x1='448.74' y1='541.96' x2='462.57' y2='541.96' style='stroke-width: 1.07; stroke: #FF0000; stroke-linecap: butt;' />
 <line x1='448.74' y1='541.96' x2='462.57' y2='541.96' style='stroke-width: 1.07; stroke: #FF0000; stroke-linecap: butt;' />
 <text x='403.39' y='544.98' style='font-size: 8.80px; font-family: sans;' textLength='38.15px' lengthAdjust='spacingAndGlyphs'>Ind FCMs</text>

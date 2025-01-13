@@ -285,7 +285,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
 })
 
 
-# Not finished yet
+
 test_that("fcmconfr_plot works with IVFN FCMs", {
   set.seed(100)
 
@@ -576,7 +576,6 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
 
 
 
-# Not finished yet
 test_that("fcmconfr_plot works with TFN FCMs", {
   set.seed(100)
 

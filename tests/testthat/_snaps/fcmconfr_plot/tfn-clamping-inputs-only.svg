@@ -414,10 +414,9 @@
 <text x='568.48' y='515.05' text-anchor='middle' style='font-size: 8.80px; fill: #4D4D4D; font-family: sans;' textLength='12.23px' lengthAdjust='spacingAndGlyphs'>0.1</text>
 <text x='660.28' y='515.05' text-anchor='middle' style='font-size: 8.80px; fill: #4D4D4D; font-family: sans;' textLength='12.23px' lengthAdjust='spacingAndGlyphs'>0.2</text>
 <rect x='402.37' y='527.84' width='77.35' height='28.24' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
-<line x1='419.21' y1='541.96' x2='424.74' y2='541.96' style='stroke-width: 0.71; stroke: #000000; stroke-opacity: 0.80;' />
-<line x1='421.97' y1='544.72' x2='421.97' y2='539.19' style='stroke-width: 0.71; stroke: #000000; stroke-opacity: 0.80;' />
-<line x1='415.06' y1='541.96' x2='428.88' y2='541.96' style='stroke-width: 0.21; stroke-linecap: butt;' />
-<circle cx='421.97' cy='541.96' r='2.84' style='stroke-width: 1.42; fill: #000000;' />
+<line x1='415.06' y1='541.96' x2='428.88' y2='541.96' style='stroke-width: 1.07; stroke-linecap: butt;' />
+<circle cx='421.97' cy='541.96' r='2.84' style='stroke-width: 1.42; stroke: none; fill: #000000;' />
+<circle cx='421.97' cy='541.96' r='1.95' style='stroke-width: 0.71; stroke: none; fill: #000000; fill-opacity: 0.60;' />
 <text x='436.09' y='544.98' style='font-size: 8.80px; font-family: sans;' textLength='38.15px' lengthAdjust='spacingAndGlyphs'>Ind FCMs</text>
 <text x='201.94' y='29.01' style='font-size: 13.20px; font-family: sans;' textLength='155.54px' lengthAdjust='spacingAndGlyphs'>TFN Clamping Inputs Only</text>
 </g>
