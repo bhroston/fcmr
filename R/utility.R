@@ -485,3 +485,34 @@ standardize_adj_matrices <- function(adj_matrices = list(matrix())) {
 
   standardized_adj_matrices
 }
+
+
+# view_fcm_layout <- function(fcm = matrix(), seed = integer()) {
+#   fcm_input_type <- get_adj_matrices_input_type(fcm)
+#   fcm_class <- fcm_input_type$fcm_class
+#   if (fcm_class == "conventional") {
+#     conventional_fcm <- fcm
+#   } else if (fcm_class == "ivfn") {
+#     conventional_fcm <- apply(fcm, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$upper))
+#   } else if (fcm_class == "tfn") {
+#     conventional_fcm <- apply(fcm, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$mode,  x[[1]]$upper))
+#   }
+#
+#   # Translate fcm into an igraph object and then convert to visNetwork
+#   fcm_as_igraph_obj <- igraph::graph_from_adjacency_matrix(as.matrix(conventional_fcm), weighted = TRUE, mode = "directed")
+#   fcm_as_visNetwork_obj <- visNetwork::visIgraph(fcm_as_igraph_obj)
+#
+#   # Add aesthetics for nodes
+#   fcm_as_visNetwork_obj$x$nodes$color <- "lightgrey"
+#
+#   # Add aesthetics for edges
+#   edges_df <- fcm_as_visNetwork_obj$x$edges
+#   edges_df$label <- paste(edges_df$weight)
+#   edges_df$color <- ifelse(edges_df$weight >= 0, "black", "red")
+#   edges_df$width <- abs(edges_df$weight*2)
+#   fcm_as_visNetwork_obj$x$edges <- edges_df
+#
+#   # Load plot
+#   fcm_as_visNetwork_obj %>%
+#     visNetwork::visLayout(randomSeed = seed)
+# }
