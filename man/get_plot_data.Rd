@@ -11,6 +11,10 @@ get_plot_data(fcmconfr_object, filter_limit = 0.01)
 
 \item{filter_limit}{Remove concepts whose inferences do not exceed this value}
 }
+\value{
+A list of fcmconfr output dataframes organized to streamline
+functionality with ggplot
+}
 \description{
 This function parses through an \code{\link{fcmconfr}} output to gather and
 organize the analysis results into dataframes that are constructed to be
@@ -19,4 +23,7 @@ plugged directly into a ggplot2 pipeline
 \details{
 This function produces slightly different outputs for \code{\link{fcmconfr}}
 outputs generated from conventional, ivfn, and tfn FCMs
+}
+\examples{
+NULL
 }

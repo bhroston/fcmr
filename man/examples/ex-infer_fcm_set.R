@@ -30,7 +30,7 @@ mc_fcms <- build_monte_carlo_fcms_from_conventional_adj_matrices(
   ex_fcms, N_samples = 1000, include_zeroes = FALSE, show_progress = TRUE
 )
 
-mc_fcms_inferences <- infer_monte_carlo_fcm_set(
+mc_fcms_inferences <- infer_fcm_set(
   mc_adj_matrices = mc_fcms,
   initial_state_vector <- c(1, 1, 1, 1),
   clamping_vector <- c(1, 0, 0, 0),
@@ -89,7 +89,7 @@ fcms_w_ivfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
 mc_fcms <- build_monte_carlo_fcms_from_fuzzy_set_adj_matrices(
   fcms_w_ivfns, "ivfn", 1000, include_zeroes = FALSE
 )
-mc_fcms_inferences <- infer_monte_carlo_fcm_set(
+mc_fcms_inferences <- infer_fcm_set(
   mc_adj_matrices = mc_fcms,
   initial_state_vector <- c(1, 1),
   clamping_vector <- c(1, 0),
@@ -170,7 +170,7 @@ fcms_w_tfns <- list(adj_matrix_1, adj_matrix_2, adj_matrix_3, adj_matrix_4)
 mc_fcms <- build_monte_carlo_fcms_from_fuzzy_set_adj_matrices(
   fcms_w_tfns, "tfn", 1000, include_zeroes = FALSE
 )
-mc_fcms_inferences <- infer_monte_carlo_fcm_set(
+mc_fcms_inferences <- infer_fcm_set(
   mc_adj_matrices = mc_fcms,
   initial_state_vector <- c(1, 1),
   clamping_vector <- c(1, 0),

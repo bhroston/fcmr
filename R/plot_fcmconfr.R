@@ -17,7 +17,12 @@
 #' @param fcmconfr_object A direct output of the \code{\link{fcmconfr}} function
 #' @param filter_limit Remove concepts whose inferences do not exceed this value
 #'
+#' @returns An array of concepts that should be included in the fcmconfr plot
+#' output because they have simulation inferences greater than the filter_limit
+#'
 #' @export
+#' @examples
+#' NULL
 get_concepts_to_plot <- function(fcmconfr_object, filter_limit = 10e-10) {
   fcm_clamping_vector <- fcmconfr_object$params$simulation_opts$clamping_vector
   fcm_nodes <- unique(lapply(fcmconfr_object$params$adj_matrices, colnames))[[1]]
@@ -129,7 +134,12 @@ get_concepts_to_plot <- function(fcmconfr_object, filter_limit = 10e-10) {
 #' @param fcmconfr_object A direct output of the \code{\link{fcmconfr}} function
 #' @param filter_limit Remove concepts whose inferences do not exceed this value
 #'
+#' @returns A list of fcmconfr output dataframes organized to streamline
+#' functionality with ggplot
+#'
 #' @export
+#' @examples
+#' NULL
 get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
   nodes_to_plot <- get_concepts_to_plot(fcmconfr_object, filter_limit)
 
@@ -318,7 +328,12 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
 #'
 #' @importFrom ggplot2 autoplot ggplot aes
 #' @importFrom rlang .data
+#'
+#' @returns An autoplot plot of an fcmconfr object's results
+#'
 #' @export
+#' @examples
+#' NULL
 autoplot.fcmconfr <- function(object, ...) {
                               # exclude_input_inferences = FALSE,
                               # exclude_agg_inferences = FALSE,
@@ -504,9 +519,9 @@ autoplot.fcmconfr <- function(object, ...) {
   }
 
   if (coord_flip) {
-    fcmconfr_plot <- ggplot_main + default_theme()
+    fcmconfr_plot <- ggplot_main + fcmconfr_default_theme()
   } else {
-    fcmconfr_plot <- ggplot_main + default_theme() + ggplot2::coord_flip()
+    fcmconfr_plot <- ggplot_main + fcmconfr_default_theme() + ggplot2::coord_flip()
   }
 
     # browser()
@@ -526,7 +541,12 @@ autoplot.fcmconfr <- function(object, ...) {
 #'  - coord_flip Swap x- and y-axes (i.e. rotate plot)
 #'
 #' @importFrom graphics plot
+#'
+#' @returns A plot of an fcmconfr object's results
+#'
 #' @export
+#' @examples
+#' NULL
 plot.fcmconfr <- function(x, ...) {
   additional_inputs = list(...)
   if (!("filter_limit" %in% names(additional_inputs))) {
@@ -553,8 +573,13 @@ plot.fcmconfr <- function(x, ...) {
 #' @param ... Additional Inputs
 #'
 #' @importFrom ggplot2 %+replace%
+#'
+#' @returns A custom ggplot2 theme for fcmconfr plot objects
+#'
 #' @export
-theme_custom <- function(...) {
+#' @examples
+#' NULL
+fcmconfr_theme_custom <- function(...) {
   ggplot2::theme_classic(...) %+replace%
     ggplot2::theme(
       plot.margin = ggplot2::margin(t = 20, r = 40, b = 20, l = 20),
@@ -567,12 +592,17 @@ theme_custom <- function(...) {
     )
 }
 
+
 #' Default plot.fcmconfr Theme
 #'
 #' @description
-#' A formal call to the custom_theme defined by \code{\link{theme_custom}}
+#' A formal call to the custom_theme defined by \code{\link{fcmconfr_theme_custom}}
+#'
+#' @returns A default ggplot2 theme for fcmconfr plot objects
 #'
 #' @export
-default_theme <- function() {
-  theme_custom()
+#' @examples
+#' NULL
+fcmconfr_default_theme <- function() {
+  fcmconfr_theme_custom()
 }

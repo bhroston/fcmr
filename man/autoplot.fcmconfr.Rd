@@ -11,6 +11,9 @@
 
 \item{...}{Additional inputs}
 }
+\value{
+An autoplot plot of an fcmconfr object's results
+}
 \description{
 Generate a generic plot visualizing \code{\link{fcmconfr}} results. Call the
 function name directly (\code{\link{autoplot.fcmconfr}})) without parentheses
@@ -20,4 +23,7 @@ as needed.
 \details{
 This function produces slightly different outputs for \code{\link{fcmconfr}}
 outputs generated from conventional, ivfn, and tfn FCMs.
+}
+\examples{
+NULL
 }

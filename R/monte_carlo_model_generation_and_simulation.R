@@ -5,7 +5,7 @@
 # These functions assist in generating empirical FCMs via monte carlo methods
 # and simulating the generated FCMs in bulk.
 #
-#   - infer_monte_carlo_fcm_set
+#   - infer_fcm_set
 #   - get_mc_simulations_inference_CIs_w_bootstrap
 #   - build_monte_carlo_fcms
 #   - build_monte_carlo_fcms_from_conventional_adj_matrices
@@ -60,8 +60,8 @@
 #' plotting (particularly with ggplot2)
 #'
 #' @export
-#' @example man/examples/ex-infer_mc_fcm_set.R
-infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
+#' @example man/examples/ex-infer_fcm_set.R
+infer_fcm_set <- function(mc_adj_matrices = list(matrix()),
                                       initial_state_vector = c(),
                                       clamping_vector = c(),
                                       activation = c("kosko", "modified-kosko", "rescale"),
@@ -79,7 +79,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
   i <- NULL
 
   # Perform input checks ----
-  checks <- check_monte_carlo_inputs(
+  checks <- check_infer_fcm_set_inputs(
     mc_adj_matrices,
     initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error,
     parallel, n_cores, show_progress, include_simulations_in_output
@@ -95,32 +95,32 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
   parallel <- checks$parallel
   # ----
 
-  if (parallel) {
-    max_possible_cores <- parallel::detectCores()
-    if (identical(n_cores, integer())) {
-      warning(cli::format_warning(c(
-        "!" = "Warning: {.var n_cores} not defined",
-        "~~~~~ Assuming {.var n_cores} is the maximum available on the machine: n_cores = {max_possible_cores}"
-      )))
-      n_cores <- max_possible_cores
-    }
-    if (n_cores > max_possible_cores) {
-      warning(cli::format_warning(c(
-        "!" = "Warning: {.var n_cores} is {n_cores} which is greater than the max. cores available on the machine (n = {max_possible_cores})",
-        "~~~~~ Reducing {.var n_cores} to {max_possible_cores}"
-      )))
-    }
-  }
-  if (!parallel & !identical(n_cores, integer())) {
-    warning(cli::format_warning(c(
-      "!" = "Warning: {.var n_cores} is ignored since {.var parallel} = FALSE"
-    )))
-  }
+  # if (parallel) {
+  #   max_possible_cores <- parallel::detectCores()
+  #   if (identical(n_cores, integer())) {
+  #     warning(cli::format_warning(c(
+  #       "!" = "Warning: {.var n_cores} not defined",
+  #       "~~~~~ Assuming {.var n_cores} is the maximum available on the machine: n_cores = {max_possible_cores}"
+  #     )))
+  #     n_cores <- max_possible_cores
+  #   }
+  #   if (n_cores > max_possible_cores) {
+  #     warning(cli::format_warning(c(
+  #       "!" = "Warning: {.var n_cores} is {n_cores} which is greater than the max. cores available on the machine (n = {max_possible_cores})",
+  #       "~~~~~ Reducing {.var n_cores} to {max_possible_cores}"
+  #     )))
+  #   }
+  # }
+  # if (!parallel & !identical(n_cores, integer())) {
+  #   warning(cli::format_warning(c(
+  #     "!" = "Warning: {.var n_cores} is ignored since {.var parallel} = FALSE"
+  #   )))
+  # }
 
   if (parallel & show_progress) {
     print("Initializing cluster", quote = FALSE)
     cl <- parallel::makeForkCluster(n_cores)
-    print("Simulating Monte Carlo FCMs", quote = FALSE)
+    print("Running Simulations in Parallel", quote = FALSE)
     inferences_for_mc_adj_matrices <- pbapply::pblapply(
       mc_adj_matrices,
       function(adj_matrix) {
@@ -166,7 +166,7 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
 
   } else if (!parallel & show_progress) {
     cat("\n")
-    print("Running simulations", quote = FALSE)
+    print("Running Simulations", quote = FALSE)
 
     inferences_for_mc_adj_matrices <- pbapply::pblapply(
       mc_adj_matrices,
@@ -206,20 +206,25 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
     )
   }
 
-  inference_values_by_sim <- lapply(inferences_for_mc_adj_matrices, function(sim) sim$inference)
+  if (identical(fcm_class, "conventional")) {
+    inference_values_by_sim <- lapply(inferences_for_mc_adj_matrices, function(sim) sim$inference)
+  } else {
+    inference_values_by_sim <- lapply(inferences_for_mc_adj_matrices, function(sim) sim$inferences)
+  }
+
   inference_values_by_sim <- do.call(rbind, inference_values_by_sim)
   rownames(inference_values_by_sim) <- 1:nrow(inference_values_by_sim)
 
-  inference_plot_data <- data.frame(
-    node = rep(colnames(inference_values_by_sim), nrow(inference_values_by_sim)),
-    value = unlist(lapply(t(inference_values_by_sim), c))
-  )
+  # inference_plot_data <- data.frame(
+  #   node = rep(colnames(inference_values_by_sim), nrow(inference_values_by_sim)),
+  #   value = unlist(lapply(t(inference_values_by_sim), c))
+  # )
 
   if (include_simulations_in_output) {
     structure(
       .Data = list(
         inference = inference_values_by_sim,
-        inference_for_plotting = inference_plot_data,
+        # inference_for_plotting = inference_plot_data,
         sims = inferences_for_mc_adj_matrices
       ),
       class = "inference_of_monte_carlo_fcm_set"
@@ -227,8 +232,8 @@ infer_monte_carlo_fcm_set <- function(mc_adj_matrices = list(matrix()),
   } else {
     structure(
       .Data = list(
-        inference = inference_values_by_sim,
-        inference_for_plotting = inference_plot_data
+        inference = inference_values_by_sim#,
+        # inference_for_plotting = inference_plot_data
       ),
       class = "inference_of_monte_carlo_fcm_set"
     )
@@ -300,27 +305,27 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
 
   node_names <- colnames(mc_simulations_inference_df)
 
-  if (parallel) {
-    max_possible_cores <- parallel::detectCores()
-    if (identical(n_cores, integer())) {
-      warning(cli::format_warning(c(
-        "!" = "Warning: {.var n_cores} not defined",
-        "~~~~~ Assuming {.var n_cores} is the maximum available on the machine: n_cores = {max_possible_cores}"
-      )))
-      n_cores <- max_possible_cores
-    }
-    if (n_cores > max_possible_cores) {
-      warning(cli::format_warning(c(
-        "!" = "Warning: {.var n_cores} is {n_cores} which is greater than the max. cores available on the machine (n = {max_possible_cores})",
-        "~~~~~ Reducing {.var n_cores} to {max_possible_cores}"
-      )))
-    }
-  }
-  if (!parallel & !identical(n_cores, integer())) {
-    warning(cli::format_warning(c(
-      "!" = "Warning: {.var n_cores} is ignored since {.var parallel} = FALSE"
-    )))
-  }
+  # if (parallel) {
+  #   max_possible_cores <- parallel::detectCores()
+  #   if (identical(n_cores, integer())) {
+  #     warning(cli::format_warning(c(
+  #       "!" = "Warning: {.var n_cores} not defined",
+  #       "~~~~~ Assuming {.var n_cores} is the maximum available on the machine: n_cores = {max_possible_cores}"
+  #     )))
+  #     n_cores <- max_possible_cores
+  #   }
+  #   if (n_cores > max_possible_cores) {
+  #     warning(cli::format_warning(c(
+  #       "!" = "Warning: {.var n_cores} is {n_cores} which is greater than the max. cores available on the machine (n = {max_possible_cores})",
+  #       "~~~~~ Reducing {.var n_cores} to {max_possible_cores}"
+  #     )))
+  #   }
+  # }
+  # if (!parallel & !identical(n_cores, integer())) {
+  #   warning(cli::format_warning(c(
+  #     "!" = "Warning: {.var n_cores} is ignored since {.var parallel} = FALSE"
+  #   )))
+  # }
 
   if (parallel & show_progress) {
     print("Performing bootstrap simulations", quote = FALSE)
@@ -810,7 +815,7 @@ build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_mat
 #' @export
 #' @examples
 #' NULL
-check_monte_carlo_inputs <- function(mc_adj_matrices = list(matrix()),
+check_infer_fcm_set_inputs <- function(mc_adj_matrices = list(matrix()),
                                      initial_state_vector = c(),
                                      clamping_vector = c(),
                                      activation = c("kosko", "modified-kosko", "rescale"),
@@ -874,7 +879,7 @@ check_monte_carlo_inputs <- function(mc_adj_matrices = list(matrix()),
   if (parallel) {
     if (identical(n_cores, integer())) {
       warning(cli::format_warning(c(
-        "!" = "Warning: N {.var n_cores} given.",
+        "!" = "Warning: No {.var n_cores} given.",
         "~~~~~ Assuming {.var n_cores} is {parallel::detectCores() - 1} (i.e. the max available cores minus 1)"
       )))
       n_cores <- parallel::detectCores() - 1
@@ -903,6 +908,12 @@ check_monte_carlo_inputs <- function(mc_adj_matrices = list(matrix()),
         "+++++ Input {.var n_cores} was {n_cores}"
       )))
     }
+  }
+  if (!parallel & !identical(n_cores, integer())) {
+    warning(cli::format_warning(c(
+      "!" = "Warning: {.var n_cores} given but {.var parallel} = FALSE.",
+      "~~~~~ Ignoring {.var n_cores} input."
+    )))
   }
   # ----
 
@@ -1077,7 +1088,7 @@ check_monte_carlo_bootstrap_inputs <- function(inference_estimation_function = c
   if (parallel) {
     if (identical(n_cores, integer())) {
       warning(cli::format_warning(c(
-        "!" = "Warning: N {.var n_cores} given.",
+        "!" = "Warning: No {.var n_cores} given.",
         "~~~~~ Assuming {.var n_cores} is {parallel::detectCores() - 1} (i.e. the max available cores minus 1)"
       )))
       n_cores <- parallel::detectCores() - 1
@@ -1106,6 +1117,12 @@ check_monte_carlo_bootstrap_inputs <- function(inference_estimation_function = c
         "+++++ Input {.var n_cores} was {n_cores}"
       )))
     }
+  }
+  if (!parallel & !identical(n_cores, integer())) {
+    warning(cli::format_warning(c(
+      "!" = "Warning: {.var n_cores} given but {.var parallel} = FALSE.",
+      "~~~~~ Ignoring {.var n_cores} input."
+    )))
   }
   # ----
 

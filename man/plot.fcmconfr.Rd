@@ -13,6 +13,12 @@
 - filter_limit Remove concepts whose inferences do not exceed this value
 - coord_flip Swap x- and y-axes (i.e. rotate plot)}
 }
+\value{
+A plot of an fcmconfr object's results
+}
 \description{
 Print the output of the autoplot function (\code{\link{autoplot.fcmconfr}})
+}
+\examples{
+NULL
 }

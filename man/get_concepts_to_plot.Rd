@@ -11,6 +11,10 @@ get_concepts_to_plot(fcmconfr_object, filter_limit = 1e-09)
 
 \item{filter_limit}{Remove concepts whose inferences do not exceed this value}
 }
+\value{
+An array of concepts that should be included in the fcmconfr plot
+output because they have simulation inferences greater than the filter_limit
+}
 \description{
 This determines which concepts should be included in fcmconfr output plot by
 selecting concepts that either were NOT clamped (if applicable) or did not
@@ -23,4 +27,7 @@ This function removes:
     x-axis, potentially diminishing the ability to view other data
     - Inactivated Nodes because they do not display on the plot and would
     add unnecessary whitespace to the plot.
+}
+\examples{
+NULL
 }
