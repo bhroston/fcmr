@@ -2,10 +2,10 @@
 % Please edit documentation in R/monte_carlo_model_generation_and_simulation.R
 \name{check_infer_fcm_set_inputs}
 \alias{check_infer_fcm_set_inputs}
-\title{Check inputs for monte carlo bootstrap analysis}
+\title{Check inputs for running infer_fcm on a list of adj. matrices}
 \usage{
 check_infer_fcm_set_inputs(
-  mc_adj_matrices = list(matrix()),
+  adj_matrices = list(matrix()),
   initial_state_vector = c(),
   clamping_vector = c(),
   activation = c("kosko", "modified-kosko", "rescale"),
@@ -21,7 +21,7 @@ check_infer_fcm_set_inputs(
 )
 }
 \arguments{
-\item{mc_adj_matrices}{A list of adjecency matrices generated from simulation using build_fmcm_models.}
+\item{adj_matrices}{A list of adjecency matrices}
 
 \item{initial_state_vector}{A list state values at the start of an fcm simulation}
 
@@ -62,7 +62,7 @@ FCM. Will dramatically increase size of output if TRUE.}
 NULL; Errors if checks fail
 }
 \description{
-Check inputs for monte carlo bootstrap analysis
+Check inputs for running infer_fcm on a list of adj. matrices
 }
 \examples{
 NULL
