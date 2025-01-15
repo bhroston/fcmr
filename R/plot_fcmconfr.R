@@ -247,11 +247,11 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
     min_y <- min(min(input_inferences_longer$value), min(mc_inferences_longer$value), min(aggregate_inferences_longer$value))
     min_y <- (floor(min_y*1000))/1000
 
-    input_inferences_longer$analysis_source <- "Ind FCMs"
-    aggregate_inferences_longer$analysis_source <- "Agg FCM"
-    mc_inferences_longer$analysis_source <- "MC FCMs"
-    mc_avg_inferences_longer$analysis_source <- "Avg MC FCMs"
-    mc_inference_CIs$analysis_source <- "CIs"
+    input_inferences_longer$analysis_source <- "Ind FCM Inferences"
+    aggregate_inferences_longer$analysis_source <- "Agg FCM Inferences"
+    mc_inferences_longer$analysis_source <- "MC FCM Inferences"
+    mc_avg_inferences_longer$analysis_source <- "MC FCM Avg Inferences"
+    mc_inference_CIs$analysis_source <- "CIs of MC FCM Avg Inferences"
 
   } else if (fcmconfr_object$fcm_class == "ivfn") {
     fcm_class_subtitle <- "IVFN FCM"
@@ -259,7 +259,7 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
     lower_input_inferences_longer <- tidyr::pivot_longer(input_inferences$lower_inference_values, cols = 2:ncol(input_inferences$lower_inference_values), values_to = "lower")
     upper_input_inferences_longer <- tidyr::pivot_longer(input_inferences$upper_inference_values, cols = 2:ncol(input_inferences$upper_inference_values), values_to = "upper")
     input_inferences_longer <- merge(lower_input_inferences_longer, upper_input_inferences_longer)
-    input_inferences_longer$analysis_source <- "Ind FCMs"
+    input_inferences_longer$analysis_source <- "Ind FCM Inferences"
 
     lower_aggregate_inferences <- vapply(aggregate_inferences, function(element) ifelse(identical(methods::is(element[[1]]), "ivfn"), element[[1]]$lower, NA), numeric(1))
     upper_aggregate_inferences <- vapply(aggregate_inferences, function(element) ifelse(identical(methods::is(element[[1]]), "ivfn"), element[[1]]$upper, NA), numeric(1))
@@ -277,10 +277,10 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
     min_y <- min(min(input_inferences_longer$lower), min(mc_inferences_longer$value), min(aggregate_inferences_longer$lower))
     min_y <- (floor(min_y*1000))/1000
 
-    aggregate_inferences_longer$analysis_source <- "Agg FCM"
-    mc_inferences_longer$analysis_source <- "MC FCMs"
-    mc_avg_inferences_longer$analysis_source <- "Avg MC FCMs"
-    mc_inference_CIs$analysis_source <- "CIs"
+    aggregate_inferences_longer$analysis_source <- "Agg FCM Inferences"
+    mc_inferences_longer$analysis_source <- "MC FCM Inferences"
+    mc_avg_inferences_longer$analysis_source <- "MC FCM Avg Inferences"
+    mc_inference_CIs$analysis_source <- "CIs of MC FCM Avg Inferences"
   } else if (fcmconfr_object$fcm_class == "tfn") {
     fcm_class_subtitle <- "TFN FCM"
 
@@ -289,7 +289,7 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
     upper_input_inferences_longer <- tidyr::pivot_longer(input_inferences$upper_inference_values, cols = 2:ncol(input_inferences$upper_inference_values), values_to = "upper")
     input_inferences_longer <- Reduce(function(x, y) merge(x, y, all=TRUE), list(lower_input_inferences_longer, mode_input_inferences_longer, upper_input_inferences_longer))
     #input_inferences_longer <- merge(lower_input_inferences_longer, mode_input_inferences_longer, upper_input_inferences_longer, all = TRUE)
-    input_inferences_longer$analysis_source <- "Ind FCMs"
+    input_inferences_longer$analysis_source <- "Ind FCM Inferences"
 
     lower_aggregate_inferences <- vapply(aggregate_inferences, function(element) ifelse(identical(methods::is(element[[1]]), "tfn"), element[[1]]$lower, NA), numeric(1))
     mode_aggregate_inferences <- vapply(aggregate_inferences, function(element) ifelse(identical(methods::is(element[[1]]), "tfn"), element[[1]]$mode, NA), numeric(1))
@@ -309,10 +309,10 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
     min_y <- min(min(input_inferences_longer$lower), min(mc_inferences_longer$value), min(aggregate_inferences_longer$lower), na.rm = TRUE)
     min_y <- (floor(min_y*1000))/1000
 
-    aggregate_inferences_longer$analysis_source <- "Agg FCM"
-    mc_inferences_longer$analysis_source <- "MC FCMs"
-    mc_avg_inferences_longer$analysis_source <- "Avg MC FCMs"
-    mc_inference_CIs$analysis_source <- "CIs"
+    aggregate_inferences_longer$analysis_source <- "Agg FCM Inferences"
+    mc_inferences_longer$analysis_source <- "MC FCM Inferences"
+    mc_avg_inferences_longer$analysis_source <- "MC FCM Avg Inferences"
+    mc_inference_CIs$analysis_source <- "CIs of MC FCM Avg Inferences"
   }
 
   list(
@@ -352,13 +352,12 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
 #' @examples
 #' NULL
 autoplot.fcmconfr <- function(object, ...) {
-                              # exclude_input_inferences = FALSE,
-                              # exclude_agg_inferences = FALSE,
-                              # exclude_mc_inferences = FALSE,
-                              # aggregate_fill = "#f7e3dd",
-                              # aggregate_color = "#E1D1CB",
-                              # aggregate_alpha = 0.7,
-                              # mc_fill = "#f7e3dd",
+                              # additional_inputs = list(
+                              #   filter_limit
+                              #   coord_flip
+                              #
+                              # )
+
 
   additional_inputs <- list(...)[[1]]
   filter_limit <- additional_inputs$filter_limit
@@ -382,249 +381,210 @@ autoplot.fcmconfr <- function(object, ...) {
   inputs_agg_and_mc_no_bs <- (!(identical(plot_data$aggregate_inferences$name, "blank")) & !(identical(plot_data$mc_inferences$name, "blank")) & identical(plot_data$mc_inference_CIs$name, "blank"))
   inputs_agg_and_mc_w_bs <- (!(identical(plot_data$aggregate_inferences$name, "blank")) & !(identical(plot_data$mc_inferences$name, "blank")) & !(identical(plot_data$mc_inference_CIs$name, "blank")))
 
-  if (object$fcm_class == "conventional") {
-    ggplot_main <- ggplot() +
-      # MC CIs
+  # Scale Parameters ----
+  mc_avg_and_CIs_color <- "blue"
+
+  mc_inferences_color <- "blue"
+  mc_inferences_shape <- 3
+
+  ind_inferences_color <- "black"
+  ind_inferences_shape <- 16
+
+  agg_inferences_color <- "red"
+  agg_inferences_shape <- 17
+
+  ind_ivfn_and_tfn_linewidth <- 0.1
+  agg_ivfn_and_tfn_linewidth <- 0.6
+
+  if (object$fcm_class == "ivfn") {
+    ind_inferences_shape <- NA
+    agg_inferences_shape <- NA
+  }
+  # ----
+
+  ggplot_main <- ggplot()
+
+  # MC Avg Ingerences CIs ----
+  if (inputs_agg_and_mc_w_bs) {
+    ggplot_main <- ggplot_main +
       ggplot2::geom_crossbar(
         data = ggplot2::remove_missing(plot_data$mc_inference_CIs),
-        aes(y = .data$name, xmin = .data$lower_CI, x = .data$lower_CI, xmax = .data$lower_CI),
-        width = 0.8, color = "blue", linewidth = 0.1, na.rm = FALSE, key_glyph = ggplot2::draw_key_vline
+        aes(y = .data$name, xmin = .data$lower_CI, x = .data$lower_CI, xmax = .data$lower_CI, linewidth = .data$analysis_source),
+        width = 0.7, color = mc_avg_and_CIs_color,
+        na.rm = FALSE, key_glyph = ggplot2::draw_key_vline
       ) +
       ggplot2::geom_crossbar(
         data = ggplot2::remove_missing(plot_data$mc_inference_CIs),
-        aes(y = .data$name, xmin = .data$upper_CI, x = .data$upper_CI, xmax = .data$upper_CI),
-        width = 0.8, color = "blue", linewidth = 0.1, na.rm = TRUE, key_glyph = ggplot2::draw_key_vline
-      ) +
-      # MC FCMs
+        aes(y = .data$name, xmin = .data$upper_CI, x = .data$upper_CI, xmax = .data$upper_CI, linewidth = .data$analysis_source),
+        width = 0.7, color = mc_avg_and_CIs_color,
+        na.rm = TRUE, key_glyph = ggplot2::draw_key_vline
+      )
+  }
+  # ----
+
+  # MC FCM Inferences ----
+  if (inputs_agg_and_mc_no_bs | inputs_agg_and_mc_w_bs) {
+    # MC FCM Inferences
+    ggplot_main <- ggplot_main +
       ggplot2::geom_point(
         data = ggplot2::remove_missing(plot_data$mc_inferences),
-        aes(y = .data$name, x = .data$value, color = .data$analysis_source),
-        position = ggplot2::position_dodge2(width = 0.25), alpha = 0.6, shape = 3, na.rm = FALSE
+        aes(y = .data$name, x = .data$value, color = .data$analysis_source, shape = .data$analysis_source),
+        position = ggplot2::position_dodge2(width = 0.25), alpha = 0.6,
+        # shape = 3,
+        na.rm = FALSE
       ) +
       ggplot2::geom_crossbar(
         data = ggplot2::remove_missing(plot_data$mc_avg_inferences),
-        aes(y = .data$name, xmin = .data$value, x = .data$value, xmax = .data$value, linetype = .data$analysis_source),
-        width = 0.9, color = "blue", linewidth = 0.2, na.rm = FALSE, key_glyph = ggplot2::draw_key_vline
-      ) +
-      # Ind FCMs
+        aes(y = .data$name, xmin = .data$value, x = .data$value, xmax = .data$value),
+        width = 0.9, linewidth = 0.1, color = mc_avg_and_CIs_color, na.rm = FALSE, key_glyph = ggplot2::draw_key_vline
+      )
+  }
+  # ----
+
+  # Individual FCM Inferences ----
+  if (object$fcm_class == "conventional") {
+    ggplot_main <- ggplot_main +
       ggplot2::geom_point(
         data = ggplot2::remove_missing(plot_data$input_inferences),
-        # position = ggplot2::position_jitter(h = 0.025, w = 0),
         position = ggplot2::position_dodge2(width = 0.1),
-        aes(y = .data$name, x = .data$value, color = .data$analysis_source),
-        shape = 16, size = 2, na.rm = TRUE
-      ) +
-      # Agg FCM
-      ggplot2::geom_point(
-        data = ggplot2::remove_missing(plot_data$aggregate_inferences),
-        aes(y = .data$name, x = .data$value, color = .data$analysis_source),
-        shape = 17, size = 2,
+        aes(y = .data$name, x = .data$value, color = .data$analysis_source, shape = .data$analysis_source),
+        size = 2, na.rm = TRUE
       )
   } else if (object$fcm_class == "ivfn") {
-    ggplot_main <- ggplot2::ggplot() +
-      # MC CIs
-      ggplot2::geom_crossbar(
-        data = ggplot2::remove_missing(plot_data$mc_inference_CIs),
-        aes(y = .data$name, xmin = .data$lower_CI, x = .data$lower_CI, xmax = .data$lower_CI),
-        width = 0.8, color = "blue", linewidth = 0.1, na.rm = FALSE, key_glyph = ggplot2::draw_key_vline
-      ) +
-      ggplot2::geom_crossbar(
-        data = ggplot2::remove_missing(plot_data$mc_inference_CIs),
-        aes(y = .data$name, xmin = .data$upper_CI, x = .data$upper_CI, xmax = .data$upper_CI),
-        width = 0.8, color = "blue", linewidth = 0.1, na.rm = TRUE, key_glyph = ggplot2::draw_key_vline
-      ) +
-      # MC FCMs
-      ggplot2::geom_point(
-        data = ggplot2::remove_missing(plot_data$mc_inferences),
-        aes(y = .data$name, x = .data$value, color = .data$analysis_source),
-        position = ggplot2::position_dodge2(width = 0.25), alpha = 0.6, shape = 3, na.rm = FALSE
-      ) +
-      ggplot2::geom_crossbar(
-        data = ggplot2::remove_missing(plot_data$mc_avg_inferences),
-        aes(y = .data$name, xmin = .data$value, x = .data$value, xmax = .data$value, linetype = .data$analysis_source),
-        width = 0.9, color = "blue", linewidth = 0.2, na.rm = FALSE, key_glyph = ggplot2::draw_key_vline
-      ) +
-      # Individual FCMs
+    ggplot_main <- ggplot_main +
       ggplot2::geom_linerange(
         data = ggplot2::remove_missing(plot_data$input_inferences),
-        aes(y = .data$name, xmin = .data$lower, x = .data$lower, xmax = .data$upper, color = .data$analysis_source),
-        position = ggplot2::position_dodge2(width = 0.5), linewidth = 0.1
+        aes(y = .data$name, xmin = .data$lower, xmax = .data$upper, color = .data$analysis_source),
+        position = ggplot2::position_dodge2(width = 0.5), linewidth = ind_ivfn_and_tfn_linewidth
       )
-    # Aggregate FCM
-    if (!inputs_only) {
-       ggplot_main <- ggplot_main +
-        ggplot2::geom_linerange(
-          data = ggplot2::remove_missing(plot_data$aggregate_inferences),
-          aes(y = .data$name, xmin = .data$lower, xmax = .data$upper, color = .data$analysis_source),
-          linewidth = 0.4
-        )
-    }
   } else if (object$fcm_class == "tfn") {
-    ggplot_main <- ggplot2::ggplot() +
-      # Individual FCMs
+    ggplot_main <- ggplot_main +
       ggplot2::geom_pointrange(
         data = ggplot2::remove_missing(plot_data$input_inferences),
         aes(y = .data$name, xmin = .data$lower, x = .data$mode, xmax = .data$upper, color = .data$analysis_source),#, shape = .data$analysis_source),
-        position = ggplot2::position_dodge2(width = 0.5), fatten = 0.6, linewidth = 0.1
-      ) +
-      # MC CIs
-      ggplot2::geom_crossbar(
-        data = ggplot2::remove_missing(plot_data$mc_inference_CIs),
-        aes(y = .data$name, xmin = .data$lower_CI, x = .data$lower_CI, xmax = .data$lower_CI),#, linetype = .data$analysis_source),
-        width = 0.7, color = "blue", linewidth = 0.1, na.rm = FALSE, key_glyph = ggplot2::draw_key_vline
-      ) +
-      ggplot2::geom_crossbar(
-        data = ggplot2::remove_missing(plot_data$mc_inference_CIs),
-        aes(y = .data$name, xmin = .data$upper_CI, x = .data$upper_CI, xmax = .data$upper_CI),#, linetype = .data$analysis_source),
-        width = 0.7, color = "blue", linewidth = 0.1, na.rm = TRUE, key_glyph = ggplot2::draw_key_vline
-      ) +
-      # MC FCMs
-      ggplot2::geom_point(
-        data = ggplot2::remove_missing(plot_data$mc_inferences),
-        aes(y = .data$name, x = .data$value, color = .data$analysis_source),
-        position = ggplot2::position_dodge2(width = 0.25), alpha = 0.6, shape = 3, na.rm = FALSE
-      ) +
-      ggplot2::geom_crossbar(
-        data = ggplot2::remove_missing(plot_data$mc_avg_inferences),
-        aes(y = .data$name, xmin = .data$value, x = .data$value, xmax = .data$value, linetype = .data$analysis_source),
-        width = 0.9, color = "blue", linewidth = 0.2, na.rm = FALSE, key_glyph = ggplot2::draw_key_vline
+        position = ggplot2::position_dodge2(width = 0.5), fatten = 0.6, linewidth = ind_ivfn_and_tfn_linewidth
       )
-      # ggplot2::geom_point(
-      #   data = ggplot2::remove_missing(plot_data$mc_avg_inferences),
-      #   aes(y = .data$name, x = .data$value, color = .data$analysis_source),
-      #   position = ggplot2::position_dodge2(width = 0.25), alpha = 1, shape = 15, na.rm = FALSE
-      # )
-    # Aggregate FCM - Have to separate this because it's the only clean way to
-    # make the legend's key look right
-    if (!inputs_only) {
+  }
+  # ----
+
+  # Aggregate FCM Inferences ----
+  if (!inputs_only) {
+    if (object$fcm_class == "conventional") {
+      ggplot_main <- ggplot_main +
+        ggplot2::geom_point(
+          data = ggplot2::remove_missing(plot_data$aggregate_inferences),
+          aes(y = .data$name, x = .data$value, color = .data$analysis_source, shape = .data$analysis_source),
+          size = 2,
+        )
+    } else if (object$fcm_class == "ivfn") {
+      ggplot_main <- ggplot_main +
+        ggplot2::geom_linerange(
+          data = ggplot2::remove_missing(plot_data$aggregate_inferences),
+          aes(y = .data$name, xmin = .data$lower, xmax = .data$upper, color = .data$analysis_source),
+          linewidth = agg_ivfn_and_tfn_linewidth
+        )
+    } else if (object$fcm_class == "tfn") {
       ggplot_main <- ggplot_main +
         ggplot2::geom_pointrange(
           data = ggplot2::remove_missing(plot_data$aggregate_inferences),
-          aes(y = .data$name, xmin = .data$lower, x = .data$mode, xmax = .data$upper, color = .data$analysis_source),
-          shape = 17, fatten = 2, linewidth = 0.4
+          aes(y = .data$name, xmin = .data$lower, x = .data$mode, xmax = .data$upper, color = .data$analysis_source, shape = .data$analysis_source),
+          fatten = 2, linewidth = agg_ivfn_and_tfn_linewidth
         )
     }
   }
+  # ----
 
-  if  (inputs_only) {
-    if (object$fcm_class == "conventional") {
-      ggplot_main <- ggplot_main +
-        ggplot2::scale_color_manual(
-          values = c("Ind FCMs" = "black"),
-          breaks = c("Ind FCMs"),
-          guide = ggplot2::guide_legend(override.aes = list(shape = c(16), linewidth = c(0.5)), order = 1)
-        )
-    } else if (object$fcm_class == "ivfn") {
-      ggplot_main <- ggplot_main +
-        ggplot2::scale_color_manual(
-          values = c("Ind FCMs" = "black"),
-          breaks = c("Ind FCMs"),
-          guide = ggplot2::guide_legend(override.aes = list(shape = c(NA), linewidth = c(0.5)), order = 1)
-        )
-    } else if (object$fcm_class == "tfn") {
-      ggplot_main <- ggplot_main +
-        ggplot2::scale_color_manual(
-          values = c("Ind FCMs" = "black"),
-          breaks = c("Ind FCMs"),
-          guide = ggplot2::guide_legend(override.aes = list(shape = c(16), linewidth = c(0.5)), order = 1)
-        )
-    }
-  } else if (inputs_and_agg) {
-    if (object$fcm_class == "conventional") {
-      ggplot_main <- ggplot_main +
-        ggplot2::scale_color_manual(
-          values = c("Ind FCMs" = "black", "Agg FCM" = "red"),
-          breaks = c("Ind FCMs", "Agg FCM"),
-          guide = ggplot2::guide_legend(override.aes = list(shape = c(16, 17), linewidth = c(0.5, 0.5)), order = 1)
-        )
-    } else if (object$fcm_class == "ivfn") {
-      ggplot_main <- ggplot_main +
-        ggplot2::scale_color_manual(
-          values = c("Ind FCMs" = "black", "Agg FCM" = "red"),
-          breaks = c("Ind FCMs", "Agg FCM"),
-          guide = ggplot2::guide_legend(override.aes = list(shape = c(NA, NA), linewidth = c(0.5, 0.5)), order = 1)
-        )
-    } else if (object$fcm_class == "tfn") {
-      ggplot_main <- ggplot_main +
-        ggplot2::scale_color_manual(
-          values = c("Ind FCMs" = "black", "Agg FCM" = "red"),
-          breaks = c("Ind FCMs", "Agg FCM"),
-          guide = ggplot2::guide_legend(override.aes = list(shape = c(16, 17), linewidth = c(0.5, 0.5)), order = 1)
-        )
-    }
-
-  } else if (inputs_agg_and_mc_no_bs) {
-    if (object$fcm_class == "conventional") {
-      ggplot_main <- ggplot_main +
-        ggplot2::scale_color_manual(
-          values = c("Ind FCMs" = "black", "Agg FCM" = "red", "MC FCMs" = "blue"),
-          breaks = c("Ind FCMs", "Agg FCM", "MC FCMs"),
-          guide = ggplot2::guide_legend(override.aes = list(shape = c(16, 17, 3), linewidth = c(0.5, 0.5, NA)), order = 1)
-        ) +
-        ggplot2::scale_linetype_manual(
-          values = c("Avg MC FCMs" = "solid"), labels = c("MC Avg"),
-          guide = ggplot2::guide_legend(order = 2)
-        )
-    } else if (object$fcm_class == "ivfn") {
-      ggplot_main <- ggplot_main +
-        ggplot2::scale_color_manual(
-          values = c("Ind FCMs" = "black", "Agg FCM" = "red", "MC FCMs" = "blue"),
-          breaks = c("Ind FCMs", "Agg FCM", "MC FCMs"),
-          guide = ggplot2::guide_legend(override.aes = list(shape = c(NA, NA, 3), linewidth = c(0.5, 0.5, NA)), order = 1)
-        ) +
-        ggplot2::scale_linetype_manual(
-          values = c("Avg MC FCMs" = "solid"), labels = c("MC Avg"),
-          guide = ggplot2::guide_legend(order = 2)
-        )
-    } else if (object$fcm_class == "tfn") {
-      ggplot_main <- ggplot_main +
-        ggplot2::scale_color_manual(
-          values = c("Ind FCMs" = "black", "Agg FCM" = "red", "MC FCMs" = "blue"),
-          breaks = c("Ind FCMs", "Agg FCM", "MC FCMs"),
-          guide = ggplot2::guide_legend(override.aes = list(shape = c(16, 17, 3), linewidth = c(0.5, 0.5, NA)), order = 1)
-        ) +
-        ggplot2::scale_linetype_manual(
-          values = c("Avg MC FCMs" = "solid"), labels = c("MC Avg"),
-          guide = ggplot2::guide_legend(order = 2)
-        )
-    }
-  } else if (inputs_agg_and_mc_w_bs) {
-    if (object$fcm_class == "conventional") {
-      ggplot_main <- ggplot_main +
-        ggplot2::scale_color_manual(
-          values = c("Ind FCMs" = "black", "Agg FCM" = "red", "MC FCMs" = "blue"),
-          breaks = c("Ind FCMs", "Agg FCM", "MC FCMs"),
-          guide = ggplot2::guide_legend(override.aes = list(shape = c(16, 17, 3), linewidth = c(0.5, 0.5, NA)), order = 1)
-        ) +
-        ggplot2::scale_linetype_manual(
-          values = c("Avg MC FCMs" = "solid"), labels = c("MC Avg w/ CIs"),
-          guide = ggplot2::guide_legend(order = 2)
-        )
-    }
-    else if (object$fcm_class == "ivfn") {
-      ggplot_main <- ggplot_main +
-        ggplot2::scale_color_manual(
-          values = c("Ind FCMs" = "black", "Agg FCM" = "red", "MC FCMs" = "blue"),
-          breaks = c("Ind FCMs", "Agg FCM", "MC FCMs"),
-          guide = ggplot2::guide_legend(override.aes = list(shape = c(NA, NA, 3), linewidth = c(0.5, 0.5, NA)), order = 1)
-        ) +
-        ggplot2::scale_linetype_manual(
-          values = c("Avg MC FCMs" = "solid"), labels = c("MC Avg w/ CIs"),
-          guide = ggplot2::guide_legend(order = 2)
-        )
-    } else if (object$fcm_class == "tfn") {
-      ggplot_main <- ggplot_main +
-        ggplot2::scale_color_manual(
-          values = c("Ind FCMs" = "black", "Agg FCM" = "red", "MC FCMs" = "blue"),
-          breaks = c("Ind FCMs", "Agg FCM", "MC FCMs"),
-          guide = ggplot2::guide_legend(override.aes = list(shape = c(16, 17, 3), linewidth = c(0.5, 0.5, NA)), order = 1)
-        ) +
-        ggplot2::scale_linetype_manual(
-          values = c("Avg MC FCMs" = "solid"), labels = c("MC Avg w/ CIs"),
-          guide = ggplot2::guide_legend(order = 2)
-        )
-    }
+  # Setup Legend Scales ----
+  scale_color_manual_values_str <- paste0("c('Ind FCM Inferences' = ind_inferences_color")
+  scale_shape_manual_values_str <- paste0("c('Ind FCM Inferences' = ind_inferences_shape")
+  scale_shape_manual_override_str <- paste0("c(ind_inferences_shape")
+  scale_breaks_values_str <- paste0("c('Ind FCM Inferences'")
+  if (!inputs_only & agg_inferences_color != "white") {
+    scale_color_manual_values_str <- paste0(scale_color_manual_values_str, ", 'Agg FCM Inferences' = agg_inferences_color")
+    scale_shape_manual_values_str <- paste0(scale_shape_manual_values_str, ", 'Agg FCM Inferences' = agg_inferences_shape")
+    scale_shape_manual_override_str <- paste0(scale_shape_manual_override_str, ", agg_inferences_shape")
+    scale_breaks_values_str <- paste0(scale_breaks_values_str, ", 'Agg FCM Inferences'")
   }
+  if ((inputs_agg_and_mc_no_bs | inputs_agg_and_mc_w_bs) & mc_inferences_color != "white") {
+    scale_color_manual_values_str <- paste0(scale_color_manual_values_str, ", 'MC FCM Inferences' = mc_inferences_color")
+    scale_shape_manual_values_str <- paste0(scale_shape_manual_values_str, ", 'MC FCM Inferences' = mc_inferences_shape")
+    scale_shape_manual_override_str <- paste0(scale_shape_manual_override_str, ", mc_inferences_shape")
+    scale_breaks_values_str <- paste0(scale_breaks_values_str, ", 'MC FCM Inferences'")
+  }
+  scale_color_manual_values_str <- paste0(scale_color_manual_values_str, ")")
+  scale_shape_manual_values_str <- paste0(scale_shape_manual_values_str, ")")
+  scale_shape_manual_override_str <- paste0(scale_shape_manual_override_str, ")")
+  scale_breaks_values_str <- paste0(scale_breaks_values_str, ")")
+
+  if (object$fcm_class == "conventional") {
+    scales_str <- paste0(
+      "ggplot_main +
+        ggplot2::scale_color_manual(
+          values = ", scale_color_manual_values_str, ",
+          breaks = ", scale_breaks_values_str, ",
+          guide = ggplot2::guide_legend(order = 1)
+        ) +
+        ggplot2::scale_shape_manual(
+          values = ", scale_shape_manual_values_str, ",
+          breaks = ", scale_breaks_values_str, ",
+          guide = ggplot2::guide_legend(order = 1)
+        ) +
+        ggplot2::scale_linewidth_manual(
+          values = c('CIs of MC FCM Avg Inferences' = 0.1),
+          guide = ggplot2::guide_legend(order = 2)
+        )"
+    )
+  } else if (object$fcm_class == "ivfn") {
+    scales_str <- paste0(
+      "ggplot_main +
+        ggplot2::scale_color_manual(
+          values = ", scale_color_manual_values_str, ",
+          breaks = ", scale_breaks_values_str, ",
+          guide = ggplot2::guide_legend(
+            override.aes = list(
+              shape = ", scale_shape_manual_override_str, ",
+              linewidth = c(ind_ivfn_and_tfn_linewidth, agg_ivfn_and_tfn_linewidth, NA)
+          ), order = 1)
+        ) +
+        ggplot2::scale_shape_manual(
+          values = ", scale_shape_manual_values_str, ",
+          breaks = ", scale_breaks_values_str, ",
+          guide = 'none'
+        ) +
+        ggplot2::scale_linewidth_manual(
+          values = c('CIs of MC FCM Avg Inferences' = 0.1),
+          guide = ggplot2::guide_legend(order = 2)
+        )"
+    )
+  } else if (object$fcm_class == "tfn") {
+    scales_str <- paste0(
+      "ggplot_main +
+        ggplot2::scale_color_manual(
+          values = ", scale_color_manual_values_str, ",
+          breaks = ", scale_breaks_values_str, ",
+          guide = ggplot2::guide_legend(
+            override.aes = list(
+              shape = ", scale_shape_manual_override_str, ",
+              linewidth = c(ind_ivfn_and_tfn_linewidth, agg_ivfn_and_tfn_linewidth, NA)
+          ), order = 1)
+        ) +
+        ggplot2::scale_shape_manual(
+          values = ", scale_shape_manual_values_str, ",
+          breaks = ", scale_breaks_values_str, ",
+          #guide = ggplot2::guide_legend(order = 1)
+          guide = 'none'
+        ) +
+        ggplot2::scale_linewidth_manual(
+          values = c('CIs of MC FCM Avg Inferences' = 0.1),
+          guide = ggplot2::guide_legend(order = 2)
+        )"
+    )
+  }
+
+  scales_expr <- parse(text = scales_str)
+  ggplot_main <- eval(scales_expr)
+
+  # ----
 
   if (coord_flip) {
     fcmconfr_plot <- ggplot_main + fcmconfr_default_theme()
@@ -632,9 +592,7 @@ autoplot.fcmconfr <- function(object, ...) {
     fcmconfr_plot <- ggplot_main + fcmconfr_default_theme() + ggplot2::coord_flip()
   }
 
-    # browser()
   fcmconfr_plot
-
 }
 
 
@@ -647,6 +605,7 @@ autoplot.fcmconfr <- function(object, ...) {
 #' @param ... Additional inputs:
 #'  - filter_limit Remove concepts whose inferences do not exceed this value
 #'  - coord_flip Swap x- and y-axes (i.e. rotate plot)
+#'  - interactive Load plot in an interactive shiny window
 #'
 #' @importFrom graphics plot
 #'
@@ -665,10 +624,25 @@ plot.fcmconfr <- function(x, ...) {
     coord_flip = TRUE
     additional_inputs$coord_flip <- coord_flip
   }
+  if (!"interactive" %in% names(additional_inputs)) {
+    interactive = FALSE
+    additional_inputs$interactive <- interactive
+  }
+  accepted_inputs <- c("filter_limit", "coord_flip", "interactive")
+  if (!all(names(additional_inputs) %in% accepted_inputs)) {
+    stop(cli::format_error(c(
+      "x" = "Error: plot.fcmconfr takes the following additional inputs: filter_limit, coord_flip, and/or interactive",
+    )))
+  }
   stopifnot(is.numeric(filter_limit) & (filter_limit > 0 & filter_limit < 1))
   stopifnot(is.logical(coord_flip))
+  stopifnot(is.logical(coord_flip))
 
-  suppressWarnings(print(autoplot(x, additional_inputs)))
+  if (!additional_inputs$interactive) {
+    suppressWarnings(print(autoplot(x, additional_inputs)))
+  } else {
+    suppressWarnings(interactive_plot_fcmconfr(x, additional_inputs))
+  }
 }
 
 
@@ -714,4 +688,34 @@ fcmconfr_theme_custom <- function(...) {
 #' NULL
 fcmconfr_default_theme <- function() {
   fcmconfr_theme_custom()
+}
+
+
+#' (Interactive) Plot fcmconfr
+#'
+#' @description
+#' Load plot of fcmconfr output in an interactive shiny window
+#'
+#' @param x A direct output of the \code{\link{fcmconfr}} function
+#' @param ... Additional inputs:
+#'  - filter_limit Remove concepts whose inferences do not exceed this value
+#'  - coord_flip Swap x- and y-axes (i.e. rotate plot)
+#'
+#' @importFrom graphics plot
+#'
+#' @returns A shiny window displaying a plot of an fcmconfr object's results
+#'
+#' @export
+#' @examples
+#' NULL
+interactive_plot_fcmconfr <- function(x, ...) {
+  # These bslib and shinyWidgets calls are only here to be acknowledged in
+  # R CMD Check, they have no impact on the rest of the function and can be
+  # ignored.
+  bslib::versions()
+  shinyWidgets::animations
+
+  assign("iplot_fcmconfr_obj", x, envir = .GlobalEnv)
+  shiny::runApp(appDir = system.file(file.path('shiny', 'interactive_fcmconfr_plot'), package = 'fcmconfr'))
+  rm(iplot_fcmconfr_obj)
 }
