@@ -636,8 +636,7 @@ autoplot.fcmconfr <- function(object, ...) {
 #' @returns A plot of an fcmconfr object's results
 #'
 #' @export
-#' @examples
-#' man/examples/ex-plot_fcmconfr.R
+#' @example man/examples/ex-plot_fcmconfr.R
 plot.fcmconfr <- function(x, ...) {
   additional_inputs = list(...)
 
@@ -1034,8 +1033,11 @@ interactive_plot_fcmconfr <- function(x, ...) {
   bslib::versions()
   shinyWidgets::animations
 
-  #assign("iplot_fcmconfr_obj", x, envir = .GlobalEnv)
-  #assign("iplot_additional_inputs", as.list(...), envir = .GlobalEnv)
+  # Load objects into package:fcmconfr env to access them in the shiny app
+  fcmconfr_env <- rlang::search_envs()[[which(names(rlang::search_envs()) == "package:fcmconfr")]]
+  assign("iplot_fcmconfr_obj", x, envir = fcmconfr_env)
+  assign("iplot_additional_inputs", as.list(...), envir = fcmconfr_env)
+
   shiny::runApp(appDir = system.file(file.path('shiny', 'interactive_fcmconfr_plot'), package = 'fcmconfr'))
-  #rm(list = c("iplot_fcmconfr_obj", "iplot_additional_inputs"), envir = .GlobalEnv)
+  rm(list = c("iplot_fcmconfr_obj", "iplot_additional_inputs"), envir = fcmconfr_env)
 }

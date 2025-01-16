@@ -3,7 +3,7 @@
 #' @description
 #' [ADD DETAILS HERE!!!]
 #'
-shiny_ui <- function() {
+shiny_iplot_ui <- function() {
   bslib::page_sidebar(
     title = "FCMConfR Plot (Interactive)",
     sidebar = bslib::sidebar(

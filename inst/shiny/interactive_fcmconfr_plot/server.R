@@ -6,14 +6,18 @@
 #' @param input the data streamed into the server from the ui
 #' @param output the data streamed from to the ui from the server
 #' @param session data surrounding the shiny instance itself
-shiny_server <- function(input, output, session) {
+shiny_iplot_server <- function(input, output, session) {
+
+  iplot_fcmconfr_env <- shiny::reactive({
+    as.list(rlang::search_envs()[[which(names(rlang::search_envs()) == "package:fcmconfr")]])
+  })
 
   iplot_fcmconfr_obj <- shiny::reactive({
-    as.list(.GlobalEnv)[names(as.list(.GlobalEnv)) == "iplot_fcmconfr_obj"][[1]]
+    iplot_fcmconfr_env()$iplot_fcmconfr_obj
   })
 
   iplot_additional_inputs <- shiny::reactive({
-    as.list(.GlobalEnv)[names(as.list(.GlobalEnv)) == "iplot_additional_inputs"][[1]]
+    iplot_fcmconfr_env()$iplot_additional_inputs
   })
 
   analyses_performed <- shiny::reactive({
@@ -87,8 +91,6 @@ shiny_server <- function(input, output, session) {
     )
   })
 
-  browser()
-
   output$plot_font_size_numeric_input <- shiny::renderUI({
     shiny::numericInput(
       "plot_font_size",
@@ -99,7 +101,6 @@ shiny_server <- function(input, output, session) {
       step = 0.5
     )
   })
-
 
   iplot_fcmconfr_text_font_size <- shiny::reactive({
     input$plot_font_size
