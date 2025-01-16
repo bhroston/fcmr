@@ -36,7 +36,7 @@ test_that("infer_fcm_set works with ivfn fcms", {
   invisible(capture.output(
     expect_no_error(
       test_fmcm_inference_p_sp <- infer_fcm_set(
-        mc_adj_matrices = test_mc_fcms,
+        adj_matrices = test_mc_fcms,
         initial_state_vector <- c(1, 1, 1, 1),
         clamping_vector <- c(1, 0, 0, 0),
         activation = "kosko",
@@ -56,7 +56,7 @@ test_that("infer_fcm_set works with ivfn fcms", {
   invisible(capture.output(
     expect_no_error(
       test_fmcm_inference_p_and_no_sp <- infer_fcm_set(
-        mc_adj_matrices = test_mc_fcms,
+        adj_matrices = test_mc_fcms,
         initial_state_vector <- c(1, 1, 1, 1),
         clamping_vector <- c(1, 0, 0, 0),
         activation = "kosko",
@@ -76,7 +76,7 @@ test_that("infer_fcm_set works with ivfn fcms", {
   invisible(capture.output(
     expect_warning(
       test_fmcm_inference_no_p_and_sp <- infer_fcm_set(
-        mc_adj_matrices = test_mc_fcms,
+        adj_matrices = test_mc_fcms,
         initial_state_vector <- c(1, 1, 1, 1),
         clamping_vector <- c(1, 0, 0, 0),
         activation = "kosko",
@@ -96,7 +96,7 @@ test_that("infer_fcm_set works with ivfn fcms", {
   invisible(capture.output(
     expect_no_error(
       test_fmcm_inference_no_p_and_no_sp <- infer_fcm_set(
-        mc_adj_matrices = test_mc_fcms,
+        adj_matrices = test_mc_fcms,
         initial_state_vector <- c(1, 1, 1, 1),
         clamping_vector <- c(1, 0, 0, 0),
         activation = "kosko",
@@ -113,9 +113,9 @@ test_that("infer_fcm_set works with ivfn fcms", {
 
   # Confirm all methods produce same output
   max_error <- 1e-5
-  # expect_true(all(abs(test_fmcm_inference_p_sp$inference - test_fmcm_inference_no_p_and_sp$inference) <= max_error))
-  # expect_true(all(abs(test_fmcm_inference_no_p_and_sp$inference - test_fmcm_inference_p_and_no_sp$inference) <= max_error))
-  # expect_true(all(abs(test_fmcm_inference_p_and_no_sp$inference - test_fmcm_inference_no_p_and_no_sp$inference) <= max_error))
+  expect_true(all(abs(test_fmcm_inference_p_sp$inference - test_fmcm_inference_no_p_and_sp$inference) <= max_error))
+  expect_true(all(abs(test_fmcm_inference_no_p_and_sp$inference - test_fmcm_inference_p_and_no_sp$inference) <= max_error))
+  expect_true(all(abs(test_fmcm_inference_p_and_no_sp$inference - test_fmcm_inference_no_p_and_no_sp$inference) <= max_error))
   expect_true(all(abs(test_fmcm_inference_no_p_and_sp$inference - test_fmcm_inference_no_p_and_no_sp$inference) <= max_error))
 })
 
@@ -252,7 +252,7 @@ test_that("get_mc_simulations_inference_CIs_w_bootstrap", {
   ))
   invisible(capture.output(
     test_mc_fcms_inferences <- infer_fcm_set(
-      mc_adj_matrices = test_mc_fcms,
+      adj_matrices = test_mc_fcms,
       initial_state_vector <- c(1, 1, 1, 1),
       clamping_vector <- c(1, 0, 0, 0),
       activation = "kosko",
@@ -315,7 +315,7 @@ test_that("get_mc_simulations_inference_CIs_w_bootstrap catches invalid parallel
   test_mc_fcms <- build_monte_carlo_fcms(sample_fcms$large_fcms$conventional_fcms, N_samples = 100, include_zeroes = TRUE, show_progress = FALSE)
   invisible(capture.output(
     test_mc_fcms_inferences <- infer_fcm_set(
-      mc_adj_matrices = test_mc_fcms,
+      adj_matrices = test_mc_fcms,
       initial_state_vector = test_initial_state_vector,
       clamping_vector = test_clamping_vector,
       activation = "kosko",

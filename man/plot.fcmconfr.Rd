@@ -10,8 +10,21 @@
 \item{x}{A direct output of the \code{\link{fcmconfr}} function}
 
 \item{...}{Additional inputs:
+- interactive Open plot in interactive shiny app
+# Plot Formatting Parameters
 - filter_limit Remove concepts whose inferences do not exceed this value
-- coord_flip Swap x- and y-axes (i.e. rotate plot)}
+- coord_flip Swap x- and y-axes (i.e. rotate plot)
+- text_font_size (Mainly for shiny use, i.e. leave blank) Set text font size
+# Plot Aesthetic Parameters (and defaults)
+- mc_avg_and_CIs_color = "blue"
+- mc_inferences_color = "blue"
+- mc_inferences_shape = 3
+- ind_inferences_color = "black"
+- ind_inferences_shape = 16
+- agg_inferences_color = "red"
+- agg_inferences_shape = 17
+- ind_ivfn_and_tfn_linewidth = 0.1
+- agg_ivfn_and_tfn_linewidth = 0.6}
 }
 \value{
 A plot of an fcmconfr object's results
@@ -20,5 +33,5 @@ A plot of an fcmconfr object's results
 Print the output of the autoplot function (\code{\link{autoplot.fcmconfr}})
 }
 \examples{
-NULL
+man/examples/ex-plot_fcmconfr.R
 }

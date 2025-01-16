@@ -1,47 +1,22 @@
-# Conventional FCMs fcmconfr
-test_adj_matrix_1 <- data.frame(
-  "A" = c(0, 0, 0, 0),
-  "B" = c(1, 0, 0, 1),
-  "C" = c(0, 1, 0, 0),
-  "D" = c(0, 0, 1, 0)
-)
-test_adj_matrix_2 <- data.frame(
-  "A" = c(0, 0, 0, 0),
-  "B" = c(0.25, 0, 0, 0.25),
-  "C" = c(0, 0.25, 0, 0),
-  "D" = c(0, 0, 0.25, 0)
-)
-test_adj_matrix_3 <- data.frame(
-  "A" = c(0, 0, 0, 0),
-  "B" = c(0.75, 0, 0, 0.75),
-  "C" = c(0, 0.75, 0, 0),
-  "D" = c(0, 0, 0.75, 0)
-)
-test_adj_matrix_4 <- data.frame(
-  "A" = c(0, 0, 0, 0),
-  "B" = c(0.5, 0, 0, 0.5),
-  "C" = c(0, 0.5, 0, 0),
-  "D" = c(0, 0, 0.5, 0)
-)
-ex_conventional_fcms <- list(
-  test_adj_matrix_1, test_adj_matrix_2, test_adj_matrix_3, test_adj_matrix_4
-)
-ex_conventional_fcmconfr <- fcmconfr(
-  adj_matrices = ex_conventional_fcms,
+
+# Example using TFN FCMs fcmconfr
+tfn_example_fcmconfr <- fcmconfr(
+  adj_matrices = sample_fcms$simple_fcms$tfn_fcms,
+  # adj_matrices = group_tfn_fcms,
   # Aggregation and Monte Carlo Sampling
   aggregation_function = 'mean',
   monte_carlo_sampling_draws = 100,
   # Simulation
-  initial_state_vector = c(1, 1, 1, 1),
-  clamping_vector = c(0, 1, 0, 0),
-  activation = 'kosko',
+  initial_state_vector = c(1, 1, 1, 1, 1, 1, 1),
+  clamping_vector = c(1, 0, 0, 0, 0, 0, 0),
+  activation = 'rescale',
   squashing = 'sigmoid',
   lambda = 1,
   point_of_inference = "final",
-  max_iter = 100,
+  max_iter = 1000,
   min_error = 1e-05,
   # Inference Estimation (bootstrap)
-  inference_estimation_function = "median",
+  inference_estimation_function = mean,
   inference_estimation_CI = 0.95,
   inference_estimation_bootstrap_reps = 1000,
   # Runtime Options
@@ -52,134 +27,63 @@ ex_conventional_fcmconfr <- fcmconfr(
   perform_aggregate_analysis = TRUE,
   perform_monte_carlo_analysis = TRUE,
   perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-  include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
+  include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
   include_monte_carlo_FCM_simulations_in_output = TRUE
 )
 
 
-fcmconfr_plot(ex_conventional_fcmconfr)
-
-
-
-# IVFN FCM fcmconfr
-lower_adj_matrix_1 <- data.frame(
-  "A" = c(0, 0),
-  "B" = c(0.25, 0)
-)
-upper_adj_matrix_1 <- data.frame(
-  "A" = c(0, 0),
-  "B" = c(0.75, 0)
-)
-adj_matrix_w_ivfns_1 <- make_adj_matrix_w_ivfns(
-  lower_adj_matrix_1, upper_adj_matrix_1
-)
-lower_adj_matrix_2 <- data.frame(
-  "A" = c(0, 0),
-  "B" = c(0.15, 0)
-)
-upper_adj_matrix_2 <- data.frame(
-  "A" = c(0, 0),
-  "B" = c(0.85, 0)
-)
-adj_matrix_w_ivfns_2 <- make_adj_matrix_w_ivfns(
-  lower_adj_matrix_2, upper_adj_matrix_2
-)
-ex_ivfn_fcms <- list(adj_matrix_w_ivfns_1, adj_matrix_w_ivfns_2)
-ex_ivfn_fcmconfr <- fcmconfr(
-  adj_matrices = ex_ivfn_fcms,
-  # Aggregation and Monte Carlo Sampling
-  aggregation_function = 'mean',
-  monte_carlo_sampling_draws = 100,
-  # Simulation
-  initial_state_vector = c(1, 1),
-  clamping_vector = c(0, 1),
-  activation = 'kosko',
-  squashing = 'sigmoid',
-  lambda = 1,
-  point_of_inference = "final",
-  max_iter = 100,
-  min_error = 1e-05,
-  # Inference Estimation (bootstrap)
-  inference_estimation_function = "mean",
-  inference_estimation_CI = 0.95,
-  inference_estimation_bootstrap_reps = 1000,
-  # Runtime Options
-  show_progress = TRUE,
-  parallel = FALSE,
-  n_cores = 10,
-  # Additional Options
-  perform_aggregate_analysis = TRUE,
-  perform_monte_carlo_analysis = TRUE,
-  perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-  include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-  include_monte_carlo_FCM_simulations_in_output = TRUE
+# Plot Defaults
+plot(tfn_example_fcmconfr,
+     interactive = FALSE, # Set to TRUE to open shiny app
+     # Plot Formatting Parameters
+     filter_limit = 1e-4,
+     coord_flip = FALSE,
+     # Plot Aesthetic Parameters
+     mc_avg_and_CIs_color = "blue",
+     mc_inferences_color = "blue",
+     mc_inferences_shape = 3,
+     ind_inferences_color = "black",
+     ind_inferences_shape = 16,
+     agg_inferences_color = "red",
+     agg_inferences_shape = 17,
+     ind_ivfn_and_tfn_linewidth = 0.1,
+     agg_ivfn_and_tfn_linewidth = 0.6
 )
 
-fcmconfr_plot(ex_ivfn_fcmconfr)
-
-
-# TFN FCM fcmconfr
-lower_adj_matrix_1 <- data.frame(
-  "A" = c(0, 0),
-  "B" = c(0.25, 0)
-)
-mode_adj_matrix_1 <- data.frame(
-  "A" = c(0, 0),
-  "B" = c(0.5, 0)
-)
-upper_adj_matrix_1 <- data.frame(
-  "A" = c(0, 0),
-  "B" = c(0.75, 0)
-)
-adj_matrix_w_tfns_1 <- make_adj_matrix_w_tfns(
-  lower_adj_matrix_1, mode_adj_matrix_1, upper_adj_matrix_1
+# Changed from Plot Defaults
+plot(tfn_example_fcmconfr,
+     interactive = FALSE, # Set to TRUE to open shiny app
+     # Plot Formatting Parameters
+     filter_limit = 1e-4,
+     coord_flip = FALSE,
+     # Plot Aesthetic Parameters
+     mc_avg_and_CIs_color = "blue",
+     mc_inferences_color = "blue",
+     mc_inferences_shape = 3,
+     ind_inferences_color = "black",
+     ind_inferences_shape = 16,
+     agg_inferences_color = "red",
+     agg_inferences_shape = 17,
+     ind_ivfn_and_tfn_linewidth = 0.1,
+     agg_ivfn_and_tfn_linewidth = 0.6
 )
 
-lower_adj_matrix_2 <- data.frame(
-  "A" = c(0, 0),
-  "B" = c(0.15, 0)
-)
-mode_adj_matrix_2 <- data.frame(
-  "A" = c(0, 0),
-  "B" = c(0.65, 0)
-)
-upper_adj_matrix_2 <- data.frame(
-  "A" = c(0, 0),
-  "B" = c(0.85, 0)
-)
-adj_matrix_w_tfns_2 <- make_adj_matrix_w_tfns(
-  lower_adj_matrix_2, mode_adj_matrix_2, upper_adj_matrix_2
-)
 
-ex_tfn_fcms <- list(adj_matrix_w_tfns_1, adj_matrix_w_tfns_2)
-ex_tfn_fcmconfr <- fcmconfr(
-  adj_matrices = ex_tfn_fcms,
-  # Aggregation and Monte Carlo Sampling
-  aggregation_function = 'mean',
-  monte_carlo_sampling_draws = 100,
-  # Simulation
-  initial_state_vector = c(1, 1),
-  clamping_vector = c(0, 1),
-  activation = 'kosko',
-  squashing = 'sigmoid',
-  lambda = 1,
-  point_of_inference = "final",
-  max_iter = 100,
-  min_error = 1e-05,
-  # Inference Estimation (bootstrap)
-  inference_estimation_function = "mean",
-  inference_estimation_CI = 0.95,
-  inference_estimation_bootstrap_reps = 1000,
-  # Runtime Options
-  show_progress = TRUE,
-  parallel = FALSE,
-  n_cores = 10,
-  # Additional Options
-  perform_aggregate_analysis = TRUE,
-  perform_monte_carlo_analysis = TRUE,
-  perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-  include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-  include_monte_carlo_FCM_simulations_in_output = TRUE
-)
-
-fcmconfr_plot(ex_tfn_fcmconfr)
+# Plot Defaults w/ Shiny App
+# plot(tfn_example_fcmconfr,
+#      interactive = TRUE, # Set to TRUE to open shiny app
+#      # Plot Formatting Parameters
+#      filter_limit = 1e-4,
+#      coord_flip = FALSE,
+#      text_font_size = 12,
+#      # Plot Aesthetic Parameters
+#      mc_avg_and_CIs_color = "blue",
+#      mc_inferences_color = "blue",
+#      mc_inferences_shape = 3,
+#      ind_inferences_color = "black",
+#      ind_inferences_shape = 16,
+#      agg_inferences_color = "red",
+#      agg_inferences_shape = 17,
+#      ind_ivfn_and_tfn_linewidth = 0.1,
+#      agg_ivfn_and_tfn_linewidth = 0.6
+# )

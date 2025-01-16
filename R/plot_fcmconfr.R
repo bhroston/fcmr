@@ -144,6 +144,10 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
   nodes_to_plot <- get_concepts_to_plot(fcmconfr_object, filter_limit)
 
   if (length(nodes_to_plot$name) == 0) {
+    stop(cli::format_error(c(
+      "x" = "Error: No inferences are greater than the {.var filter limit}, so no plot cannot be drawn.",
+      "+++++> Reduce {.var filter limit}"
+    )))
     stop("No inferences are greater than the filter limit, so no plot cannot be drawn.")
   }
 
@@ -361,10 +365,11 @@ autoplot.fcmconfr <- function(object, ...) {
   # Parse additional_inputs ----
   additional_inputs <- list(...)[[1]]
 
-  # browser()
-
+  # Plot formatting parameters
   filter_limit <- additional_inputs$filter_limit
   coord_flip <- additional_inputs$coord_flip
+  text_font_size <- additional_inputs$text_font_size
+  # Plot aesthetic parameters
   mc_avg_and_CIs_color <- additional_inputs$mc_avg_and_CIs_color
   mc_inferences_color <- additional_inputs$mc_inferences_color
   mc_inferences_shape <- additional_inputs$mc_inferences_shape
@@ -375,20 +380,10 @@ autoplot.fcmconfr <- function(object, ...) {
   ind_ivfn_and_tfn_linewidth <- additional_inputs$ind_ivfn_and_tfn_linewidth
   agg_ivfn_and_tfn_linewidth <- additional_inputs$agg_ivfn_and_tfn_linewidth
 
-  # Scale Parameters ---
-  # mc_avg_and_CIs_color <- "blue"
-  #
-  # mc_inferences_color <- "blue"
-  # mc_inferences_shape <- 3
-
-  # ind_inferences_color <- "black"
-  # ind_inferences_shape <- 16
-
-  # agg_inferences_color <- "red"
-  # agg_inferences_shape <- 17
-
-  # ind_ivfn_and_tfn_linewidth <- 0.1
-  # agg_ivfn_and_tfn_linewidth <- 0.6
+  if (object$fcm_class == "ivfn") {
+    ind_inferences_shape <- NA
+    agg_inferences_shape <- NA
+  }
   # ----
 
   # Get Plotting Data ----
@@ -409,29 +404,10 @@ autoplot.fcmconfr <- function(object, ...) {
   inputs_and_agg <- (!(identical(plot_data$aggregate_inferences$name, "blank")) & identical(plot_data$mc_inferences$name, "blank") & identical(plot_data$mc_inference_CIs$name, "blank"))
   inputs_agg_and_mc_no_bs <- (!(identical(plot_data$aggregate_inferences$name, "blank")) & !(identical(plot_data$mc_inferences$name, "blank")) & identical(plot_data$mc_inference_CIs$name, "blank"))
   inputs_agg_and_mc_w_bs <- (!(identical(plot_data$aggregate_inferences$name, "blank")) & !(identical(plot_data$mc_inferences$name, "blank")) & !(identical(plot_data$mc_inference_CIs$name, "blank")))
-
-  # Scale Parameters ---
-  # mc_avg_and_CIs_color <- "blue"
-  #
-  # mc_inferences_color <- "blue"
-  # mc_inferences_shape <- 3
-  #
-  # ind_inferences_color <- "black"
-  # ind_inferences_shape <- 16
-  #
-  # agg_inferences_color <- "red"
-  # agg_inferences_shape <- 17
-  #
-  # ind_ivfn_and_tfn_linewidth <- 0.1
-  # agg_ivfn_and_tfn_linewidth <- 0.6
-
-  if (object$fcm_class == "ivfn") {
-    ind_inferences_shape <- NA
-    agg_inferences_shape <- NA
-  }
   # ----
 
-  ggplot_main <- ggplot()
+  ggplot_main <- ggplot() +
+    ggplot2::geom_vline(xintercept = zero_intercept, linetype = "dotted", size = 0.5)
 
   # MC Avg Ingerences CIs ----
   if (inputs_agg_and_mc_w_bs) {
@@ -526,22 +502,26 @@ autoplot.fcmconfr <- function(object, ...) {
   scale_color_manual_values_str <- paste0("c('Ind FCM Inferences' = ind_inferences_color")
   scale_shape_manual_values_str <- paste0("c('Ind FCM Inferences' = ind_inferences_shape")
   scale_shape_manual_override_str <- paste0("c(ind_inferences_shape")
+  scale_linewidth_maual_values_str <- paste0("c('Ind FCM Inferences' = ind_ivfn_and_tfn_linewidth")
   scale_breaks_values_str <- paste0("c('Ind FCM Inferences'")
-  if (!inputs_only & agg_inferences_color != "white") {
+  if (!inputs_only) {
     scale_color_manual_values_str <- paste0(scale_color_manual_values_str, ", 'Agg FCM Inferences' = agg_inferences_color")
     scale_shape_manual_values_str <- paste0(scale_shape_manual_values_str, ", 'Agg FCM Inferences' = agg_inferences_shape")
     scale_shape_manual_override_str <- paste0(scale_shape_manual_override_str, ", agg_inferences_shape")
+    scale_linewidth_maual_values_str <- paste0(scale_linewidth_maual_values_str, ", 'Agg FCM Inferences' = ind_ivfn_and_tfn_linewidth")
     scale_breaks_values_str <- paste0(scale_breaks_values_str, ", 'Agg FCM Inferences'")
   }
-  if ((inputs_agg_and_mc_no_bs | inputs_agg_and_mc_w_bs) & mc_inferences_color != "white") {
+  if (inputs_agg_and_mc_no_bs | inputs_agg_and_mc_w_bs) {
     scale_color_manual_values_str <- paste0(scale_color_manual_values_str, ", 'MC FCM Inferences' = mc_inferences_color")
     scale_shape_manual_values_str <- paste0(scale_shape_manual_values_str, ", 'MC FCM Inferences' = mc_inferences_shape")
     scale_shape_manual_override_str <- paste0(scale_shape_manual_override_str, ", mc_inferences_shape")
+    scale_linewidth_maual_values_str <- paste0(scale_linewidth_maual_values_str, ", 'MC FCM Inferences' = NA")
     scale_breaks_values_str <- paste0(scale_breaks_values_str, ", 'MC FCM Inferences'")
   }
   scale_color_manual_values_str <- paste0(scale_color_manual_values_str, ")")
   scale_shape_manual_values_str <- paste0(scale_shape_manual_values_str, ")")
   scale_shape_manual_override_str <- paste0(scale_shape_manual_override_str, ")")
+  scale_linewidth_maual_values_str <- paste0(scale_linewidth_maual_values_str, ")")
   scale_breaks_values_str <- paste0(scale_breaks_values_str, ")")
 
   if (object$fcm_class == "conventional") {
@@ -571,7 +551,7 @@ autoplot.fcmconfr <- function(object, ...) {
           guide = ggplot2::guide_legend(
             override.aes = list(
               shape = ", scale_shape_manual_override_str, ",
-              linewidth = c(ind_ivfn_and_tfn_linewidth, agg_ivfn_and_tfn_linewidth, NA)
+              linewidth = ", scale_linewidth_maual_values_str, "
           ), order = 1)
         ) +
         ggplot2::scale_shape_manual(
@@ -593,7 +573,7 @@ autoplot.fcmconfr <- function(object, ...) {
           guide = ggplot2::guide_legend(
             override.aes = list(
               shape = ", scale_shape_manual_override_str, ",
-              linewidth = c(ind_ivfn_and_tfn_linewidth, agg_ivfn_and_tfn_linewidth, NA)
+              linewidth = ", scale_linewidth_maual_values_str, "
           ), order = 1)
         ) +
         ggplot2::scale_shape_manual(
@@ -611,13 +591,17 @@ autoplot.fcmconfr <- function(object, ...) {
 
   scales_expr <- parse(text = scales_str)
   ggplot_main <- eval(scales_expr)
-
   # ----
 
-  if (coord_flip) {
+  if (!coord_flip) {
     fcmconfr_plot <- ggplot_main + fcmconfr_default_theme()
   } else {
     fcmconfr_plot <- ggplot_main + fcmconfr_default_theme() + ggplot2::coord_flip()
+  }
+
+  if (!is.na(text_font_size)) {
+    fcmconfr_plot <- fcmconfr_plot +
+      ggplot2::theme(text = ggplot2::element_text(size = text_font_size))
   }
 
   fcmconfr_plot
@@ -631,9 +615,21 @@ autoplot.fcmconfr <- function(object, ...) {
 #'
 #' @param x A direct output of the \code{\link{fcmconfr}} function
 #' @param ... Additional inputs:
+#'  - interactive Open plot in interactive shiny app
+#'  # Plot Formatting Parameters
 #'  - filter_limit Remove concepts whose inferences do not exceed this value
 #'  - coord_flip Swap x- and y-axes (i.e. rotate plot)
-#'  - interactive Load plot in an interactive shiny window
+#'  - text_font_size (Mainly for shiny use, i.e. leave blank) Set text font size
+#'  # Plot Aesthetic Parameters (and defaults)
+#'  - mc_avg_and_CIs_color = "blue"
+#'  - mc_inferences_color = "blue"
+#'  - mc_inferences_shape = 3
+#'  - ind_inferences_color = "black"
+#'  - ind_inferences_shape = 16
+#'  - agg_inferences_color = "red"
+#'  - agg_inferences_shape = 17
+#'  - ind_ivfn_and_tfn_linewidth = 0.1
+#'  - agg_ivfn_and_tfn_linewidth = 0.6
 #'
 #' @importFrom graphics plot
 #'
@@ -641,23 +637,14 @@ autoplot.fcmconfr <- function(object, ...) {
 #'
 #' @export
 #' @examples
-#' NULL
+#' man/examples/ex-plot_fcmconfr.R
 plot.fcmconfr <- function(x, ...) {
   additional_inputs = list(...)
-  if (!("filter_limit" %in% names(additional_inputs))) {
-    filter_limit = 1e-3
-    additional_inputs$filter_limit <- filter_limit
-  }
-  if (!("coord_flip" %in% names(additional_inputs))) {
-    coord_flip = TRUE
-    additional_inputs$coord_flip <- coord_flip
-  }
-  if (!"interactive" %in% names(additional_inputs)) {
-    interactive = FALSE
-    additional_inputs$interactive <- interactive
-  }
 
   # input validation template functions ----
+  is_not_logical <- function(input_value) {
+    !(is.logical(input_value))
+  }
   is_not_numeric <- function(input_value) {
     !(is.numeric(input_value))
   }
@@ -671,7 +658,7 @@ plot.fcmconfr <- function(x, ...) {
     !("character" %in% methods::is(input_string))
   }
   is_not_color <- function(input_color) {
-    "try-error" %in% methods::is(try(col2rgb(input_color), silent = TRUE))
+    "try-error" %in% methods::is(try(grDevices::col2rgb(input_color), silent = TRUE))
   }
   is_not_shape_value <- function(input_shape) {
     !(input_shape %in% 0:25)
@@ -681,6 +668,75 @@ plot.fcmconfr <- function(x, ...) {
   }
   # ----
 
+  # interactive ----
+  if (!"interactive" %in% names(additional_inputs)) {
+    interactive = FALSE
+    additional_inputs$interactive <- interactive
+  }
+  if (is_not_logical(additional_inputs$interactive)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var interactive} must be logical (TRUE/FALSE)",
+      "+++++> Input {.var interactive} was of type: {methods::is(additional_inputs$interactive)[1]}"
+    )))
+  }
+  # ----
+
+  # Plot Format Parameters
+  # filter_limit ----
+  if (!("filter_limit" %in% names(additional_inputs))) {
+    filter_limit = 1e-3
+    additional_inputs$filter_limit <- filter_limit
+  }
+  if (is_not_numeric(additional_inputs$filter_limit)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var filter_limit} must be a positive numeric value",
+      "+++++> Input {.var filter_limit} was of type: {methods::is(additional_inputs$filter_limit)[1]}"
+    )))
+  }
+  if (additional_inputs$filter_limit <= 0) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var filter_limit} must be a positive numeric value greater than 0",
+      "+++++> Input {.var filter_limit} was: {additional_inputs$filter_limit}"
+    )))
+  }
+  # ----
+
+  # coord_flip ----
+  if (!("coord_flip" %in% names(additional_inputs))) {
+    coord_flip = FALSE
+    additional_inputs$coord_flip <- coord_flip
+  }
+  if (is_not_logical(additional_inputs$coord_flip)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var coord_flip} must be logical (TRUE/FALSE)",
+      "+++++> Input {.var coord_flip} was of type: {methods::is(additional_inputs$coord_flip)[1]}"
+    )))
+  }
+  # ----
+
+  # text_font_size ----
+  if (!("text_font_size" %in% names(additional_inputs))) {
+    text_font_size = NA
+    additional_inputs$text_font_size <- text_font_size
+  }
+  if (!is.na(additional_inputs$text_font_size)) {
+    if (is_not_numeric(additional_inputs$text_font_size)) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var text_font_size} must be a positive numeric value",
+        "+++++> Input {.var text_font_size} was of type: {methods::is(additional_inputs$text_font_size)[1]}"
+      )))
+    }
+    if (additional_inputs$text_font_size <= 0) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var text_font_size} must be a positive numeric value greater than 0",
+        "+++++> Input {.var text_font_size} was: {additional_inputs$text_font_size}"
+      )))
+    }
+  }
+  # ----
+
+
+  # Plot Aesthetic Parameters
   # mc_avg_and_CIs_color ----
   if (!"mc_avg_and_CIs_color" %in% names(additional_inputs)) {
     mc_avg_and_CIs_color <- "blue"
@@ -689,7 +745,7 @@ plot.fcmconfr <- function(x, ...) {
   if (is_not_char(additional_inputs$mc_avg_and_CIs_color)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var mc_avg_and_CIs_color} must be a string (i.e. of type 'char')",
-      "+++++> Input {.var mc_avg_and_CIs_color} was: {methods::is(additional_inputs$mc_avg_and_CIs_color)}"
+      "+++++> Input {.var mc_avg_and_CIs_color} was: {methods::is(additional_inputs$mc_avg_and_CIs_color)[1]}"
     )))
   }
   if (is_not_color(additional_inputs$mc_avg_and_CIs_color)) {
@@ -708,7 +764,7 @@ plot.fcmconfr <- function(x, ...) {
   if (is_not_char(additional_inputs$mc_inferences_color)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var mc_inferences_color} must be a string (i.e. of type 'char')",
-      "+++++> Input {.var mc_inferences_color} was: {methods::is(additional_inputs$mc_inferences_color)}"
+      "+++++> Input {.var mc_inferences_color} was: {methods::is(additional_inputs$mc_inferences_color)[1]}"
     )))
   }
   if (is_not_color(additional_inputs$mc_inferences_color)) {
@@ -755,7 +811,7 @@ plot.fcmconfr <- function(x, ...) {
   if (is_not_char(additional_inputs$ind_inferences_color)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var ind_inferences_color} must be a string (i.e. of type 'char')",
-      "+++++> Input {.var ind_inferences_color} was: {methods::is(additional_inputs$ind_inferences_color)}"
+      "+++++> Input {.var ind_inferences_color} was: {methods::is(additional_inputs$ind_inferences_color)[1]}"
     )))
   }
   if (is_not_color(additional_inputs$ind_inferences_color)) {
@@ -802,7 +858,7 @@ plot.fcmconfr <- function(x, ...) {
   if (is_not_char(additional_inputs$agg_inferences_color)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var agg_inferences_color} must be a string (i.e. of type 'char')",
-      "+++++> Input {.var agg_inferences_color} was: {methods::is(additional_inputs$agg_inferences_color)}"
+      "+++++> Input {.var agg_inferences_color} was: {methods::is(additional_inputs$agg_inferences_color)[1]}"
     )))
   }
   if (is_not_color(additional_inputs$agg_inferences_color)) {
@@ -879,16 +935,28 @@ plot.fcmconfr <- function(x, ...) {
   }
   # ----
 
-
-  # accepted_inputs <- c("filter_limit", "coord_flip", "interactive")
-  # if (!all(names(additional_inputs) %in% accepted_inputs)) {
-  #   stop(cli::format_error(c(
-  #     "x" = "Error: plot.fcmconfr takes the following additional inputs: filter_limit, coord_flip, and/or interactive",
-  #   )))
-  # }
-  # stopifnot(is.numeric(filter_limit) & (filter_limit > 0 & filter_limit < 1))
-  # stopifnot(is.logical(coord_flip))
-  # stopifnot(is.logical(coord_flip))
+  # Check for Invalid Parameters ----
+  acceptable_inputs <- c(
+    "interactive",
+    # Plot Format Parameters
+    "filter_limit", "coord_flip", "text_font_size",
+    # Plot Aesthetic Parameters
+    "mc_avg_and_CIs_color",
+    "mc_inferences_color", "mc_inferences_shape",
+    "ind_inferences_color", "ind_inferences_shape",
+    "agg_inferences_color", "agg_inferences_shape",
+    "ind_ivfn_and_tfn_linewidth", "agg_ivfn_and_tfn_linewidth"
+  )
+  if (!all(names(additional_inputs) %in% acceptable_inputs)) {
+    unacceptable_inputs <- names(additional_inputs)[!(names(additional_inputs) %in% acceptable_inputs)]
+    stop(cli::format_error(c(
+      "x" = "Error: Invalid additional parameter given for plot.fcmconfr",
+      "+++++> Invalid Additional Input(s): {unacceptable_inputs}",
+      "",
+      "+++++> Additional Input Options Include: {acceptable_inputs}"
+    )))
+  }
+  # ----
 
   if (!additional_inputs$interactive) {
     suppressWarnings(print(autoplot(x, additional_inputs)))
@@ -917,13 +985,12 @@ fcmconfr_theme_custom <- function(...) {
   ggplot2::theme_classic(...) %+replace%
     ggplot2::theme(
       plot.margin = ggplot2::margin(t = 20, r = 40, b = 20, l = 20),
-      axis.title.x = ggplot2::element_blank(),  # element_text(margin = margin(t = 10)),
-      axis.title.y = ggplot2::element_blank(),  # element_text(margin = margin(r = 10), angle = 90, vjust = 0.5),
+      axis.title.x = ggplot2::element_blank(),
+      axis.title.y = ggplot2::element_blank(),
       legend.position = "bottom",
       legend.title = ggplot2::element_blank(),
       legend.justification = "center",
-      legend.spacing = ggplot2::unit(0.001, 'cm')# ,
-      # legend.box.margin = ggplot2::margin(r = ggplot2::unit(0.001, 'cm'), b = ggplot2::unit(0.001, 'cm'), l = ggplot2::unit(0.001, 'cm'), t = ggplot2::unit(0.001, 'cm'))
+      legend.spacing = ggplot2::unit(0.001, 'cm')
     )
 }
 
@@ -967,7 +1034,8 @@ interactive_plot_fcmconfr <- function(x, ...) {
   bslib::versions()
   shinyWidgets::animations
 
-  assign("iplot_fcmconfr_obj", x, envir = .GlobalEnv)
+  #assign("iplot_fcmconfr_obj", x, envir = .GlobalEnv)
+  #assign("iplot_additional_inputs", as.list(...), envir = .GlobalEnv)
   shiny::runApp(appDir = system.file(file.path('shiny', 'interactive_fcmconfr_plot'), package = 'fcmconfr'))
-  rm(iplot_fcmconfr_obj)
+  #rm(list = c("iplot_fcmconfr_obj", "iplot_additional_inputs"), envir = .GlobalEnv)
 }
