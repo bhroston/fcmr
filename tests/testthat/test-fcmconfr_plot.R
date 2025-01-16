@@ -1,3 +1,162 @@
+test_that("fcmconfr_plot additional inputs work", {
+
+  test_initial_state_vector <- c(1, 1, 1, 1, 1, 1, 1)
+  test_pulse_initial_state_vector <- c(1, 0, 0, 0, 0, 0, 0)
+  test_clamping_vector <- c(1, 0, 0, 0, 0, 0, 0)
+  test_pulse_clamping_vector <- c(0, 0, 0, 0, 0, 0, 0)
+
+  tfn_clamping_inputs_agg_and_mc_w_bs <- fcmconfr(
+    adj_matrices = sample_fcms$simple_fcms$tfn_fcms,
+    # adj_matrices = group_tfn_fcms,
+    # Aggregation and Monte Carlo Sampling
+    aggregation_function = 'mean',
+    monte_carlo_sampling_draws = 100,
+    # Simulation
+    # initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
+    # clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
+    initial_state_vector = test_initial_state_vector,
+    clamping_vector = test_clamping_vector,
+    activation = 'rescale',
+    squashing = 'sigmoid',
+    lambda = 1,
+    point_of_inference = "final",
+    max_iter = 1000,
+    min_error = 1e-05,
+    # Inference Estimation (bootstrap)
+    inference_estimation_function = mean,
+    inference_estimation_CI = 0.95,
+    inference_estimation_bootstrap_reps = 1000,
+    # Runtime Options
+    show_progress = TRUE,
+    parallel = TRUE,
+    n_cores = 2,
+    # Additional Options
+    perform_aggregate_analysis = TRUE,
+    perform_monte_carlo_analysis = TRUE,
+    perform_monte_carlo_inference_bootstrap_analysis = TRUE,
+    include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
+    include_monte_carlo_FCM_simulations_in_output = TRUE
+  )
+
+  # mc_avg_and_CIs_color ----
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, mc_avg_and_CIs_color = 12345)
+  )
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, mc_avg_and_CIs_color = "not a color")
+  )
+  expect_no_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, mc_avg_and_CIs_color = "orange")
+  )
+  # ----
+
+  # mc_inferences_color ----
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, mc_inferences_color = 12345)
+  )
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, mc_inferences_color = "not a color")
+  )
+  expect_no_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, mc_inferences_color = "orange")
+  )
+  # ----
+
+  # mc_inferences_shape ----
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, mc_inferences_shape = 1.2345)
+  )
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, mc_inferences_shape = 12345)
+  )
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, mc_inferences_shape = "not a shape")
+  )
+  expect_no_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, mc_inferences_shape = "square")
+  )
+  # ----
+
+  # ind_inferences_color ----
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, ind_inferences_color = 12345)
+  )
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, ind_inferences_color = "not a color")
+  )
+  expect_no_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, ind_inferences_color = "orange")
+  )
+  # ----
+
+  # ind_inferences_shape ----
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, ind_inferences_shape = 1.2345)
+  )
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, ind_inferences_shape = 12345)
+  )
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, ind_inferences_shape = "not a shape")
+  )
+  expect_no_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, ind_inferences_shape = "square")
+  )
+  # ----
+
+  # agg_inferences_color ----
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, agg_inferences_color = 12345)
+  )
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, agg_inferences_color = "not a color")
+  )
+  expect_no_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, agg_inferences_color = "orange")
+  )
+  # ----
+
+  # agg_inferences_shape ----
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, agg_inferences_shape = 1.2345)
+  )
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, agg_inferences_shape = 12345)
+  )
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, agg_inferences_shape = "not a shape")
+  )
+  expect_no_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, agg_inferences_shape = "square")
+  )
+  # ----
+
+  # ind_ivfn_and_tfn_linewidth ----
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, ind_ivfn_and_tfn_linewidth = "asdfads")
+  )
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, ind_ivfn_and_tfn_linewidth = -1)
+  )
+  expect_no_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, ind_ivfn_and_tfn_linewidth = 0.2)
+  )
+  # ----
+
+  # agg_ivfn_and_tfn_linewidth ----
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, agg_ivfn_and_tfn_linewidth = "asdfads")
+  )
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, agg_ivfn_and_tfn_linewidth = -1)
+  )
+  expect_no_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, agg_ivfn_and_tfn_linewidth = 0.2)
+  )
+  # ----
+})
+
+
 
 test_that("fcmconfr_plot works with Conventional FCMs", {
   set.seed(100)
