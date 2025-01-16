@@ -97,48 +97,56 @@ infer_fcm_set <- function(adj_matrices = list(matrix()),
 
   if (parallel & show_progress) {
     print("Initializing cluster", quote = FALSE)
-    cl <- parallel::makeForkCluster(n_cores)
+    cl <- parallel::makeCluster(n_cores)
+    fcmconfr_env <- rlang::search_envs()[[which(names(rlang::search_envs()) == "package:fcmconfr")]]
+    parallel::clusterExport(cl, names(fcmconfr_env))
     print("Running Simulations in Parallel", quote = FALSE)
-    inferences_for_adj_matrices <- pbapply::pblapply(
-      adj_matrices,
-      function(adj_matrix) {
-        infer_fcm(
-          adj_matrix = adj_matrix,
-          initial_state_vector = initial_state_vector,
-          clamping_vector = clamping_vector,
-          activation = activation,
-          squashing = squashing,
-          lambda = lambda,
-          point_of_inference = point_of_inference,
-          max_iter = max_iter,
-          min_error = min_error
-        )
-      },
-      cl = cl
+    suppressWarnings(
+      inferences_for_adj_matrices <- pbapply::pblapply(
+        adj_matrices,
+        function(adj_matrix) {
+          infer_fcm(
+            adj_matrix = adj_matrix,
+            initial_state_vector = initial_state_vector,
+            clamping_vector = clamping_vector,
+            activation = activation,
+            squashing = squashing,
+            lambda = lambda,
+            point_of_inference = point_of_inference,
+            max_iter = max_iter,
+            min_error = min_error
+          )
+        },
+        cl = cl
+      )
     )
     names(inferences_for_adj_matrices) <- paste0("adj_matrix_", 1:length(inferences_for_adj_matrices))
     parallel::stopCluster(cl)
   } else if (parallel & !show_progress) {
     print("Initializing cluster", quote = FALSE)
-    cl <- parallel::makeForkCluster(n_cores) # Only makeForkCluster works. Socket Cluster use old function versions for some reason?
+    cl <- parallel::makeCluster(n_cores)
+    fcmconfr_env <- rlang::search_envs()[[which(names(rlang::search_envs()) == "package:fcmconfr")]]
+    parallel::clusterExport(cl, names(fcmconfr_env))
     cat("\n")
     print("Running simulations", quote = FALSE)
-    inferences_for_adj_matrices <- parallel::parLapply(
-      cl,
-      adj_matrices,
-      function(adj_matrix) {
-        infer_fcm(
-          adj_matrix = adj_matrix,
-          initial_state_vector = initial_state_vector,
-          clamping_vector = clamping_vector,
-          activation = activation,
-          squashing = squashing,
-          lambda = lambda,
-          point_of_inference = point_of_inference,
-          max_iter = max_iter,
-          min_error = min_error
-        )
-      }
+    suppressWarnings(
+      inferences_for_adj_matrices <- parallel::parLapply(
+        cl,
+        adj_matrices,
+        function(adj_matrix) {
+          infer_fcm(
+            adj_matrix = adj_matrix,
+            initial_state_vector = initial_state_vector,
+            clamping_vector = clamping_vector,
+            activation = activation,
+            squashing = squashing,
+            lambda = lambda,
+            point_of_inference = point_of_inference,
+            max_iter = max_iter,
+            min_error = min_error
+          )
+        }
+      )
     )
     parallel::stopCluster(cl)
 
