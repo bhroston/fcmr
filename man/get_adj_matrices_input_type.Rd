@@ -23,7 +23,6 @@ This function performs two actions:
  2. This function identifies the 'class' of the input adj. matrices from the
     following options: 'conventional' 'ivfn' 'tfn' or 'unavailable'
 
-
      - 'conventional' means that the adj. matrices contain only numeric objects
 
      - 'ivfn' means that the adj. matrices contain only 'ivfn' objects (interval-
@@ -175,6 +174,7 @@ Other utility:
 \code{\link{check_if_local_machine_has_access_to_parallel_processing_functionalities}()},
 \code{\link{check_if_local_machine_has_access_to_show_progress_functionalities}()},
 \code{\link{get_edgelist_from_adj_matrix}()},
+\code{\link{get_inferences}()},
 \code{\link{get_node_IDs_from_input}()},
 \code{\link{standardize_adj_matrices}()}
 }

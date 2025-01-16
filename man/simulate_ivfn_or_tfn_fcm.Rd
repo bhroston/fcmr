@@ -11,6 +11,7 @@ simulate_ivfn_or_tfn_fcm(
   activation = "kosko",
   squashing = "tanh",
   lambda = 1,
+  point_of_inference = c("peak", "final"),
   max_iter = 100,
   min_error = 1e-05
 )
@@ -32,6 +33,9 @@ will remain constant throughout the entire simulation as if they were "clamped" 
 
 \item{lambda}{A numeric value that defines the steepness of the slope of the
 squashing function when tanh or sigmoid are applied}
+
+\item{point_of_inference}{The point along the simulation time-series to be
+identified as the inference. Must be one of the following: 'peak' or 'final'}
 
 \item{max_iter}{The maximum number of iterations to run if the minimum error value is not achieved}
 
@@ -85,7 +89,8 @@ simulate_fcm(adj_matrix,
              clamping_vector = c(1, 0, 0, 0, 0, 0),
              activation = "kosko",
              squashing = "sigmoid",
-             lambda = 1)
+             lambda = 1,
+             point_of_inference = "final")
 
 
 # Inference w/ Triangular Fuzzy Numbers (TFNs)
@@ -122,5 +127,6 @@ simulate_fcm(adj_matrix,
              clamping_vector = c(1, 0, 0, 0, 0, 0),
              activation = "kosko",
              squashing = "sigmoid",
-             lambda = 1)
+             lambda = 1,
+             point_of_inference = "final")
 }

@@ -13,12 +13,12 @@ fcmconfr(
   activation = c("kosko", "modified-kosko", "rescale"),
   squashing = c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"),
   lambda = 1,
+  point_of_inference = c("peak", "final"),
   max_iter = 100,
   min_error = 1e-05,
   inference_estimation_function = c("mean", "median"),
   inference_estimation_CI = 0.95,
   inference_estimation_bootstrap_reps = 5000,
-  inference_estimation_bootstrap_draws_per_rep = 5000,
   show_progress = TRUE,
   parallel = TRUE,
   n_cores = integer(),
@@ -56,6 +56,9 @@ will remain constant throughout the entire simulation as if they were "clamped" 
 \item{lambda}{A numeric value that defines the steepness of the slope of the
 squashing function when tanh or sigmoid are applied}
 
+\item{point_of_inference}{The point along the simulation time-series to be
+identified as the inference. Must be one of the following: 'peak' or 'final'}
+
 \item{max_iter}{The maximum number of iterations to run if the minimum error value is not achieved}
 
 \item{min_error}{The lowest error (sum of the absolute value of the current state
@@ -71,10 +74,6 @@ of each concept across all monte carlo FCMs (via bootstrap)}
 \item{inference_estimation_bootstrap_reps}{The number of bootstraps to perform in
 estimating the confidence interval for the inferences of each concept across all monte
 carlo FCMs}
-
-\item{inference_estimation_bootstrap_draws_per_rep}{The number of draws to sample
-(with replacement) from the estimates for the inferences of each concept across
-all monte carlo FCMs per bootstrap}
 
 \item{show_progress}{TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 from the pbapply package as the underlying function.}
@@ -202,13 +201,13 @@ ex_conventional_fcmconfr <- fcmconfr(
   activation = 'kosko',
   squashing = 'sigmoid',
   lambda = 1,
+  point_of_inference = "final",
   max_iter = 100,
   min_error = 1e-05,
   # Inference Estimation (bootstrap)
   inference_estimation_function = "median",
   inference_estimation_CI = 0.95,
   inference_estimation_bootstrap_reps = 1000,
-  inference_estimation_bootstrap_draws_per_rep = 1000,
   # Runtime Options
   show_progress = TRUE,
   parallel = TRUE,
@@ -257,17 +256,17 @@ ex_ivfn_fcmconfr <- fcmconfr(
   activation = 'kosko',
   squashing = 'sigmoid',
   lambda = 1,
+  point_of_inference = "final",
   max_iter = 100,
   min_error = 1e-05,
   # Inference Estimation (bootstrap)
   inference_estimation_function = "mean",
   inference_estimation_CI = 0.95,
   inference_estimation_bootstrap_reps = 1000,
-  inference_estimation_bootstrap_draws_per_rep = 1000,
   # Runtime Options
   show_progress = TRUE,
-  parallel = FALSE,
-  n_cores = 10,
+  parallel = TRUE,
+  n_cores = 2,
   # Additional Options
   perform_aggregate_analysis = TRUE,
   perform_monte_carlo_analysis = TRUE,
@@ -322,17 +321,16 @@ ex_tfn_fcmconfr <- fcmconfr(
   activation = 'kosko',
   squashing = 'sigmoid',
   lambda = 1,
+  point_of_inference = "final",
   max_iter = 100,
   min_error = 1e-05,
   # Inference Estimation (bootstrap)
   inference_estimation_function = "mean",
   inference_estimation_CI = 0.95,
   inference_estimation_bootstrap_reps = 1000,
-  inference_estimation_bootstrap_draws_per_rep = 1000,
   # Runtime Options
   show_progress = TRUE,
   parallel = FALSE,
-  n_cores = 10,
   # Additional Options
   perform_aggregate_analysis = TRUE,
   perform_monte_carlo_analysis = TRUE,

@@ -8,6 +8,80 @@
 #' @param session data surrounding the shiny instance itself
 shiny_server <- function(input, output, session) {
 
+  output$definitions <- shiny::renderUI(
+    if (input$nav_panel == "Data") {
+      shiny::fluidRow(
+        shiny::HTML("<p><small><b>Initial State Vector:</b> Sets the starting
+        value of each concept in the simulation. Typically, all values are set
+        to 1 to include every concept. Set concepts that should not be included
+        in the simulation to 0 (i.e. their impacts on the system should be
+        ignored).</small>
+        <br><br>
+        <small><b>Clamping Vector:</b> Fixes or 'clamps' the value of specific
+        concepts for the entire simulation. Set a concept's clamping value in
+        the range of [0, 1] or [-1, 1] depending on the squashing function to
+        measure its influence on the simulation output.</small></p>")
+      )
+    } else if (input$nav_panel == "Agg. and Monte Carlo Options") {
+      shiny::fluidRow(
+        shiny::HTML("<p><small><b>Include 0-Weighted Edges:</b> Only applicable
+        when FCMs are aggregated. When taking the median or the mean across all
+        adjacency matrices in a set, links that are not specified are either
+        assigned a weight of zero (Include 0-Weighted Edges = TRUE) or ignored
+        (Include 0-Weighted Edges = FALSE).</small></p><br>"),
+        shiny::h4("Aggregation Options"),
+        shiny::HTML("<p><small><b>Aggregation Analysis:</b> Aggregate input
+        adjacency matrices into a single, collective adjacency matrix.</small></p>
+        <br>
+        <small><b>Aggregation Function:</b> Specify the expected value (mean or
+        median) of edge weights across all adjacency matrices in a set.
+        </small></p>
+        <br>"),
+        shiny::h4("Monte Carlo Options"),
+        shiny::HTML("<small><b>Monte Carlo Analysis:</b> Generate N simulations
+        from N adjacency matrices created via Monte Carlo sampling of input
+        adjacency matrices.</small></p>
+        <small><b># Sample Maps to Generate:</b> The number of adjacency
+        matrices (N) to generate</small></p>
+        <small><b>Inference Bootstrap Analysis:</b> Estimate confidence bounds
+        about Monte Carlo simulation outputs for each modeled concept
+        </small></p>
+        <small><b>Inference Estimation Function:</b> Specify whether confidence
+        bounds will be about the mean or the median</small></p>
+        <small><b># Bootstraps:</b> The number of bootstraps to perform when
+        estimating confidence intervals </small></p>
+        <br></>")
+      )
+    } else if (input$nav_panel == "Simulation Options") {
+      shiny::fluidRow(
+        shiny::fluidRow(
+          shiny::HTML("<p><small><b>Activation Function</b> The activation
+          function to be applied.</small></p>
+          <small><b>Squashing Function:</b> The squashing (also known as
+          transformation or threshold) function to apply </small></p>
+          <small><b>Lambda:</b> A numeric value that defines the steepness of
+          the slope of the squashing function when tanh or sigmoid are
+          applied</small></p>
+          <small><b>Point of Inference:</b> The point along the simulation
+          time-series to be identified as the inference</small></p>
+          <small><b>Max Iterations per Sim:</b> The maximum number of iterations
+          to run if the minimum error value is not achieved</small></p>
+          <small><b>Min. Acceptable Error:</b> The lowest error (sum of the
+          absolute value of the current state vector minus the previous state
+          vector) at which no more iterations are necessary and the simulation
+          will stop</small></p>")
+        )
+      )
+    } else if (input$nav_panel == "Runtime Options") {
+      shiny::fluidRow(
+        shiny::fluidRow(
+          shiny::HTML("<p><small>These options only influence runtime
+          performance and do NOT impact results.</small></p>")
+        )
+      )
+    }
+  )
+
   # Data Nav Panel
   # Data Loading and Checks ====
   adj_matrices_selected <- reactive({
@@ -132,9 +206,30 @@ shiny_server <- function(input, output, session) {
 
   # Initial State Vector ====
   output$initial_state_vector_numeric_inputs <- shiny::renderUI({
-    lapply(concepts(), function(i) {
-      shiny::numericInput(paste0("initial_state_", i), label = i, value = 1, min = -1, max = 1, step = 0.05)
-    })
+
+    shiny::fluidRow(
+      # tags$head(
+      #   tags$style(type = "text/css","label{ display: table-cell; text-align: center;vertical-align: middle; } .form-group { display: table-row;}")
+      # ),
+      lapply(
+        concepts(),
+        function(concept) {
+          shiny::fluidRow(
+            shiny::column(width = 3, shiny::numericInput(paste0('initial_state_', concept), label = '', value = 1, min = -1, max = 1, step = 0.05)),
+            shiny::column(width = 9, align = "left", shiny::p(concept, style = "padding-top:25px;"))
+          )
+#
+#           tags$tr(
+#            # tags$style(type = "text/css", "label{text-align: center;vertical-align: middle; }"),
+#            tags$td(shiny::numericInput(paste0('initial_state_', concept), label = '', value = 1, min = -1, max = 1, step = 0.05, width = '100px')),
+#            tags$td(concept), div(style = "font-size:12px; padding-top:28px;")
+#           )
+        }
+      )
+    )
+    #lapply(concepts(), function(i) {
+      # shiny::numericInput(paste0("initial_state_", i), label = i, value = 1, min = -1, max = 1, step = 0.05)
+    #})
   })
 
   initial_state_vector <- reactive({
@@ -149,7 +244,7 @@ shiny_server <- function(input, output, session) {
         "Value" = initial_state_vector()
       )
     )
-  }, align = "c", spacing = "xs")
+  }, align = "l", spacing = "xs")
 
   output$initial_state_vector_input_ui <- shiny::renderUI({
     if (!accepted_adj_matrices_input()) {
@@ -189,9 +284,23 @@ shiny_server <- function(input, output, session) {
 
   # Clamping Vector ====
   output$clamping_vector_numeric_inputs <- shiny::renderUI({
-    lapply(concepts(), function(i) {
-      shiny::numericInput(paste0("clamping_", i), label = i, value = 0, min = -1, max = 1, step = 0.05)
-    })
+    shiny::fluidPage(
+      # tags$head(
+      #   tags$style(type = "text/css","label{ display: table-cell; text-align: center;vertical-align: middle; } .form-group { display: table-row;}")
+      # ),
+      lapply(
+        concepts(),
+        function(concept) {
+          shiny::fluidRow(
+            shiny::column(width = 3, shiny::numericInput(paste0('initial_state_', concept), label = '', value = 1, min = -1, max = 1, step = 0.05)),
+            shiny::column(width = 9, align = "left", shiny::p(concept, style = "padding-top:25px;"))
+          )
+        }
+      )
+    )
+    # lapply(concepts(), function(i) {
+    #   shiny::numericInput(paste0("clamping_", i), label = i, value = 0, min = -1, max = 1, step = 0.05)
+    # })
   })
 
   clamping_vector <- reactive({
@@ -206,7 +315,7 @@ shiny_server <- function(input, output, session) {
         "Value" = clamping_vector()
       )
     )
-  }, align = "c", spacing = "xs")
+  }, align = "l", spacing = "xs")
 
   output$clamping_vector_input_ui <- shiny::renderUI({
     if (!accepted_adj_matrices_input()) {
@@ -273,7 +382,7 @@ shiny_server <- function(input, output, session) {
           shiny::fluidRow(
             shiny::column(
               width = 6, align = "right",
-              shiny::h5("Aggregation Function", style = "padding: 35px;")
+              shiny::h5("Aggregation Function", style = "padding-top:35px;")
             ),
             shiny::column(
               width = 6, align = "left",
@@ -335,8 +444,8 @@ shiny_server <- function(input, output, session) {
       shiny::fluidPage(
         shiny::fluidRow(
           shiny::column(
-            width = 6, align = "right",
-            shiny::h5("# Sample Maps To Generate", style = "padding: 35px;")
+            width = 6, align = "right", style = "padding-top:28px;",
+            shiny::h5("# Sample Maps To Generate")
           ),
           shiny::column(
             width = 6, align = "left",
@@ -491,17 +600,61 @@ shiny_server <- function(input, output, session) {
   })
   # ----
 
-  # Fuzzy Set Samples
-  output$fuzzy_set_samples_ui <- shiny::renderUI({
-    if (fcm_class() %in% c("ivfn", "tfn") | !adj_matrices_selected()) {
+  output$activation_function_formulae <- shiny::renderUI({
+    if (input$activation == "kosko") {
+      formula <- "$$
+        \\begin{gather}
+          A_{i}^{( t+1)} =f\\left(\\sum _{ \\begin{array}{l}
+          j\ =\\ i\\
+          i\ \\neq \ j
+          \\end{array}}^{M} w_{ji} A_{j}^{( t)}\\right)
+        \\end{gather}
+      $$"
+    } else if (input$activation == "modified-kosko") {
+      formula <- "$$
+        \\begin{gather}
+          A_{i}^{( t+1)} =f\\left(\\sum _{ \\begin{array}{l}
+          j\\ =\\ i\\\
+          i\\ \\neq \\ j
+          \\end{array}}^{M} w_{ji} A_{j}^{( t)} +A_{i}^{( t)}\\right)
+        \\end{gather}
+      $$"
+    } else if (input$activation == "rescale") {
+      formula <- "$$
+        \\begin{gather}
+          A_{i}^{( t+1)} =f\\left(\\sum _{ \\begin{array}{l}
+          j\\ =\\ i\\\
+          i\\ \\neq \\ j
+          \\end{array}}^{M} w_{ji}\\left( 2A_{j}^{( t)} -1\\right) +\\left( 2A_{i}^{( t)} -1\\right)\\right)
+        \\end{gather}
+      $$"
+    }
+    shiny::fluidRow(
+      shiny::column(
+        width = 12, align = "center",
+        shiny::withMathJax(tags$p(formula))
+      )
+    )
+  })
+
+  # Warn users about using tanh with rescale activation
+  output$tanh_warning_text <- shiny::renderUI({
+    if (input$activation == "rescale" & input$squashing == "tanh") {
       shiny::fluidRow(
         shiny::column(
-          width = 5, align = "right",
-          shiny::h5(paste0("Fuzzy Set Samples"), style = "padding: 28px;")
-        ),
+          width = 12, align = "center",
+          shiny::p("WARNING: The Rescale activation function is designed to work with
+                   the sigmoid squashing function only!"),
+          shiny::p("Using tanh will produce illogical results.")
+        )
+      )
+    } else if (input$activation == "modified-kosko" & input$squashing == "tanh") {
+      shiny::fluidRow(
         shiny::column(
-          width = 3, align = "left",
-          shiny::numericInput("fuzzy_set_samples", "", 1, min = 10, step = 10)
+          width = 12, align = "center",
+          shiny::p("WARNING: It is unconventional to pair Modified-Kosko with Tanh because simulation inference values
+          tend to approach 0 as the number of iterations increases!"),
+          shiny::p("Using tanh may produce inconsistent results.")
         )
       )
     } else {
@@ -550,8 +703,6 @@ shiny_server <- function(input, output, session) {
 
   shiny::onStop(
     function() {
-      #browser()
-      #env_frame_index <- which(unlist(lapply(sys.frames(), function(frame) frame$shiny_env_check)) == 1)
       assign(
         x = "fcmconfr_gui_input",
         value = structure(.Data = shiny::isolate(form_data()), class = "fcmconfr_gui_input"),

@@ -36,7 +36,6 @@ test_that("check_if_local_machine_has_access_to_show_progress_functionalities wo
 })
 
 
-
 test_that("get_adj_matrices_input_type works", {
   # Individual Conventional Adj. Matrix ----
   adj_matrix_1 <- data.frame(
@@ -47,6 +46,12 @@ test_that("get_adj_matrices_input_type works", {
   expect_false(input_type$adj_matrices_input_is_list)
   expect_identical(input_type$object_types_in_list, c("conventional", "data.frame"))
 
+  # Incorrect data type in Adj. Matrix
+  bad_adj_matrix <- data.frame(sample_fcms$large_fcms$conventional_fcms[[1]])
+  bad_adj_matrix[2, 4] <- "a"
+  expect_error(
+    get_adj_matrices_input_type(bad_adj_matrix)
+  )
 
   # List of Multiple Conventional FCM Adj. Matrices ----
   adj_matrix_1 <- data.frame(
@@ -202,7 +207,6 @@ test_that("get_adj_matrices_input_type works", {
 })
 
 
-
 test_that("get_adj_matrix_from_edgelist works", {
   test_edgelist <- data.frame(
     from = c("A"),
@@ -264,7 +268,6 @@ test_that("get_adj_matrix_from_edgelist works", {
 })
 
 
-
 test_that("get_edgelist_from_adj_matrix works", {
   test_adj_matrix <- data.frame(
     "C1" = c(0, 0.36, 0.45, -0.90, 0),
@@ -303,7 +306,6 @@ test_that("get_edgelist_from_adj_matrix works", {
 })
 
 
-
 test_that("get_node_IDs_from_input works", {
   test_adj_matrix <- data.frame(
     "A" = c(0, 0.36, 0.45, -0.90, 0),
@@ -320,7 +322,6 @@ test_that("get_node_IDs_from_input works", {
   nodes <- get_node_IDs_from_input(test_adj_matrix)
   expect_identical(nodes, c("C1", "C2", "C3", "C4", "C5"))
 })
-
 
 
 test_that("standardize_adj_matrices works", {
@@ -492,6 +493,117 @@ test_that("standardize_adj_matrices works", {
 })
 
 
+test_that("get_inferences works", {
+
+  invisible(capture.output(
+    conventional_fcmconfr <- fcmconfr(
+      adj_matrices = sample_fcms$simple_fcms$conventional_fcms,
+      # adj_matrices = group_conventional_fcms,
+      # Aggregation and Monte Carlo Sampling
+      aggregation_function = 'mean',
+      monte_carlo_sampling_draws = 100,
+      # Simulation
+      initial_state_vector = c(0, 0, 1, 0, 0, 0, 0),
+      clamping_vector = c(0, 0, 0, 0, 0, 0, 0),
+      activation = 'kosko',
+      squashing = 'tanh',
+      lambda = 0.5,
+      point_of_inference = "final",
+      max_iter = 10000,
+      min_error = 1e-05,
+      # Inference Estimation (bootstrap)
+      inference_estimation_function = "mean",
+      inference_estimation_CI = 0.95,
+      inference_estimation_bootstrap_reps = 1000,
+      # Runtime Options
+      show_progress = TRUE,
+      parallel = TRUE,
+      n_cores = 2,
+      # Additional Options
+      perform_aggregate_analysis = TRUE,
+      perform_monte_carlo_analysis = TRUE,
+      perform_monte_carlo_inference_bootstrap_analysis = TRUE,
+      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
+      include_monte_carlo_FCM_simulations_in_output = TRUE
+    )
+  ))
+
+  expect_error(get_inferences(12413))
+  expect_error(get_inferences(conventional_fcmconfr, analysis = "not correct"))
+
+  test_get_inferences <- get_inferences(conventional_fcmconfr)
+  expect_equal(names(test_get_inferences), c("input_inferences", "aggregate_inferences", "mc_inferences", "mc_CIs_and_quantiles"))
+  test_get_inferences <- get_inferences(conventional_fcmconfr, analysis = c("input", "aggregate"))
+  expect_equal(names(test_get_inferences), c("input_inferences", "aggregate_inferences"))
+
+  invisible(capture.output(
+    ivfn_fcmconfr <- fcmconfr(
+      adj_matrices = sample_fcms$simple_fcms$ivfn_fcms,
+      # adj_matrices = group_ivfn_fcms,
+      # Aggregation and Monte Carlo Sampling
+      aggregation_function = 'mean',
+      monte_carlo_sampling_draws = 100,
+      # Simulation
+      initial_state_vector = c(0, 0, 1, 0, 0, 0, 0),
+      clamping_vector = c(0, 0, 0, 0, 0, 0, 0),
+      activation = 'rescale',
+      squashing = 'sigmoid',
+      lambda = 1,
+      point_of_inference = "final",
+      max_iter = 1000,
+      min_error = 1e-05,
+      # Inference Estimation (bootstrap)
+      inference_estimation_function = mean,
+      inference_estimation_CI = 0.95,
+      inference_estimation_bootstrap_reps = 1000,
+      # Runtime Options
+      show_progress = TRUE,
+      parallel = TRUE,
+      n_cores = 2,
+      # Additional Options
+      perform_aggregate_analysis = TRUE,
+      perform_monte_carlo_analysis = TRUE,
+      perform_monte_carlo_inference_bootstrap_analysis = TRUE,
+      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
+      include_monte_carlo_FCM_simulations_in_output = TRUE
+    )
+  ))
+  expect_no_error(get_inferences(ivfn_fcmconfr))
+
+  invisible(capture.output(
+    tfn_fcmconfr <- fcmconfr(
+      adj_matrices = sample_fcms$simple_fcms$tfn_fcms,
+      # adj_matrices = group_tfn_fcms,
+      # Aggregation and Monte Carlo Sampling
+      aggregation_function = 'mean',
+      monte_carlo_sampling_draws = 100,
+      # Simulation
+      initial_state_vector = c(1, 1, 1, 1, 1, 1, 1),
+      clamping_vector = c(1, 0, 0, 0, 0, 0, 0),
+      activation = 'rescale',
+      squashing = 'sigmoid',
+      lambda = 1,
+      point_of_inference = "final",
+      max_iter = 1000,
+      min_error = 1e-05,
+      # Inference Estimation (bootstrap)
+      inference_estimation_function = mean,
+      inference_estimation_CI = 0.95,
+      inference_estimation_bootstrap_reps = 1000,
+      # Runtime Options
+      show_progress = TRUE,
+      parallel = TRUE,
+      n_cores = 2,
+      # Additional Options
+      perform_aggregate_analysis = TRUE,
+      perform_monte_carlo_analysis = TRUE,
+      perform_monte_carlo_inference_bootstrap_analysis = TRUE,
+      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
+      include_monte_carlo_FCM_simulations_in_output = TRUE
+    )
+  ))
+  expect_no_error(get_inferences(tfn_fcmconfr))
+})
 
 
 #######
