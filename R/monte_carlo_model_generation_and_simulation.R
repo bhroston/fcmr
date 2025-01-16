@@ -29,7 +29,7 @@
 #' change the output! These are allowed to be toggled on/off to increase user
 #' control at runtime.
 #'
-#' @param mc_adj_matrices A list of adjecency matrices generated from simulation using build_fmcm_models.
+#' @param adj_matrices A list of adjecency matrices generated from simulation using build_fmcm_models.
 #' @param initial_state_vector A list state values at the start of an fcm simulation
 #' @param clamping_vector A list of values representing specific actions taken to
 #' control the behavior of an FCM. Specifically, non-zero values defined in this vector
@@ -61,7 +61,7 @@
 #'
 #' @export
 #' @example man/examples/ex-infer_fcm_set.R
-infer_fcm_set <- function(mc_adj_matrices = list(matrix()),
+infer_fcm_set <- function(adj_matrices = list(matrix()),
                                       initial_state_vector = c(),
                                       clamping_vector = c(),
                                       activation = c("kosko", "modified-kosko", "rescale"),
@@ -80,12 +80,12 @@ infer_fcm_set <- function(mc_adj_matrices = list(matrix()),
 
   # Perform input checks ----
   checks <- check_infer_fcm_set_inputs(
-    mc_adj_matrices,
+    adj_matrices,
     initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error,
     parallel, n_cores, show_progress, include_simulations_in_output
   )
   fcm_class <- checks$fcm_class
-  adj_matrix <- checks$adj_matrix
+  adj_matrices <- checks$adj_matrices
   initial_state_vector <- checks$initial_state_vector
   clamping_vector <- checks$clamping_vector
   activation <- checks$activation
@@ -95,34 +95,12 @@ infer_fcm_set <- function(mc_adj_matrices = list(matrix()),
   parallel <- checks$parallel
   # ----
 
-  # if (parallel) {
-  #   max_possible_cores <- parallel::detectCores()
-  #   if (identical(n_cores, integer())) {
-  #     warning(cli::format_warning(c(
-  #       "!" = "Warning: {.var n_cores} not defined",
-  #       "~~~~~ Assuming {.var n_cores} is the maximum available on the machine: n_cores = {max_possible_cores}"
-  #     )))
-  #     n_cores <- max_possible_cores
-  #   }
-  #   if (n_cores > max_possible_cores) {
-  #     warning(cli::format_warning(c(
-  #       "!" = "Warning: {.var n_cores} is {n_cores} which is greater than the max. cores available on the machine (n = {max_possible_cores})",
-  #       "~~~~~ Reducing {.var n_cores} to {max_possible_cores}"
-  #     )))
-  #   }
-  # }
-  # if (!parallel & !identical(n_cores, integer())) {
-  #   warning(cli::format_warning(c(
-  #     "!" = "Warning: {.var n_cores} is ignored since {.var parallel} = FALSE"
-  #   )))
-  # }
-
   if (parallel & show_progress) {
     print("Initializing cluster", quote = FALSE)
     cl <- parallel::makeForkCluster(n_cores)
     print("Running Simulations in Parallel", quote = FALSE)
-    inferences_for_mc_adj_matrices <- pbapply::pblapply(
-      mc_adj_matrices,
+    inferences_for_adj_matrices <- pbapply::pblapply(
+      adj_matrices,
       function(adj_matrix) {
         infer_fcm(
           adj_matrix = adj_matrix,
@@ -138,19 +116,19 @@ infer_fcm_set <- function(mc_adj_matrices = list(matrix()),
       },
       cl = cl
     )
-    names(inferences_for_mc_adj_matrices) <- paste0("mc_", 1:length(inferences_for_mc_adj_matrices))
+    names(inferences_for_adj_matrices) <- paste0("adj_matrix_", 1:length(inferences_for_adj_matrices))
     parallel::stopCluster(cl)
   } else if (parallel & !show_progress) {
     print("Initializing cluster", quote = FALSE)
     cl <- parallel::makeForkCluster(n_cores) # Only makeForkCluster works. Socket Cluster use old function versions for some reason?
     cat("\n")
     print("Running simulations", quote = FALSE)
-    inferences_for_mc_adj_matrices <- parallel::parLapply(
+    inferences_for_adj_matrices <- parallel::parLapply(
       cl,
-      mc_adj_matrices,
-      function(mc_adj_matrix) {
+      adj_matrices,
+      function(adj_matrix) {
         infer_fcm(
-          adj_matrix = mc_adj_matrix,
+          adj_matrix = adj_matrix,
           initial_state_vector = initial_state_vector,
           clamping_vector = clamping_vector,
           activation = activation,
@@ -168,11 +146,11 @@ infer_fcm_set <- function(mc_adj_matrices = list(matrix()),
     cat("\n")
     print("Running Simulations", quote = FALSE)
 
-    inferences_for_mc_adj_matrices <- pbapply::pblapply(
-      mc_adj_matrices,
-      function(mc_adj_matrix) {
+    inferences_for_adj_matrices <- pbapply::pblapply(
+      adj_matrices,
+      function(adj_matrix) {
         infer_fcm(
-          adj_matrix = mc_adj_matrix,
+          adj_matrix = adj_matrix,
           initial_state_vector = initial_state_vector,
           clamping_vector = clamping_vector,
           activation = activation,
@@ -188,11 +166,11 @@ infer_fcm_set <- function(mc_adj_matrices = list(matrix()),
   } else if (!parallel & !show_progress) {
     cat("\n")
     print("Running simulations", quote = FALSE)
-    inferences_for_mc_adj_matrices <- lapply(
-      mc_adj_matrices,
-      function(mc_adj_matrix) {
+    inferences_for_adj_matrices <- lapply(
+      adj_matrices,
+      function(adj_matrix) {
         infer_fcm(
-          adj_matrix = mc_adj_matrix,
+          adj_matrix = adj_matrix,
           initial_state_vector = initial_state_vector,
           clamping_vector = clamping_vector,
           activation = activation,
@@ -207,35 +185,28 @@ infer_fcm_set <- function(mc_adj_matrices = list(matrix()),
   }
 
   if (identical(fcm_class, "conventional")) {
-    inference_values_by_sim <- lapply(inferences_for_mc_adj_matrices, function(sim) sim$inference)
+    inference_values_by_sim <- lapply(inferences_for_adj_matrices, function(sim) sim$inference)
   } else {
-    inference_values_by_sim <- lapply(inferences_for_mc_adj_matrices, function(sim) sim$inferences)
+    inference_values_by_sim <- lapply(inferences_for_adj_matrices, function(sim) sim$inferences)
   }
 
   inference_values_by_sim <- do.call(rbind, inference_values_by_sim)
   rownames(inference_values_by_sim) <- 1:nrow(inference_values_by_sim)
 
-  # inference_plot_data <- data.frame(
-  #   node = rep(colnames(inference_values_by_sim), nrow(inference_values_by_sim)),
-  #   value = unlist(lapply(t(inference_values_by_sim), c))
-  # )
-
   if (include_simulations_in_output) {
     structure(
       .Data = list(
         inference = inference_values_by_sim,
-        # inference_for_plotting = inference_plot_data,
-        sims = inferences_for_mc_adj_matrices
+        sims = inferences_for_adj_matrices
       ),
-      class = "inference_of_monte_carlo_fcm_set"
+      class = "inference_of_fcm_set"
     )
   } else {
     structure(
       .Data = list(
-        inference = inference_values_by_sim#,
-        # inference_for_plotting = inference_plot_data
+        inference = inference_values_by_sim
       ),
-      class = "inference_of_monte_carlo_fcm_set"
+      class = "inference_of_fcm_set"
     )
   }
 }
@@ -781,11 +752,11 @@ build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_mat
 
 
 
-#' Check inputs for monte carlo bootstrap analysis
+#' Check inputs for running infer_fcm on a list of adj. matrices
 #'
 #' @family monte-carlo-model-generation-and-simulation
 #'
-#' @param mc_adj_matrices A list of adjecency matrices generated from simulation using build_fmcm_models.
+#' @param adj_matrices A list of adjecency matrices
 #' @param initial_state_vector A list state values at the start of an fcm simulation
 #' @param clamping_vector A list of values representing specific actions taken to
 #' control the behavior of an FCM. Specifically, non-zero values defined in this vector
@@ -815,7 +786,7 @@ build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_mat
 #' @export
 #' @examples
 #' NULL
-check_infer_fcm_set_inputs <- function(mc_adj_matrices = list(matrix()),
+check_infer_fcm_set_inputs <- function(adj_matrices = list(matrix()),
                                      initial_state_vector = c(),
                                      clamping_vector = c(),
                                      activation = c("kosko", "modified-kosko", "rescale"),
@@ -830,7 +801,6 @@ check_infer_fcm_set_inputs <- function(mc_adj_matrices = list(matrix()),
                                      include_simulations_in_output = FALSE) {
 
   # Check adj_matrices ----
-  adj_matrices <- mc_adj_matrices
   adj_matrices_input_type <- get_adj_matrices_input_type(adj_matrices)
   fcm_class <- adj_matrices_input_type$fcm_class
   if (!adj_matrices_input_type$adj_matrices_input_is_list) {

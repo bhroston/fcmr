@@ -18,7 +18,7 @@
   </clipPath>
 </defs>
 <g clip-path='url(#cpMC4wMHw3MjAuMDB8MC4wMHw1NzYuMDA=)'>
-<rect x='-0.000000000000064' y='0.00' width='720.00' height='576.00' style='stroke-width: 1.07; stroke: #FFFFFF; fill: #FFFFFF;' />
+<rect x='0.00' y='0.00' width='720.00' height='576.00' style='stroke-width: 1.07; stroke: #FFFFFF; fill: #FFFFFF;' />
 </g>
 <defs>
   <clipPath id='cpMjAxLjk0fDY4MC4xNXwzNy4yM3w1MDQuMDY='>
@@ -27,6 +27,7 @@
 </defs>
 <g clip-path='url(#cpMjAxLjk0fDY4MC4xNXwzNy4yM3w1MDQuMDY=)'>
 <rect x='201.94' y='37.23' width='478.21' height='466.83' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
+<line x1='360.48' y1='504.06' x2='360.48' y2='37.23' style='stroke-width: 1.07; stroke-dasharray: 1.42,4.27; stroke-linecap: butt;' />
 <line x1='340.20' y1='480.83' x2='423.37' y2='480.83' style='stroke-width: 0.21; stroke-linecap: butt;' />
 <line x1='335.26' y1='479.75' x2='401.78' y2='479.75' style='stroke-width: 0.21; stroke-linecap: butt;' />
 <line x1='392.16' y1='478.67' x2='467.58' y2='478.67' style='stroke-width: 0.21; stroke-linecap: butt;' />
@@ -237,13 +238,13 @@
 <line x1='467.58' y1='62.62' x2='467.58' y2='62.62' style='stroke-width: 0.21; stroke-linecap: butt;' />
 <line x1='467.58' y1='61.54' x2='467.58' y2='61.54' style='stroke-width: 0.21; stroke-linecap: butt;' />
 <line x1='467.58' y1='60.46' x2='467.58' y2='60.46' style='stroke-width: 0.21; stroke-linecap: butt;' />
-<line x1='467.58' y1='400.32' x2='541.29' y2='400.32' style='stroke-width: 0.85; stroke: #FF0000; stroke-linecap: butt;' />
-<line x1='480.10' y1='270.65' x2='576.94' y2='270.65' style='stroke-width: 0.85; stroke: #FF0000; stroke-linecap: butt;' />
-<line x1='349.66' y1='76.13' x2='454.66' y2='76.13' style='stroke-width: 0.85; stroke: #FF0000; stroke-linecap: butt;' />
-<line x1='256.61' y1='140.97' x2='399.94' y2='140.97' style='stroke-width: 0.85; stroke: #FF0000; stroke-linecap: butt;' />
-<line x1='403.58' y1='465.16' x2='553.86' y2='465.16' style='stroke-width: 0.85; stroke: #FF0000; stroke-linecap: butt;' />
-<line x1='467.58' y1='335.48' x2='533.97' y2='335.48' style='stroke-width: 0.85; stroke: #FF0000; stroke-linecap: butt;' />
-<line x1='237.79' y1='205.81' x2='585.60' y2='205.81' style='stroke-width: 0.85; stroke: #FF0000; stroke-linecap: butt;' />
+<line x1='467.58' y1='400.32' x2='541.29' y2='400.32' style='stroke-width: 1.28; stroke: #FF0000; stroke-linecap: butt;' />
+<line x1='480.10' y1='270.65' x2='576.94' y2='270.65' style='stroke-width: 1.28; stroke: #FF0000; stroke-linecap: butt;' />
+<line x1='349.66' y1='76.13' x2='454.66' y2='76.13' style='stroke-width: 1.28; stroke: #FF0000; stroke-linecap: butt;' />
+<line x1='256.61' y1='140.97' x2='399.94' y2='140.97' style='stroke-width: 1.28; stroke: #FF0000; stroke-linecap: butt;' />
+<line x1='403.58' y1='465.16' x2='553.86' y2='465.16' style='stroke-width: 1.28; stroke: #FF0000; stroke-linecap: butt;' />
+<line x1='467.58' y1='335.48' x2='533.97' y2='335.48' style='stroke-width: 1.28; stroke: #FF0000; stroke-linecap: butt;' />
+<line x1='237.79' y1='205.81' x2='585.60' y2='205.81' style='stroke-width: 1.28; stroke: #FF0000; stroke-linecap: butt;' />
 </g>
 <g clip-path='url(#cpMC4wMHw3MjAuMDB8MC4wMHw1NzYuMDA=)'>
 <polyline points='201.94,504.06 201.94,37.23 ' style='stroke-width: 1.07; stroke-linecap: butt;' />
@@ -270,13 +271,13 @@
 <text x='360.48' y='515.05' text-anchor='middle' style='font-size: 8.80px; fill: #4D4D4D; font-family: sans;' textLength='12.23px' lengthAdjust='spacingAndGlyphs'>0.5</text>
 <text x='511.59' y='515.05' text-anchor='middle' style='font-size: 8.80px; fill: #4D4D4D; font-family: sans;' textLength='12.23px' lengthAdjust='spacingAndGlyphs'>0.6</text>
 <text x='662.70' y='515.05' text-anchor='middle' style='font-size: 8.80px; fill: #4D4D4D; font-family: sans;' textLength='12.23px' lengthAdjust='spacingAndGlyphs'>0.7</text>
-<rect x='369.67' y='527.84' width='142.76' height='28.24' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
-<line x1='382.36' y1='541.96' x2='396.18' y2='541.96' style='stroke-width: 1.07; stroke-linecap: butt;' />
-<line x1='382.36' y1='541.96' x2='396.18' y2='541.96' style='stroke-width: 1.07; stroke-linecap: butt;' />
-<line x1='448.74' y1='541.96' x2='462.57' y2='541.96' style='stroke-width: 1.07; stroke: #FF0000; stroke-linecap: butt;' />
-<line x1='448.74' y1='541.96' x2='462.57' y2='541.96' style='stroke-width: 1.07; stroke: #FF0000; stroke-linecap: butt;' />
-<text x='403.39' y='544.98' style='font-size: 8.80px; font-family: sans;' textLength='38.15px' lengthAdjust='spacingAndGlyphs'>Ind FCMs</text>
-<text x='469.77' y='544.98' style='font-size: 8.80px; font-family: sans;' textLength='37.17px' lengthAdjust='spacingAndGlyphs'>Agg FCM</text>
+<rect x='331.07' y='527.84' width='219.96' height='28.24' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
+<rect x='336.54' y='533.32' width='17.28' height='17.28' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
+<line x1='338.27' y1='541.96' x2='352.10' y2='541.96' style='stroke-width: 0.21; stroke-linecap: butt;' />
+<rect x='442.07' y='533.32' width='17.28' height='17.28' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
+<line x1='443.80' y1='541.96' x2='457.62' y2='541.96' style='stroke-width: 0.21; stroke: #FF0000; stroke-linecap: butt;' />
+<text x='359.30' y='544.98' style='font-size: 8.80px; font-family: sans;' textLength='77.29px' lengthAdjust='spacingAndGlyphs'>Ind FCM Inferences</text>
+<text x='464.83' y='544.98' style='font-size: 8.80px; font-family: sans;' textLength='80.72px' lengthAdjust='spacingAndGlyphs'>Agg FCM Inferences</text>
 <text x='201.94' y='29.01' style='font-size: 13.20px; font-family: sans;' textLength='159.25px' lengthAdjust='spacingAndGlyphs'>IVFN Pulse Inputs and Agg</text>
 </g>
 </svg>

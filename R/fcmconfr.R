@@ -191,6 +191,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   if (fcm_class == "conventional") {
     individual_adj_matrices_inferences_df <- do.call(rbind, lapply(individual_adj_matrices_inferences, function(inference) inference$inferences))
     individual_adj_matrices_inferences_df <- cbind(input = paste0("adj_matrix_", 1:length(adj_matrices)), individual_adj_matrices_inferences_df)
+    rownames(individual_adj_matrices_inferences_df) <- NULL
   } else if (fcm_class %in% c("ivfn", "tfn")) {
     individual_adj_matrices_inferences_df <- lapply(individual_adj_matrices_inferences, function(inference) inference$inferences)
     names(individual_adj_matrices_inferences_df) <- paste0("adj_matrix_", 1:length(adj_matrices))
@@ -219,7 +220,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
       })
 
     mc_inferences <- infer_fcm_set(
-      mc_adj_matrices = mc_adj_matrices,
+      adj_matrices = mc_adj_matrices,
       initial_state_vector = initial_state_vector,
       clamping_vector = clamping_vector,
       activation = activation,

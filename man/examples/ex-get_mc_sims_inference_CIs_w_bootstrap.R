@@ -31,7 +31,7 @@ mc_fcms <- build_monte_carlo_fcms_from_conventional_adj_matrices(
 )
 
 mc_fcms_inferences <- infer_fcm_set(
-  mc_adj_matrices = mc_fcms,
+  adj_matrices = mc_fcms,
   initial_state_vector <- c(1, 1, 1, 1),
   clamping_vector <- c(1, 0, 0, 0),
   activation = "kosko",

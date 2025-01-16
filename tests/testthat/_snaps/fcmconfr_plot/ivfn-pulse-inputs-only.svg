@@ -18,7 +18,7 @@
   </clipPath>
 </defs>
 <g clip-path='url(#cpMC4wMHw3MjAuMDB8MC4wMHw1NzYuMDA=)'>
-<rect x='-0.000000000000064' y='0.00' width='720.00' height='576.00' style='stroke-width: 1.07; stroke: #FFFFFF; fill: #FFFFFF;' />
+<rect x='0.00' y='0.00' width='720.00' height='576.00' style='stroke-width: 1.07; stroke: #FFFFFF; fill: #FFFFFF;' />
 </g>
 <defs>
   <clipPath id='cpMjAxLjk0fDY4MC4xNXwzNy4yM3w1MDQuMDY='>
@@ -27,6 +27,7 @@
 </defs>
 <g clip-path='url(#cpMjAxLjk0fDY4MC4xNXwzNy4yM3w1MDQuMDY=)'>
 <rect x='201.94' y='37.23' width='478.21' height='466.83' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
+<line x1='360.48' y1='504.06' x2='360.48' y2='37.23' style='stroke-width: 1.07; stroke-dasharray: 1.42,4.27; stroke-linecap: butt;' />
 <line x1='340.20' y1='480.83' x2='423.37' y2='480.83' style='stroke-width: 0.21; stroke-linecap: butt;' />
 <line x1='335.26' y1='479.75' x2='401.78' y2='479.75' style='stroke-width: 0.21; stroke-linecap: butt;' />
 <line x1='392.16' y1='478.67' x2='467.58' y2='478.67' style='stroke-width: 0.21; stroke-linecap: butt;' />
@@ -263,9 +264,10 @@
 <text x='360.48' y='515.05' text-anchor='middle' style='font-size: 8.80px; fill: #4D4D4D; font-family: sans;' textLength='12.23px' lengthAdjust='spacingAndGlyphs'>0.5</text>
 <text x='511.59' y='515.05' text-anchor='middle' style='font-size: 8.80px; fill: #4D4D4D; font-family: sans;' textLength='12.23px' lengthAdjust='spacingAndGlyphs'>0.6</text>
 <text x='662.70' y='515.05' text-anchor='middle' style='font-size: 8.80px; fill: #4D4D4D; font-family: sans;' textLength='12.23px' lengthAdjust='spacingAndGlyphs'>0.7</text>
-<rect x='402.37' y='527.84' width='77.35' height='28.24' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
-<line x1='415.06' y1='541.96' x2='428.88' y2='541.96' style='stroke-width: 1.07; stroke-linecap: butt;' />
-<text x='436.09' y='544.98' style='font-size: 8.80px; font-family: sans;' textLength='38.15px' lengthAdjust='spacingAndGlyphs'>Ind FCMs</text>
+<rect x='385.54' y='527.84' width='111.01' height='28.24' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
+<rect x='391.02' y='533.32' width='17.28' height='17.28' style='stroke-width: 1.07; stroke: none; fill: #FFFFFF;' />
+<line x1='392.75' y1='541.96' x2='406.57' y2='541.96' style='stroke-width: 0.21; stroke-linecap: butt;' />
+<text x='413.78' y='544.98' style='font-size: 8.80px; font-family: sans;' textLength='77.29px' lengthAdjust='spacingAndGlyphs'>Ind FCM Inferences</text>
 <text x='201.94' y='29.01' style='font-size: 13.20px; font-family: sans;' textLength='137.21px' lengthAdjust='spacingAndGlyphs'>IVFN Pulse Inputs Only</text>
 </g>
 </svg>

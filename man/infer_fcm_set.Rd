@@ -5,7 +5,7 @@
 \title{Infer FCMs Generated from Monte Carlo Methods}
 \usage{
 infer_fcm_set(
-  mc_adj_matrices = list(matrix()),
+  adj_matrices = list(matrix()),
   initial_state_vector = c(),
   clamping_vector = c(),
   activation = c("kosko", "modified-kosko", "rescale"),
@@ -21,7 +21,7 @@ infer_fcm_set(
 )
 }
 \arguments{
-\item{mc_adj_matrices}{A list of adjecency matrices generated from simulation using build_fmcm_models.}
+\item{adj_matrices}{A list of adjecency matrices generated from simulation using build_fmcm_models.}
 
 \item{initial_state_vector}{A list state values at the start of an fcm simulation}
 
@@ -108,7 +108,7 @@ mc_fcms <- build_monte_carlo_fcms_from_conventional_adj_matrices(
 )
 
 mc_fcms_inferences <- infer_fcm_set(
-  mc_adj_matrices = mc_fcms,
+  adj_matrices = mc_fcms,
   initial_state_vector <- c(1, 1, 1, 1),
   clamping_vector <- c(1, 0, 0, 0),
   activation = "kosko",
@@ -167,7 +167,7 @@ mc_fcms <- build_monte_carlo_fcms_from_fuzzy_set_adj_matrices(
   fcms_w_ivfns, "ivfn", 1000, include_zeroes = FALSE
 )
 mc_fcms_inferences <- infer_fcm_set(
-  mc_adj_matrices = mc_fcms,
+  adj_matrices = mc_fcms,
   initial_state_vector <- c(1, 1),
   clamping_vector <- c(1, 0),
   activation = "kosko",
@@ -248,7 +248,7 @@ mc_fcms <- build_monte_carlo_fcms_from_fuzzy_set_adj_matrices(
   fcms_w_tfns, "tfn", 1000, include_zeroes = FALSE
 )
 mc_fcms_inferences <- infer_fcm_set(
-  mc_adj_matrices = mc_fcms,
+  adj_matrices = mc_fcms,
   initial_state_vector <- c(1, 1),
   clamping_vector <- c(1, 0),
   activation = "kosko",
