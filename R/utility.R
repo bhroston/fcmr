@@ -591,32 +591,90 @@ get_inferences <- function(fcmconfr_obj = list(),
 }
 
 
-# view_fcm_layout <- function(fcm = matrix(), seed = integer()) {
-#   fcm_input_type <- get_adj_matrices_input_type(fcm)
-#   fcm_class <- fcm_input_type$fcm_class
-#   if (fcm_class == "conventional") {
-#     conventional_fcm <- fcm
-#   } else if (fcm_class == "ivfn") {
-#     conventional_fcm <- apply(fcm, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$upper))
-#   } else if (fcm_class == "tfn") {
-#     conventional_fcm <- apply(fcm, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$mode,  x[[1]]$upper))
-#   }
-#
-#   # Translate fcm into an igraph object and then convert to visNetwork
-#   fcm_as_igraph_obj <- igraph::graph_from_adjacency_matrix(as.matrix(conventional_fcm), weighted = TRUE, mode = "directed")
-#   fcm_as_visNetwork_obj <- visNetwork::visIgraph(fcm_as_igraph_obj)
-#
-#   # Add aesthetics for nodes
-#   fcm_as_visNetwork_obj$x$nodes$color <- "lightgrey"
-#
-#   # Add aesthetics for edges
-#   edges_df <- fcm_as_visNetwork_obj$x$edges
-#   edges_df$label <- paste(edges_df$weight)
-#   edges_df$color <- ifelse(edges_df$weight >= 0, "black", "red")
-#   edges_df$width <- abs(edges_df$weight*2)
-#   fcm_as_visNetwork_obj$x$edges <- edges_df
-#
-#   # Load plot
-#   fcm_as_visNetwork_obj %>%
-#     visNetwork::visLayout(randomSeed = seed)
-# }
+
+#' Display FCM in Viewer
+#'
+#' @family utility
+#'
+#' @description
+#' Display an FCM in the Viewer pane as an interactive visNetwork object. Use
+#' the with_shiny parameter to interact with the FCM visNetwork object and
+#' store its output in the global environment via the view_fcm_visNetwork
+#' variable.
+#'
+#' @param fcm_adj_matrix An adjacency matrix representing an FCM
+#' @param with_shiny View visNetwork output in a shiny app instead of the viewer
+#' pane. This adds the functionality to store node locations after moving them.
+#'
+#' @returns A display of the input FCM in the Viewer pane; if with_shiny = TRUE,
+#' the visNetwork object saved into the global environment as
+#' fcm_view_visNetwork
+#'
+#' @export
+#' @example man/examples/ex-fcm_view.R
+fcm_view <- function(fcm_adj_matrix = matrix(), with_shiny = FALSE) {
+  fcm_adj_matrix_input_type <- get_adj_matrices_input_type(fcm_adj_matrix)
+
+  if (!(is.logical(with_shiny))) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var with_shiny} must be a logical (TRUE/FALSE) value.",
+      "+++++> Input {.var with_shiny} was: {with_shiny}"
+    )))
+  }
+
+  fcm_adj_matrix_class <- fcm_adj_matrix_input_type$fcm_class
+  if (fcm_adj_matrix_class == "conventional") {
+    conventional_fcm <- fcm_adj_matrix
+  } else if (fcm_adj_matrix_class == "ivfn") {
+    conventional_fcm <- apply(fcm, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$upper))
+  } else if (fcm_class == "tfn") {
+    conventional_fcm <- apply(fcm, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$mode,  x[[1]]$upper))
+  }
+
+  # Translate fcm into an igraph object and then convert to visNetwork
+  fcm_as_igraph_obj <- igraph::graph_from_adjacency_matrix(as.matrix(conventional_fcm), weighted = TRUE, mode = "directed")
+  fcm_as_visNetwork_obj <- visNetwork::visIgraph(fcm_as_igraph_obj)
+
+  # Add aesthetics for nodes
+  fcm_as_visNetwork_obj$x$nodes$color <- "lightgrey"
+  fcm_as_visNetwork_obj$x$nodes$physics <- FALSE
+
+  # Add aesthetics for edges
+  edges_df <- fcm_as_visNetwork_obj$x$edges
+  edges_df$label <- paste(edges_df$weight)
+  edges_df$color <- ifelse(edges_df$weight >= 0, "black", "red")
+  edges_df$width <- abs(edges_df$weight*2)
+  fcm_as_visNetwork_obj$x$edges <- edges_df
+
+  # Load plot
+  fcm_as_network_obj <- fcm_as_visNetwork_obj %>%
+    visNetwork::visEdges(smooth = list(enabled = TRUE, type = "dynamic", roundness = 0.6)) %>%
+    visNetwork::visLayout(randomSeed = sample(1:1e10, 1))
+
+  node_x_coords <- fcm_as_network_obj$x$nodes$x
+  node_y_coords <- fcm_as_network_obj$x$nodes$y
+
+  spaced_node_x_coords <- node_x_coords*1.5
+  spaced_node_y_coords <- node_y_coords*2
+
+  fcm_as_network_obj$x$nodes$x <- spaced_node_x_coords
+  fcm_as_network_obj$x$nodes$y <- spaced_node_y_coords
+
+  if (!with_shiny) {
+    fcm_as_network_obj
+  } else {
+    server <- source(system.file(file.path('shiny', 'view_fcm', 'server.R'), package = 'fcmconfr'))$value
+    ui <- source(system.file(file.path('shiny', 'view_fcm', 'ui.R'), package = 'fcmconfr'))$value
+
+    shiny_env <- new.env()
+    assign("fcm_as_network_obj", fcm_as_network_obj, shiny_env)
+    environment(ui) <- shiny_env
+    environment(server) <- shiny_env
+    app <- shiny::shinyApp(
+      ui = ui,
+      server = server
+    )
+    options(shiny.launch.browser = .rs.invokeShinyPaneViewer)
+    shiny::runApp(app)
+  }
+}
