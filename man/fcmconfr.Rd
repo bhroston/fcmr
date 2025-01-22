@@ -20,7 +20,7 @@ fcmconfr(
   inference_estimation_CI = 0.95,
   inference_estimation_bootstrap_reps = 5000,
   show_progress = TRUE,
-  parallel = TRUE,
+  parallel = FALSE,
   n_cores = integer(),
   perform_aggregate_analysis = TRUE,
   perform_monte_carlo_analysis = TRUE,

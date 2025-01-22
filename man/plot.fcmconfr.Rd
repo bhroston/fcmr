@@ -75,7 +75,6 @@ plot(tfn_example_fcmconfr,
      coord_flip = FALSE,
      # Plot Aesthetic Parameters
      mc_avg_and_CIs_color = "blue",
-     mc_avg_and_CIs_alpha = 0,
      mc_inferences_color = "blue",
      mc_inferences_alpha = 1,
      mc_inferences_shape = 3,
