@@ -176,6 +176,6 @@
         # Additional Options
         perform_aggregate_analysis = FALSE,
         perform_monte_carlo_analysis = FALSE,
-        perform_monte_carlo_inference_bootstrap_analysis = FALSE,
+        perform_monte_carlo_inference_bootstrap_analysis = FALSE
       )
 
