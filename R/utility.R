@@ -523,44 +523,64 @@ get_inferences <- function(fcmconfr_obj = list(),
   fcm_class <- fcmconfr_obj$fcm_class
 
   if (fcm_class == "conventional") {
-    individual_inferences <- fcmconfr_obj$inferences$individual_fcms$inferences
+    individual_inferences_df <- fcmconfr_obj$inferences$individual_fcms$inferences
+    individual_inferences_matrix_names <- individual_inferences_df$input
+    individual_inferences <- data.frame(t(individual_inferences_df[, 2:ncol(individual_inferences_df)]))
+    colnames(individual_inferences) <- individual_inferences_matrix_names
   } else if (fcm_class == "ivfn") {
-    individual_inferences <- do.call(rbind, fcmconfr_obj$inferences$individual_fcms$inferences)
-    individual_inferences <- apply(
-      individual_inferences, 2,
-      function(inferences) {
-        inference_observations <- lapply(
-          inferences,
-          function(value) {
-            data.frame(
-              crisp = (value$lower + value$upper)/2,
-              lower = value$lower,
-              upper = value$upper
-            )
-          })
-        inference_observations <- data.frame(do.call(rbind, inference_observations))
-        rownames(inference_observations) <- NULL
-        data.frame(cbind(input = paste0("adj_matrix_", 1:nrow(inference_observations)), inference_observations))
-      })
+    individual_inferences_df <- data.frame(t(do.call(rbind, fcmconfr_obj$inferences$individual_fcms$inferences)))
+    lower_individual_inferences <- data.frame(apply(individual_inferences_df, c(1, 2), function(element) element[[1]]$lower))
+    upper_individual_inferences <- data.frame(apply(individual_inferences_df, c(1, 2), function(element) element[[1]]$upper))
+    individual_inferences <- list(
+      ivfn_df = individual_inferences_df,
+      lower_values = lower_individual_inferences,
+      upper_values = upper_individual_inferences
+    )
+    # individual_inferences <- apply(
+    #   individual_inferences, 2,
+    #   function(inferences) {
+    #     inference_observations <- lapply(
+    #       inferences,
+    #       function(value) {
+    #         data.frame(
+    #           crisp = (value$lower + value$upper)/2,
+    #           lower = value$lower,
+    #           upper = value$upper
+    #         )
+    #       })
+    #     inference_observations <- data.frame(do.call(rbind, inference_observations))
+    #     rownames(inference_observations) <- NULL
+    #     data.frame(cbind(input = paste0("adj_matrix_", 1:nrow(inference_observations)), inference_observations))
+    #   })
   } else if (fcm_class == "tfn") {
-    individual_inferences <- do.call(rbind, fcmconfr_obj$inferences$individual_fcms$inferences)
-    individual_inferences <- apply(
-      individual_inferences, 2,
-      function(inferences) {
-        inference_observations <- lapply(
-          inferences,
-          function(value) {
-            data.frame(
-              crisp = (value$lower + value$mode + value$upper)/3,
-              lower = value$lower,
-              mode = value$mode,
-              upper = value$upper
-            )
-          })
-        inference_observations <- data.frame(do.call(rbind, inference_observations))
-        rownames(inference_observations) <- NULL
-        data.frame(cbind(input = paste0("adj_matrix_", 1:nrow(inference_observations)), inference_observations))
-      })
+    individual_inferences_df <- data.frame(t(do.call(rbind, fcmconfr_obj$inferences$individual_fcms$inferences)))
+    lower_individual_inferences <- data.frame(apply(individual_inferences_df, c(1, 2), function(element) element[[1]]$lower))
+    mode_individual_inferences <- data.frame(apply(individual_inferences_df, c(1, 2), function(element) element[[1]]$mode))
+    upper_individual_inferences <- data.frame(apply(individual_inferences_df, c(1, 2), function(element) element[[1]]$upper))
+    individual_inferences <- list(
+      tfn_df = individual_inferences_df,
+      lower_values = lower_individual_inferences,
+      mode_values = mode_individual_inferences,
+      upper_values = upper_individual_inferences
+    )
+    # individual_inferences <- do.call(rbind, fcmconfr_obj$inferences$individual_fcms$inferences)
+    # individual_inferences <- apply(
+    #   individual_inferences, 2,
+    #   function(inferences) {
+    #     inference_observations <- lapply(
+    #       inferences,
+    #       function(value) {
+    #         data.frame(
+    #           crisp = (value$lower + value$mode + value$upper)/3,
+    #           lower = value$lower,
+    #           mode = value$mode,
+    #           upper = value$upper
+    #         )
+    #       })
+    #     inference_observations <- data.frame(do.call(rbind, inference_observations))
+    #     rownames(inference_observations) <- NULL
+    #     data.frame(cbind(input = paste0("adj_matrix_", 1:nrow(inference_observations)), inference_observations))
+    #   })
   }
 
   inferences_list <- list(
@@ -568,15 +588,42 @@ get_inferences <- function(fcmconfr_obj = list(),
   )
 
   if (fcmconfr_obj$params$additional_opts$perform_aggregate_analysis) {
-    aggregate_inferences <- fcmconfr_obj$inferences$aggregate_fcm$inferences
-    aggregate_inferences <- data.frame(cbind(input = "aggregate", aggregate_inferences))
-    inferences_list$aggregate_inferences = aggregate_inferences
+    if (fcm_class == "conventional") {
+      aggregate_inferences_transposed <- data.frame(t(fcmconfr_obj$inferences$aggregate_fcm$inferences))
+      inferences_list$aggregate_inferences = aggregate_inferences_transposed
+    } else if (fcm_class == "ivfn") {
+      aggregate_inferences_df <- data.frame(t(fcmconfr_obj$inferences$aggregate_fcm$inferences))
+      crisp_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) (element[[1]]$lower + element[[1]]$upper)/2)
+      lower_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) element[[1]]$lower)
+      upper_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) element[[1]]$upper)
+      aggregate_inferences <- data.frame(
+        crisp = crisp_aggregate_inferences,
+        lower = lower_aggregate_inferences,
+        upper = upper_aggregate_inferences
+      )
+      colnames(aggregate_inferences) <- c("crisp", "lower", "upper")
+      inferences_list$aggregate_inferences = aggregate_inferences
+    } else if (fcm_class == "tfn") {
+      aggregate_inferences_df <- data.frame(t(fcmconfr_obj$inferences$aggregate_fcm$inferences))
+      crisp_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) (element[[1]]$lower + element[[1]]$mode + element[[1]]$upper)/3)
+      lower_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) element[[1]]$lower)
+      mode_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) element[[1]]$mode)
+      upper_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) element[[1]]$upper)
+      aggregate_inferences <- data.frame(
+        crisp = crisp_aggregate_inferences,
+        lower = lower_aggregate_inferences,
+        mode = mode_aggregate_inferences,
+        upper = upper_aggregate_inferences
+      )
+      colnames(aggregate_inferences) <- c("crisp", "lower", "mode", "upper")
+      inferences_list$aggregate_inferences = aggregate_inferences
+    }
   }
 
   if (fcmconfr_obj$params$additional_opts$perform_monte_carlo_analysis) {
-    mc_inferences <- fcmconfr_obj$inferences$monte_carlo_fcms$all_inferences
-    mc_inferences <- data.frame(cbind(input = paste("mc_", 1:nrow(mc_inferences)), mc_inferences))
-    inferences_list$mc_inferences = mc_inferences
+    mc_inferences_transposed <- t(fcmconfr_obj$inferences$monte_carlo_fcms$all_inferences)
+    colnames(mc_inferences_transposed) <- paste0("mc_", 1:ncol(mc_inferences_transposed))
+    inferences_list$mc_inferences = mc_inferences_transposed
   }
 
   if (fcmconfr_obj$params$additional_opts$perform_monte_carlo_inference_bootstrap_analysis) {
