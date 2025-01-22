@@ -139,7 +139,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
                      inference_estimation_bootstrap_reps = 5000,
                      # Runtime Options
                      show_progress = TRUE,
-                     parallel = TRUE,
+                     parallel = FALSE,
                      n_cores = integer(),
                      # Additional Options
                      perform_aggregate_analysis = TRUE,
