@@ -371,11 +371,15 @@ autoplot.fcmconfr <- function(object, ...) {
   text_font_size <- additional_inputs$text_font_size
   # Plot aesthetic parameters
   mc_avg_and_CIs_color <- additional_inputs$mc_avg_and_CIs_color
+  mc_avg_and_CIs_alpha <- additional_inputs$mc_avg_and_CIs_alpha
   mc_inferences_color <- additional_inputs$mc_inferences_color
+  mc_inferences_alpha <- additional_inputs$mc_inferences_alpha
   mc_inferences_shape <- additional_inputs$mc_inferences_shape
   ind_inferences_color <- additional_inputs$ind_inferences_color
+  ind_inferences_alpha <- additional_inputs$ind_inferences_alpha
   ind_inferences_shape <- additional_inputs$ind_inferences_shape
   agg_inferences_color <- additional_inputs$agg_inferences_color
+  agg_inferences_alpha <- additional_inputs$agg_inferences_alpha
   agg_inferences_shape <- additional_inputs$agg_inferences_shape
   ind_ivfn_and_tfn_linewidth <- additional_inputs$ind_ivfn_and_tfn_linewidth
   agg_ivfn_and_tfn_linewidth <- additional_inputs$agg_ivfn_and_tfn_linewidth
@@ -416,7 +420,7 @@ autoplot.fcmconfr <- function(object, ...) {
         data = ggplot2::remove_missing(plot_data$mc_inference_CIs),
         aes(y = .data$name, xmin = .data$lower_CI, x = .data$lower_CI, xmax = .data$lower_CI, linewidth = .data$analysis_source),
         width = 0.7, color = mc_avg_and_CIs_color,
-        na.rm = FALSE, key_glyph = ggplot2::draw_key_vline
+        na.rm = TRUE, key_glyph = ggplot2::draw_key_vline
       ) +
       ggplot2::geom_crossbar(
         data = ggplot2::remove_missing(plot_data$mc_inference_CIs),
@@ -432,7 +436,7 @@ autoplot.fcmconfr <- function(object, ...) {
     ggplot_main <- ggplot_main +
       ggplot2::geom_point(
         data = ggplot2::remove_missing(plot_data$mc_inferences),
-        aes(y = .data$name, x = .data$value, color = .data$analysis_source, shape = .data$analysis_source),
+        aes(y = .data$name, x = .data$value, color = .data$analysis_source, alpha = .data$analysis_source, shape = .data$analysis_source),
         position = ggplot2::position_dodge2(width = 0.25), alpha = 0.6,
         # shape = 3,
         na.rm = FALSE
@@ -451,21 +455,21 @@ autoplot.fcmconfr <- function(object, ...) {
       ggplot2::geom_point(
         data = ggplot2::remove_missing(plot_data$input_inferences),
         position = ggplot2::position_dodge2(width = 0.1),
-        aes(y = .data$name, x = .data$value, color = .data$analysis_source, shape = .data$analysis_source),
+        aes(y = .data$name, x = .data$value, color = .data$analysis_source, alpha = .data$analysis_source, shape = .data$analysis_source),
         size = 2, na.rm = TRUE
       )
   } else if (object$fcm_class == "ivfn") {
     ggplot_main <- ggplot_main +
       ggplot2::geom_linerange(
         data = ggplot2::remove_missing(plot_data$input_inferences),
-        aes(y = .data$name, xmin = .data$lower, xmax = .data$upper, color = .data$analysis_source),
+        aes(y = .data$name, xmin = .data$lower, xmax = .data$upper, color = .data$analysis_source, alpha = .data$analysis_source),
         position = ggplot2::position_dodge2(width = 0.5), linewidth = ind_ivfn_and_tfn_linewidth
       )
   } else if (object$fcm_class == "tfn") {
     ggplot_main <- ggplot_main +
       ggplot2::geom_pointrange(
         data = ggplot2::remove_missing(plot_data$input_inferences),
-        aes(y = .data$name, xmin = .data$lower, x = .data$mode, xmax = .data$upper, color = .data$analysis_source, shape = .data$analysis_source),
+        aes(y = .data$name, xmin = .data$lower, x = .data$mode, xmax = .data$upper, color = .data$analysis_source, alpha = .data$analysis_source, shape = .data$analysis_source),
         position = ggplot2::position_dodge2(width = 0.5), fatten = 0.6, linewidth = ind_ivfn_and_tfn_linewidth
       )
   }
@@ -477,21 +481,21 @@ autoplot.fcmconfr <- function(object, ...) {
       ggplot_main <- ggplot_main +
         ggplot2::geom_point(
           data = ggplot2::remove_missing(plot_data$aggregate_inferences),
-          aes(y = .data$name, x = .data$value, color = .data$analysis_source, shape = .data$analysis_source),
+          aes(y = .data$name, x = .data$value, color = .data$analysis_source, alpha = .data$analysis_source, shape = .data$analysis_source),
           size = 2,
         )
     } else if (object$fcm_class == "ivfn") {
       ggplot_main <- ggplot_main +
         ggplot2::geom_linerange(
           data = ggplot2::remove_missing(plot_data$aggregate_inferences),
-          aes(y = .data$name, xmin = .data$lower, xmax = .data$upper, color = .data$analysis_source),
+          aes(y = .data$name, xmin = .data$lower, xmax = .data$upper, alpha = .data$analysis_source, color = .data$analysis_source),
           linewidth = agg_ivfn_and_tfn_linewidth
         )
     } else if (object$fcm_class == "tfn") {
       ggplot_main <- ggplot_main +
         ggplot2::geom_pointrange(
           data = ggplot2::remove_missing(plot_data$aggregate_inferences),
-          aes(y = .data$name, xmin = .data$lower, x = .data$mode, xmax = .data$upper, color = .data$analysis_source, shape = .data$analysis_source),
+          aes(y = .data$name, xmin = .data$lower, x = .data$mode, xmax = .data$upper, color = .data$analysis_source, alpha = .data$analysis_source, shape = .data$analysis_source),
           fatten = 2, linewidth = agg_ivfn_and_tfn_linewidth
         )
     }
@@ -500,12 +504,14 @@ autoplot.fcmconfr <- function(object, ...) {
 
   # Setup Legend Scales ----
   scale_color_manual_values_str <- paste0("c('Ind FCM Inferences' = ind_inferences_color")
+  scale_alpha_manual_values_str <- paste0("c('Ind FCM Inferences' = ind_inferences_alpha")
   scale_shape_manual_values_str <- paste0("c('Ind FCM Inferences' = ind_inferences_shape")
   scale_shape_manual_override_str <- paste0("c(ind_inferences_shape")
   scale_linewidth_maual_values_str <- paste0("c('Ind FCM Inferences' = ind_ivfn_and_tfn_linewidth")
   scale_breaks_values_str <- paste0("c('Ind FCM Inferences'")
   if (!inputs_only) {
     scale_color_manual_values_str <- paste0(scale_color_manual_values_str, ", 'Agg FCM Inferences' = agg_inferences_color")
+    scale_alpha_manual_values_str <- paste0(scale_alpha_manual_values_str, ", 'Agg FCM Inferences' = agg_inferences_alpha")
     scale_shape_manual_values_str <- paste0(scale_shape_manual_values_str, ", 'Agg FCM Inferences' = agg_inferences_shape")
     scale_shape_manual_override_str <- paste0(scale_shape_manual_override_str, ", agg_inferences_shape")
     scale_linewidth_maual_values_str <- paste0(scale_linewidth_maual_values_str, ", 'Agg FCM Inferences' = ind_ivfn_and_tfn_linewidth")
@@ -513,12 +519,14 @@ autoplot.fcmconfr <- function(object, ...) {
   }
   if (inputs_agg_and_mc_no_bs | inputs_agg_and_mc_w_bs) {
     scale_color_manual_values_str <- paste0(scale_color_manual_values_str, ", 'MC FCM Inferences' = mc_inferences_color")
+    scale_alpha_manual_values_str <- paste0(scale_alpha_manual_values_str, ", 'MC FCM Inferences' = mc_inferences_alpha")
     scale_shape_manual_values_str <- paste0(scale_shape_manual_values_str, ", 'MC FCM Inferences' = mc_inferences_shape")
     scale_shape_manual_override_str <- paste0(scale_shape_manual_override_str, ", mc_inferences_shape")
     scale_linewidth_maual_values_str <- paste0(scale_linewidth_maual_values_str, ", 'MC FCM Inferences' = NA")
     scale_breaks_values_str <- paste0(scale_breaks_values_str, ", 'MC FCM Inferences'")
   }
   scale_color_manual_values_str <- paste0(scale_color_manual_values_str, ")")
+  scale_alpha_manual_values_str <- paste0(scale_alpha_manual_values_str, ")")
   scale_shape_manual_values_str <- paste0(scale_shape_manual_values_str, ")")
   scale_shape_manual_override_str <- paste0(scale_shape_manual_override_str, ")")
   scale_linewidth_maual_values_str <- paste0(scale_linewidth_maual_values_str, ")")
@@ -529,6 +537,11 @@ autoplot.fcmconfr <- function(object, ...) {
       "ggplot_main +
         ggplot2::scale_color_manual(
           values = ", scale_color_manual_values_str, ",
+          breaks = ", scale_breaks_values_str, ",
+          guide = ggplot2::guide_legend(order = 1)
+        ) +
+        ggplot2::scale_alpha_manual(
+          values = ", scale_alpha_manual_values_str, ",
           breaks = ", scale_breaks_values_str, ",
           guide = ggplot2::guide_legend(order = 1)
         ) +
@@ -550,9 +563,15 @@ autoplot.fcmconfr <- function(object, ...) {
           breaks = ", scale_breaks_values_str, ",
           guide = ggplot2::guide_legend(
             override.aes = list(
+              alpha = ", scale_alpha_manual_values_str, ",
               shape = ", scale_shape_manual_override_str, ",
               linewidth = ", scale_linewidth_maual_values_str, "
           ), order = 1)
+        ) +
+        ggplot2::scale_alpha_manual(
+          values = ", scale_alpha_manual_values_str, ",
+          breaks = ", scale_breaks_values_str, ",
+          guide = 'none'
         ) +
         ggplot2::scale_shape_manual(
           values = ", scale_shape_manual_values_str, ",
@@ -572,9 +591,16 @@ autoplot.fcmconfr <- function(object, ...) {
           breaks = ", scale_breaks_values_str, ",
           guide = ggplot2::guide_legend(
             override.aes = list(
+              alpha = ", scale_alpha_manual_values_str, ",
               shape = ", scale_shape_manual_override_str, ",
               linewidth = ", scale_linewidth_maual_values_str, "
           ), order = 1)
+        ) +
+        ggplot2::scale_alpha_manual(
+          values = ", scale_alpha_manual_values_str, ",
+          breaks = ", scale_breaks_values_str, ",
+          # guide = ggplot2::guide_legend(order = 1),
+          guide = 'none'
         ) +
         ggplot2::scale_shape_manual(
           values = ", scale_shape_manual_values_str, ",
@@ -755,6 +781,18 @@ plot.fcmconfr <- function(x, ...) {
   }
   # ----
 
+  # mc_avg_and_CIs_alpha ----
+  if ("mc_avg_and_CIs_alpha" %in% names(additional_inputs)) {
+    warning(cli::format_warning(c(
+      "!" = "Warning: {.var mc_avg_and_CIs_alpha} is not an accepted aes parameter for geom_crossbar",
+      "~~~~~ Set {.var mc_avg_and_CIs_color} = 'transparent' to make invisible",
+      "~~~~~ Ignoring input {.var mc_avg_and_CIs_alpha}"
+    )))
+    mc_avg_and_CIs_alpha <- 1
+    additional_inputs$mc_avg_and_CIs_alpha <- mc_avg_and_CIs_alpha
+  }
+  # ----
+
   # mc_inferences_color ----
   if (!"mc_inferences_color" %in% names(additional_inputs)) {
     mc_inferences_color <- "blue"
@@ -770,6 +808,25 @@ plot.fcmconfr <- function(x, ...) {
     stop(cli::format_error(c(
       "x" = "Error: {.var mc_inferences_color} must be a valid color",
       "+++++> Input {.var mc_inferences_color} was '{additional_inputs$mc_inferences_color}'"
+    )))
+  }
+  # ----
+
+  # mc_inferences_alpha ----
+  if (!"mc_inferences_alpha" %in% names(additional_inputs)) {
+    mc_inferences_alpha <- 1
+    additional_inputs$mc_inferences_alpha <- mc_inferences_alpha
+  }
+  if (is_not_numeric(additional_inputs$mc_inferences_alpha)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var mc_inferences_alpha} must be a positive numeric value between 0 and 1",
+      "+++++> Input {.var mc_inferences_alpha} was: {mc_inferences_alpha}"
+    )))
+  }
+  if (additional_inputs$mc_inferences_alpha < 0 | additional_inputs$mc_inferences_alpha > 1) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var mc_inferences_alpha} must be a positive numeric value between 0 and 1",
+      "+++++> Input {.var mc_inferences_alpha} was: {mc_inferences_alpha}"
     )))
   }
   # ----
@@ -821,6 +878,25 @@ plot.fcmconfr <- function(x, ...) {
   }
   # ----
 
+  # ind_inferences_alpha ----
+  if (!"ind_inferences_alpha" %in% names(additional_inputs)) {
+    ind_inferences_alpha <- 1
+    additional_inputs$ind_inferences_alpha <- ind_inferences_alpha
+  }
+  if (is_not_numeric(additional_inputs$ind_inferences_alpha)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var ind_inferences_alpha} must be a positive numeric value between 0 and 1",
+      "+++++> Input {.var ind_inferences_alpha} was: {ind_inferences_alpha}"
+    )))
+  }
+  if (additional_inputs$ind_inferences_alpha < 0 | additional_inputs$ind_inferences_alpha > 1) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var ind_inferences_alpha} must be a positive numeric value between 0 and 1",
+      "+++++> Input {.var ind_inferences_alpha} was: {ind_inferences_alpha}"
+    )))
+  }
+  # ----
+
   # ind_inferences_shape ----
   if (!"ind_inferences_shape" %in% names(additional_inputs)) {
     ind_inferences_shape <- 16
@@ -864,6 +940,25 @@ plot.fcmconfr <- function(x, ...) {
     stop(cli::format_error(c(
       "x" = "Error: {.var agg_inferences_color} must be a valid color",
       "+++++> Input {.var agg_inferences_color} was '{additional_inputs$agg_inferences_color}'"
+    )))
+  }
+  # ----
+
+  # agg_inferences_alpha ----
+  if (!"agg_inferences_alpha" %in% names(additional_inputs)) {
+    agg_inferences_alpha <- 1
+    additional_inputs$agg_inferences_alpha <- agg_inferences_alpha
+  }
+  if (is_not_numeric(additional_inputs$agg_inferences_alpha)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var agg_inferences_alpha} must be a positive numeric value between 0 and 1",
+      "+++++> Input {.var agg_inferences_alpha} was: {agg_inferences_alpha}"
+    )))
+  }
+  if (additional_inputs$agg_inferences_alpha < 0 | additional_inputs$agg_inferences_alpha > 1) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var agg_inferences_alpha} must be a positive numeric value between 0 and 1",
+      "+++++> Input {.var agg_inferences_alpha} was: {agg_inferences_alpha}"
     )))
   }
   # ----
@@ -940,10 +1035,10 @@ plot.fcmconfr <- function(x, ...) {
     # Plot Format Parameters
     "filter_limit", "coord_flip", "text_font_size",
     # Plot Aesthetic Parameters
-    "mc_avg_and_CIs_color",
-    "mc_inferences_color", "mc_inferences_shape",
-    "ind_inferences_color", "ind_inferences_shape",
-    "agg_inferences_color", "agg_inferences_shape",
+    "mc_avg_and_CIs_color", "mc_avg_and_CIs_alpha",
+    "mc_inferences_color", "mc_inferences_alpha", "mc_inferences_shape",
+    "ind_inferences_color", "ind_inferences_alpha", "ind_inferences_shape",
+    "agg_inferences_color", "agg_inferences_alpha", "agg_inferences_shape",
     "ind_ivfn_and_tfn_linewidth", "agg_ivfn_and_tfn_linewidth"
   )
   if (!all(names(additional_inputs) %in% acceptable_inputs)) {
@@ -1033,11 +1128,18 @@ interactive_plot_fcmconfr <- function(x, ...) {
   bslib::versions()
   shinyWidgets::animations
 
-  # Load objects into package:fcmconfr env to access them in the shiny app
-  fcmconfr_env <- rlang::search_envs()[[which(names(rlang::search_envs()) == "package:fcmconfr")]]
-  assign("iplot_fcmconfr_obj", x, envir = fcmconfr_env)
-  assign("iplot_additional_inputs", as.list(...), envir = fcmconfr_env)
+  server <- source(system.file(file.path('shiny', 'fcmconfr_plot', 'server.R'), package = 'fcmconfr'))$value
+  ui <- source(system.file(file.path('shiny', 'fcmconfr_plot', 'ui.R'), package = 'fcmconfr'))$value
 
-  shiny::runApp(appDir = system.file(file.path('shiny', 'interactive_fcmconfr_plot'), package = 'fcmconfr'))
-  rm(list = c("iplot_fcmconfr_obj", "iplot_additional_inputs"), envir = fcmconfr_env)
+  shiny_env <- new.env()
+  assign("fcmconfr_output", x, shiny_env)
+  assign("additional_inputs", as.list(...), shiny_env)
+  environment(ui) <- shiny_env
+  environment(server) <- shiny_env
+  app <- shiny::shinyApp(
+    ui = ui,
+    server = server
+  )
+
+  shiny::runApp(app)
 }
