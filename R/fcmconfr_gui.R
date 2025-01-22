@@ -107,8 +107,6 @@ print.fcmconfr_gui_input <- function(x, ...) {
   performed_mc <- x$perform_monte_carlo
   performed_bootstrap <- x$perform_inference_bootstrap
 
-  # browser()
-
   if (performed_aggregation & !performed_mc & !performed_bootstrap) {
     cat(
       "fcmconfr(", "\n",
@@ -269,7 +267,7 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "  # Additional Options", "\n",
       "  perform_aggregate_analysis = ", x$perform_aggregation, ",\n",
       "  perform_monte_carlo_analysis = ", x$perform_monte_carlo, ",\n",
-      "  perform_monte_carlo_inference_bootstrap_analysis = ", x$perform_inference_bootstrap, ",\n",
+      "  perform_monte_carlo_inference_bootstrap_analysis = ", x$perform_inference_bootstrap, "\n",
       ")", sep = ""
     )
   }
