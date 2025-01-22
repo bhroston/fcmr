@@ -17,13 +17,6 @@ server <- function(input, output) {
     }
   })
 
-  # shiny::observe({
-  #   if (!is.null(input$fcm_display_positions)) {
-  #     cat("\n\n\n\n\n")
-  #     print(coords())
-  #   }
-  # })
-
   updated_fcm_visNetwork <- shiny::reactive({
     if (!is.null(input$fcm_display_positions)) {
       updated_fcm_as_network_obj <- fcm_as_network_obj
@@ -32,10 +25,6 @@ server <- function(input, output) {
       updated_fcm_as_network_obj
     }
   })
-
-  # shiny::observe({
-  #   print(updated_fcm_visNetwork())
-  # })
 
   shiny::onStop(
     function() {

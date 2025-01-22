@@ -663,8 +663,8 @@ fcm_view <- function(fcm_adj_matrix = matrix(), with_shiny = FALSE) {
   if (!with_shiny) {
     fcm_as_network_obj
   } else {
-    server <- source(system.file(file.path('shiny', 'view_fcm', 'server.R'), package = 'fcmconfr'))$value
-    ui <- source(system.file(file.path('shiny', 'view_fcm', 'ui.R'), package = 'fcmconfr'))$value
+    server <- source(system.file(file.path('shiny', 'view_fcm', 'server.R'), package = 'fcmconfr'), local = TRUE)$value
+    ui <- source(system.file(file.path('shiny', 'view_fcm', 'ui.R'), package = 'fcmconfr'), local = TRUE)$value
 
     shiny_env <- new.env()
     assign("fcm_as_network_obj", fcm_as_network_obj, shiny_env)
