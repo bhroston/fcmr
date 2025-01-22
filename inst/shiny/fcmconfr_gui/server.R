@@ -211,7 +211,7 @@ shiny_server <- function(input, output, session) {
         concepts(),
         function(concept) {
           shiny::fluidRow(
-            shiny::column(width = 3, shiny::numericInput(paste0('initial_state_', concept), label = '', value = 1, min = -1, max = 1, step = 0.05)),
+            shiny::column(width = 3, shiny::numericInput(paste0('initial_state_', concept), label = '', value = 1, min = -1, max = 1, step = 1)),
             shiny::column(width = 9, align = "left", shiny::p(concept, style = "padding-top:25px;"))
           )
         }
@@ -276,7 +276,7 @@ shiny_server <- function(input, output, session) {
         concepts(),
         function(concept) {
           shiny::fluidRow(
-            shiny::column(width = 3, shiny::numericInput(paste0('clamping_', concept), label = '', value = 0, min = -1, max = 1, step = 0.05)),
+            shiny::column(width = 3, shiny::numericInput(paste0('clamping_', concept), label = '', value = 0, min = -1, max = 1, step = 1)),
             shiny::column(width = 9, align = "left", shiny::p(concept, style = "padding-top:25px;"))
           )
         }
