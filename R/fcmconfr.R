@@ -113,7 +113,7 @@
 #'
 #' @importFrom Rdpack reprompt
 #'
-#' @returns A list of outputs generated from the input_fcms simulations,
+#' @returns A list of outputs generated from the individual_fcms simulations,
 #'          aggregate_fcm analysis, and monte_carlo_fcms analysis. Bootstrap
 #'          estimates of inferences from monte carlo analysis are included, as
 #'          well as function inputs.
@@ -570,7 +570,7 @@ organize_fcmconfr_output <- function(...) {
     .Data = list(
       fcm_class = variables$fcm_class,
       inferences = list(
-        input_fcms = list(
+        individual_fcms = list(
           inferences = variables$individual_adj_matrices_inferences_df,
           simulations = variables$individual_adj_matrices_inferences
         )
@@ -673,7 +673,7 @@ print.fcmconfr <- function(x, ...) {
 
     cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),
         "\n$inference\n",
-        paste0(" - input_fcms: Inferences and data from the ", n_input_fcm, " input fcm adj. matrices.\n"),
+        paste0(" - individual_fcms: Inferences and data from the ", n_input_fcm, " input fcm adj. matrices.\n"),
         paste0(" - aggregate_fcm: Inferences and data from the aggregate (", x$params$aggregation_function, ") of the ",  n_input_fcm, " input fcm adj. matrices.\n"),
         paste0(" - monte_carlo_fcms: Inferences of data from the ", n_mc_sims, " fcms constructed from the ", n_input_fcm, " input fcm adj. matrices."),
         "\n$bootstrap\n",
@@ -690,7 +690,7 @@ print.fcmconfr <- function(x, ...) {
 
     cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),
         "\n$inference\n",
-        paste0(" - input_fcms: Inferences and data from the ", n_input_fcm, " input fcm adj. matrices.\n"),
+        paste0(" - individual_fcms: Inferences and data from the ", n_input_fcm, " input fcm adj. matrices.\n"),
         paste0(" - aggregate_fcm: Inferences and data from the aggregate (", x$params$aggregation_function, ") of the ",  n_input_fcm, " input fcm adj. matrices.\n"),
         paste0(" - monte_carlo_fcms: Inferences of data from the ", n_mc_sims, " fcms constructed from the ", n_input_fcm, " input fcm adj. matrices."),
         "\n$params\n",
@@ -703,7 +703,7 @@ print.fcmconfr <- function(x, ...) {
 
     cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),
         "\n$inference\n",
-        paste0(" - input_fcms: Inferences and data from the ", n_input_fcm, " input fcm adj. matrices.\n"),
+        paste0(" - individual_fcms: Inferences and data from the ", n_input_fcm, " input fcm adj. matrices.\n"),
         paste0(" - monte_carlo_fcms: Inferences of data from the ", n_mc_sims, " fcms constructed from the ", n_input_fcm, " input fcm adj. matrices."),
         "\n$bootstrap\n",
         paste0(" - CIs_about_means_and_quantiles_by_node: ", x$params$mc_confidence_intervals_opts$inference_estimation_CI, "% CI of means of inferences and quantiles by node\n"),
@@ -719,7 +719,7 @@ print.fcmconfr <- function(x, ...) {
 
     cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),
         "\n$inference\n",
-        paste0(" - input_fcms: Inferences and data from the ", n_input_fcm, " input fcm adj. matrices.\n"),
+        paste0(" - individual_fcms: Inferences and data from the ", n_input_fcm, " input fcm adj. matrices.\n"),
         paste0(" - monte_carlo_fcms: Inferences of data from the ", n_mc_sims, " fcms constructed from the ", n_input_fcm, " input fcm adj. matrices."),
         "\n$params\n",
         " - simulation_opts:",
@@ -730,7 +730,7 @@ print.fcmconfr <- function(x, ...) {
     # browser()
     cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),
         "\n$inference\n",
-        paste0(" - input_fcms: Inferences and data from the ", n_input_fcm, " input fcm adj. matrices.\n"),
+        paste0(" - individual_fcms: Inferences and data from the ", n_input_fcm, " input fcm adj. matrices.\n"),
         paste0(" - aggregate_fcm: Inferences and data from the aggregate (", x$params$aggregation_function, ") of the ",  n_input_fcm, " input fcm adj. matrices.\n"),
         "\n$params\n",
         " - simulation_opts:",
@@ -741,7 +741,7 @@ print.fcmconfr <- function(x, ...) {
     # browser()
     cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),
         "\n$inference\n",
-        paste0(" - input_fcms: Inferences and data from the ", n_input_fcm, " input fcm adj. matrices."),
+        paste0(" - individual_fcms: Inferences and data from the ", n_input_fcm, " input fcm adj. matrices."),
         "\n$params\n",
         " - simulation_opts:",
         paste0("act = ", x$params$simulation_opts$activation, "; squash = ", x$params$simulation_opts$squashing, "; lambda = ", x$params$simulation_opts$lambda),

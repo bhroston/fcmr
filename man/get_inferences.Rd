@@ -4,7 +4,10 @@
 \alias{get_inferences}
 \title{Get inferences from an fcmconfr output}
 \usage{
-get_inferences(fcmconfr_obj = list(), analysis = c("input", "aggregate", "mc"))
+get_inferences(
+  fcmconfr_obj = list(),
+  analysis = c("individual", "aggregate", "mc")
+)
 }
 \arguments{
 \item{fcmconfr_obj}{An fcmconfr output object}

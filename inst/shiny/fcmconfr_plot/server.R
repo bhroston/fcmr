@@ -44,7 +44,7 @@ shiny_iplot_server <- function(input, output, session) {
       button_labels <- c(button_labels, "Monte Carlo (MC) FCMs")
     }
     if ("bs" %in% analyses_performed()) {
-      button_labels <- c(button_labels, "CIss about Avg MC Inferences")
+      button_labels <- c(button_labels, "CIs about Avg MC Inferences")
     }
   })
 
@@ -60,21 +60,21 @@ shiny_iplot_server <- function(input, output, session) {
 
   iplot_fcmconfr_aes_colors <- shiny::reactive({
     if (!("input" %in% input$inferences_to_plot)) {
-      iplot_ind_inferences_color <- "transparent"
+      iplot_ind_inferences_alpha <- 0
     } else {
-      iplot_ind_inferences_color <- iplot_additional_inputs()$ind_inferences_color
+      iplot_ind_inferences_alpha <- iplot_additional_inputs()$ind_inferences_alpha
     }
 
     if (!("aggregate" %in% input$inferences_to_plot)) {
-      iplot_agg_inferences_color <- "transparent"
+      iplot_agg_inferences_alpha <- 0
     } else {
-      iplot_agg_inferences_color <- iplot_additional_inputs()$agg_inferences_color
+      iplot_agg_inferences_alpha <- iplot_additional_inputs()$agg_inferences_alpha
     }
 
     if (!("mc" %in% input$inferences_to_plot)) {
-      iplot_mc_inferences_color <- "transparent"
+      iplot_mc_inferences_alpha <- 0
     } else {
-      iplot_mc_inferences_color <- iplot_additional_inputs()$mc_inferences_color
+      iplot_mc_inferences_alpha <- iplot_additional_inputs()$mc_inferences_alpha
     }
 
     if (!("bs" %in% input$inferences_to_plot)) {
@@ -84,9 +84,9 @@ shiny_iplot_server <- function(input, output, session) {
     }
 
     list(
-      ind_inferences_color = iplot_ind_inferences_color,
-      agg_inferences_color = iplot_agg_inferences_color,
-      mc_inferences_color = iplot_mc_inferences_color,
+      ind_inferences_alpha = iplot_ind_inferences_alpha,
+      agg_inferences_alpha = iplot_agg_inferences_alpha,
+      mc_inferences_alpha = iplot_mc_inferences_alpha,
       mc_avg_and_CIs_color = iplot_mc_avg_and_CIs_color
     )
   })
@@ -116,15 +116,14 @@ shiny_iplot_server <- function(input, output, session) {
            text_font_size = iplot_fcmconfr_text_font_size(),
            # Plot Aesthetic Parameters
            mc_avg_and_CIs_color = iplot_fcmconfr_aes_colors()$mc_avg_and_CIs_color,
-           mc_avg_and_CIs_alpha = iplot_additional_inputs()$mc_avg_and_CIs_alpha,
-           mc_inferences_color = iplot_fcmconfr_aes_colors()$mc_inferences_color,
-           mc_inferences_alpha = iplot_additional_inputs()$mc_inferences_alpha,
+           mc_inferences_color = iplot_additional_inputs()$mc_inferences_color,
+           mc_inferences_alpha = iplot_fcmconfr_aes_colors()$mc_inferences_alpha,
            mc_inferences_shape = iplot_additional_inputs()$mc_inferences_shape,
-           ind_inferences_color = iplot_fcmconfr_aes_colors()$ind_inferences_color,
-           ind_inferences_alpha = iplot_additional_inputs()$ind_inferences_alpha,
+           ind_inferences_color = iplot_additional_inputs()$ind_inferences_color,
+           ind_inferences_alpha = iplot_fcmconfr_aes_colors()$ind_inferences_alpha,
            ind_inferences_shape = iplot_additional_inputs()$ind_inferences_shape,
-           agg_inferences_color = iplot_fcmconfr_aes_colors()$agg_inferences_color,
-           agg_inferences_alpha = iplot_additional_inputs()$agg_inferences_alpha,
+           agg_inferences_color = iplot_additional_inputs()$agg_inferences_color,
+           agg_inferences_alpha = iplot_fcmconfr_aes_colors()$agg_inferences_alpha,
            agg_inferences_shape = iplot_additional_inputs()$agg_inferences_shape,
            ind_ivfn_and_tfn_linewidth = iplot_additional_inputs()$ind_ivfn_and_tfn_linewidth,
            agg_ivfn_and_tfn_linewidth = iplot_additional_inputs()$agg_ivfn_and_tfn_linewidth

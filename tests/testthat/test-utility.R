@@ -532,9 +532,9 @@ test_that("get_inferences works", {
   expect_error(get_inferences(conventional_fcmconfr, analysis = "not correct"))
 
   test_get_inferences <- get_inferences(conventional_fcmconfr)
-  expect_equal(names(test_get_inferences), c("input_inferences", "aggregate_inferences", "mc_inferences", "mc_CIs_and_quantiles"))
-  test_get_inferences <- get_inferences(conventional_fcmconfr, analysis = c("input", "aggregate"))
-  expect_equal(names(test_get_inferences), c("input_inferences", "aggregate_inferences"))
+  expect_equal(names(test_get_inferences), c("individual_inferences", "aggregate_inferences", "mc_inferences", "mc_CIs_and_quantiles"))
+  test_get_inferences <- get_inferences(conventional_fcmconfr, analysis = c("individual", "aggregate"))
+  expect_equal(names(test_get_inferences), c("individual_inferences", "aggregate_inferences"))
 
   invisible(capture.output(
     ivfn_fcmconfr <- fcmconfr(

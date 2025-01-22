@@ -502,7 +502,7 @@ standardize_adj_matrices <- function(adj_matrices = list(matrix())) {
 #' @export
 #' @example man/examples/ex-get_inferences.R
 get_inferences <- function(fcmconfr_obj = list(),
-                           analysis = c("input", "aggregate", "mc")) {
+                           analysis = c("individual", "aggregate", "mc")) {
 
   # Check fcmconfr_obj
   if (!identical(methods::is(fcmconfr_obj), "fcmconfr")) {
@@ -513,9 +513,9 @@ get_inferences <- function(fcmconfr_obj = list(),
   }
 
   # Check analysis input
-  if (!(all(analysis %in% c("input", "aggregate", "mc")))) {
+  if (!(all(analysis %in% c("individual", "aggregate", "mc")))) {
     stop(cli::format_error(c(
-      "x" = "Error: {.var analysis} must be within the set of c('input', 'aggregate', 'mc')",
+      "x" = "Error: {.var analysis} must be within the set of c('individual', 'aggregate', 'mc')",
       "+++++> Input {.var analysis} was {analysis}"
     )))
   }
@@ -523,9 +523,9 @@ get_inferences <- function(fcmconfr_obj = list(),
   fcm_class <- fcmconfr_obj$fcm_class
 
   if (fcm_class == "conventional") {
-    individual_inferences <- fcmconfr_obj$inferences$input_fcms$inferences
+    individual_inferences <- fcmconfr_obj$inferences$individual_fcms$inferences
   } else if (fcm_class == "ivfn") {
-    individual_inferences <- do.call(rbind, fcmconfr_obj$inferences$input_fcms$inferences)
+    individual_inferences <- do.call(rbind, fcmconfr_obj$inferences$individual_fcms$inferences)
     individual_inferences <- apply(
       individual_inferences, 2,
       function(inferences) {
@@ -543,7 +543,7 @@ get_inferences <- function(fcmconfr_obj = list(),
         data.frame(cbind(input = paste0("adj_matrix_", 1:nrow(inference_observations)), inference_observations))
       })
   } else if (fcm_class == "tfn") {
-    individual_inferences <- do.call(rbind, fcmconfr_obj$inferences$input_fcms$inferences)
+    individual_inferences <- do.call(rbind, fcmconfr_obj$inferences$individual_fcms$inferences)
     individual_inferences <- apply(
       individual_inferences, 2,
       function(inferences) {
@@ -564,7 +564,7 @@ get_inferences <- function(fcmconfr_obj = list(),
   }
 
   inferences_list <- list(
-    input_inferences = individual_inferences
+    individual_inferences = individual_inferences
   )
 
   if (fcmconfr_obj$params$additional_opts$perform_aggregate_analysis) {

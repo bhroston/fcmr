@@ -437,7 +437,7 @@ autoplot.fcmconfr <- function(object, ...) {
       ggplot2::geom_point(
         data = ggplot2::remove_missing(plot_data$mc_inferences),
         aes(y = .data$name, x = .data$value, color = .data$analysis_source, alpha = .data$analysis_source, shape = .data$analysis_source),
-        position = ggplot2::position_dodge2(width = 0.25), alpha = 0.6,
+        position = ggplot2::position_dodge2(width = 0.25),
         # shape = 3,
         na.rm = FALSE
       ) +
@@ -741,7 +741,7 @@ plot.fcmconfr <- function(x, ...) {
 
   # text_font_size ----
   if (!("text_font_size" %in% names(additional_inputs))) {
-    text_font_size = NA
+    text_font_size <- NA
     additional_inputs$text_font_size <- text_font_size
   }
   if (!is.na(additional_inputs$text_font_size)) {
@@ -1128,8 +1128,8 @@ interactive_plot_fcmconfr <- function(x, ...) {
   bslib::versions()
   shinyWidgets::animations
 
-  server <- source(system.file(file.path('shiny', 'fcmconfr_plot', 'server.R'), package = 'fcmconfr'))$value
-  ui <- source(system.file(file.path('shiny', 'fcmconfr_plot', 'ui.R'), package = 'fcmconfr'))$value
+  server <- source(system.file(file.path('shiny', 'fcmconfr_plot', 'server.R'), package = 'fcmconfr'), local = TRUE)$value
+  ui <- source(system.file(file.path('shiny', 'fcmconfr_plot', 'ui.R'), package = 'fcmconfr'), local = TRUE)$value
 
   shiny_env <- new.env()
   assign("fcmconfr_output", x, shiny_env)

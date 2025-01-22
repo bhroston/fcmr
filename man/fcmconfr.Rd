@@ -96,7 +96,7 @@ them when aggregating adj. matrices and sampling for monte carlo FCMs}
 about the size of the output of fcmconfr (simulations are necessary and will run regardless)}
 }
 \value{
-A list of outputs generated from the input_fcms simulations,
+A list of outputs generated from the individual_fcms simulations,
          aggregate_fcm analysis, and monte_carlo_fcms analysis. Bootstrap
          estimates of inferences from monte carlo analysis are included, as
          well as function inputs.
