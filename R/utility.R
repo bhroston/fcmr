@@ -626,9 +626,9 @@ fcm_view <- function(fcm_adj_matrix = matrix(), with_shiny = FALSE) {
   if (fcm_adj_matrix_class == "conventional") {
     conventional_fcm <- fcm_adj_matrix
   } else if (fcm_adj_matrix_class == "ivfn") {
-    conventional_fcm <- apply(fcm, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$upper))
-  } else if (fcm_class == "tfn") {
-    conventional_fcm <- apply(fcm, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$mode,  x[[1]]$upper))
+    conventional_fcm <- apply(fcm_adj_matrix, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$upper))
+  } else if (fcm_adj_matrix_class == "tfn") {
+    conventional_fcm <- apply(fcm_adj_matrix, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$mode,  x[[1]]$upper))
   }
 
   # Translate fcm into an igraph object and then convert to visNetwork
@@ -674,7 +674,7 @@ fcm_view <- function(fcm_adj_matrix = matrix(), with_shiny = FALSE) {
       ui = ui,
       server = server
     )
-    options(shiny.launch.browser = .rs.invokeShinyPaneViewer)
+
     shiny::runApp(app)
   }
 }
