@@ -25,14 +25,15 @@ variable.
 }
 \examples{
 
-# Conventional FCM
 adj_matrix <- sample_fcms$simple_fcms$conventional_fcms[[1]]
-fcm_display <- fcm_view(fcm_adj_matrix = adj_matrix, seed = 200)
+fcm_view(fcm_adj_matrix = adj_matrix)
 
-old_x_coords <- fcm_display$x$nodes$x
-old_y_coords <- fcm_display$x$nodes$y
+adj_matrix <- sample_fcms$simple_fcms$ivfn_fcms[[1]]
+fcm_view(fcm_adj_matrix = adj_matrix)
 
-fcm_display
+adj_matrix <- sample_fcms$simple_fcms$tfn_fcms[[1]]
+fcm_view(fcm_adj_matrix = adj_matrix)
+
 }
 \seealso{
 Other utility: 

@@ -41,10 +41,13 @@ plot(tfn_example_fcmconfr,
      # Plot Aesthetic Parameters
      mc_avg_and_CIs_color = "blue",
      mc_inferences_color = "blue",
+     mc_inferences_alpha = 1,
      mc_inferences_shape = 3,
      ind_inferences_color = "black",
+     ind_inferences_alpha = 1,
      ind_inferences_shape = 16,
      agg_inferences_color = "red",
+     agg_inferences_alpha = 1,
      agg_inferences_shape = 17,
      ind_ivfn_and_tfn_linewidth = 0.1,
      agg_ivfn_and_tfn_linewidth = 0.6
