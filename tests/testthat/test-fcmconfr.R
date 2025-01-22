@@ -101,7 +101,7 @@ test_that("streamlined fcmconfr works", {
 
 
   # ggplot() +
-  #   geom_jitter(data = test$inferences$input_fcms$inferences, aes(x = node, y = value)) +
+  #   geom_jitter(data = test$inferences$individual_fcms$inferences, aes(x = node, y = value)) +
   #   geom_crossbar(data = bootstrapped_means, aes(x = node, y = lower_0.025, ymin = lower_0.025, ymax = upper_0.975), fill = "red", color = "red", size = 0.1)
 
 
@@ -298,7 +298,7 @@ test_that("pulse only fcmconfr works", {
       )
     ))
   )
-  test_inferences <- test_fcmconfr_conventional_sigmoid$inferences$input_fcms$inferences[, -1]
+  test_inferences <- test_fcmconfr_conventional_sigmoid$inferences$individual_fcms$inferences[, -1]
 
   expected_inferences <- c(
     0.659, 0.659, 0.659, 0.659, 0.659, 0.659, 0.659, 0.659, 0.788, 0.788, 0.659,
@@ -339,7 +339,7 @@ test_that("pulse only fcmconfr works", {
       )
     ))
   )
-  test_inferences <- test_fcmconfr_conventional_tanh$inferences$input_fcms$inferences[, -1]
+  test_inferences <- test_fcmconfr_conventional_tanh$inferences$individual_fcms$inferences[, -1]
 
   # expected_inferences <- c(0, 0, 0.131, 0, 0.804, 0, 0.882, 0.612, 0)
   expected_inferences <- rep(0, unique(dim(sample_fcms$large_fcms$conventional_fcms[[1]])))

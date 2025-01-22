@@ -5,7 +5,7 @@
     Output
       fcmconfr: 4 input adj. matrices (conventional) 
       $inference
-        - input_fcms: Inferences and data from the 4 input fcm adj. matrices.
+        - individual_fcms: Inferences and data from the 4 input fcm adj. matrices.
         - aggregate_fcm: Inferences and data from the aggregate (mean) of the 4 input fcm adj. matrices.
         - monte_carlo_fcms: Inferences of data from the 100 fcms constructed from the 4 input fcm adj. matrices. 
       $bootstrap
@@ -22,7 +22,7 @@
     Output
       fcmconfr: 2 input adj. matrices (ivfn) 
       $inference
-        - input_fcms: Inferences and data from the 2 input fcm adj. matrices.
+        - individual_fcms: Inferences and data from the 2 input fcm adj. matrices.
         - aggregate_fcm: Inferences and data from the aggregate (mean) of the 2 input fcm adj. matrices.
         - monte_carlo_fcms: Inferences of data from the 100 fcms constructed from the 2 input fcm adj. matrices. 
       $bootstrap
@@ -39,7 +39,7 @@
     Output
       fcmconfr: 1 input adj. matrices (tfn) 
       $inference
-        - input_fcms: Inferences and data from the 1 input fcm adj. matrices. 
+        - individual_fcms: Inferences and data from the 1 input fcm adj. matrices. 
       $params
         - simulation_opts: act = kosko; squash = sigmoid; lambda = 1 
         - additional_opts: Perform Aggregate Analysis = FALSE; Perform MC Analysis = FALSE
@@ -51,7 +51,7 @@
     Output
       fcmconfr: 4 input adj. matrices (conventional) 
       $inference
-        - input_fcms: Inferences and data from the 4 input fcm adj. matrices.
+        - individual_fcms: Inferences and data from the 4 input fcm adj. matrices.
         - aggregate_fcm: Inferences and data from the aggregate (mean) of the 4 input fcm adj. matrices.
         - monte_carlo_fcms: Inferences of data from the 100 fcms constructed from the 4 input fcm adj. matrices. 
       $bootstrap
@@ -68,7 +68,7 @@
     Output
       fcmconfr: 4 input adj. matrices (conventional) 
       $inference
-        - input_fcms: Inferences and data from the 4 input fcm adj. matrices.
+        - individual_fcms: Inferences and data from the 4 input fcm adj. matrices.
         - aggregate_fcm: Inferences and data from the aggregate (mean) of the 4 input fcm adj. matrices.
         - monte_carlo_fcms: Inferences of data from the 100 fcms constructed from the 4 input fcm adj. matrices. 
       $params
@@ -82,7 +82,7 @@
     Output
       fcmconfr: 4 input adj. matrices (conventional) 
       $inference
-        - input_fcms: Inferences and data from the 4 input fcm adj. matrices.
+        - individual_fcms: Inferences and data from the 4 input fcm adj. matrices.
         - monte_carlo_fcms: Inferences of data from the 100 fcms constructed from the 4 input fcm adj. matrices. 
       $bootstrap
         - CIs_about_means_and_quantiles_by_node: 0.95% CI of means of inferences and quantiles by node
@@ -98,7 +98,7 @@
     Output
       fcmconfr: 4 input adj. matrices (conventional) 
       $inference
-        - input_fcms: Inferences and data from the 4 input fcm adj. matrices.
+        - individual_fcms: Inferences and data from the 4 input fcm adj. matrices.
         - monte_carlo_fcms: Inferences of data from the 100 fcms constructed from the 4 input fcm adj. matrices. 
       $params
         - simulation_opts: act = kosko; squash = sigmoid; lambda = 1 
@@ -111,7 +111,7 @@
     Output
       fcmconfr: 4 input adj. matrices (conventional) 
       $inference
-        - input_fcms: Inferences and data from the 4 input fcm adj. matrices.
+        - individual_fcms: Inferences and data from the 4 input fcm adj. matrices.
         - aggregate_fcm: Inferences and data from the aggregate (mean) of the 4 input fcm adj. matrices.
        
       $params
@@ -125,7 +125,7 @@
     Output
       fcmconfr: 4 input adj. matrices (conventional) 
       $inference
-        - input_fcms: Inferences and data from the 4 input fcm adj. matrices. 
+        - individual_fcms: Inferences and data from the 4 input fcm adj. matrices. 
       $params
         - simulation_opts: act = kosko; squash = sigmoid; lambda = 1 
         - additional_opts: Perform Aggregate Analysis = FALSE; Perform MC Analysis = FALSE

@@ -53,9 +53,9 @@ ex_conventional_fcmconfr <- fcmconfr(
   include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
   include_monte_carlo_FCM_simulations_in_output = TRUE
 )
-get_inferences(ex_conventional_fcmconfr, analysis = c("input"))
-get_inferences(ex_conventional_fcmconfr, analysis = c("input", "aggregate"))
-get_inferences(ex_conventional_fcmconfr, analysis = c("input", "aggregate", "mc"))
+get_inferences(ex_conventional_fcmconfr, analysis = c("individual"))
+get_inferences(ex_conventional_fcmconfr, analysis = c("individual", "aggregate"))
+get_inferences(ex_conventional_fcmconfr, analysis = c("individual", "aggregate", "mc"))
 get_inferences(ex_conventional_fcmconfr)
 
 
@@ -89,9 +89,9 @@ ex_ivfn_fcmconfr <- fcmconfr(
   include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
   include_monte_carlo_FCM_simulations_in_output = TRUE
 )
-get_inferences(ex_ivfn_fcmconfr, analysis = c("input"))
-get_inferences(ex_ivfn_fcmconfr, analysis = c("input", "aggregate"))
-get_inferences(ex_ivfn_fcmconfr, analysis = c("input", "aggregate", "mc"))
+get_inferences(ex_ivfn_fcmconfr, analysis = c("individual"))
+get_inferences(ex_ivfn_fcmconfr, analysis = c("individual", "aggregate"))
+get_inferences(ex_ivfn_fcmconfr, analysis = c("individual", "aggregate", "mc"))
 get_inferences(ex_ivfn_fcmconfr)
 
 
@@ -125,9 +125,9 @@ ex_tfn_fcmconfr <- fcmconfr(
   include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
   include_monte_carlo_FCM_simulations_in_output = TRUE
 )
-get_inferences(ex_tfn_fcmconfr, analysis = c("input"))
-get_inferences(ex_tfn_fcmconfr, analysis = c("input", "aggregate"))
-get_inferences(ex_tfn_fcmconfr, analysis = c("input", "aggregate", "mc"))
+get_inferences(ex_tfn_fcmconfr, analysis = c("individual"))
+get_inferences(ex_tfn_fcmconfr, analysis = c("individual", "aggregate"))
+get_inferences(ex_tfn_fcmconfr, analysis = c("individual", "aggregate", "mc"))
 get_inferences(ex_tfn_fcmconfr)
 }
 \seealso{
