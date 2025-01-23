@@ -6,8 +6,8 @@
 \usage{
 aggregate_fcms(
   adj_matrices = list(matrix()),
-  aggregation_function = c("mean", "median"),
-  include_zeroes = FALSE
+  agg_function = c("mean", "median"),
+  include_zeroes_in_sampling = FALSE
 )
 }
 \arguments{
@@ -15,10 +15,10 @@ aggregate_fcms(
 conventional FCM, IVFN FCM, and TFN FCM, but all adj. matrices must be of
 the same type between the three options.}
 
-\item{aggregation_function}{Calculate aggregate edge weights as either the
+\item{agg_function}{Calculate aggregate edge weights as either the
 "mean" or "median" of the input edge weights across inputs}
 
-\item{include_zeroes}{TRUE/FALSE Whether to include zeroes in the mean/median
+\item{include_zeroes_in_sampling}{TRUE/FALSE Whether to include zeroes in the mean/median
 calculations. (i.e. if edges not included in a map should count as a zero-weighted
 edge or not at all)}
 }

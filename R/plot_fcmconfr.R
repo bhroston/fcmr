@@ -182,7 +182,7 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
     input_inferences$upper_inference_values <- input_inferences$upper_inference_values[, c(1, nodes_to_plot$index + 1)] # Add + 1 to match column indexes in individual_fcms$inferences dataframe
   }
 
-  if (fcmconfr_object$params$additional_opts$perform_aggregate_analysis) {
+  if (fcmconfr_object$params$additional_opts$run_agg_calcs) {
     aggregate_inferences <- as.data.frame(fcmconfr_object$inferences$aggregate_fcm$inferences)
     aggregate_inferences <- data.frame(
       aggregate_inferences[, nodes_to_plot$index]
@@ -193,7 +193,7 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
       blank = NA
     )
   }
-  if (fcmconfr_object$params$additional_opts$perform_monte_carlo_analysis) {
+  if (fcmconfr_object$params$additional_opts$run_mc_calcs) {
     mc_inference_values <- as.data.frame(fcmconfr_object$inferences$monte_carlo_fcms$all_inferences)
     mc_inference_values <- data.frame(
       mc_inference_values[, nodes_to_plot$index]
@@ -214,7 +214,7 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
       averages = data.frame(blank = NA)
     )
   }
-  if (fcmconfr_object$params$additional_opts$perform_monte_carlo_inference_bootstrap_analysis) {
+  if (fcmconfr_object$params$additional_opts$run_ci_calcs) {
     mc_inference_CIs <- as.data.frame(fcmconfr_object$inferences$monte_carlo_fcms$bootstrap$CIs_and_quantiles_by_node)
     mc_inference_CIs <- data.frame(
       mc_inference_CIs[nodes_to_plot$index, ]
