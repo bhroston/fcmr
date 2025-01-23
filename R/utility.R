@@ -587,7 +587,7 @@ get_inferences <- function(fcmconfr_obj = list(),
     individual_inferences = individual_inferences
   )
 
-  if (fcmconfr_obj$params$additional_opts$perform_aggregate_analysis) {
+  if (fcmconfr_obj$params$additional_opts$run_agg_calcs) {
     if (fcm_class == "conventional") {
       aggregate_inferences_transposed <- data.frame(t(fcmconfr_obj$inferences$aggregate_fcm$inferences))
       inferences_list$aggregate_inferences = aggregate_inferences_transposed
@@ -620,13 +620,13 @@ get_inferences <- function(fcmconfr_obj = list(),
     }
   }
 
-  if (fcmconfr_obj$params$additional_opts$perform_monte_carlo_analysis) {
+  if (fcmconfr_obj$params$additional_opts$run_mc_calcs) {
     mc_inferences_transposed <- t(fcmconfr_obj$inferences$monte_carlo_fcms$all_inferences)
     colnames(mc_inferences_transposed) <- paste0("mc_", 1:ncol(mc_inferences_transposed))
     inferences_list$mc_inferences = mc_inferences_transposed
   }
 
-  if (fcmconfr_obj$params$additional_opts$perform_monte_carlo_inference_bootstrap_analysis) {
+  if (fcmconfr_obj$params$additional_opts$run_ci_calcs) {
     mc_CIs_and_quantiles <- fcmconfr_obj$inferences$monte_carlo_fcms$bootstrap$CIs_and_quantiles_by_node
     inferences_list$mc_CIs_and_quantiles = mc_CIs_and_quantiles
   }

@@ -718,51 +718,51 @@ test_that("check_build_monte_carlo_fcms_inputs works", {
 
 
 test_that("check_monte_carlo_bootstrap_inputs works", {
-  # Check inference_estimation_function ----
+  # Check ci_centering_function ----
   expect_warning(
-    check_monte_carlo_bootstrap_inputs(inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 100, n_cores = 2)
+    check_monte_carlo_bootstrap_inputs(confidence_interval = 0.95, num_ci_bootstraps = 100, n_cores = 2)
   )
   expect_error(
-    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "wrong", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 100)
-  )
-  # ----
-
-  # Chcek inference_estimation_CI ----
-  expect_error(
-    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = "a", inference_estimation_bootstrap_reps = 100)
-  )
-  expect_error(
-    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = 100, inference_estimation_bootstrap_reps = 100)
+    check_monte_carlo_bootstrap_inputs(ci_centering_function = "wrong", confidence_interval = 0.95, num_ci_bootstraps = 100)
   )
   # ----
 
-  # Chcek inference_estimation_CI ----
+  # Chcek confidence_interval ----
   expect_error(
-    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = "a")
+    check_monte_carlo_bootstrap_inputs(ci_centering_function = "mean", confidence_interval = "a", num_ci_bootstraps = 100)
   )
   expect_error(
-    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 100.1)
+    check_monte_carlo_bootstrap_inputs(ci_centering_function = "mean", confidence_interval = 100, num_ci_bootstraps = 100)
+  )
+  # ----
+
+  # Chcek confidence_interval ----
+  expect_error(
+    check_monte_carlo_bootstrap_inputs(ci_centering_function = "mean", confidence_interval = 0.95, num_ci_bootstraps = "a")
   )
   expect_error(
-    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = -1)
+    check_monte_carlo_bootstrap_inputs(ci_centering_function = "mean", confidence_interval = 0.95, num_ci_bootstraps = 100.1)
+  )
+  expect_error(
+    check_monte_carlo_bootstrap_inputs(ci_centering_function = "mean", confidence_interval = 0.95, num_ci_bootstraps = -1)
   )
   # ----
 
   # Check n_cores
   expect_warning(
-    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 100)
+    check_monte_carlo_bootstrap_inputs(ci_centering_function = "mean", confidence_interval = 0.95, num_ci_bootstraps = 100)
   )
   expect_error(
-    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 100, n_cores = 200)
+    check_monte_carlo_bootstrap_inputs(ci_centering_function = "mean", confidence_interval = 0.95, num_ci_bootstraps = 100, n_cores = 200)
   )
   expect_error(
-    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 100, n_cores = "a")
+    check_monte_carlo_bootstrap_inputs(ci_centering_function = "mean", confidence_interval = 0.95, num_ci_bootstraps = 100, n_cores = "a")
   )
   expect_error(
-    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 100, n_cores = -2)
+    check_monte_carlo_bootstrap_inputs(ci_centering_function = "mean", confidence_interval = 0.95, num_ci_bootstraps = 100, n_cores = -2)
   )
   expect_no_error(
-    check_monte_carlo_bootstrap_inputs(inference_estimation_function = "mean", inference_estimation_CI = 0.95, inference_estimation_bootstrap_reps = 10000, n_cores = 2)
+    check_monte_carlo_bootstrap_inputs(ci_centering_function = "mean", confidence_interval = 0.95, num_ci_bootstraps = 10000, n_cores = 2)
   )
 })
 

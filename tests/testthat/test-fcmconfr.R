@@ -35,8 +35,8 @@ test_that("streamlined fcmconfr works", {
       test <- fcmconfr(
         adj_matrices = test_fcms,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 100,
+        agg_function = 'mean',
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = c(1, 1, 1, 1),
         clamping_vector = c(0, 1, 0, 0),
@@ -47,19 +47,19 @@ test_that("streamlined fcmconfr works", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
@@ -71,8 +71,8 @@ test_that("streamlined fcmconfr works", {
       test <- fcmconfr(
         adj_matrices = test_fcms,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 100,
+        agg_function = 'mean',
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = c(1, 1, 1, 1),
         clamping_vector = c(0, 1, 0, 0),
@@ -83,18 +83,18 @@ test_that("streamlined fcmconfr works", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = FALSE,
         parallel = FALSE,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
@@ -130,8 +130,8 @@ test_that("streamlined fcmconfr works", {
       test <- fcmconfr(
         adj_matrices = test_fcms,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 100,
+        agg_function = 'mean',
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = c(1, 1),
         clamping_vector = c(0, 1),
@@ -142,18 +142,18 @@ test_that("streamlined fcmconfr works", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "mean",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "mean",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = FALSE,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
@@ -198,8 +198,8 @@ test_that("streamlined fcmconfr works", {
       test <- fcmconfr(
         adj_matrices = adj_matrix_w_tfns_1,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 100,
+        agg_function = 'mean',
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = c(1, 1),
         clamping_vector = c(0, 1),
@@ -210,17 +210,17 @@ test_that("streamlined fcmconfr works", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = FALSE,
         # Additional Options
-        perform_aggregate_analysis = FALSE,
-        perform_monte_carlo_analysis = FALSE,
-        perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = FALSE
+        run_agg_calcs = FALSE,
+        run_mc_calcs = FALSE,
+        run_ci_calcs = FALSE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = FALSE
       )
     ))
   )
@@ -232,8 +232,8 @@ test_that("streamlined fcmconfr works", {
 
   # adj_matrices = test_fcms
   # # Aggregation and Monte Carlo Sampling
-  # aggregation_function = 'mean'
-  # monte_carlo_sampling_draws = 1000
+  # agg_function = 'mean'
+  # num_mc_fcms = 1000
   # # Simulation
   # initial_state_vector = c(1, 1, 1, 1)
   # clamping_vector = c(0, 0, 0, 0)
@@ -244,15 +244,15 @@ test_that("streamlined fcmconfr works", {
   # min_error = 1e-05
   # fuzzy_set_samples = 1000
   # # Inference Estimation (bootstrap)
-  # inference_estimation_CI = 0.95
-  # inference_estimation_bootstrap_reps = 1000
+  # confidence_interval = 0.95
+  # num_ci_bootstraps = 1000
   # # Runtime Options
   # show_progress = TRUE
   # parallel = FALSE
   # n_cores = 10
   # # Additional Options
-  # include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE
-  # include_monte_carlo_FCM_simulations_in_output = TRUE
+  # include_zeroes_in_sampling = FALSE
+  # mc_sims_in_output = TRUE
   # estimate_inference_CI_w_bootstrap = TRUE
 
   # ggplot() +
@@ -282,19 +282,19 @@ test_that("pulse only fcmconfr works", {
         max_iter = 1000,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = mean,
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = mean,
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = FALSE,
-        perform_monte_carlo_analysis = FALSE,
-        perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = FALSE,
+        run_mc_calcs = FALSE,
+        run_ci_calcs = FALSE,
+        include_zeroes_in_sampling = TRUE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
@@ -323,19 +323,19 @@ test_that("pulse only fcmconfr works", {
         max_iter = 100,
         min_error = 1e-03,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = mean,
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = mean,
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = FALSE,
-        perform_monte_carlo_analysis = FALSE,
-        perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = FALSE,
+        run_mc_calcs = FALSE,
+        run_ci_calcs = FALSE,
+        include_zeroes_in_sampling = TRUE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
@@ -365,8 +365,8 @@ test_that("fcmconfr works with igraph inputs", {
       test <- fcmconfr(
         adj_matrices = fcms_from_igraph_objects,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 100,
+        agg_function = 'mean',
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = test_initial_state_vector,
         clamping_vector = test_clamping_vector,
@@ -377,19 +377,19 @@ test_that("fcmconfr works with igraph inputs", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
@@ -425,8 +425,8 @@ test_that("check_fcmconfr_inputs work", {
       test <- fcmconfr(
         adj_matrices = test_fcms,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 100,
+        agg_function = 'mean',
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = c(1, 1, 1, 1),
         clamping_vector = c(0, 1, 0, 0),
@@ -437,25 +437,25 @@ test_that("check_fcmconfr_inputs work", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
 
 
-  # Expect error if perform_aggregate_analysis is not logical()
+  # Expect error if run_agg_calcs is not logical()
   expect_error(
   invisible(capture.output(
     tfn_clamping_inputs_only <- fcmconfr(
@@ -474,16 +474,16 @@ test_that("check_fcmconfr_inputs work", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = 2,
-      perform_monte_carlo_analysis = FALSE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = FALSE
+      run_agg_calcs = 2,
+      run_mc_calcs = FALSE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = FALSE
     )
   ))
   )
 
-  # Expect error if perform_monte_carlo_analysis is not logical()
+  # Expect error if run_mc_calcs is not logical()
   expect_error(
     invisible(capture.output(
       tfn_clamping_inputs_only <- fcmconfr(
@@ -502,16 +502,16 @@ test_that("check_fcmconfr_inputs work", {
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = 2,
-        perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = FALSE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = 2,
+        run_ci_calcs = FALSE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = FALSE
       )
     ))
   )
 
-  # Expect error if perform_monte_carlo_inference_bootstrap_analysis is not logical()
+  # Expect error if run_ci_calcs is not logical()
   expect_error(
   invisible(capture.output(
     tfn_clamping_inputs_only <- fcmconfr(
@@ -530,16 +530,16 @@ test_that("check_fcmconfr_inputs work", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = FALSE,
-      perform_monte_carlo_inference_bootstrap_analysis = 2,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = FALSE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = FALSE,
+      run_ci_calcs = 2,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = FALSE
     )
   ))
   )
 
-  # Expect error if include_zero_weighted_edges_in_aggregation_and_mc_sampling is not logical()
+  # Expect error if include_zeroes_in_sampling is not logical()
   expect_error(
   invisible(capture.output(
     tfn_clamping_inputs_only <- fcmconfr(
@@ -558,16 +558,16 @@ test_that("check_fcmconfr_inputs work", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = FALSE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = 2,
-      include_monte_carlo_FCM_simulations_in_output = FALSE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = FALSE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = 2,
+      mc_sims_in_output = FALSE
     )
   ))
   )
 
-  # Expect error if include_monte_carlo_FCM_simulations_in_output is not logical()
+  # Expect error if mc_sims_in_output is not logical()
   expect_error(
   invisible(capture.output(
     tfn_clamping_inputs_only <- fcmconfr(
@@ -586,11 +586,11 @@ test_that("check_fcmconfr_inputs work", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = FALSE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
-      include_monte_carlo_FCM_simulations_in_output = 2
+      run_agg_calcs = TRUE,
+      run_mc_calcs = FALSE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = TRUE,
+      mc_sims_in_output = 2
     )
   ))
   )
@@ -623,8 +623,8 @@ test_that("check_fcmconfr_inputs work", {
       test <- fcmconfr(
         adj_matrices = test_fcms,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 100,
+        agg_function = 'mean',
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = c(),
         clamping_vector = c(0, 1, 0, 0),
@@ -635,19 +635,19 @@ test_that("check_fcmconfr_inputs work", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
@@ -658,8 +658,8 @@ test_that("check_fcmconfr_inputs work", {
       test <- fcmconfr(
         adj_matrices = test_fcms,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 100,
+        agg_function = 'mean',
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = c(1, 1, 1, 1),
         clamping_vector = c(),
@@ -670,19 +670,19 @@ test_that("check_fcmconfr_inputs work", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
@@ -693,8 +693,8 @@ test_that("check_fcmconfr_inputs work", {
       test <- fcmconfr(
         adj_matrices = test_fcms,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 100,
+        agg_function = 'mean',
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = c(1, 1, 1, 1),
         clamping_vector = c(0, 1, 0, 0),
@@ -704,19 +704,19 @@ test_that("check_fcmconfr_inputs work", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
@@ -727,8 +727,8 @@ test_that("check_fcmconfr_inputs work", {
       test <- fcmconfr(
         adj_matrices = test_fcms,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 100,
+        agg_function = 'mean',
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = c(1, 1, 1, 1),
         clamping_vector = c(0, 1, 0, 0),
@@ -738,19 +738,19 @@ test_that("check_fcmconfr_inputs work", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
@@ -761,8 +761,8 @@ test_that("check_fcmconfr_inputs work", {
       test <- fcmconfr(
         adj_matrices = test_fcms,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 100,
+        agg_function = 'mean',
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = c(1, 0, 1, 1),
         clamping_vector = c(0, 1, 0, 0),
@@ -773,19 +773,19 @@ test_that("check_fcmconfr_inputs work", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
@@ -817,8 +817,8 @@ test_that("check_fcmconfr_inputs work", {
       test <- fcmconfr(
         adj_matrices = test_fcms,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 100,
+        agg_function = 'mean',
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = c(1, 1, 1, 1),
         clamping_vector = c(0, 1, 0, 0),
@@ -829,19 +829,19 @@ test_that("check_fcmconfr_inputs work", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
@@ -859,8 +859,8 @@ test_that("check_fcmconfr_inputs work", {
       test <- fcmconfr(
         adj_matrices = test_adj_matrix,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 100,
+        agg_function = 'mean',
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = c(1, 1, 1, 1),
         clamping_vector = c(0, 1, 0, 0),
@@ -871,18 +871,18 @@ test_that("check_fcmconfr_inputs work", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = FALSE,
-        perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = FALSE,
+        run_ci_calcs = FALSE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
@@ -903,8 +903,8 @@ test_that("check_fcmconfr_inputs work", {
       test <- fcmconfr(
         adj_matrices = adj_matrix_w_ivfns,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 100,
+        agg_function = 'mean',
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = c(1, 1),
         clamping_vector = c(0, 1),
@@ -915,19 +915,19 @@ test_that("check_fcmconfr_inputs work", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
@@ -938,8 +938,8 @@ test_that("check_fcmconfr_inputs work", {
       test <- fcmconfr(
         adj_matrices = sample_fcms$simple_fcms$conventional_fcms,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'wrong name',
-        monte_carlo_sampling_draws = 100,
+        agg_function = 'wrong name',
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = c(1, 1, 1, 1, 1, 1, 1),
         clamping_vector = c(1, 0, 0, 0, 0, 0, 0),
@@ -950,19 +950,19 @@ test_that("check_fcmconfr_inputs work", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
@@ -988,8 +988,8 @@ test_that("check_fcmconfr_inputs work", {
       test <- fcmconfr(
         adj_matrices = test_fcms,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 100,
+        agg_function = 'mean',
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = c(1, 1, 1, 1),
         clamping_vector = c(0, 1, 0, 0),
@@ -1000,19 +1000,19 @@ test_that("check_fcmconfr_inputs work", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = FALSE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = FALSE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
@@ -1023,7 +1023,7 @@ test_that("check_fcmconfr_inputs work", {
       test <- fcmconfr(
         adj_matrices = test_fcms,
         # Aggregation and Monte Carlo Sampling
-        monte_carlo_sampling_draws = 100,
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = c(1, 1, 1, 1),
         clamping_vector = c(0, 1, 0, 0),
@@ -1034,32 +1034,32 @@ test_that("check_fcmconfr_inputs work", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
 
 
-  # Expect warning if no inference_estimation_function defined
+  # Expect warning if no ci_centering_function defined
   expect_warning(
     invisible(capture.output(
       test <- fcmconfr(
         adj_matrices = test_fcms,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = "mean",
-        monte_carlo_sampling_draws = 100,
+        agg_function = "mean",
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = c(1, 1, 1, 1),
         clamping_vector = c(0, 1, 0, 0),
@@ -1070,30 +1070,30 @@ test_that("check_fcmconfr_inputs work", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
 
-  # Expect error is monte_carlo_sampling_draws is not numeric
+  # Expect error is num_mc_fcms is not numeric
   expect_error(
     invisible(capture.output(
       test <- fcmconfr(
         adj_matrices = sample_fcms$simple_fcms$conventional_fcms,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 'a',
+        agg_function = 'mean',
+        num_mc_fcms = 'a',
         # Simulation
         initial_state_vector = c(1, 1, 1, 1, 1, 1, 1),
         clamping_vector = c(1, 0, 0, 0, 0, 0, 0),
@@ -1104,31 +1104,31 @@ test_that("check_fcmconfr_inputs work", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
 
-  # Expect errorr if monte_carlo_sampling_draws is not an integer
+  # Expect errorr if num_mc_fcms is not an integer
   expect_error(
     invisible(capture.output(
       test <- fcmconfr(
         adj_matrices = sample_fcms$simple_fcms$conventional_fcms,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 100.5,
+        agg_function = 'mean',
+        num_mc_fcms = 100.5,
         # Simulation
         initial_state_vector = c(1, 1, 1, 1, 1, 1, 1),
         clamping_vector = c(1, 0, 0, 0, 0, 0, 0),
@@ -1139,31 +1139,31 @@ test_that("check_fcmconfr_inputs work", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
 
-  # Expect error if monte_carlo_sampling_draws <= 0
+  # Expect error if num_mc_fcms <= 0
   expect_error(
     invisible(capture.output(
       test <- fcmconfr(
         adj_matrices = sample_fcms$simple_fcms$conventional_fcms,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = -1,
+        agg_function = 'mean',
+        num_mc_fcms = -1,
         # Simulation
         initial_state_vector = c(1, 1, 1, 1, 1, 1, 1),
         clamping_vector = c(1, 0, 0, 0, 0, 0, 0),
@@ -1174,19 +1174,19 @@ test_that("check_fcmconfr_inputs work", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
@@ -1197,8 +1197,8 @@ test_that("check_fcmconfr_inputs work", {
       test <- fcmconfr(
         adj_matrices = sample_fcms$simple_fcms$conventional_fcms,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 100,
+        agg_function = 'mean',
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = c(1, 1, 1, 1, 1, 1, 1),
         clamping_vector = c(1, 0, 0, 0, 0, 0, 0),
@@ -1209,19 +1209,19 @@ test_that("check_fcmconfr_inputs work", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 'z',
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
@@ -1232,8 +1232,8 @@ test_that("check_fcmconfr_inputs work", {
       test <- fcmconfr(
         adj_matrices = sample_fcms$simple_fcms$conventional_fcms,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 100,
+        agg_function = 'mean',
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = c(1, 1, 1, 1, 1, 1, 1),
         clamping_vector = c(1, 0, 0, 0, 0, 0, 0),
@@ -1244,19 +1244,19 @@ test_that("check_fcmconfr_inputs work", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 2.5,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
@@ -1267,8 +1267,8 @@ test_that("check_fcmconfr_inputs work", {
       test <- fcmconfr(
         adj_matrices = sample_fcms$simple_fcms$conventional_fcms,
         # Aggregation and Monte Carlo Sampling
-        aggregation_function = 'mean',
-        monte_carlo_sampling_draws = 100,
+        agg_function = 'mean',
+        num_mc_fcms = 100,
         # Simulation
         initial_state_vector = c(1, 1, 1, 1, 1, 1, 1),
         clamping_vector = c(1, 0, 0, 0, 0, 0, 0),
@@ -1279,19 +1279,19 @@ test_that("check_fcmconfr_inputs work", {
         max_iter = 100,
         min_error = 1e-05,
         # Inference Estimation (bootstrap)
-        inference_estimation_function = "median",
-        inference_estimation_CI = 0.95,
-        inference_estimation_bootstrap_reps = 1000,
+        ci_centering_function = "median",
+        confidence_interval = 0.95,
+        num_ci_bootstraps = 1000,
         # Runtime Options
         show_progress = TRUE,
         parallel = TRUE,
         n_cores = 0,
         # Additional Options
-        perform_aggregate_analysis = TRUE,
-        perform_monte_carlo_analysis = TRUE,
-        perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-        include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-        include_monte_carlo_FCM_simulations_in_output = TRUE
+        run_agg_calcs = TRUE,
+        run_mc_calcs = TRUE,
+        run_ci_calcs = TRUE,
+        include_zeroes_in_sampling = FALSE,
+        mc_sims_in_output = TRUE
       )
     ))
   )
@@ -1331,8 +1331,8 @@ test_that("print.fcmconfr works", {
     test <- fcmconfr(
       adj_matrices = test_fcms,
       # Aggregation and Monte Carlo Sampling
-      aggregation_function = 'mean',
-      monte_carlo_sampling_draws = 100,
+      agg_function = 'mean',
+      num_mc_fcms = 100,
       # Simulation
       initial_state_vector = c(1, 1, 1, 1),
       clamping_vector = c(0, 1, 0, 0),
@@ -1343,19 +1343,19 @@ test_that("print.fcmconfr works", {
       max_iter = 100,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)
-      inference_estimation_function = "median",
-      inference_estimation_CI = 0.95,
-      inference_estimation_bootstrap_reps = 1000,
+      ci_centering_function = "median",
+      confidence_interval = 0.95,
+      num_ci_bootstraps = 1000,
       # Runtime Options
       show_progress = TRUE,
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = TRUE,
-      perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = TRUE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = TRUE,
+      run_ci_calcs = TRUE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = TRUE
     )
   ))
   expect_snapshot(print(test))
@@ -1365,8 +1365,8 @@ test_that("print.fcmconfr works", {
     test <- fcmconfr(
       adj_matrices = test_fcms,
       # Aggregation and Monte Carlo Sampling
-      aggregation_function = 'mean',
-      monte_carlo_sampling_draws = 100,
+      agg_function = 'mean',
+      num_mc_fcms = 100,
       # Simulation
       initial_state_vector = c(1, 1, 1, 1),
       clamping_vector = c(0, 1, 0, 0),
@@ -1377,19 +1377,19 @@ test_that("print.fcmconfr works", {
       max_iter = 100,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)
-      inference_estimation_function = "median",
-      inference_estimation_CI = 0.95,
-      inference_estimation_bootstrap_reps = 1000,
+      ci_centering_function = "median",
+      confidence_interval = 0.95,
+      num_ci_bootstraps = 1000,
       # Runtime Options
       show_progress = TRUE,
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = TRUE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = TRUE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = TRUE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = TRUE
     )
   ))
   expect_snapshot(print(test))
@@ -1399,8 +1399,8 @@ test_that("print.fcmconfr works", {
     test <- fcmconfr(
       adj_matrices = test_fcms,
       # Aggregation and Monte Carlo Sampling
-      aggregation_function = 'mean',
-      monte_carlo_sampling_draws = 100,
+      agg_function = 'mean',
+      num_mc_fcms = 100,
       # Simulation
       initial_state_vector = c(1, 1, 1, 1),
       clamping_vector = c(0, 1, 0, 0),
@@ -1411,19 +1411,19 @@ test_that("print.fcmconfr works", {
       max_iter = 100,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)
-      inference_estimation_function = "median",
-      inference_estimation_CI = 0.95,
-      inference_estimation_bootstrap_reps = 1000,
+      ci_centering_function = "median",
+      confidence_interval = 0.95,
+      num_ci_bootstraps = 1000,
       # Runtime Options
       show_progress = TRUE,
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = FALSE,
-      perform_monte_carlo_analysis = TRUE,
-      perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = TRUE
+      run_agg_calcs = FALSE,
+      run_mc_calcs = TRUE,
+      run_ci_calcs = TRUE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = TRUE
     )
   ))
   expect_snapshot(test)
@@ -1433,8 +1433,8 @@ test_that("print.fcmconfr works", {
     test <- fcmconfr(
       adj_matrices = test_fcms,
       # Aggregation and Monte Carlo Sampling
-      aggregation_function = 'mean',
-      monte_carlo_sampling_draws = 100,
+      agg_function = 'mean',
+      num_mc_fcms = 100,
       # Simulation
       initial_state_vector = c(1, 1, 1, 1),
       clamping_vector = c(0, 1, 0, 0),
@@ -1445,19 +1445,19 @@ test_that("print.fcmconfr works", {
       max_iter = 100,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)
-      inference_estimation_function = "median",
-      inference_estimation_CI = 0.95,
-      inference_estimation_bootstrap_reps = 1000,
+      ci_centering_function = "median",
+      confidence_interval = 0.95,
+      num_ci_bootstraps = 1000,
       # Runtime Options
       show_progress = TRUE,
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = FALSE,
-      perform_monte_carlo_analysis = TRUE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = TRUE
+      run_agg_calcs = FALSE,
+      run_mc_calcs = TRUE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = TRUE
     )
   ))
   expect_snapshot(test)
@@ -1467,8 +1467,8 @@ test_that("print.fcmconfr works", {
     test <- fcmconfr(
       adj_matrices = test_fcms,
       # Aggregation and Monte Carlo Sampling
-      aggregation_function = 'mean',
-      monte_carlo_sampling_draws = 100,
+      agg_function = 'mean',
+      num_mc_fcms = 100,
       # Simulation
       initial_state_vector = c(1, 1, 1, 1),
       clamping_vector = c(0, 1, 0, 0),
@@ -1479,19 +1479,19 @@ test_that("print.fcmconfr works", {
       max_iter = 100,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)
-      inference_estimation_function = "median",
-      inference_estimation_CI = 0.95,
-      inference_estimation_bootstrap_reps = 1000,
+      ci_centering_function = "median",
+      confidence_interval = 0.95,
+      num_ci_bootstraps = 1000,
       # Runtime Options
       show_progress = TRUE,
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = FALSE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = TRUE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = FALSE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = TRUE
     )
   ))
   expect_snapshot(test)
@@ -1501,8 +1501,8 @@ test_that("print.fcmconfr works", {
     test <- fcmconfr(
       adj_matrices = test_fcms,
       # Aggregation and Monte Carlo Sampling
-      aggregation_function = 'mean',
-      monte_carlo_sampling_draws = 100,
+      agg_function = 'mean',
+      num_mc_fcms = 100,
       # Simulation
       initial_state_vector = c(1, 1, 1, 1),
       clamping_vector = c(0, 1, 0, 0),
@@ -1513,19 +1513,19 @@ test_that("print.fcmconfr works", {
       max_iter = 100,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)
-      inference_estimation_function = "median",
-      inference_estimation_CI = 0.95,
-      inference_estimation_bootstrap_reps = 1000,
+      ci_centering_function = "median",
+      confidence_interval = 0.95,
+      num_ci_bootstraps = 1000,
       # Runtime Options
       show_progress = TRUE,
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = FALSE,
-      perform_monte_carlo_analysis = FALSE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = TRUE
+      run_agg_calcs = FALSE,
+      run_mc_calcs = FALSE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = TRUE
     )
   ))
   expect_snapshot(test)

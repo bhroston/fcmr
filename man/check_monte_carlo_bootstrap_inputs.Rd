@@ -5,22 +5,22 @@
 \title{Check inputs for monte carlo bootstrap analysis}
 \usage{
 check_monte_carlo_bootstrap_inputs(
-  inference_estimation_function = c("mean", "median"),
-  inference_estimation_CI = 0.95,
-  inference_estimation_bootstrap_reps = 1000,
+  ci_centering_function = c("mean", "median"),
+  confidence_interval = 0.95,
+  num_ci_bootstraps = 1000,
   parallel = TRUE,
   n_cores = integer(),
   show_progress = TRUE
 )
 }
 \arguments{
-\item{inference_estimation_function}{Estimate confidence intervals about the "mean" or "median" of
+\item{ci_centering_function}{Estimate confidence intervals about the "mean" or "median" of
 inferences from the monte carlo simulations}
 
-\item{inference_estimation_CI}{What are of the distribution should be bounded by the
+\item{confidence_interval}{What are of the distribution should be bounded by the
 confidence intervals? (e.g. 0.95)}
 
-\item{inference_estimation_bootstrap_reps}{Repetitions for bootstrap process, if chosen}
+\item{num_ci_bootstraps}{Repetitions for bootstrap process, if chosen}
 
 \item{parallel}{TRUE/FALSE Whether to perform the function using parallel processing}
 
