@@ -30,6 +30,7 @@
 <url><loc>/reference/convert_element_to_ivfn_or_tfn_if_numeric.html</loc></url>
 <url><loc>/reference/convert_fuzzy_set_elements_in_matrix_to_distributions.html</loc></url>
 <url><loc>/reference/defuzz_ivfn_or_tfn.html</loc></url>
+<url><loc>/reference/fcm_view.html</loc></url>
 <url><loc>/reference/fcmconfr.html</loc></url>
 <url><loc>/reference/fcmconfr_default_theme.html</loc></url>
 <url><loc>/reference/fcmconfr_gui.html</loc></url>
@@ -53,6 +54,7 @@
 <url><loc>/reference/make_adj_matrix_w_ivfns.html</loc></url>
 <url><loc>/reference/make_adj_matrix_w_tfns.html</loc></url>
 <url><loc>/reference/organize_fcmconfr_output.html</loc></url>
+<url><loc>/reference/pipe.html</loc></url>
 <url><loc>/reference/plot.fcmconfr.html</loc></url>
 <url><loc>/reference/plot.rtriangular_dist.html</loc></url>
 <url><loc>/reference/print.aggregate.html</loc></url>

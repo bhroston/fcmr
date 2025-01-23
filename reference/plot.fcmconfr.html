@@ -86,8 +86,8 @@
 <span class="r-in"><span>  adj_matrices <span class="op">=</span> <span class="va">sample_fcms</span><span class="op">$</span><span class="va">simple_fcms</span><span class="op">$</span><span class="va">tfn_fcms</span>,</span></span>
 <span class="r-in"><span>  <span class="co"># adj_matrices = group_tfn_fcms,</span></span></span>
 <span class="r-in"><span>  <span class="co"># Aggregation and Monte Carlo Sampling</span></span></span>
-<span class="r-in"><span>  aggregation_function <span class="op">=</span> <span class="st">'mean'</span>,</span></span>
-<span class="r-in"><span>  monte_carlo_sampling_draws <span class="op">=</span> <span class="fl">100</span>,</span></span>
+<span class="r-in"><span>  agg_function <span class="op">=</span> <span class="st">'mean'</span>,</span></span>
+<span class="r-in"><span>  num_mc_fcms <span class="op">=</span> <span class="fl">100</span>,</span></span>
 <span class="r-in"><span>  <span class="co"># Simulation</span></span></span>
 <span class="r-in"><span>  initial_state_vector <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  clamping_vector <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span></span>
@@ -98,19 +98,19 @@
 <span class="r-in"><span>  max_iter <span class="op">=</span> <span class="fl">1000</span>,</span></span>
 <span class="r-in"><span>  min_error <span class="op">=</span> <span class="fl">1e-05</span>,</span></span>
 <span class="r-in"><span>  <span class="co"># Inference Estimation (bootstrap)</span></span></span>
-<span class="r-in"><span>  inference_estimation_function <span class="op">=</span> <span class="va">mean</span>,</span></span>
-<span class="r-in"><span>  inference_estimation_CI <span class="op">=</span> <span class="fl">0.95</span>,</span></span>
-<span class="r-in"><span>  inference_estimation_bootstrap_reps <span class="op">=</span> <span class="fl">1000</span>,</span></span>
+<span class="r-in"><span>  ci_centering_function <span class="op">=</span> <span class="va">mean</span>,</span></span>
+<span class="r-in"><span>  confidence_interval <span class="op">=</span> <span class="fl">0.95</span>,</span></span>
+<span class="r-in"><span>  num_ci_bootstraps <span class="op">=</span> <span class="fl">1000</span>,</span></span>
 <span class="r-in"><span>  <span class="co"># Runtime Options</span></span></span>
 <span class="r-in"><span>  show_progress <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>  parallel <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>  n_cores <span class="op">=</span> <span class="fl">2</span>,</span></span>
 <span class="r-in"><span>  <span class="co"># Additional Options</span></span></span>
-<span class="r-in"><span>  perform_aggregate_analysis <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>  perform_monte_carlo_analysis <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>  perform_monte_carlo_inference_bootstrap_analysis <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>  include_zero_weighted_edges_in_aggregation_and_mc_sampling <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>  include_monte_carlo_FCM_simulations_in_output <span class="op">=</span> <span class="cn">TRUE</span></span></span>
+<span class="r-in"><span>  run_agg_calcs <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  run_mc_calcs <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  run_ci_calcs <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  include_zeroes_in_sampling <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>  mc_sims_in_output <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] Simulating Input FCMs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] Initializing cluster</span>
@@ -135,10 +135,13 @@
 <span class="r-in"><span>     <span class="co"># Plot Aesthetic Parameters</span></span></span>
 <span class="r-in"><span>     mc_avg_and_CIs_color <span class="op">=</span> <span class="st">"blue"</span>,</span></span>
 <span class="r-in"><span>     mc_inferences_color <span class="op">=</span> <span class="st">"blue"</span>,</span></span>
+<span class="r-in"><span>     mc_inferences_alpha <span class="op">=</span> <span class="fl">1</span>,</span></span>
 <span class="r-in"><span>     mc_inferences_shape <span class="op">=</span> <span class="fl">3</span>,</span></span>
 <span class="r-in"><span>     ind_inferences_color <span class="op">=</span> <span class="st">"black"</span>,</span></span>
+<span class="r-in"><span>     ind_inferences_alpha <span class="op">=</span> <span class="fl">1</span>,</span></span>
 <span class="r-in"><span>     ind_inferences_shape <span class="op">=</span> <span class="fl">16</span>,</span></span>
 <span class="r-in"><span>     agg_inferences_color <span class="op">=</span> <span class="st">"red"</span>,</span></span>
+<span class="r-in"><span>     agg_inferences_alpha <span class="op">=</span> <span class="fl">1</span>,</span></span>
 <span class="r-in"><span>     agg_inferences_shape <span class="op">=</span> <span class="fl">17</span>,</span></span>
 <span class="r-in"><span>     ind_ivfn_and_tfn_linewidth <span class="op">=</span> <span class="fl">0.1</span>,</span></span>
 <span class="r-in"><span>     agg_ivfn_and_tfn_linewidth <span class="op">=</span> <span class="fl">0.6</span></span></span>
