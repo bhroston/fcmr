@@ -1,178 +1,120 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# fcmconfr <a href='https://github.com/bhroston/fcmconfr.git/'><img src="man/figures/logo.png" align="right" height="138"/></a>
+# fcmconfr
+
+\# fcmconfr \<a
+href=’[https://github.com/bhroston/fcmconfr.git/’](https://github.com/bhroston/fcmconfr.git/')\<img
+src=“man/figures/logo.png” align=“right” height=“138”/\>\</a\>
 
 <!-- badges: start -->
 
 ![Project Status: WIP – Initial development is in progress, but there
 has not yet been a stable, usable release suitable for the
-public.](https://www.repostatus.org/badges/latest/wip.svg)
-[![codecov](https://codecov.io/gh/bhroston/fcmconfr/graph/badge.svg?token=D83LF4TC8D)](https://codecov.io/gh/bhroston/fcmconfr)[![pkgcheck](https://github.com/bhroston/fcmconfr/actions/workflows/pkgcheck.yaml/badge.svg?branch=main)](https://github.com/bhroston/fcmconfr.git/actions?query=workflow%3Apkgcheck)
-[![R-CMD-check](https://github.com/bhroston/fcmconfr/actions/workflows/check-standard.yaml/badge.svg?branch=main)](https://github.com/bhroston/fcmconfr/actions/workflows/R-CMD-check.yaml)
+public.](%5Bhttps://www.repostatus.org/badges/latest/wip.svg)\](<https://www.repostatus.org/badges/latest/wip.svg>))
+[![codecov](%5Bhttps://codecov.io/gh/bhroston/fcmconfr/graph/badge.svg?token=D83LF4TC8D)\](https://codecov.io/gh/bhroston/fcmconfr)\[![pkgcheck](https://github.com/bhroston/fcmconfr/actions/workflows/pkgcheck.yaml/badge.svg?branch=main)\](https://github.com/bhroston/fcmconfr.git/actions?query=workflow%3Apkgcheck)](https://codecov.io/gh/bhroston/fcmconfr/graph/badge.svg?token=D83LF4TC8D)\](<https://codecov.io/gh/bhroston/fcmconfr>)[![pkgcheck](https://github.com/bhroston/fcmconfr/actions/workflows/pkgcheck.yaml/badge.svg?branch=main)](https://github.com/bhroston/fcmconfr.git/actions?query=workflow%3Apkgcheck))
+[![R-CMD-check](%5Bhttps://github.com/bhroston/fcmconfr/actions/workflows/check-standard.yaml/badge.svg?branch=main)\](https://github.com/bhroston/fcmconfr/actions/workflows/R-CMD-check.yaml)](https://github.com/bhroston/fcmconfr/actions/workflows/check-standard.yaml/badge.svg?branch=main)\](<https://github.com/bhroston/fcmconfr/actions/workflows/R-CMD-check.yaml>))
 [![License: GPL
-v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+v3](%5Bhttps://img.shields.io/badge/License-GPLv3-blue.svg)\](https://www.gnu.org/licenses/gpl-3.0)](https://img.shields.io/badge/License-GPLv3-blue.svg)\](<https://www.gnu.org/licenses/gpl-3.0>))
 
 <!-- badges: end -->
 
-## Overview
+The goal of fcmconfr is to is to provide a suite of functions that
+streamline the analysis of Fuzzy Cognitive Maps (FCMs). Fuzzy Cognitive
+Maps (FCMs), as introduced in Kosko (1986), are network graphs whose
+nodes and edges represent causal connections in a system. A key
+characteristic of FCMs are their capacity to represent causal
+connections through the language of fuzzy logic, where the strength of
+causality between nodes may be represented along a spectrum of values as
+opposed to a simple, binary depiction of the existence of connection
+between nodes of ordinary Cognitive Map.
 
-fcmconfr is a tool to evaluate sets of Fuzzy Cognitive Maps (FCMs) to
-generate inferences that leverage uncertainty in individual FCMs and
-across the collective.
+FCMs serve as an accessible medium for stakeholders and researchers
+alike to explore perspectives in systems thinking. However, despite
+their accessibility as tools for data collection, FCM analysis is
+mathematically intensive and requires a combination of academic and
+programming expertise to both navigate the FCM literature and implement
+the array of algorithms proposed in the theory.
 
-`fcmconfr()` is the package’s primary function which takes a list of FCM
-adjacency matrices (or an individual adjacency matrix) and performs the
-following analyses:
-
-- Simulate Input FCMs
-
-- Generate an Aggregate FCM and Simulate the result
-
-- Generate Bulk Monte-Carlo FCMs and Simulate them
-
-`fcmconfr_gui()` provides a graphical user interface (GUI) to help users
-identify the appropriate inputs for their preferred analyses and
-generally improve the overall user-experience in defining the many
-inputs required by the primary `fcmconfr()` function.
-
-**fcmconfr aims to consolidate existing software and theory into a
-centralized package:** The landscape of software tools to analyse FCMs
-is diverse, with approaches and outputs varying across them. This is
-reflective of the decentralized nature of FCM theory as a whole which
-features an array of analysis methods, each having their strengths and
-weaknesses, without one in particular being consistently adopted
-throughout the literature.
-
-**fcmconfr offers novel tools to analyze FCMs with edge weights that
-incorporate uncertainty:** One limitation of the conventional FCM
-approach is that it restricts edge weights to discrete values. Many
-extensions of the conventional approach have been introduced in the
-literature that allow edge weights to be represented as intervals,
-distributions, and a numerous other abstractions. fcmconfr offers novel
-tools that streamline access to two such extensions: one represents edge
-weights as Interval-Value Fuzzy Numbers (IVFNs, named here as IVFN-FCMs)
-and the other represents edge weights as Triangular Fuzzy Numbers (TFNs,
-named here as TFN-FCMs).
+fcmconfr lets users analyze FCMs without the previously described
+barriers-to-entry. Rather than theoretical and programming expertise,
+users with moderate experience with the R programming language can use
+fcmconfr to go straight from data collection and creating FCMs to
+analyzing results.
 
 ## Installation
 
-You can install the development version of `fcmconfr()` from GitHub
-with:
+You can install the development version of fcmconfr from
+[GitHub](https://github.com/) with:
 
 ``` r
+# install.packages("pak")
+pak::pak("bhroston/fcmconfr")
+
+# OR
+
 # install.packages("remotes")
 remotes::install_github("bhroston/fcmconfr")
 ```
 
-## Using fcmconfr (Example)
+## Example
 
-``` r
-library(fcmconfr)
+### Loading Data
 
-# This example uses the salinization_ses_fcms dataset included within the package
-# 
+FCMs, represented as adjacency matrices, are the fundamental inputs for
+fcmconfr. Whether stored in .xlsx or .csv files, users will need to load
+adjacency matrices into R to use fcmconfr. This is an example of loading
+an adjacency matrix or set of adjacency matrices from an excel file.
+Follow a similar process for loading from .csv files. Note that multiple
+FCMs are loaded as a list of multiple FCMs but stored in an individual
+object.
 
-# Use fcmconfr_gui() to select inputs or manually identify input parameters
-# fcmconfr_gui()
+### Using fcmconfr
 
-# Use fcmconfr() to perform the analysis
-fcmconfr(
-  adj_matrices = salinization_ses_fcms,
-  # Aggregation and Monte Carlo Sampling
-  aggregation_function = 'mean',
-  monte_carlo_sampling_draws = 1000,
-  # Simulation
-  initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
-  clamping_vector = c(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-  activation = 'modified-kosko',
-  squashing = 'sigmoid',
-  lambda = 1,
-  max_iter = 100,
-  min_error = 1e-05,
-  # Inference Estimation (bootstrap)
-  inference_estimation_function = mean,
-  inference_estimation_CI = 0.95,
-  inference_estimation_bootstrap_reps = 1000,
-  inference_estimation_bootstrap_draws_per_rep = 1000,
-  # Runtime Options
-  show_progress = TRUE,
-  parallel = FALSE,
-  n_cores = 1,
-  # Additional Options
-  perform_aggregate_analysis = TRUE,
-  perform_monte_carlo_analysis = TRUE,
-  perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-  include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-  include_monte_carlo_FCM_simulations_in_output = FALSE
-)
-```
+The fcmconfr() function itself takes many inputs, so it is recommended
+for users to call fcmconfr_gui() to help write the call to fcmconfr with
+their intended parameters. This example uses the sample_fcms object
+provided in fcmconfr.
 
-## Citation
+fcmconfr_gui() opens a shiny app that asks the user to select an
+adjacency matrix or list of adjacency matrices from the Global
+Environment. Note the sidebar panel arrow to the right of the app. Open
+this sidebar to see definitions and descriptions for each parameter.
 
-``` r
-citation("fcmconfr")
-#> To cite fcmconfr in publications use:
-#> 
-#>   Roston & Rippy, (2024). FCMConfR: FCM Uncertainty Analysis Tools.
-#>   https://github.com/bhroston/fcmconfr.git.
-#> 
-#> A BibTeX entry for LaTeX users is
-#> 
-#>   @bibentry{,
-#>     bibtype = {Manual}
-#>     title = {FCMConfR: FCM Uncertainty Analysis Tools},
-#>     author = {Ben Roston and Megan Rippy},
-#>     year = {2024},
-#>     url = {https://github.com/bhroston/fcmconfr},
-#>     copyright = {GNU General Public License}
-#>   }
-```
+<figure>
+<img src="images/fcmconfr_gui_screenshot-01.png"
+alt="fcmconfr_gui() opens a shiny app that guides users through selecting inputs for the fcmconfr() function" />
+<figcaption aria-hidden="true">fcmconfr_gui() opens a shiny app that
+guides users through selecting inputs for the fcmconfr()
+function</figcaption>
+</figure>
 
-## Further Reading
+Once parameters are selected, scroll down in the app and click the
+“Submit” button. This outputs an example call to fcmconfr() in the
+RStudio console that uses the parameters selected by the user in the
+gui. For example, fcmconfr_gui() may return:
 
-further reading here
+![](images/fcmconfr_gui_output.png)
 
-## Contributing
+Users can copy-and-paste the generated call to the main fcmconfr()
+function into a separate file or directly into the console.
 
-Please note that this package is released with a [Contributor Code of
-Conduct](https://ropensci.org/code-of-conduct/). By contributing to this
-project, you agree to abide by its terms.
+When running fcmconfr(), the console will output messages to update the
+user on the function’s progress. Depending on the complexity of the
+inputs and the capacity of the local machine, fcmconfr() can take
+anywhere from a few seconds to many minutes to run. Note: the progress
+text will be different depending on inputs to fcmconfr().
 
-- If you think you have encountered a bug, please [submit an
-  issue](https://github.com/bhroston/fcmconfr/issues).
+<img src="images/fcmconfr_run_text.png" width="428" />
 
-- Please include a
-  [reprex](https://reprex.tidyverse.org/articles/articles/learn-reprex.html)
-  (a minimal, reproducible example) to clearly communicate about your
-  code.
+### fcmconfr Outputs
 
-------------------------------------------------------------------------
+As fcmconfr() performs a collection of analyses on potentially many
+FCMs, its output is typically a large object to navigate. Use
+get_inferences(fcmconfr_output_obj) to get a list of organized
+dataframes for the results of each analysis performed by fcmconfr().
 
-However, most remain untested, and their mathematical complexity leaves
-many largely inaccessible (citation).
-
-Package to FCM packages across the R
-([fcm](https://cran.r-project.org/web/packages/fcm/index.html "CRAN: fcm"))
-and Python ([PyFCM](https://github.com/payamaminpour/PyFCM.git))
-ecosystems as well
-
-(Dikopoulou and Papageorgiou 2017; Aminpour 2018)
-
-<div id="refs" class="references csl-bib-body hanging-indent"
-entry-spacing="0">
-
-<div id="ref-aminpourPyFCM2018" class="csl-entry">
-
-Aminpour, Payam. 2018. “PyFCM.”
-
-</div>
-
-<div id="ref-dikopoulouFcmInferenceFuzzy2017" class="csl-entry">
-
-Dikopoulou, Zoumpoulia, and Elpiniki Papageorgiou. 2017. “Fcm: Inference
-of Fuzzy Cognitive Maps (FCMs).”
-
-</div>
-
-</div>
+Use plot() to plot the analysis’ results. Adding interactive = TRUE to
+the call to plot() loads the figure in a shiny app where users can
+select sepecific analysis results to display and/or hide. Additional
+parameters for plot() are given below:
