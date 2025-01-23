@@ -502,7 +502,7 @@ standardize_adj_matrices <- function(adj_matrices = list(matrix())) {
 #' @export
 #' @example man/examples/ex-get_inferences.R
 get_inferences <- function(fcmconfr_obj = list(),
-                           analysis = c("input", "aggregate", "mc")) {
+                           analysis = c("individual", "aggregate", "mc")) {
 
   # Check fcmconfr_obj
   if (!identical(methods::is(fcmconfr_obj), "fcmconfr")) {
@@ -513,9 +513,9 @@ get_inferences <- function(fcmconfr_obj = list(),
   }
 
   # Check analysis input
-  if (!(all(analysis %in% c("input", "aggregate", "mc")))) {
+  if (!(all(analysis %in% c("individual", "aggregate", "mc")))) {
     stop(cli::format_error(c(
-      "x" = "Error: {.var analysis} must be within the set of c('input', 'aggregate', 'mc')",
+      "x" = "Error: {.var analysis} must be within the set of c('individual', 'aggregate', 'mc')",
       "+++++> Input {.var analysis} was {analysis}"
     )))
   }
@@ -523,63 +523,110 @@ get_inferences <- function(fcmconfr_obj = list(),
   fcm_class <- fcmconfr_obj$fcm_class
 
   if (fcm_class == "conventional") {
-    individual_inferences <- fcmconfr_obj$inferences$input_fcms$inferences
+    individual_inferences_df <- fcmconfr_obj$inferences$individual_fcms$inferences
+    individual_inferences_matrix_names <- individual_inferences_df$input
+    individual_inferences <- data.frame(t(individual_inferences_df[, 2:ncol(individual_inferences_df)]))
+    colnames(individual_inferences) <- individual_inferences_matrix_names
   } else if (fcm_class == "ivfn") {
-    individual_inferences <- do.call(rbind, fcmconfr_obj$inferences$input_fcms$inferences)
-    individual_inferences <- apply(
-      individual_inferences, 2,
-      function(inferences) {
-        inference_observations <- lapply(
-          inferences,
-          function(value) {
-            data.frame(
-              crisp = (value$lower + value$upper)/2,
-              lower = value$lower,
-              upper = value$upper
-            )
-          })
-        inference_observations <- data.frame(do.call(rbind, inference_observations))
-        rownames(inference_observations) <- NULL
-        data.frame(cbind(input = paste0("adj_matrix_", 1:nrow(inference_observations)), inference_observations))
-      })
+    individual_inferences_df <- data.frame(t(do.call(rbind, fcmconfr_obj$inferences$individual_fcms$inferences)))
+    lower_individual_inferences <- data.frame(apply(individual_inferences_df, c(1, 2), function(element) element[[1]]$lower))
+    upper_individual_inferences <- data.frame(apply(individual_inferences_df, c(1, 2), function(element) element[[1]]$upper))
+    individual_inferences <- list(
+      ivfn_df = individual_inferences_df,
+      lower_values = lower_individual_inferences,
+      upper_values = upper_individual_inferences
+    )
+    # individual_inferences <- apply(
+    #   individual_inferences, 2,
+    #   function(inferences) {
+    #     inference_observations <- lapply(
+    #       inferences,
+    #       function(value) {
+    #         data.frame(
+    #           crisp = (value$lower + value$upper)/2,
+    #           lower = value$lower,
+    #           upper = value$upper
+    #         )
+    #       })
+    #     inference_observations <- data.frame(do.call(rbind, inference_observations))
+    #     rownames(inference_observations) <- NULL
+    #     data.frame(cbind(input = paste0("adj_matrix_", 1:nrow(inference_observations)), inference_observations))
+    #   })
   } else if (fcm_class == "tfn") {
-    individual_inferences <- do.call(rbind, fcmconfr_obj$inferences$input_fcms$inferences)
-    individual_inferences <- apply(
-      individual_inferences, 2,
-      function(inferences) {
-        inference_observations <- lapply(
-          inferences,
-          function(value) {
-            data.frame(
-              crisp = (value$lower + value$mode + value$upper)/3,
-              lower = value$lower,
-              mode = value$mode,
-              upper = value$upper
-            )
-          })
-        inference_observations <- data.frame(do.call(rbind, inference_observations))
-        rownames(inference_observations) <- NULL
-        data.frame(cbind(input = paste0("adj_matrix_", 1:nrow(inference_observations)), inference_observations))
-      })
+    individual_inferences_df <- data.frame(t(do.call(rbind, fcmconfr_obj$inferences$individual_fcms$inferences)))
+    lower_individual_inferences <- data.frame(apply(individual_inferences_df, c(1, 2), function(element) element[[1]]$lower))
+    mode_individual_inferences <- data.frame(apply(individual_inferences_df, c(1, 2), function(element) element[[1]]$mode))
+    upper_individual_inferences <- data.frame(apply(individual_inferences_df, c(1, 2), function(element) element[[1]]$upper))
+    individual_inferences <- list(
+      tfn_df = individual_inferences_df,
+      lower_values = lower_individual_inferences,
+      mode_values = mode_individual_inferences,
+      upper_values = upper_individual_inferences
+    )
+    # individual_inferences <- do.call(rbind, fcmconfr_obj$inferences$individual_fcms$inferences)
+    # individual_inferences <- apply(
+    #   individual_inferences, 2,
+    #   function(inferences) {
+    #     inference_observations <- lapply(
+    #       inferences,
+    #       function(value) {
+    #         data.frame(
+    #           crisp = (value$lower + value$mode + value$upper)/3,
+    #           lower = value$lower,
+    #           mode = value$mode,
+    #           upper = value$upper
+    #         )
+    #       })
+    #     inference_observations <- data.frame(do.call(rbind, inference_observations))
+    #     rownames(inference_observations) <- NULL
+    #     data.frame(cbind(input = paste0("adj_matrix_", 1:nrow(inference_observations)), inference_observations))
+    #   })
   }
 
   inferences_list <- list(
-    input_inferences = individual_inferences
+    individual_inferences = individual_inferences
   )
 
-  if (fcmconfr_obj$params$additional_opts$perform_aggregate_analysis) {
-    aggregate_inferences <- fcmconfr_obj$inferences$aggregate_fcm$inferences
-    aggregate_inferences <- data.frame(cbind(input = "aggregate", aggregate_inferences))
-    inferences_list$aggregate_inferences = aggregate_inferences
+  if (fcmconfr_obj$params$additional_opts$run_agg_calcs) {
+    if (fcm_class == "conventional") {
+      aggregate_inferences_transposed <- data.frame(t(fcmconfr_obj$inferences$aggregate_fcm$inferences))
+      inferences_list$aggregate_inferences = aggregate_inferences_transposed
+    } else if (fcm_class == "ivfn") {
+      aggregate_inferences_df <- data.frame(t(fcmconfr_obj$inferences$aggregate_fcm$inferences))
+      crisp_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) (element[[1]]$lower + element[[1]]$upper)/2)
+      lower_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) element[[1]]$lower)
+      upper_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) element[[1]]$upper)
+      aggregate_inferences <- data.frame(
+        crisp = crisp_aggregate_inferences,
+        lower = lower_aggregate_inferences,
+        upper = upper_aggregate_inferences
+      )
+      colnames(aggregate_inferences) <- c("crisp", "lower", "upper")
+      inferences_list$aggregate_inferences = aggregate_inferences
+    } else if (fcm_class == "tfn") {
+      aggregate_inferences_df <- data.frame(t(fcmconfr_obj$inferences$aggregate_fcm$inferences))
+      crisp_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) (element[[1]]$lower + element[[1]]$mode + element[[1]]$upper)/3)
+      lower_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) element[[1]]$lower)
+      mode_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) element[[1]]$mode)
+      upper_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) element[[1]]$upper)
+      aggregate_inferences <- data.frame(
+        crisp = crisp_aggregate_inferences,
+        lower = lower_aggregate_inferences,
+        mode = mode_aggregate_inferences,
+        upper = upper_aggregate_inferences
+      )
+      colnames(aggregate_inferences) <- c("crisp", "lower", "mode", "upper")
+      inferences_list$aggregate_inferences = aggregate_inferences
+    }
   }
 
-  if (fcmconfr_obj$params$additional_opts$perform_monte_carlo_analysis) {
-    mc_inferences <- fcmconfr_obj$inferences$monte_carlo_fcms$all_inferences
-    mc_inferences <- data.frame(cbind(input = paste("mc_", 1:nrow(mc_inferences)), mc_inferences))
-    inferences_list$mc_inferences = mc_inferences
+  if (fcmconfr_obj$params$additional_opts$run_mc_calcs) {
+    mc_inferences_transposed <- t(fcmconfr_obj$inferences$monte_carlo_fcms$all_inferences)
+    colnames(mc_inferences_transposed) <- paste0("mc_", 1:ncol(mc_inferences_transposed))
+    inferences_list$mc_inferences = mc_inferences_transposed
   }
 
-  if (fcmconfr_obj$params$additional_opts$perform_monte_carlo_inference_bootstrap_analysis) {
+  if (fcmconfr_obj$params$additional_opts$run_ci_calcs) {
     mc_CIs_and_quantiles <- fcmconfr_obj$inferences$monte_carlo_fcms$bootstrap$CIs_and_quantiles_by_node
     inferences_list$mc_CIs_and_quantiles = mc_CIs_and_quantiles
   }
@@ -591,32 +638,90 @@ get_inferences <- function(fcmconfr_obj = list(),
 }
 
 
-# view_fcm_layout <- function(fcm = matrix(), seed = integer()) {
-#   fcm_input_type <- get_adj_matrices_input_type(fcm)
-#   fcm_class <- fcm_input_type$fcm_class
-#   if (fcm_class == "conventional") {
-#     conventional_fcm <- fcm
-#   } else if (fcm_class == "ivfn") {
-#     conventional_fcm <- apply(fcm, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$upper))
-#   } else if (fcm_class == "tfn") {
-#     conventional_fcm <- apply(fcm, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$mode,  x[[1]]$upper))
-#   }
-#
-#   # Translate fcm into an igraph object and then convert to visNetwork
-#   fcm_as_igraph_obj <- igraph::graph_from_adjacency_matrix(as.matrix(conventional_fcm), weighted = TRUE, mode = "directed")
-#   fcm_as_visNetwork_obj <- visNetwork::visIgraph(fcm_as_igraph_obj)
-#
-#   # Add aesthetics for nodes
-#   fcm_as_visNetwork_obj$x$nodes$color <- "lightgrey"
-#
-#   # Add aesthetics for edges
-#   edges_df <- fcm_as_visNetwork_obj$x$edges
-#   edges_df$label <- paste(edges_df$weight)
-#   edges_df$color <- ifelse(edges_df$weight >= 0, "black", "red")
-#   edges_df$width <- abs(edges_df$weight*2)
-#   fcm_as_visNetwork_obj$x$edges <- edges_df
-#
-#   # Load plot
-#   fcm_as_visNetwork_obj %>%
-#     visNetwork::visLayout(randomSeed = seed)
-# }
+
+#' Display FCM in Viewer
+#'
+#' @family utility
+#'
+#' @description
+#' Display an FCM in the Viewer pane as an interactive visNetwork object. Use
+#' the with_shiny parameter to interact with the FCM visNetwork object and
+#' store its output in the global environment via the view_fcm_visNetwork
+#' variable.
+#'
+#' @param fcm_adj_matrix An adjacency matrix representing an FCM
+#' @param with_shiny View visNetwork output in a shiny app instead of the viewer
+#' pane. This adds the functionality to store node locations after moving them.
+#'
+#' @returns A display of the input FCM in the Viewer pane; if with_shiny = TRUE,
+#' the visNetwork object saved into the global environment as
+#' fcm_view_visNetwork
+#'
+#' @export
+#' @example man/examples/ex-fcm_view.R
+fcm_view <- function(fcm_adj_matrix = matrix(), with_shiny = FALSE) {
+  fcm_adj_matrix_input_type <- get_adj_matrices_input_type(fcm_adj_matrix)
+
+  if (!(is.logical(with_shiny))) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var with_shiny} must be a logical (TRUE/FALSE) value.",
+      "+++++> Input {.var with_shiny} was: {with_shiny}"
+    )))
+  }
+
+  fcm_adj_matrix_class <- fcm_adj_matrix_input_type$fcm_class
+  if (fcm_adj_matrix_class == "conventional") {
+    conventional_fcm <- fcm_adj_matrix
+  } else if (fcm_adj_matrix_class == "ivfn") {
+    conventional_fcm <- apply(fcm_adj_matrix, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$upper))
+  } else if (fcm_adj_matrix_class == "tfn") {
+    conventional_fcm <- apply(fcm_adj_matrix, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$mode,  x[[1]]$upper))
+  }
+
+  # Translate fcm into an igraph object and then convert to visNetwork
+  fcm_as_igraph_obj <- igraph::graph_from_adjacency_matrix(as.matrix(conventional_fcm), weighted = TRUE, mode = "directed")
+  fcm_as_visNetwork_obj <- visNetwork::visIgraph(fcm_as_igraph_obj)
+
+  # Add aesthetics for nodes
+  fcm_as_visNetwork_obj$x$nodes$color <- "lightgrey"
+  fcm_as_visNetwork_obj$x$nodes$physics <- FALSE
+
+  # Add aesthetics for edges
+  edges_df <- fcm_as_visNetwork_obj$x$edges
+  edges_df$label <- paste(edges_df$weight)
+  edges_df$color <- ifelse(edges_df$weight >= 0, "black", "red")
+  edges_df$width <- abs(edges_df$weight*2)
+  fcm_as_visNetwork_obj$x$edges <- edges_df
+
+  # Load plot
+  fcm_as_network_obj <- fcm_as_visNetwork_obj %>%
+    visNetwork::visEdges(smooth = list(enabled = TRUE, type = "dynamic", roundness = 0.6)) %>%
+    visNetwork::visLayout(randomSeed = sample(1:1e10, 1))
+
+  node_x_coords <- fcm_as_network_obj$x$nodes$x
+  node_y_coords <- fcm_as_network_obj$x$nodes$y
+
+  spaced_node_x_coords <- node_x_coords*1.5
+  spaced_node_y_coords <- node_y_coords*2
+
+  fcm_as_network_obj$x$nodes$x <- spaced_node_x_coords
+  fcm_as_network_obj$x$nodes$y <- spaced_node_y_coords
+
+  if (!with_shiny) {
+    fcm_as_network_obj
+  } else {
+    server <- source(system.file(file.path('shiny', 'view_fcm', 'server.R'), package = 'fcmconfr'), local = TRUE)$value
+    ui <- source(system.file(file.path('shiny', 'view_fcm', 'ui.R'), package = 'fcmconfr'), local = TRUE)$value
+
+    shiny_env <- new.env()
+    assign("fcm_as_network_obj", fcm_as_network_obj, shiny_env)
+    environment(ui) <- shiny_env
+    environment(server) <- shiny_env
+    app <- shiny::shinyApp(
+      ui = ui,
+      server = server
+    )
+
+    shiny::runApp(app)
+  }
+}

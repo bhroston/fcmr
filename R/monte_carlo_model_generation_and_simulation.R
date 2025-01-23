@@ -51,7 +51,7 @@
 #' from the pbapply package as the underlying function.
 #' @param n_cores Number of cores to use in parallel processing. If no input given,
 #' will use all available cores in the machine.
-#' @param include_simulations_in_output TRUE/FALSE whether to include simulations of monte-carlo-generated
+#' @param mc_sims_in_output TRUE/FALSE whether to include simulations of monte-carlo-generated
 #' FCM. Will dramatically increase size of output if TRUE.
 #'
 #' @returns A list of two dataframes: the first contains all inference estimates
@@ -73,7 +73,7 @@ infer_fcm_set <- function(adj_matrices = list(matrix()),
                                       parallel = TRUE,
                                       n_cores = integer(),
                                       show_progress = TRUE,
-                                      include_simulations_in_output = FALSE) {
+                                      mc_sims_in_output = FALSE) {
 
   # Adding for R CMD check. Does not impact logic.
   i <- NULL
@@ -82,7 +82,7 @@ infer_fcm_set <- function(adj_matrices = list(matrix()),
   checks <- check_infer_fcm_set_inputs(
     adj_matrices,
     initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error,
-    parallel, n_cores, show_progress, include_simulations_in_output
+    parallel, n_cores, show_progress, mc_sims_in_output
   )
   fcm_class <- checks$fcm_class
   adj_matrices <- checks$adj_matrices
@@ -201,7 +201,7 @@ infer_fcm_set <- function(adj_matrices = list(matrix()),
   inference_values_by_sim <- do.call(rbind, inference_values_by_sim)
   rownames(inference_values_by_sim) <- 1:nrow(inference_values_by_sim)
 
-  if (include_simulations_in_output) {
+  if (mc_sims_in_output) {
     structure(
       .Data = list(
         inference = inference_values_by_sim,
@@ -275,7 +275,7 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
 
   # Check function inputs
   mcbc_checks <- check_monte_carlo_bootstrap_inputs(inference_function, confidence_interval, bootstrap_reps, parallel, n_cores, show_progress)
-  inference_estimation_function <- mcbc_checks$inference_estimation_function
+  ci_centering_function <- mcbc_checks$ci_centering_function
   parallel <- mcbc_checks$parallel
   n_cores <- mcbc_checks$n_cores
   show_progress <- mcbc_checks$show_progress
@@ -786,7 +786,7 @@ build_monte_carlo_fcms_from_fuzzy_set_adj_matrices <- function(fuzzy_set_adj_mat
 #' from the pbapply package as the underlying function.
 #' @param n_cores Number of cores to use in parallel processing. If no input given,
 #' will use all available cores in the machine.
-#' @param include_simulations_in_output TRUE/FALSE whether to include simulations of monte-carlo-generated
+#' @param mc_sims_in_output TRUE/FALSE whether to include simulations of monte-carlo-generated
 #' FCM. Will dramatically increase size of output if TRUE.
 #'
 #' @returns NULL; Errors if checks fail
@@ -806,7 +806,7 @@ check_infer_fcm_set_inputs <- function(adj_matrices = list(matrix()),
                                      parallel = TRUE,
                                      n_cores = integer(),
                                      show_progress = TRUE,
-                                     include_simulations_in_output = FALSE) {
+                                     mc_sims_in_output = FALSE) {
 
   # Check adj_matrices ----
   adj_matrices_input_type <- get_adj_matrices_input_type(adj_matrices)
@@ -896,10 +896,10 @@ check_infer_fcm_set_inputs <- function(adj_matrices = list(matrix()),
   # ----
 
   # Check Output Options ----
-  if (!is.logical(include_simulations_in_output)) {
+  if (!is.logical(mc_sims_in_output)) {
     stop(cli::format_error(c(
-      "x" = "Error: {.var include_simulations_in_output} must be logical (TRUE/FALSE)",
-      "+++++> Input {.var include_simulations_in_output} was {include_simulations_in_output}"
+      "x" = "Error: {.var mc_sims_in_output} must be logical (TRUE/FALSE)",
+      "+++++> Input {.var mc_sims_in_output} was {mc_sims_in_output}"
     )))
   }
   # ----
@@ -982,11 +982,11 @@ check_build_monte_carlo_fcms_inputs <- function(adj_matrix_list,
 #'
 #' @family monte-carlo-model-generation-and-simulation
 #'
-#' @param inference_estimation_function Estimate confidence intervals about the "mean" or "median" of
+#' @param ci_centering_function Estimate confidence intervals about the "mean" or "median" of
 #' inferences from the monte carlo simulations
-#' @param inference_estimation_CI What are of the distribution should be bounded by the
+#' @param confidence_interval What are of the distribution should be bounded by the
 #' confidence intervals? (e.g. 0.95)
-#' @param inference_estimation_bootstrap_reps Repetitions for bootstrap process, if chosen
+#' @param num_ci_bootstraps Repetitions for bootstrap process, if chosen
 #' @param parallel TRUE/FALSE Whether to perform the function using parallel processing
 #' @param n_cores Number of cores to use in parallel processing. If no input given,
 #' will use all available cores in the machine.
@@ -998,64 +998,64 @@ check_build_monte_carlo_fcms_inputs <- function(adj_matrix_list,
 #' @export
 #' @examples
 #' NULL
-check_monte_carlo_bootstrap_inputs <- function(inference_estimation_function = c("mean", "median"),
-                                               inference_estimation_CI = 0.95,
-                                               inference_estimation_bootstrap_reps = 1000,
+check_monte_carlo_bootstrap_inputs <- function(ci_centering_function = c("mean", "median"),
+                                               confidence_interval = 0.95,
+                                               num_ci_bootstraps = 1000,
                                                parallel = TRUE,
                                                n_cores = integer(),
                                                show_progress = TRUE) {
 
-  # Check inference_estimation_function ----
-  if (identical(inference_estimation_function, c("mean", "median"))) {
+  # Check ci_centering_function ----
+  if (identical(ci_centering_function, c("mean", "median"))) {
     warning(cli::format_warning(c(
-      "!" = "Warning: No {.var inference_estimation_function} given",
-      "~~~~~ Assuming {.var inference_estimation_function} is 'mean'"
+      "!" = "Warning: No {.var ci_centering_function} given",
+      "~~~~~ Assuming {.var ci_centering_function} is 'mean'"
     )))
-    inference_estimation_function <- "mean"
+    ci_centering_function <- "mean"
   }
-  if (!(inference_estimation_function %in% c("mean", "median"))) {
+  if (!(ci_centering_function %in% c("mean", "median"))) {
     stop(cli::format_error(c(
-      "x" = "Error: {.var inference_estimation_function} must be one of the following: 'mean' or 'median'",
-      "+++++> Input {.var inference_estimation_function} was '{inference_estimation_function}'"
-    )))
-  }
-  # ----
-
-  # Check inference_estimation_CI ----
-
-  if (!is.numeric(inference_estimation_CI)) {
-    stop(cli::format_error(c(
-      "x" = "Error: {.var inference_estimation_CI} must be a positive value between 0 and 1",
-      "+++++> Input {.var inference_estimation_CI} was '{inference_estimation_CI}'"
-    )))
-  }
-
-  if (inference_estimation_CI < 0 | inference_estimation_CI >= 1) {
-    stop(cli::format_error(c(
-      "x" = "Error: {.var inference_estimation_CI} must be a positive value between 0 and 1",
-      "+++++> Input {.var inference_estimation_CI} was {inference_estimation_CI}"
+      "x" = "Error: {.var ci_centering_function} must be one of the following: 'mean' or 'median'",
+      "+++++> Input {.var ci_centering_function} was '{ci_centering_function}'"
     )))
   }
   # ----
 
-  # Check inference_estimation_bootstrap_reps
-  if (!is.numeric(inference_estimation_bootstrap_reps)) {
+  # Check confidence_interval ----
+
+  if (!is.numeric(confidence_interval)) {
     stop(cli::format_error(c(
-      "x" = "Error: {.var inference_estimation_bootstrap_reps} must be a positive integer, typically greater than 1000",
-      "+++++> Input {.var inference_estimation_bootstrap_reps} was '{inference_estimation_bootstrap_reps}'"
+      "x" = "Error: {.var confidence_interval} must be a positive value between 0 and 1",
+      "+++++> Input {.var confidence_interval} was '{confidence_interval}'"
     )))
   }
 
-  if (!(inference_estimation_bootstrap_reps == round(inference_estimation_bootstrap_reps))) {
+  if (confidence_interval < 0 | confidence_interval >= 1) {
     stop(cli::format_error(c(
-      "x" = "Error: {.var inference_estimation_bootstrap_reps} must be a positive integer, typically greater than 1000",
-      "+++++> Input {.var inference_estimation_bootstrap_reps} was {inference_estimation_bootstrap_reps}"
+      "x" = "Error: {.var confidence_interval} must be a positive value between 0 and 1",
+      "+++++> Input {.var confidence_interval} was {confidence_interval}"
     )))
   }
-  if (inference_estimation_bootstrap_reps <= 0) {
+  # ----
+
+  # Check num_ci_bootstraps
+  if (!is.numeric(num_ci_bootstraps)) {
     stop(cli::format_error(c(
-      "x" = "Error: {.var inference_estimation_bootstrap_reps} must be a positive value (typically > 1000)",
-      "+++++> Input {.var inference_estimation_bootstrap_reps} was {inference_estimation_bootstrap_reps}"
+      "x" = "Error: {.var num_ci_bootstraps} must be a positive integer, typically greater than 1000",
+      "+++++> Input {.var num_ci_bootstraps} was '{num_ci_bootstraps}'"
+    )))
+  }
+
+  if (!(num_ci_bootstraps == round(num_ci_bootstraps))) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var num_ci_bootstraps} must be a positive integer, typically greater than 1000",
+      "+++++> Input {.var num_ci_bootstraps} was {num_ci_bootstraps}"
+    )))
+  }
+  if (num_ci_bootstraps <= 0) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var num_ci_bootstraps} must be a positive value (typically > 1000)",
+      "+++++> Input {.var num_ci_bootstraps} was {num_ci_bootstraps}"
     )))
   }
   # ----
@@ -1105,7 +1105,7 @@ check_monte_carlo_bootstrap_inputs <- function(inference_estimation_function = c
   # ----
 
   list(
-    inference_estimation_function = inference_estimation_function,
+    ci_centering_function = ci_centering_function,
     parallel = parallel,
     n_cores = n_cores,
     show_progress = show_progress

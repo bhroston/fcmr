@@ -11,8 +11,8 @@ test_that("fcmconfr_plot additional inputs work", {
       adj_matrices = sample_fcms$simple_fcms$tfn_fcms,
       # adj_matrices = group_tfn_fcms,
       # Aggregation and Monte Carlo Sampling
-      aggregation_function = 'mean',
-      monte_carlo_sampling_draws = 100,
+      agg_function = 'mean',
+      num_mc_fcms = 100,
       # Simulation
       # initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
       # clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -25,19 +25,19 @@ test_that("fcmconfr_plot additional inputs work", {
       max_iter = 1000,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)
-      inference_estimation_function = mean,
-      inference_estimation_CI = 0.95,
-      inference_estimation_bootstrap_reps = 1000,
+      ci_centering_function = mean,
+      confidence_interval = 0.95,
+      num_ci_bootstraps = 1000,
       # Runtime Options
       show_progress = TRUE,
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = TRUE,
-      perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
-      include_monte_carlo_FCM_simulations_in_output = TRUE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = TRUE,
+      run_ci_calcs = TRUE,
+      include_zeroes_in_sampling = TRUE,
+      mc_sims_in_output = TRUE
     )
   ))
   # ----
@@ -263,11 +263,11 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = FALSE,
-      perform_monte_carlo_analysis = FALSE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = FALSE
+      run_agg_calcs = FALSE,
+      run_mc_calcs = FALSE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -292,11 +292,11 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = FALSE,
-      perform_monte_carlo_analysis = FALSE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = FALSE
+      run_agg_calcs = FALSE,
+      run_mc_calcs = FALSE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -308,7 +308,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
     conventional_clamping_inputs_and_agg <- fcmconfr(
       adj_matrices = sample_fcms$simple_fcms$conventional_fcms,
       # Aggregation
-      aggregation_function = 'mean',
+      agg_function = 'mean',
       # Simulation
       initial_state_vector = test_initial_state_vector,
       clamping_vector = test_clamping_vector,
@@ -323,11 +323,11 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = FALSE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
-      include_monte_carlo_FCM_simulations_in_output = FALSE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = FALSE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = TRUE,
+      mc_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -339,7 +339,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
     conventional_pulse_inputs_and_agg <- fcmconfr(
       adj_matrices = sample_fcms$simple_fcms$conventional_fcms,
       # Aggregation
-      aggregation_function = 'mean',
+      agg_function = 'mean',
       # Simulation
       initial_state_vector = test_pulse_initial_state_vector,
       clamping_vector = test_pulse_clamping_vector,
@@ -354,11 +354,11 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = FALSE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = FALSE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = FALSE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -371,8 +371,8 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       adj_matrices = sample_fcms$simple_fcms$conventional_fcms,
       # adj_matrices = group_conventional_fcms,
       # Aggregation and Monte Carlo Sampling
-      aggregation_function = 'mean',
-      monte_carlo_sampling_draws = 100,
+      agg_function = 'mean',
+      num_mc_fcms = 100,
       # Simulation
       initial_state_vector = test_initial_state_vector,
       clamping_vector = test_clamping_vector,
@@ -387,11 +387,11 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = TRUE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
-      include_monte_carlo_FCM_simulations_in_output = TRUE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = TRUE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = TRUE,
+      mc_sims_in_output = TRUE
     )
   ))
   # vdiffr is too sensitive for this test, run in personal testing only
@@ -405,8 +405,8 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       adj_matrices = sample_fcms$simple_fcms$conventional_fcms,
       # adj_matrices = group_conventional_fcms,
       # Aggregation and Monte Carlo Sampling
-      aggregation_function = 'mean',
-      monte_carlo_sampling_draws = 100,
+      agg_function = 'mean',
+      num_mc_fcms = 100,
       # Simulation
       initial_state_vector = test_pulse_initial_state_vector,
       clamping_vector = test_pulse_clamping_vector,
@@ -421,11 +421,11 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = TRUE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = TRUE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = TRUE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = TRUE
     )
   ))
   # vdiffr is too sensitive for this test, run in personal testing only
@@ -440,8 +440,8 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       adj_matrices = sample_fcms$simple_fcms$conventional_fcms,
       # adj_matrices = group_conventional_fcms,
       # Aggregation and Monte Carlo Sampling
-      aggregation_function = 'mean',
-      monte_carlo_sampling_draws = 100,
+      agg_function = 'mean',
+      num_mc_fcms = 100,
       # Simulation
       # initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
       # clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -454,19 +454,19 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       max_iter = 10000,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)
-      inference_estimation_function = "mean",
-      inference_estimation_CI = 0.95,
-      inference_estimation_bootstrap_reps = 1000,
+      ci_centering_function = "mean",
+      confidence_interval = 0.95,
+      num_ci_bootstraps = 1000,
       # Runtime Options
       show_progress = TRUE,
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = TRUE,
-      perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
-      include_monte_carlo_FCM_simulations_in_output = TRUE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = TRUE,
+      run_ci_calcs = TRUE,
+      include_zeroes_in_sampling = TRUE,
+      mc_sims_in_output = TRUE
     )
   ))
   # vdiffr is too sensitive for this test, run in personal testing only
@@ -480,8 +480,8 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       adj_matrices = sample_fcms$simple_fcms$conventional_fcms,
       # adj_matrices = group_conventional_fcms,
       # Aggregation and Monte Carlo Sampling
-      aggregation_function = 'mean',
-      monte_carlo_sampling_draws = 100,
+      agg_function = 'mean',
+      num_mc_fcms = 100,
       # Simulation
       # initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
       # clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -494,18 +494,18 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       max_iter = 1000,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)
-      inference_estimation_function = mean,
-      inference_estimation_CI = 0.95,
-      inference_estimation_bootstrap_reps = 1000,
+      ci_centering_function = mean,
+      confidence_interval = 0.95,
+      num_ci_bootstraps = 1000,
       # Runtime Options
       show_progress = TRUE,
       parallel = FALSE,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = TRUE,
-      perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = TRUE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = TRUE,
+      run_ci_calcs = TRUE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = TRUE
     )
   ))
   # vdiffr is too sensitive for this test, run in personal testing only
@@ -552,11 +552,11 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = FALSE,
-      perform_monte_carlo_analysis = FALSE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = FALSE
+      run_agg_calcs = FALSE,
+      run_mc_calcs = FALSE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -581,11 +581,11 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = FALSE,
-      perform_monte_carlo_analysis = FALSE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = FALSE
+      run_agg_calcs = FALSE,
+      run_mc_calcs = FALSE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -598,7 +598,7 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
     ivfn_clamping_inputs_and_agg <- fcmconfr(
       adj_matrices = sample_fcms$simple_fcms$ivfn_fcms,
       # Aggregation
-      aggregation_function = 'mean',
+      agg_function = 'mean',
       # Simulation
       initial_state_vector = test_initial_state_vector,
       clamping_vector = test_clamping_vector,
@@ -613,11 +613,11 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = FALSE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
-      include_monte_carlo_FCM_simulations_in_output = FALSE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = FALSE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = TRUE,
+      mc_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -629,7 +629,7 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
     ivfn_pulse_inputs_and_agg <- fcmconfr(
       adj_matrices = sample_fcms$simple_fcms$ivfn_fcms,
       # Aggregation
-      aggregation_function = 'mean',
+      agg_function = 'mean',
       # Simulation
       initial_state_vector = test_pulse_initial_state_vector,
       clamping_vector = test_pulse_clamping_vector,
@@ -644,11 +644,11 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = FALSE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = FALSE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = FALSE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -661,8 +661,8 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       adj_matrices = sample_fcms$simple_fcms$ivfn_fcms,
       # adj_matrices = group_ivfn_fcms,
       # Aggregation and Monte Carlo Sampling
-      aggregation_function = 'mean',
-      monte_carlo_sampling_draws = 100,
+      agg_function = 'mean',
+      num_mc_fcms = 100,
       # Simulation
       initial_state_vector = test_initial_state_vector,
       clamping_vector = test_clamping_vector,
@@ -677,11 +677,11 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = TRUE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
-      include_monte_carlo_FCM_simulations_in_output = TRUE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = TRUE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = TRUE,
+      mc_sims_in_output = TRUE
     )
   ))
   # vdiffr is too sensitive for this test, run in personal testing only
@@ -695,8 +695,8 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       adj_matrices = sample_fcms$simple_fcms$ivfn_fcms,
       # adj_matrices = group_ivfn_fcms,
       # Aggregation and Monte Carlo Sampling
-      aggregation_function = 'mean',
-      monte_carlo_sampling_draws = 100,
+      agg_function = 'mean',
+      num_mc_fcms = 100,
       # Simulation
       initial_state_vector = test_pulse_initial_state_vector,
       clamping_vector = test_pulse_clamping_vector,
@@ -711,11 +711,11 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = TRUE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = TRUE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = TRUE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = TRUE
     )
   ))
   # vdiffr is too sensitive for this test, run in personal testing only
@@ -730,8 +730,8 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       adj_matrices = sample_fcms$simple_fcms$ivfn_fcms,
       # adj_matrices = group_ivfn_fcms,
       # Aggregation and Monte Carlo Sampling
-      aggregation_function = 'mean',
-      monte_carlo_sampling_draws = 100,
+      agg_function = 'mean',
+      num_mc_fcms = 100,
       # Simulation
       # initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
       # clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -744,19 +744,19 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       max_iter = 1000,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)
-      inference_estimation_function = mean,
-      inference_estimation_CI = 0.95,
-      inference_estimation_bootstrap_reps = 1000,
+      ci_centering_function = mean,
+      confidence_interval = 0.95,
+      num_ci_bootstraps = 1000,
       # Runtime Options
       show_progress = TRUE,
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = TRUE,
-      perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
-      include_monte_carlo_FCM_simulations_in_output = TRUE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = TRUE,
+      run_ci_calcs = TRUE,
+      include_zeroes_in_sampling = TRUE,
+      mc_sims_in_output = TRUE
     )
   ))
   # vdiffr is too sensitive for this test, run in personal testing only
@@ -772,8 +772,8 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       adj_matrices = sample_fcms$simple_fcms$ivfn_fcms,
       # adj_matrices = group_ivfn_fcms,
       # Aggregation and Monte Carlo Sampling
-      aggregation_function = 'mean',
-      monte_carlo_sampling_draws = 100,
+      agg_function = 'mean',
+      num_mc_fcms = 100,
       # Simulation
       # initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
       # clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -786,19 +786,19 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       max_iter = 1000,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)
-      inference_estimation_function = mean,
-      inference_estimation_CI = 0.95,
-      inference_estimation_bootstrap_reps = 1000,
+      ci_centering_function = mean,
+      confidence_interval = 0.95,
+      num_ci_bootstraps = 1000,
       # Runtime Options
       show_progress = TRUE,
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = TRUE,
-      perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = TRUE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = TRUE,
+      run_ci_calcs = TRUE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = TRUE
     )
   ))
 
@@ -840,11 +840,11 @@ test_that("fcmconfr_plot works with TFN FCMs", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = FALSE,
-      perform_monte_carlo_analysis = FALSE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = FALSE
+      run_agg_calcs = FALSE,
+      run_mc_calcs = FALSE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -869,11 +869,11 @@ test_that("fcmconfr_plot works with TFN FCMs", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = FALSE,
-      perform_monte_carlo_analysis = FALSE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = FALSE
+      run_agg_calcs = FALSE,
+      run_mc_calcs = FALSE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -886,7 +886,7 @@ test_that("fcmconfr_plot works with TFN FCMs", {
     tfn_clamping_inputs_and_agg <- fcmconfr(
       adj_matrices = sample_fcms$simple_fcms$tfn_fcms,
       # Aggregation
-      aggregation_function = 'mean',
+      agg_function = 'mean',
       # Simulation
       initial_state_vector = test_initial_state_vector,
       clamping_vector = test_clamping_vector,
@@ -901,11 +901,11 @@ test_that("fcmconfr_plot works with TFN FCMs", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = FALSE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
-      include_monte_carlo_FCM_simulations_in_output = FALSE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = FALSE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = TRUE,
+      mc_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -917,7 +917,7 @@ test_that("fcmconfr_plot works with TFN FCMs", {
     tfn_pulse_inputs_and_agg <- fcmconfr(
       adj_matrices = sample_fcms$simple_fcms$tfn_fcms,
       # Aggregation
-      aggregation_function = 'mean',
+      agg_function = 'mean',
       # Simulation
       initial_state_vector = test_pulse_initial_state_vector,
       clamping_vector = test_pulse_clamping_vector,
@@ -932,11 +932,11 @@ test_that("fcmconfr_plot works with TFN FCMs", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = FALSE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = FALSE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = FALSE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -949,8 +949,8 @@ test_that("fcmconfr_plot works with TFN FCMs", {
       adj_matrices = sample_fcms$simple_fcms$tfn_fcms,
       # adj_matrices = group_tfn_fcms,
       # Aggregation and Monte Carlo Sampling
-      aggregation_function = 'mean',
-      monte_carlo_sampling_draws = 100,
+      agg_function = 'mean',
+      num_mc_fcms = 100,
       # Simulation
       initial_state_vector = test_initial_state_vector,
       clamping_vector = test_clamping_vector,
@@ -965,11 +965,11 @@ test_that("fcmconfr_plot works with TFN FCMs", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = TRUE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
-      include_monte_carlo_FCM_simulations_in_output = TRUE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = TRUE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = TRUE,
+      mc_sims_in_output = TRUE
     )
   ))
   # vdiffr is too sensitive for this test, run in personal testing only
@@ -983,8 +983,8 @@ test_that("fcmconfr_plot works with TFN FCMs", {
       adj_matrices = sample_fcms$simple_fcms$tfn_fcms,
       # adj_matrices = group_tfn_fcms,
       # Aggregation and Monte Carlo Sampling
-      aggregation_function = 'mean',
-      monte_carlo_sampling_draws = 100,
+      agg_function = 'mean',
+      num_mc_fcms = 100,
       # Simulation
       initial_state_vector = test_pulse_initial_state_vector,
       clamping_vector = test_pulse_clamping_vector,
@@ -999,11 +999,11 @@ test_that("fcmconfr_plot works with TFN FCMs", {
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = TRUE,
-      perform_monte_carlo_inference_bootstrap_analysis = FALSE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = TRUE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = TRUE,
+      run_ci_calcs = FALSE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = TRUE
     )
   ))
   # vdiffr is too sensitive for this test, run in personal testing only
@@ -1018,8 +1018,8 @@ test_that("fcmconfr_plot works with TFN FCMs", {
       adj_matrices = sample_fcms$simple_fcms$tfn_fcms,
       # adj_matrices = group_tfn_fcms,
       # Aggregation and Monte Carlo Sampling
-      aggregation_function = 'mean',
-      monte_carlo_sampling_draws = 100,
+      agg_function = 'mean',
+      num_mc_fcms = 100,
       # Simulation
       # initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
       # clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -1032,19 +1032,19 @@ test_that("fcmconfr_plot works with TFN FCMs", {
       max_iter = 1000,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)
-      inference_estimation_function = mean,
-      inference_estimation_CI = 0.95,
-      inference_estimation_bootstrap_reps = 1000,
+      ci_centering_function = mean,
+      confidence_interval = 0.95,
+      num_ci_bootstraps = 1000,
       # Runtime Options
       show_progress = TRUE,
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = TRUE,
-      perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = TRUE,
-      include_monte_carlo_FCM_simulations_in_output = TRUE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = TRUE,
+      run_ci_calcs = TRUE,
+      include_zeroes_in_sampling = TRUE,
+      mc_sims_in_output = TRUE
     )
   ))
   # vdiffr is too sensitive for this test, run in personal testing only
@@ -1060,8 +1060,8 @@ test_that("fcmconfr_plot works with TFN FCMs", {
       adj_matrices = sample_fcms$simple_fcms$tfn_fcms,
       # adj_matrices = group_tfn_fcms,
       # Aggregation and Monte Carlo Sampling
-      aggregation_function = 'mean',
-      monte_carlo_sampling_draws = 100,
+      agg_function = 'mean',
+      num_mc_fcms = 100,
       # Simulation
       # initial_state_vector = c(0, 0, 1, 0, 0, 0, 0, 0, 0),
       # clamping_vector = c(0, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -1074,19 +1074,19 @@ test_that("fcmconfr_plot works with TFN FCMs", {
       max_iter = 1000,
       min_error = 1e-05,
       # Inference Estimation (bootstrap)
-      inference_estimation_function = mean,
-      inference_estimation_CI = 0.95,
-      inference_estimation_bootstrap_reps = 1000,
+      ci_centering_function = mean,
+      confidence_interval = 0.95,
+      num_ci_bootstraps = 1000,
       # Runtime Options
       show_progress = TRUE,
       parallel = TRUE,
       n_cores = 2,
       # Additional Options
-      perform_aggregate_analysis = TRUE,
-      perform_monte_carlo_analysis = TRUE,
-      perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-      include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-      include_monte_carlo_FCM_simulations_in_output = TRUE
+      run_agg_calcs = TRUE,
+      run_mc_calcs = TRUE,
+      run_ci_calcs = TRUE,
+      include_zeroes_in_sampling = FALSE,
+      mc_sims_in_output = TRUE
     )
   ))
 

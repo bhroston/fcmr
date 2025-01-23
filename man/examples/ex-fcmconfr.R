@@ -29,8 +29,8 @@ ex_conventional_fcms <- list(
 ex_conventional_fcmconfr <- fcmconfr(
   adj_matrices = ex_conventional_fcms,
   # Aggregation and Monte Carlo Sampling
-  aggregation_function = 'mean',
-  monte_carlo_sampling_draws = 100,
+  agg_function = 'mean',
+  num_mc_fcms = 100,
   # Simulation
   initial_state_vector = c(1, 1, 1, 1),
   clamping_vector = c(0, 1, 0, 0),
@@ -41,19 +41,19 @@ ex_conventional_fcmconfr <- fcmconfr(
   max_iter = 100,
   min_error = 1e-05,
   # Inference Estimation (bootstrap)
-  inference_estimation_function = "median",
-  inference_estimation_CI = 0.95,
-  inference_estimation_bootstrap_reps = 1000,
+  ci_centering_function = "median",
+  confidence_interval = 0.95,
+  num_ci_bootstraps = 1000,
   # Runtime Options
   show_progress = TRUE,
   parallel = TRUE,
   n_cores = 2,
   # Additional Options
-  perform_aggregate_analysis = TRUE,
-  perform_monte_carlo_analysis = TRUE,
-  perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-  include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-  include_monte_carlo_FCM_simulations_in_output = TRUE
+  run_agg_calcs = TRUE,
+  run_mc_calcs = TRUE,
+  run_ci_calcs = TRUE,
+  include_zeroes_in_sampling = FALSE,
+  mc_sims_in_output = TRUE
 )
 
 
@@ -84,8 +84,8 @@ ex_ivfn_fcms <- list(adj_matrix_w_ivfns_1, adj_matrix_w_ivfns_2)
 ex_ivfn_fcmconfr <- fcmconfr(
   adj_matrices = ex_ivfn_fcms,
   # Aggregation and Monte Carlo Sampling
-  aggregation_function = 'mean',
-  monte_carlo_sampling_draws = 100,
+  agg_function = 'mean',
+  num_mc_fcms = 100,
   # Simulation
   initial_state_vector = c(1, 1),
   clamping_vector = c(0, 1),
@@ -96,19 +96,19 @@ ex_ivfn_fcmconfr <- fcmconfr(
   max_iter = 100,
   min_error = 1e-05,
   # Inference Estimation (bootstrap)
-  inference_estimation_function = "mean",
-  inference_estimation_CI = 0.95,
-  inference_estimation_bootstrap_reps = 1000,
+  ci_centering_function = "mean",
+  confidence_interval = 0.95,
+  num_ci_bootstraps = 1000,
   # Runtime Options
   show_progress = TRUE,
   parallel = TRUE,
   n_cores = 2,
   # Additional Options
-  perform_aggregate_analysis = TRUE,
-  perform_monte_carlo_analysis = TRUE,
-  perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-  include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-  include_monte_carlo_FCM_simulations_in_output = TRUE
+  run_agg_calcs = TRUE,
+  run_mc_calcs = TRUE,
+  run_ci_calcs = TRUE,
+  include_zeroes_in_sampling = FALSE,
+  mc_sims_in_output = TRUE
 )
 
 
@@ -149,8 +149,8 @@ ex_tfn_fcms <- list(adj_matrix_w_tfns_1, adj_matrix_w_tfns_2)
 ex_tfn_fcmconfr <- fcmconfr(
   adj_matrices = ex_tfn_fcms,
   # Aggregation and Monte Carlo Sampling
-  aggregation_function = 'mean',
-  monte_carlo_sampling_draws = 100,
+  agg_function = 'mean',
+  num_mc_fcms = 100,
   # Simulation
   initial_state_vector = c(1, 1),
   clamping_vector = c(0, 1),
@@ -161,18 +161,18 @@ ex_tfn_fcmconfr <- fcmconfr(
   max_iter = 100,
   min_error = 1e-05,
   # Inference Estimation (bootstrap)
-  inference_estimation_function = "mean",
-  inference_estimation_CI = 0.95,
-  inference_estimation_bootstrap_reps = 1000,
+  ci_centering_function = "mean",
+  confidence_interval = 0.95,
+  num_ci_bootstraps = 1000,
   # Runtime Options
   show_progress = TRUE,
   parallel = FALSE,
   # Additional Options
-  perform_aggregate_analysis = TRUE,
-  perform_monte_carlo_analysis = TRUE,
-  perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-  include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-  include_monte_carlo_FCM_simulations_in_output = TRUE
+  run_agg_calcs = TRUE,
+  run_mc_calcs = TRUE,
+  run_ci_calcs = TRUE,
+  include_zeroes_in_sampling = FALSE,
+  mc_sims_in_output = TRUE
 )
 
 

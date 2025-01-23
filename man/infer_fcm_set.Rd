@@ -17,7 +17,7 @@ infer_fcm_set(
   parallel = TRUE,
   n_cores = integer(),
   show_progress = TRUE,
-  include_simulations_in_output = FALSE
+  mc_sims_in_output = FALSE
 )
 }
 \arguments{
@@ -55,7 +55,7 @@ will use all available cores in the machine.}
 \item{show_progress}{TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 from the pbapply package as the underlying function.}
 
-\item{include_simulations_in_output}{TRUE/FALSE whether to include simulations of monte-carlo-generated
+\item{mc_sims_in_output}{TRUE/FALSE whether to include simulations of monte-carlo-generated
 FCM. Will dramatically increase size of output if TRUE.}
 }
 \value{

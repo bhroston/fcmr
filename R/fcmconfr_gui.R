@@ -41,20 +41,20 @@ fcmconfr_gui <- function() {
     fcmconfr_gui_input$clamping_vector <- rep(0, length(fcmconfr_gui_input$initial_state_vector))
   }
 
-  if (!("aggregation_function" %in% fcmconfr_gui_vars)) {
-    fcmconfr_gui_input$aggregation_function <- "mean"
+  if (!("agg_function" %in% fcmconfr_gui_vars)) {
+    fcmconfr_gui_input$agg_function <- "mean"
   }
 
   if (!("monte_carlo_samples" %in% fcmconfr_gui_vars)) {
     fcmconfr_gui_input$monte_carlo_samples <- 1000
   }
 
-  if (!("mc_inference_estimation_function" %in% fcmconfr_gui_vars)) {
-    fcmconfr_gui_input$mc_inference_estimation_function <- "mean"
+  if (!("mc_ci_centering_function" %in% fcmconfr_gui_vars)) {
+    fcmconfr_gui_input$mc_ci_centering_function <- "mean"
   }
 
-  if (!("mc_inference_estimation_CI" %in% fcmconfr_gui_vars)) {
-    fcmconfr_gui_input$mc_inference_estimation_CI <- 0.95
+  if (!("mc_confidence_interval" %in% fcmconfr_gui_vars)) {
+    fcmconfr_gui_input$mc_confidence_interval <- 0.95
   }
 
   if (!("mc_inference_bootstrap_reps" %in% fcmconfr_gui_vars)) {
@@ -65,12 +65,12 @@ fcmconfr_gui <- function() {
     fcmconfr_gui_input$n_cores <- 2
   }
 
-  if (!("include_zero_weighted_edges_in_aggregation_and_mc_sampling" %in% fcmconfr_gui_vars)) {
-    fcmconfr_gui_input$include_zero_weighted_edges_in_aggregation_and_mc_sampling <- FALSE
+  if (!("include_zeroes_in_sampling" %in% fcmconfr_gui_vars)) {
+    fcmconfr_gui_input$include_zeroes_in_sampling <- FALSE
   }
 
-  if (!("include_monte_carlo_FCM_simulations_in_output" %in% fcmconfr_gui_vars)) {
-    fcmconfr_gui_input$include_monte_carlo_FCM_simulations_in_output <- FALSE
+  if (!("mc_sims_in_output" %in% fcmconfr_gui_vars)) {
+    fcmconfr_gui_input$mc_sims_in_output <- FALSE
   }
 
   fcmconfr_gui_input$initial_state_vector <- paste0("c(", paste(fcmconfr_gui_input$initial_state_vector, collapse = ", "), ")")
@@ -107,14 +107,12 @@ print.fcmconfr_gui_input <- function(x, ...) {
   performed_mc <- x$perform_monte_carlo
   performed_bootstrap <- x$perform_inference_bootstrap
 
-  # browser()
-
   if (performed_aggregation & !performed_mc & !performed_bootstrap) {
     cat(
       "fcmconfr(", "\n",
       "  adj_matrices = ", x$adj_matrices, ",\n",
       "  # Aggregation", "\n",
-      "  aggregation_function = ", paste0("'", x$aggregation_fun, "'"), ",\n",
+      "  agg_function = ", paste0("'", x$aggregation_fun, "'"), ",\n",
       "  # Simulation", "\n",
       "  initial_state_vector = ", x$initial_state_vector, ",\n",
       "  clamping_vector = ", x$clamping_vector, ",\n",
@@ -127,10 +125,10 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "  # Runtime Options", "\n",
       "  show_progress = ", x$show_progress, ",\n",
       "  # Additional Options", "\n",
-      "  perform_aggregate_analysis = ", x$perform_aggregation, ",\n",
-      "  perform_monte_carlo_analysis = ", x$perform_monte_carlo, ",\n",
-      "  perform_monte_carlo_inference_bootstrap_analysis = ", x$perform_inference_bootstrap, ",\n",
-      "  include_zero_weighted_edges_in_aggregation_and_mc_sampling = ", x$include_zero_weighted_edges_in_aggregation_and_mc_sampling, "\n",
+      "  run_agg_calcs = ", x$perform_aggregation, ",\n",
+      "  run_mc_calcs = ", x$perform_monte_carlo, ",\n",
+      "  run_ci_calcs = ", x$perform_inference_bootstrap, ",\n",
+      "  include_zeroes_in_sampling = ", x$include_zeroes_in_sampling, "\n",
       ")", sep = ""
     )
   } else if (performed_aggregation & performed_mc & !performed_bootstrap) {
@@ -138,8 +136,8 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "fcmconfr(", "\n",
       "  adj_matrices = ", x$adj_matrices, ",\n",
       "  # Aggregation and Monte Carlo Sampling", "\n",
-      "  aggregation_function = ", paste0("'", x$aggregation_fun, "'"), ",\n",
-      "  monte_carlo_sampling_draws = ", x$monte_carlo_samples, ",\n",
+      "  agg_function = ", paste0("'", x$aggregation_fun, "'"), ",\n",
+      "  num_mc_fcms = ", x$monte_carlo_samples, ",\n",
       "  # Simulation", "\n",
       "  initial_state_vector = ", x$initial_state_vector, ",\n",
       "  clamping_vector = ", x$clamping_vector, ",\n",
@@ -154,11 +152,11 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "  parallel = ", x$parallel, ",\n",
       "  n_cores = ", x$n_cores, ",\n",
       "  # Additional Options", "\n",
-      "  perform_aggregate_analysis = ", x$perform_aggregation, ",\n",
-      "  perform_monte_carlo_analysis = ", x$perform_monte_carlo, ",\n",
-      "  perform_monte_carlo_inference_bootstrap_analysis = ", x$perform_inference_bootstrap, ",\n",
-      "  include_zero_weighted_edges_in_aggregation_and_mc_sampling = ", x$include_zero_weighted_edges_in_aggregation_and_mc_sampling, ",\n",
-      "  include_monte_carlo_FCM_simulations_in_output = ",  x$include_monte_carlo_FCM_simulations_in_output, "\n",
+      "  run_agg_calcs = ", x$perform_aggregation, ",\n",
+      "  run_mc_calcs = ", x$perform_monte_carlo, ",\n",
+      "  run_ci_calcs = ", x$perform_inference_bootstrap, ",\n",
+      "  include_zeroes_in_sampling = ", x$include_zeroes_in_sampling, ",\n",
+      "  mc_sims_in_output = ",  x$mc_sims_in_output, "\n",
       ")", sep = ""
     )
   } else if (performed_aggregation & performed_mc & performed_bootstrap) {
@@ -166,8 +164,8 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "fcmconfr(", "\n",
       "  adj_matrices = ", x$adj_matrices, ",\n",
       "  # Aggregation and Monte Carlo Sampling", "\n",
-      "  aggregation_function = ", paste0("'", x$aggregation_fun, "'"), ",\n",
-      "  monte_carlo_sampling_draws = ", x$monte_carlo_samples, ",\n",
+      "  agg_function = ", paste0("'", x$aggregation_fun, "'"), ",\n",
+      "  num_mc_fcms = ", x$monte_carlo_samples, ",\n",
       "  # Simulation", "\n",
       "  initial_state_vector = ", x$initial_state_vector, ",\n",
       "  clamping_vector = ", x$clamping_vector, ",\n",
@@ -178,19 +176,19 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "  max_iter = ", x$max_iter, ",\n",
       "  min_error = ", x$min_error, ",\n",
       "  # Inference Estimation (bootstrap)", "\n",
-      "  inference_estimation_function = ", paste0("'", x$mc_inference_estimation_function, "'"), ",\n",
-      "  inference_estimation_CI = ", x$mc_inference_estimation_CI, ",\n",
-      "  inference_estimation_bootstrap_reps = ", x$mc_inference_bootstrap_reps, ",\n",
+      "  ci_centering_function = ", paste0("'", x$mc_ci_centering_function, "'"), ",\n",
+      "  confidence_interval = ", x$mc_confidence_interval, ",\n",
+      "  num_ci_bootstraps = ", x$mc_inference_bootstrap_reps, ",\n",
       "  # Runtime Options", "\n",
       "  show_progress = ", x$show_progress, ",\n",
       "  parallel = ", x$parallel, ",\n",
       "  n_cores = ", x$n_cores, ",\n",
       "  # Additional Options", "\n",
-      "  perform_aggregate_analysis = ", x$perform_aggregation, ",\n",
-      "  perform_monte_carlo_analysis = ", x$perform_monte_carlo, ",\n",
-      "  perform_monte_carlo_inference_bootstrap_analysis = ", x$perform_inference_bootstrap, ",\n",
-      "  include_zero_weighted_edges_in_aggregation_and_mc_sampling = ", x$include_zero_weighted_edges_in_aggregation_and_mc_sampling, ",\n",
-      "  include_monte_carlo_FCM_simulations_in_output = ",  x$include_monte_carlo_FCM_simulations_in_output, "\n",
+      "  run_agg_calcs = ", x$perform_aggregation, ",\n",
+      "  run_mc_calcs = ", x$perform_monte_carlo, ",\n",
+      "  run_ci_calcs = ", x$perform_inference_bootstrap, ",\n",
+      "  include_zeroes_in_sampling = ", x$include_zeroes_in_sampling, ",\n",
+      "  mc_sims_in_output = ",  x$mc_sims_in_output, "\n",
       ")", sep = ""
     )
   } else if (!performed_aggregation & performed_mc & !performed_bootstrap) {
@@ -198,7 +196,7 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "fcmconfr(", "\n",
       "  adj_matrices = ", x$adj_matrices, ",\n",
       "  # Monte Carlo Sampling", "\n",
-      "  monte_carlo_sampling_draws = ", x$monte_carlo_samples, ",\n",
+      "  num_mc_fcms = ", x$monte_carlo_samples, ",\n",
       "  # Simulation", "\n",
       "  initial_state_vector = ", x$initial_state_vector, ",\n",
       "  clamping_vector = ", x$clamping_vector, ",\n",
@@ -213,11 +211,11 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "  parallel = ", x$parallel, ",\n",
       "  n_cores = ", x$n_cores, ",\n",
       "  # Additional Options", "\n",
-      "  perform_aggregate_analysis = ", x$perform_aggregation, ",\n",
-      "  perform_monte_carlo_analysis = ", x$perform_monte_carlo, ",\n",
-      "  perform_monte_carlo_inference_bootstrap_analysis = ", x$perform_inference_bootstrap, ",\n",
-      "  include_zero_weighted_edges_in_aggregation_and_mc_sampling = ", x$include_zero_weighted_edges_in_aggregation_and_mc_sampling, ",\n",
-      "  include_monte_carlo_FCM_simulations_in_output = ",  x$include_monte_carlo_FCM_simulations_in_output, "\n",
+      "  run_agg_calcs = ", x$perform_aggregation, ",\n",
+      "  run_mc_calcs = ", x$perform_monte_carlo, ",\n",
+      "  run_ci_calcs = ", x$perform_inference_bootstrap, ",\n",
+      "  include_zeroes_in_sampling = ", x$include_zeroes_in_sampling, ",\n",
+      "  mc_sims_in_output = ",  x$mc_sims_in_output, "\n",
       ")", sep = ""
     )
   } else if (!performed_aggregation & performed_mc & performed_bootstrap) {
@@ -225,7 +223,7 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "fcmconfr(", "\n",
       "  adj_matrices = ", x$adj_matrices, ",\n",
       "  # Monte Carlo Sampling", "\n",
-      "  monte_carlo_sampling_draws = ", x$monte_carlo_samples, ",\n",
+      "  num_mc_fcms = ", x$monte_carlo_samples, ",\n",
       "  # Simulation", "\n",
       "  initial_state_vector = ", x$initial_state_vector, ",\n",
       "  clamping_vector = ", x$clamping_vector, ",\n",
@@ -236,19 +234,19 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "  max_iter = ", x$max_iter, ",\n",
       "  min_error = ", x$min_error, ",\n",
       "  # Inference Estimation (bootstrap)", "\n",
-      "  inference_estimation_function = ", paste0("'", x$mc_inference_estimation_function, "'"), ",\n",
-      "  inference_estimation_CI = ", x$mc_inference_estimation_CI, ",\n",
-      "  inference_estimation_bootstrap_reps = ", x$mc_inference_bootstrap_reps, ",\n",
+      "  ci_centering_function = ", paste0("'", x$mc_ci_centering_function, "'"), ",\n",
+      "  confidence_interval = ", x$mc_confidence_interval, ",\n",
+      "  num_ci_bootstraps = ", x$mc_inference_bootstrap_reps, ",\n",
       "  # Runtime Options", "\n",
       "  show_progress = ", x$show_progress, ",\n",
       "  parallel = ", x$parallel, ",\n",
       "  n_cores = ", x$n_cores, ",\n",
       "  # Additional Options", "\n",
-      "  perform_aggregate_analysis = ", x$perform_aggregation, ",\n",
-      "  perform_monte_carlo_analysis = ", x$perform_monte_carlo, ",\n",
-      "  perform_monte_carlo_inference_bootstrap_analysis = ", x$perform_inference_bootstrap, ",\n",
-      "  include_zero_weighted_edges_in_aggregation_and_mc_sampling = ", x$include_zero_weighted_edges_in_aggregation_and_mc_sampling, ",\n",
-      "  include_monte_carlo_FCM_simulations_in_output = ",  x$include_monte_carlo_FCM_simulations_in_output, "\n",
+      "  run_agg_calcs = ", x$perform_aggregation, ",\n",
+      "  run_mc_calcs = ", x$perform_monte_carlo, ",\n",
+      "  run_ci_calcs = ", x$perform_inference_bootstrap, ",\n",
+      "  include_zeroes_in_sampling = ", x$include_zeroes_in_sampling, ",\n",
+      "  mc_sims_in_output = ",  x$mc_sims_in_output, "\n",
       ")", sep = ""
     )
   } else if (!performed_aggregation & !performed_mc & !performed_bootstrap) {
@@ -267,9 +265,9 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "  # Runtime Options", "\n",
       "  show_progress = ", x$show_progress, ",\n",
       "  # Additional Options", "\n",
-      "  perform_aggregate_analysis = ", x$perform_aggregation, ",\n",
-      "  perform_monte_carlo_analysis = ", x$perform_monte_carlo, ",\n",
-      "  perform_monte_carlo_inference_bootstrap_analysis = ", x$perform_inference_bootstrap, ",\n",
+      "  run_agg_calcs = ", x$perform_aggregation, ",\n",
+      "  run_mc_calcs = ", x$perform_monte_carlo, ",\n",
+      "  run_ci_calcs = ", x$perform_inference_bootstrap, "\n",
       ")", sep = ""
     )
   }
