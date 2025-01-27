@@ -492,9 +492,9 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
 
   quantiles_of_mc_simulation_inferences <- data.frame(t(apply(mc_simulations_inference_df, 2, stats::quantile)))
   mc_inference_distributions_df <- data.frame(cbind(
-    CIs_by_node$node, CIs_by_node$expected_value, quantiles_of_mc_simulation_inferences$X0.,
-    CIs_by_node$lower_CI, quantiles_of_mc_simulation_inferences$X25., quantiles_of_mc_simulation_inferences$X50.,
-    quantiles_of_mc_simulation_inferences$X75., CIs_by_node$upper_CI, quantiles_of_mc_simulation_inferences$X100.
+    CIs_by_node$node, CIs_by_node$expected_value, CIs_by_node$lower_CI, CIs_by_node$upper_CI,
+    quantiles_of_mc_simulation_inferences$X0., quantiles_of_mc_simulation_inferences$X25., quantiles_of_mc_simulation_inferences$X50.,
+    quantiles_of_mc_simulation_inferences$X75., quantiles_of_mc_simulation_inferences$X100.
   ))
 
   colnames(mc_inference_distributions_df) <- c(

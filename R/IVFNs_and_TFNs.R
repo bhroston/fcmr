@@ -50,12 +50,22 @@
 #' @export
 #' @example  man/examples/ex-make_adj_matrix_w_ivfns.R
 make_adj_matrix_w_ivfns <- function(lower = matrix(), upper = matrix()) {
+  # browser()
+
   if (!identical(dim(lower), dim(upper))) {
-    stop("Failed Validation: Input adjacency matrices must be the same size")
+    stop(cli::format_error(c(
+      "x" = "Error: {.var lower} and {.var upper} must have the same dimensions (i.e. be the same size) and must be square (n x n) matrices",
+      "+++++> Input {.var lower} had dimensions: {dim(lower)}",
+      "+++++> Input {.var upper} had dimensions: {dim(upper)}"
+    )))
   }
 
   if (nrow(lower) != ncol(lower) | nrow(upper) != ncol(upper)) {
-    stop("Failed Validation: Input adjacency matrices must be square matrices (n x n)")
+    stop(cli::format_error(c(
+      "x" = "Error: {.var lower} and {.var upper} must have the same dimensions (i.e. be the same size) and must be square (n x n) matrices",
+      "+++++> Input {.var lower} had dimensions: {dim(lower)}",
+      "+++++> Input {.var upper} had dimensions: {dim(upper)}"
+    )))
   } else {
     size <- nrow(lower)
   }
@@ -66,6 +76,23 @@ make_adj_matrix_w_ivfns <- function(lower = matrix(), upper = matrix()) {
     IDs <- paste0("C", 1:nrow(lower))
     colnames(lower) <- IDs
     colnames(upper) <- IDs
+  }
+
+  if ((!all(lower <= upper))) {
+    offense_locs <- unique(rbind(which(!lower <= mode, arr.ind = TRUE), which(!mode <= upper, arr.ind = TRUE)))
+    offenses_df <- data.frame(
+      row = offense_locs[, 1],
+      col = offense_locs[, 2],
+      lower = apply(offense_locs, 1, function(locs) lower[locs[1], locs[2]]),
+      upper = apply(offense_locs, 1, function(locs) upper[locs[1], locs[2]])
+    )
+    rownames(offenses_df) <- NULL
+    print(offenses_df)
+    stop(cli::format_error(c(
+      "x" = "Error: Failed to create adj. matrix from input",
+      "+++++>  All lower values must be less than or equal to upper values.",
+      "+++++>  Check offenses printed above."
+    )))
   }
 
   adj_matrix_w_ivfns <- as.data.frame(matrix(data = list(0), nrow = size, ncol = size))
@@ -117,6 +144,9 @@ make_adj_matrix_w_ivfns <- function(lower = matrix(), upper = matrix()) {
 #' @export
 #' @example  man/examples/ex-ivfn.R
 ivfn <- function(lower = double(), upper = double()) {
+  lower <- unlist(lower)
+  upper <- unlist(upper)
+
   if (identical(lower, double())) {
     lower <- -Inf
   }
@@ -126,11 +156,19 @@ ivfn <- function(lower = double(), upper = double()) {
   }
 
   if ((!is.numeric(lower)) | (!is.numeric(upper))) {
-    stop("lower and upper must be single, numeric values", call. = FALSE)
+    stop(cli::format_error(c(
+      "x" = "Error: {.var lower} and {.var upper} must be single, numeric values",
+      "+++++> Input {.var lower} was: {lower}",
+      "+++++> Input {.var upper} was: {upper}"
+    )))
   }
 
   if (lower > upper) {
-    stop("The lower input must be less than or equal to the upper input", call. = FALSE)
+    stop(cli::format_error(c(
+      "x" = "Error: {.var lower} must be less than or equal to {.var upper}",
+      "+++++> Input {.var lower} was: {lower}",
+      "+++++> Input {.var upper} was: {upper}"
+    )))
   }
 
   structure(
@@ -277,11 +315,21 @@ make_adj_matrix_w_tfns <- function(lower = matrix(),
                                    mode = matrix(),
                                    upper = matrix()) {
   if (!(identical(dim(lower), dim(mode)) & identical(dim(mode), dim(upper)))) {
-    stop("Failed Validation: Input adjacency matrices must be the same size")
+    stop(cli::format_error(c(
+      "x" = "Error: {.var lower}, {.var mode}, and {.var upper} must have the same dimensions (i.e. be the same size) and must be square (n x n) matrices",
+      "+++++> Input {.var lower} had dimensions: {dim(lower)}",
+      "+++++> Input {.var lower} had dimensions: {dim(mode)}",
+      "+++++> Input {.var upper} had dimensions: {dim(upper)}"
+    )))
   }
 
   if (nrow(lower) != ncol(lower) | nrow(mode) != ncol(mode) | nrow(upper) != ncol(upper)) {
-    stop("Failed Validation: Input adjacency matrices must be square matrices (n x n)")
+    stop(cli::format_error(c(
+      "x" = "Error: {.var lower}, {.var mode}, and {.var upper} must have the same dimensions (i.e. be the same size) and must be square (n x n) matrices",
+      "+++++> Input {.var lower} had dimensions: {dim(lower)}",
+      "+++++> Input {.var lower} had dimensions: {dim(mode)}",
+      "+++++> Input {.var upper} had dimensions: {dim(upper)}"
+    )))
   } else {
     size <- nrow(lower)
   }
@@ -298,16 +346,17 @@ make_adj_matrix_w_tfns <- function(lower = matrix(),
     offenses_df <- data.frame(
       row = offense_locs[, 1],
       col = offense_locs[, 2],
-      lower = apply(offense_locs, 1,function(locs) lower[locs[1], locs[2]]),
-      mode = apply(offense_locs, 1,function(locs) mode[locs[1], locs[2]]),
+      lower = apply(offense_locs, 1, function(locs) lower[locs[1], locs[2]]),
+      mode = apply(offense_locs, 1, function(locs) mode[locs[1], locs[2]]),
       upper = apply(offense_locs, 1,function(locs) upper[locs[1], locs[2]])
     )
     rownames(offenses_df) <- NULL
-    writeLines("\n\nERROR: Failed to create triangular adj. matrix from input.\nCheck:")
     print(offenses_df)
-    stop(
-      "All lower values must be less than or equal to mode values which in turn, \n  must be less than or equal to upper values."
-    )
+    stop(cli::format_error(c(
+      "x" = "Error: Failed to create adj. matrix from input",
+      "+++++>  All lower values must be less than or equal to mode values which in turn, \n  must be less than or equal to upper values.",
+      "+++++>  Check offenses printed above."
+    )))
   }
 
   adj_matrix_w_tfns <- as.data.frame(matrix(data = list(0), nrow = size, ncol = size))
@@ -362,6 +411,10 @@ make_adj_matrix_w_tfns <- function(lower = matrix(),
 #' @export
 #' @example  man/examples/ex-tfn.R
 tfn <- function(lower = double(), mode = double(), upper = double()) {
+  lower <- unlist(lower)
+  mode <- unlist(mode)
+  upper <- unlist(upper)
+
   if (identical(lower, double())) {
     lower <- -Inf
   }
@@ -375,15 +428,30 @@ tfn <- function(lower = double(), mode = double(), upper = double()) {
   }
 
   if ((!is.numeric(lower)) | (!is.numeric(mode)) | (!is.numeric(upper))) {
-    stop("lower, mode, and upper must be single, numeric values", call. = FALSE)
+    stop(cli::format_error(c(
+      "x" = "Error: {.var lower} and {.var upper} must be single, numeric values",
+      "+++++> Input {.var lower} was: {lower}",
+      "+++++> Input {.var mode} was: {mode}",
+      "+++++> Input {.var upper} was: {upper}"
+    )))
   }
 
   if (lower > upper | lower > mode) {
-    stop("The lower input must be less than or equal to both the mode and upper inputs", call. = FALSE)
+    stop(cli::format_error(c(
+      "x" = "Error: {.var lower} must be less than or equal to {.var mode}, which in turn must be less than or equal to {.var upper}",
+      "+++++> Input {.var lower} was: {lower}",
+      "+++++> Input {.var mode} was: {mode}",
+      "+++++> Input {.var upper} was: {upper}"
+    )))
   }
 
   if (mode > upper) {
-    stop("The mode input must be less than or equal to the upper input", call. = FALSE)
+    stop(cli::format_error(c(
+      "x" = "Error: {.var lower} must be less than or equal to {.var mode}, which in turn must be less than or equal to {.var upper}",
+      "+++++> Input {.var lower} was: {lower}",
+      "+++++> Input {.var mode} was: {mode}",
+      "+++++> Input {.var upper} was: {upper}"
+    )))
   }
 
   structure(

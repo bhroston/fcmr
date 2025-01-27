@@ -24,3 +24,8 @@ NULL
 #' @return The result of calling `rhs(lhs)`.
 NULL
 
+# here::here() is used in a vignette and must be officially called in the
+# main R directory for R CMD Check to recognize the dependence
+# Feel free to ignore
+invisible(here::here())
+

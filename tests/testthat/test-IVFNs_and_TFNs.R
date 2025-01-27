@@ -1,4 +1,3 @@
-
 # IVFN Tests ----
 test_that("make_adj_matrix_w_ivfns works", {
   test_lower_adj_matrix <- data.frame(
@@ -71,6 +70,21 @@ test_that("make_adj_matrix_w_ivfns works", {
   expect_error(make_adj_matrix_w_ivfns(test_lower_adj_matrix, test_upper_adj_matrix))
 
 
+  # Works with objects imported from xlsx
+  # filepath <- system.file(
+  #   file.path("vignettes", "vignette_example_data", "ivfn_fcms", "sample_ivfn_fcm.xlsx"),
+  #   package = "fcmconfr"
+  # ) # Your directory path above
+  # sheets <- readxl::excel_sheets(filepath)
+  # lower_and_upper_adj_matrices <- lapply(
+  #   sheets,
+  #   function(sheet) readxl::read_excel(filepath, sheet = sheet)
+  # )
+  # lower_adj_matrix <- lower_and_upper_adj_matrices[[1]]
+  # upper_adj_matrix <- lower_and_upper_adj_matrices[[2]]
+  # expect_no_error(
+  #   ivfn_adj_matrix <- make_adj_matrix_w_ivfns(lower_adj_matrix, upper_adj_matrix)
+  # )
 })
 
 
