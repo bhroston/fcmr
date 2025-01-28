@@ -1,8 +1,8 @@
 ---
-title: "fcmconfr_example"
+title: "fcmconfr_Example"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{fcmconfr_example}
+  %\VignetteIndexEntry{fcmconfr_Example}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -12,10 +12,6 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-
-if (!identical("", system.file(package = 'devtools'))) {
-  devtools::load_all()
-}
 ```
 
 ```{r eval=FALSE}
@@ -28,7 +24,7 @@ It is a common practice when working with stakeholder FCMs to group FCMs in like
 
 Let's walkthrough how `fcmconfr` can both streamline and expand upon this type of analysis using conventional FCMs from the `sample_fcms` data set included in the package.
 
-```{r}
+```{r eval=FALSE}
 stkhldr_fcms <- sample_fcms$simple_fcms$conventional_fcms
 ```
 
@@ -40,7 +36,9 @@ Note: The steps to perform this analysis are the same for IVFN/TFN FCMs, with di
 
 Suppose that prior to using `fcmconfr` we performed a Principal Component Analysis (PCA) that identified four clusters of similar FCMs. We could then either manually or with `fcmconfr` calculate the aggregate FCM by aggregating the cluster aggregates. The figure below illustrates this process.
 
-![](images/clipboard-2607423294.png)
+::: {style="text-align: center;"}
+![](images/aggregation_approach_diagram.png){width="85%"}
+:::
 
 <br>
 
@@ -50,7 +48,11 @@ A limitation of this analysis is that it cannot propagate error throughout each 
 
 Using the monte-carlo sampling capability of `fcmconfr` we can try a different approach. Again, use PCA or a similar analysis to identify clusters of like FCMs. Then, use `fcmconfr()` to generate (N) maps representative of each cluster's possibility space by sampling edges and their weights from FCMs within the cluster. Combine these newly created empirical, monte-carlo-generated FCMs into a list object with each cluster represented with the same number (N) of entries (Num. FCMs = Num Clusters \* N). Finally, pass this list into the `fcmconfr` function. The following figure illustrates this expanded process.
 
-![](images/clipboard-3362355968.png)
+::: {style="text-align: center;"}
+![](images/monte_carlo_approach_diagram.png){width="86%"}
+:::
+
+<br>
 
 ## Using `fcmconfr`
 
@@ -58,7 +60,7 @@ Let's see how `fcmconfr` lets us perform not just the monte-carlo approach but a
 
 First, let's assume the given information about the relevant clusters and which FCMs are included in each.
 
-```{r}
+```{r eval=FALSE}
 cluster_1_fcms <- stkhldr_fcms[c(1, 5, 11, 18, 22, 28)]
 cluster_2_fcms <- stkhldr_fcms[c(2, 7, 13, 14, 15, 20, 24, 26)]
 cluster_3_fcms <- stkhldr_fcms[c(3, 6, 9, 10, 21, 23, 27)]
@@ -85,7 +87,11 @@ After loading the FCM cluster lists into the Global Environment we can call `fcm
 fcmconfr_gui()
 ```
 
-![After selecting `cluster_1_fcms` as the List of Adj. Matrices, switch to the Clamping Vector tab displayed as displayed in the figure and set the value for Guidance.Docs.for.Salt.Management to 1.](images/Screenshot%202025-01-27%20at%201.26.54%20PM.png)
+::: {style="text-align: center;"}
+![After selecting `cluster_1_fcms` as the List of Adj. Matrices, switch to the Clamping Vector tab displayed as displayed in the figure and set the value for Guidance.Docs.for.Salt.Management to 1.](images/cluster_1_fcmconfr_gui.png){width="100%"}
+:::
+
+<br>
 
 For the Aggregate approach, under the Agg. and Monte Carlo Opts tab, leave the Aggregation Analysis box checked and remove the check from the box for Monte Carlo Analysis. Likewise, for the Monte Carlo approach, remove the check from the Aggregation Analysis box and make sure the Monte Carlo Analysis box is checked instead.
 
@@ -261,7 +267,11 @@ Use `plot(cluster_aggreagate_fcms_fcmconfr)` to view the results of the Aggregat
 plot(cluster_aggregate_fcms_fcmconfr, xlim = c(-0.4, 0.4))
 ```
 
-![](images/Screenshot 2025-01-27 at 6.11.38 PM.png)
+::: {style="text-align: center;"}
+![](images/aggregate_approach_plot.png){width="100%"}
+:::
+
+<br>
 
 ### The Monte Carlo Approach with fcmconfr
 
@@ -273,7 +283,11 @@ After loading the FCM cluster lists into the Global Environment we can call `fcm
 fcmconfr_gui()
 ```
 
-![After selecting `cluster_1_fcms` as the List of Adj. Matrices, switch to the Clamping Vector tab displayed as displayed in the figure and set the value for Public.Education.Programs to 1.](images/Screenshot%202025-01-27%20at%201.26.54%20PM.png){alt="After selecting cluster_1_fcms as the List of Adj. Matrices, switch to the Clamping Vector tab displayed as displayed in the figure and set the value for Guidance.Docs.for.Salt.Management to 1."}
+::: {style="text-align: center;"}
+![After selecting cluster_1_fcms as the List of Adj. Matrices, switch to the Clamping Vector tab displayed as displayed in the figure and set the value for Guidance.Docs.for.Salt.Management to 1.](images/cluster_1_fcmconfr_gui.png){width="100%"}
+:::
+
+<br>
 
 For the Monte Carlo approach, remove the check from the Aggregation Analysis box and make sure the Monte Carlo Analysis box is checked instead.
 
@@ -281,7 +295,11 @@ There are additional parameters to define under the Monte Carlo and Bootstrap se
 
 The rest of the defaults will be appropriate for this example, but users with experience in monte carlo and bootstrapping methods should feel free to play with these values.
 
-![](images/Screenshot 2025-01-27 at 2.33.35 PM.png){width="90%"}
+::: {style="text-align: center;"}
+![](images/mc_opts_gui.png){width="90%"}
+:::
+
+<br>
 
 In the Simulation Options tab we can select our parameters for the actual simulations of our FCM models. These parameters are described in greater detail throughout the FCM literature and are not described here, though definitions are given in the gui via a side tab accessible by clicking the arrow in the gui's top-right corner.
 
@@ -491,7 +509,11 @@ Use `plot(all_clusters_mc_fcms_fcmconfr)` to view the results of the Monte Carlo
 plot(all_clusters_mc_fcms_fcmconfr, xlim = c(-0.4, 0.4))
 ```
 
-![](images/Screenshot 2025-01-27 at 6.46.09 PM.png)
+::: {style="text-align: center;"}
+![](images/mc_approach_plot_messy.png){width="100%"}
+:::
+
+<br>
 
 Note how the individual FCMs estimate data take up a lot of the figure. Plot takes some additional arguments to help out with situations like these. See the plotting section later on in this article for more information. For now, we'll just play with arguments that will help with this current plot.
 
@@ -505,7 +527,11 @@ plot(all_clusters_mc_fcms_fcmconfr,
 )
 ```
 
-![](images/Screenshot 2025-01-27 at 6.44.44 PM.png)
+::: {style="text-align: center;"}
+![](images/mc_approach_plot_clean.png){width="100%"}
+:::
+
+<br>
 
 ## The `fcmconfr` Approach
 
@@ -513,7 +539,11 @@ The above example walks through how to use `fcmconfr` to sample from the possibi
 
 By sampling from the input FCMs directly to generate empirical Monte-Carlo FCMs, `fcmconfr` can estimate confidence intervals, and thus potential error, at the group level in a single function call (see figure below).
 
-![](images/clipboard-3315492704.png){width="100%"}
+::: {style="text-align: center;"}
+![](images/fcmconfr_method_diagram.png){width="100%"}
+:::
+
+<br>
 
 Call `fcmconfr_gui()`, but this time select the raw `stkhldr_fcms` list of adjacency matrices and leave both the Aggregation Analysis and Monte Carlo Analysis boxes checked. Using Rescale again for the Squashing Function (Simulation Options) and setting the Clamping Vector value for Guidance.Docs.for.Salt.Management to 1 (or Public.Education.Programs for comparative analysis), generate a new call to `fcmconfr()`
 
@@ -588,4 +618,52 @@ plot(stkhldr_fcms_fcmconfr_guidance_docs, xlim = c(-0.5, 0.5))
 plot(stkhldr_fcms_fcmconfr_education, xlim = c(-0.5, 0.5))
 ```
 
-![](images/Screenshot 2025-01-27 at 6.02.03 PM.png)
+::: {style="text-align: center;"}
+![](images/fcmconfr_approach_plot.png){width="100%"}
+:::
+
+<br>
+
+## A Note on Plotting
+
+`plot()` is a versatile function in R in that it works differently depending on the type of input or what package is calling it. To view the documentation for the version of `plot()` used for `fcmconfr` output objects, type `?plot.fcmconfr` into the console.
+
+`plot.fcmconfr()` takes many additional inputs, the defaults of which are given below. This is what `plot` calls if passed only an `fcmconfr` output object without any additional parameters.
+
+```{r eval = FALSE}
+# Plot Defaults
+plot(fcmconfr_obj,
+     interactive = FALSE, # Set to TRUE to open shiny app
+     # Plot Formatting Parameters
+     filter_limit = 1e-4,
+     xlim = NA, # Accepts c(lower_limit, upper_limit) inputs
+     coord_flip = FALSE,
+     # Plot Aesthetic Parameters
+     mc_avg_and_CIs_color = "blue",
+     mc_inferences_color = "blue",
+     mc_inferences_alpha = 0.1,
+     mc_inferences_shape = 3,
+     ind_inferences_color = "black",
+     ind_inferences_alpha = 1,
+     ind_inferences_shape = 16,
+     agg_inferences_color = "red",
+     agg_inferences_alpha = 1,
+     agg_inferences_shape = 17,
+     ind_ivfn_and_tfn_linewidth = 0.1,
+     agg_ivfn_and_tfn_linewidth = 0.6
+)
+```
+
+A majority of these parameters describe how points from different analyses are plotted. Any or all of these parameters can be included in a call to `plot` when plotting `fcmconfr` output objects. Alpha changes the point transparency with 1 being opaque and 0 being completely transparent.
+
+Notice the `interactive` parameter. Include `interactive = TRUE` to launch the plot inside a shiny app to toggle the results from different analyses on/off. This is a great option for exploring early results. (You may need to play with the text font size in the app to get a better view of the axis labels).
+
+```{r eval=FALSE}
+plot(stkhldr_fcms_fcmconfr_guidance_docs,
+     interactive = TRUE,
+     xlim = c(-0.5, 0.5))
+```
+
+::: {style="text-align: center;"}
+![](images/interactive_plot_gui.png){width="100%"}
+:::

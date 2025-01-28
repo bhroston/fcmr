@@ -68,6 +68,21 @@ test_that("fcmconfr_plot additional inputs work", {
   )
   # ----
 
+  # xlim ----
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, xlim = "a")
+  )
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, xlim = -1)
+  )
+  expect_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, xlim = c(2, 1))
+  )
+  expect_no_error(
+    plot(tfn_clamping_inputs_agg_and_mc_w_bs, xlim = c(-0.5, 0.5))
+  )
+  # ----
+
   # coord_flip ----
   expect_error(
     plot(tfn_clamping_inputs_agg_and_mc_w_bs, coord_flip = "a")

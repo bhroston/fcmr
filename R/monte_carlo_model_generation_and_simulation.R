@@ -498,16 +498,14 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
   ))
 
   colnames(mc_inference_distributions_df) <- c(
-    "node", "expected_value", "min",
-    paste0(lower_CI, "_CI"), "0.25_quantile", "median",
-    "0.75_quantile", paste0(upper_CI, "_CI"), "max"
+    "node", "expected_value", paste0(lower_CI, "_CI"), paste0(upper_CI, "_CI"),
+    "min",  "0.25_quantile", "median", "0.75_quantile", "max"
   )
 
   for (col in 2:ncol(mc_inference_distributions_df)) {
     mc_inference_distributions_df[, col] <- as.numeric(mc_inference_distributions_df[, col])
   }
 
-  #
   print("Done", quote = FALSE)
 
   structure(
