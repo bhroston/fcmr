@@ -72,6 +72,7 @@ plot(tfn_example_fcmconfr,
      interactive = FALSE, # Set to TRUE to open shiny app
      # Plot Formatting Parameters
      filter_limit = 1e-4,
+     xlim = c(-1, 1),
      coord_flip = FALSE,
      # Plot Aesthetic Parameters
      mc_avg_and_CIs_color = "blue",
@@ -93,6 +94,7 @@ plot(tfn_example_fcmconfr,
      interactive = FALSE, # Set to TRUE to open shiny app
      # Plot Formatting Parameters
      filter_limit = 1e-4,
+     xlim = c(-0.6, 0.6),
      coord_flip = FALSE,
      # Plot Aesthetic Parameters
      mc_avg_and_CIs_color = "blue",

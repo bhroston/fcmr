@@ -67,21 +67,25 @@ remotes::install_github("bhroston/fcmconfr")
 
 ## Using fcmconfr (Example)
 
+Issue: Be able to load adj.matrices from igraph as well as ordinary adj.
+matrices
+
 ``` r
 library(fcmconfr)
 
 # This example uses the salinization_ses_fcms dataset included within the package
-# 
+
+# set.seed(81)
 
 # Use fcmconfr_gui() to select inputs or manually identify input parameters
 # fcmconfr_gui()
 
 # Use fcmconfr() to perform the analysis
-fcmconfr(
+fcmconfr_results <- fcmconfr(
   adj_matrices = salinization_ses_fcms,
   # Aggregation and Monte Carlo Sampling
   aggregation_function = 'mean',
-  monte_carlo_sampling_draws = 1000,
+  monte_carlo_sampling_draws = 100,
   # Simulation
   initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
   clamping_vector = c(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
@@ -106,6 +110,8 @@ fcmconfr(
   include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
   include_monte_carlo_FCM_simulations_in_output = FALSE
 )
+
+fcmconfr_plot(fcmconfr_results)
 ```
 
 ## Citation
@@ -131,7 +137,11 @@ citation("fcmconfr")
 
 ## Further Reading
 
-further reading here
+See package vignettes:
+
+- Getting started with fcmconfr
+
+- Detailed example
 
 ## Contributing
 

@@ -13,3 +13,5 @@
 _\.new\.png$
 ^codecov\.yml$
 ^\.covrignore$
+^README\.Rmd$
+^vignettes/articles$

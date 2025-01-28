@@ -23,13 +23,13 @@ shiny_iplot_server <- function(input, output, session) {
 
   analyses_performed <- shiny::reactive({
     analyses <- c("input")
-    if (iplot_fcmconfr_obj()$params$additional_opts$perform_aggregate_analysis) {
+    if (iplot_fcmconfr_obj()$params$additional_opts$run_agg_calcs) {
       analyses <- c(analyses, "aggregate")
     }
-    if (iplot_fcmconfr_obj()$params$additional_opts$perform_monte_carlo_analysis) {
+    if (iplot_fcmconfr_obj()$params$additional_opts$run_mc_calcs) {
       analyses <- c(analyses, "mc")
     }
-    if (iplot_fcmconfr_obj()$params$additional_opts$perform_monte_carlo_inference_bootstrap_analysis) {
+    if (iplot_fcmconfr_obj()$params$additional_opts$run_ci_calcs) {
       analyses <- c(analyses, "bs")
     }
     analyses
@@ -46,6 +46,7 @@ shiny_iplot_server <- function(input, output, session) {
     if ("bs" %in% analyses_performed()) {
       button_labels <- c(button_labels, "CIs about Avg MC Inferences")
     }
+    button_labels
   })
 
   output$inferences_to_plot <- shiny::renderUI({

@@ -608,5 +608,9 @@ test_that("get_inferences works", {
 
 #######
 
+# test_that("here works for R CMD Check", {
+#   expect_no_error(here::here())
+# })
+
 
 
