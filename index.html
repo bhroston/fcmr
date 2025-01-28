@@ -42,7 +42,8 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/Input-Outut.html">Input-Outut</a></li>
+<li><a class="dropdown-item" href="articles/fcmconfr_example.html">fcmconfr_Example</a></li>
+    <li><a class="dropdown-item" href="articles/Importing_FCMs.html">Importing_FCMs</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
@@ -93,21 +94,23 @@
 <div class="section level2">
 <h2 id="using-fcmconfr-example">Using fcmconfr (Example)<a class="anchor" aria-label="anchor" href="#using-fcmconfr-example"></a>
 </h2>
+<p>Issue: Be able to load adj.matrices from igraph as well as ordinary adj. matrices</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/bhroston/fcmconfr" class="external-link">fcmconfr</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># This example uses the salinization_ses_fcms dataset included within the package</span></span>
-<span><span class="co"># </span></span>
+<span></span>
+<span><span class="co"># set.seed(81)</span></span>
 <span></span>
 <span><span class="co"># Use fcmconfr_gui() to select inputs or manually identify input parameters</span></span>
 <span><span class="co"># fcmconfr_gui()</span></span>
 <span></span>
 <span><span class="co"># Use fcmconfr() to perform the analysis</span></span>
-<span><span class="fu"><a href="reference/fcmconfr.html">fcmconfr</a></span><span class="op">(</span></span>
+<span><span class="va">fcmconfr_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fcmconfr.html">fcmconfr</a></span><span class="op">(</span></span>
 <span>  adj_matrices <span class="op">=</span> <span class="va">salinization_ses_fcms</span>,</span>
 <span>  <span class="co"># Aggregation and Monte Carlo Sampling</span></span>
 <span>  aggregation_function <span class="op">=</span> <span class="st">'mean'</span>,</span>
-<span>  monte_carlo_sampling_draws <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  monte_carlo_sampling_draws <span class="op">=</span> <span class="fl">100</span>,</span>
 <span>  <span class="co"># Simulation</span></span>
 <span>  initial_state_vector <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  clamping_vector <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
@@ -131,7 +134,9 @@
 <span>  perform_monte_carlo_inference_bootstrap_analysis <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  include_zero_weighted_edges_in_aggregation_and_mc_sampling <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  include_monte_carlo_FCM_simulations_in_output <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">fcmconfr_plot</span><span class="op">(</span><span class="va">fcmconfr_results</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
@@ -157,7 +162,11 @@
 <div class="section level2">
 <h2 id="further-reading">Further Reading<a class="anchor" aria-label="anchor" href="#further-reading"></a>
 </h2>
-<p>further reading here</p>
+<p>See package vignettes:</p>
+<ul>
+<li><p>Getting started with fcmconfr</p></li>
+<li><p>Detailed example</p></li>
+</ul>
 </div>
 <div class="section level2">
 <h2 id="contributing">Contributing<a class="anchor" aria-label="anchor" href="#contributing"></a>
