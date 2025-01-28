@@ -107,6 +107,10 @@ print.fcmconfr_gui_input <- function(x, ...) {
   performed_mc <- x$perform_monte_carlo
   performed_bootstrap <- x$perform_inference_bootstrap
 
+  if (x$parallel == "FALSE") {
+    x$n_cores <- "integer()"
+  }
+
   if (performed_aggregation & !performed_mc & !performed_bootstrap) {
     cat(
       "fcmconfr(", "\n",
