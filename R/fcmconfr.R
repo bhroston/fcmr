@@ -605,8 +605,8 @@ organize_fcmconfr_output <- function(...) {
     )
   }
 
-
   if (variables$run_mc_calcs) {
+    fcmconfr_output$mc_adj_matrices = variables$mc_adj_matrices
     fcmconfr_output$inferences$monte_carlo_fcms = list(
       all_inferences = variables$mc_inferences$inference,
       simulations = variables$mc_inferences$sims

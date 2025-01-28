@@ -46,6 +46,7 @@ shiny_iplot_server <- function(input, output, session) {
     if ("bs" %in% analyses_performed()) {
       button_labels <- c(button_labels, "CIs about Avg MC Inferences")
     }
+    button_labels
   })
 
   output$inferences_to_plot <- shiny::renderUI({

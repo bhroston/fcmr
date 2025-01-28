@@ -367,6 +367,7 @@ autoplot.fcmconfr <- function(object, ...) {
 
   # Plot formatting parameters
   filter_limit <- additional_inputs$filter_limit
+  xlim <- additional_inputs$xlim
   coord_flip <- additional_inputs$coord_flip
   text_font_size <- additional_inputs$text_font_size
   # Plot aesthetic parameters
@@ -408,13 +409,15 @@ autoplot.fcmconfr <- function(object, ...) {
   inputs_and_agg <- (!(identical(plot_data$aggregate_inferences$name, "blank")) & identical(plot_data$mc_inferences$name, "blank") & identical(plot_data$mc_inference_CIs$name, "blank"))
   inputs_agg_and_mc_no_bs <- (!(identical(plot_data$aggregate_inferences$name, "blank")) & !(identical(plot_data$mc_inferences$name, "blank")) & identical(plot_data$mc_inference_CIs$name, "blank"))
   inputs_agg_and_mc_w_bs <- (!(identical(plot_data$aggregate_inferences$name, "blank")) & !(identical(plot_data$mc_inferences$name, "blank")) & !(identical(plot_data$mc_inference_CIs$name, "blank")))
+  inputs_no_agg_and_mc_w_no_bs <- ((identical(plot_data$aggregate_inferences$name, "blank")) & !(identical(plot_data$mc_inferences$name, "blank")) & (identical(plot_data$mc_inference_CIs$name, "blank")))
+  inputs_no_agg_and_mc_w_bs <- ((identical(plot_data$aggregate_inferences$name, "blank")) & !(identical(plot_data$mc_inferences$name, "blank")) & !(identical(plot_data$mc_inference_CIs$name, "blank")))
   # ----
 
   ggplot_main <- ggplot() +
     ggplot2::geom_vline(xintercept = zero_intercept, linetype = "dotted", size = 0.5)
 
   # MC Avg Ingerences CIs ----
-  if (inputs_agg_and_mc_w_bs) {
+  if (inputs_agg_and_mc_w_bs | inputs_no_agg_and_mc_w_bs) {
     ggplot_main <- ggplot_main +
       ggplot2::geom_crossbar(
         data = ggplot2::remove_missing(plot_data$mc_inference_CIs),
@@ -432,7 +435,7 @@ autoplot.fcmconfr <- function(object, ...) {
   # ----
 
   # MC FCM Inferences ----
-  if (inputs_agg_and_mc_no_bs | inputs_agg_and_mc_w_bs) {
+  if (inputs_agg_and_mc_no_bs | inputs_agg_and_mc_w_bs | inputs_no_agg_and_mc_w_bs | inputs_no_agg_and_mc_w_no_bs) {
     ggplot_main <- ggplot_main +
       ggplot2::geom_point(
         data = ggplot2::remove_missing(plot_data$mc_inferences),
@@ -476,7 +479,7 @@ autoplot.fcmconfr <- function(object, ...) {
   # ----
 
   # Aggregate FCM Inferences ----
-  if (!inputs_only) {
+  if (!inputs_only & !(inputs_no_agg_and_mc_w_bs | inputs_no_agg_and_mc_w_no_bs)) {
     if (object$fcm_class == "conventional") {
       ggplot_main <- ggplot_main +
         ggplot2::geom_point(
@@ -509,7 +512,7 @@ autoplot.fcmconfr <- function(object, ...) {
   scale_shape_manual_override_str <- paste0("c(ind_inferences_shape")
   scale_linewidth_maual_values_str <- paste0("c('Ind FCM Inferences' = ind_ivfn_and_tfn_linewidth")
   scale_breaks_values_str <- paste0("c('Ind FCM Inferences'")
-  if (!inputs_only) {
+  if (!inputs_only & !(inputs_no_agg_and_mc_w_bs | inputs_no_agg_and_mc_w_no_bs)) {
     scale_color_manual_values_str <- paste0(scale_color_manual_values_str, ", 'Agg FCM Inferences' = agg_inferences_color")
     scale_alpha_manual_values_str <- paste0(scale_alpha_manual_values_str, ", 'Agg FCM Inferences' = agg_inferences_alpha")
     scale_shape_manual_values_str <- paste0(scale_shape_manual_values_str, ", 'Agg FCM Inferences' = agg_inferences_shape")
@@ -517,7 +520,7 @@ autoplot.fcmconfr <- function(object, ...) {
     scale_linewidth_maual_values_str <- paste0(scale_linewidth_maual_values_str, ", 'Agg FCM Inferences' = ind_ivfn_and_tfn_linewidth")
     scale_breaks_values_str <- paste0(scale_breaks_values_str, ", 'Agg FCM Inferences'")
   }
-  if (inputs_agg_and_mc_no_bs | inputs_agg_and_mc_w_bs) {
+  if (inputs_agg_and_mc_no_bs | inputs_agg_and_mc_w_bs | inputs_no_agg_and_mc_w_bs | inputs_no_agg_and_mc_w_no_bs) {
     scale_color_manual_values_str <- paste0(scale_color_manual_values_str, ", 'MC FCM Inferences' = mc_inferences_color")
     scale_alpha_manual_values_str <- paste0(scale_alpha_manual_values_str, ", 'MC FCM Inferences' = mc_inferences_alpha")
     scale_shape_manual_values_str <- paste0(scale_shape_manual_values_str, ", 'MC FCM Inferences' = mc_inferences_shape")
@@ -617,6 +620,13 @@ autoplot.fcmconfr <- function(object, ...) {
 
   scales_expr <- parse(text = scales_str)
   ggplot_main <- eval(scales_expr)
+
+  if (!all(is.na(xlim))) {
+    ggplot_main <- ggplot_main +
+      ggplot2::xlim(xlim[1], xlim[2])
+  }
+
+
   # ----
 
   if (!coord_flip) {
@@ -709,7 +719,7 @@ plot.fcmconfr <- function(x, ...) {
   # Plot Format Parameters
   # filter_limit ----
   if (!("filter_limit" %in% names(additional_inputs))) {
-    filter_limit = 1e-3
+    filter_limit <- 1e-3
     additional_inputs$filter_limit <- filter_limit
   }
   if (is_not_numeric(additional_inputs$filter_limit)) {
@@ -722,6 +732,32 @@ plot.fcmconfr <- function(x, ...) {
     stop(cli::format_error(c(
       "x" = "Error: {.var filter_limit} must be a positive numeric value greater than 0",
       "+++++> Input {.var filter_limit} was: {additional_inputs$filter_limit}"
+    )))
+  }
+  # ----
+
+  # xlim ----
+  if (!("xlim" %in% names(additional_inputs))) {
+    xlim <- NA
+    additional_inputs$xlim <- xlim
+  }
+  if (!all(is.na(additional_inputs$xlim)) & length(additional_inputs$xlim) != 2) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var xlim} must be a set of two values in the form of c(lower_x_limit, upper_x_limit)",
+      "+++++> Input {.var xlim} was: {additional_inputs$xlim}"
+    )))
+  }
+  if (!all(is.na(additional_inputs$xlim)) & !is.numeric(additional_inputs$xlim)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var xlim} must be a set of two values in the form of c(lower_x_limit, upper_x_limit)",
+      "+++++> Input {.var xlim} was: {additional_inputs$xlim}"
+    )))
+  }
+  if (!all(is.na(additional_inputs$xlim)) & (additional_inputs$xlim[1] >= additional_inputs$xlim[2])) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var xlim} must be a set of two values in the form of c(lower_x_limit, upper_x_limit)",
+      "+++++> Input {.var xlim} was: {additional_inputs$xlim}",
+      "+++++> Note - The lower_x_limit was greater than or equal to the upper_x_limit"
     )))
   }
   # ----
@@ -814,7 +850,7 @@ plot.fcmconfr <- function(x, ...) {
 
   # mc_inferences_alpha ----
   if (!"mc_inferences_alpha" %in% names(additional_inputs)) {
-    mc_inferences_alpha <- 1
+    mc_inferences_alpha <- 0.2
     additional_inputs$mc_inferences_alpha <- mc_inferences_alpha
   }
   if (is_not_numeric(additional_inputs$mc_inferences_alpha)) {
@@ -1033,7 +1069,7 @@ plot.fcmconfr <- function(x, ...) {
   acceptable_inputs <- c(
     "interactive",
     # Plot Format Parameters
-    "filter_limit", "coord_flip", "text_font_size",
+    "filter_limit", "xlim", "coord_flip", "text_font_size",
     # Plot Aesthetic Parameters
     "mc_avg_and_CIs_color", "mc_avg_and_CIs_alpha",
     "mc_inferences_color", "mc_inferences_alpha", "mc_inferences_shape",
