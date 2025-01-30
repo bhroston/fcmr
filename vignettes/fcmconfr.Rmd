@@ -21,27 +21,27 @@ library(fcmconfr)
 
 # The `fcmconfr` Workflow
 
-`fcmconfr` streamlines FCM analysis and generally follows a 4-Step workflow:
+`fcmconfr` streamlines the process of conducting dynamic simulations using fuzzy cognitive maps (FCMs). The package can (1) analyze different types of FCMs (conventional, interval-value fuzzy number, and triangular fuzzy number), (2) perform dynamic simulations on one or more individual FCMs, (3) aggregate individual FCMs so that dynamic simulations can be performed on the aggregate, and (4) estimate uncertainty using Monte Carlo approaches. A typical fcmconfer workflow includes the following four steps:
 
 1.  Import FCMs
 
-2.  Use `fcmconfr_gui()` to Set Up Parameters
+2.  Set simulation parameters using `fcmconfr_gui()`
 
-3.  Run `fcmconfr()`
+3.  Run simulations using `fcmconfr()`
 
-4.  Explore `fcmconfr()` Results
+4.  Explore outputs using `get_inferences()` and `plot()`
 
-This guide walks through a typical workflow and describes additional functions included in `fcmconfr` that can help give users more information throughout.
+This guide walks through each of these steps, from data import to visualization.
 
 ## 1. Import FCMs
 
-One thing that makes `fcmconfr` unique is that it can handle different types of FCMs beyond the conventional format where edge weights are represented as individual numeric values. These include FCMs with edge weights represented as interval-value fuzzy numbers (IVFN-FCMs) and triangular fuzzy numbers (TFN-FCMs).
+`fcmconfr` can handle three different types of FCMs: (1) conventional, where each edge weight is represented using numeric values, (2) interval-value fuzzy number FCMs (IVFN-FCMs), where each edge weight is represented using two numeric values (lower bound, upper bound; i.e., an IVFN), and (3) triangular fuzzy number FCMs (TFN-FCMs), where each edge weight is represented using three numeric values (lower bound, mode, upper bound; i.e., a TFN).
 
-*For a more detailed guide for importing the three different types of FCMs compatible with `fcmconfr`, users are highly recommended to review the `Importing_FCMs` vignette.*
+*A detailed guide for importing each FCM type in a maner compatible with `fcmconfr` has been provided in a separate, companion vignette (Importing_FCMs). A brief description of the typical workflow used to import each FCM type has been provided below.*
 
 ### 1.1 Importing Conventional FCMs
 
-Importing Conventional FCMs involves straightforward calls to `readxl::read_excel()` or `read.csv()` (or similar functions for other file formats). Users planning to use `fcmconfr` to analyze multiple FCMs together should group them into a single `list` object.
+Conventional FCMs can be imported as adjacency matrices, either from excel or csv files using standard import functions (e.g., calls to `readxl::read_excel()` or `read.csv()`). Users who plan to use `fcmconfr` to analyze multiple FCMs together should group them into a single `list` object.
 
 ```{r eval=FALSE}
 # Import Conventional FCMs into the Global Environment
@@ -56,9 +56,7 @@ fcms <- list(fcm_1, fcm_2, ..., fcm_n)
 
 ### 1.2 Importing IVFN FCMs
 
-For Conventional FCMs, each edge weight is an individual number, but IVFN FCMs have interval edge weights that by nature must be described by two values, a lower and upper bound to the interval. Unfortunately, .xlsx and .csv files can only store one value per "cell" so we have to get creative to combine multiple values into a single edge weight.
-
-`fcmconfr` uses the `make_adj_matrix_w_ivfns()` function to make this happen. `make_adj_matrix_w_ivfns()` creates an IVFN FCM from an adjacency matrix of only the lower bounds for each edge weight and another adjacency matrix of only the upper bounds for each edge weight. This next example shows how this strategy works in practice.
+Because IVFN-FCMs have interval edge weights with lower and upper bounds, separate adjacency matrices must be created and uploaded for each bound (lower and upper). We can then use the `fcmconfr` function `make_adj_matrix_w_ivfns()` to combine the two, creating a single adjacency matrix with interval edge weights. As noted previously for conventional FCMs, users who plan to analyze multiple IVFN FCMs together should group them into a single list object.
 
 ```{r eval=FALSE}
 # Import separate adjacency matrices representing the 
@@ -70,17 +68,15 @@ ivfn_fcm_1_upper_adj_matrix <- readxl::read_excel(ivfn_fcm_1_upper_adj_matrix_fi
 ivfn_fcm_1 <- make_adj_matrix_w_ivfns(
   ivfn_fcm_1_lower_adj_matrix, ivfn_fcm_1_upper_adj_matrix
 )
-```
 
-Like with Conventional FCMs, group IVFN FCMs into a `list` object to analyze multiple at the same time in `fcmconfr()`
-
-```{r eval=FALSE}
+# To analyze multiple IVFN FCMs, group them together 
+# in a single list object
 ivfn_fcms <- list(ivfn_fcm_1, ivfn_fcm_2, ..., ivfn_fcm_n)
 ```
 
 ### 1.3 Importing TFN FCMs
 
-Importing TFN FCMs builds on the strategy used to import IVFN FCMs with the main difference that TFNs are described with three values, a lower and upper bound as well as a mode describing the most-likely value of the edge weight. So, `make_adj_matrix_w_tfns()` takes in three adjacency matrices (one for the lower bounds, one for the modes, and one for the upper bounds) make a TFN FCM, and it functions very similarly to `make_adj_matrix_w_ivfns()`.
+The workflow for importing TFN FCMs is comparable to the workflow for IVFN FCMs. The main differences are (1) the need to upload three adjacency matrices rather than two (one for the lower bound, one for the mode, and one for the upper bound) and (2) the function call to combine these matrices is `make_adj_matrix_w_tfns()` (rather than `make_adj_matrix_w_ivfns()`). As noted previously, users who plan to analyze multiple TFN-FCMs together should group them into a single `list` object.
 
 ```{r eval=FALSE}
 # Import separate adjacency matrices representing the 
@@ -93,61 +89,45 @@ ivfn_fcm_1_upper_adj_matrix <- readxl::read_excel(ivfn_fcm_1_upper_adj_matrix_fi
 tfn_fcm_1 <- make_adj_matrix_w_tfns(
   tfn_fcm_1_lower_adj_matrix, tfn_fcm_1_mode_adj_matrix, tfn_fcm_1_upper_adj_matrix
 )
-```
 
-Once again, group TFN FCMs into a `list` to analyze multiple at a time in `fcmconfr()`.
-
-```{r eval=FALSE}
+# To analyze multiple TFN-FCMs, group them together
+# in a single list object
 tfn_fcms <- list(tfn_fcm_1, tfn_fcm_2, ..., tfn_fcm_n)
 ```
 
 ### 1.4 Interacting with IVFN and TFN FCM Adjacency Matrix Elements
 
-Unlike an ordinary matrix of numeric values, elements adjacency matrices made of IVFNs are technically list objects. Consider the `numeric_df` matrix given below:
-
-```{r eval=FALSE}
-numeric_df <- data.frame("C1" = c(0, 0.75), "C2" = c(0.5, 0))
-numeric_df
-```
-
-We can access elements within `numeric_df` with indexing. For example, to get the element in the second column of the first row we can run `numeric_df[1, 2]` or `numeric_df$C2[1]` , both of which would return `0.5` .
-
-```{r eval=FALSE}
-numeric_df[1, 2] # Numeric Indexing
-numeric_df$C2[1] # Column Indexing
-```
-
-Dataframes traditionally cannot be built from custom object classes like the `ivfn` and `tfn` classes defined for `fcmconfr`. However, `fcmconfr` works around this by storing `ivfn` and `tfn` objects within lists and then treating a dataframe of `ivfn` or `tfn` objects as a dataframe of lists that contain `ivfn` or `tfn` objects.
-
-Since users can make `ivfn` or `tfn` adjacency matrices by importing matrices from files, they will rarely have to create an `ivfn` or `tfn` matrix from scratch, but it is valuable to provide a code example of how `fcmconfr` creates such objects.
+Since users can make IVFN or TFN adjacency matrices by importing matrices from files, they will rarely have to create an IVFN or TFN matrix from scratch, but it is valuable to provide a code example of how `fcmconfr` creates such objects. The example we provide below is for an IVFN matrix. The approach for a TFN matrix is similar, but uses three- rather than two-element lists.
 
 ```{r eval=FALSE}
 # First, create a dataframe from a n x n matrix of lists
-ivfn_df <- data.frame(matrix(data = list(), nrow = 2, ncol = 2))
+ivfn_fcm <- data.frame(matrix(data = list(), nrow = 2, ncol = 2))
 
-# Then, place the ivfn/tfn within a list and define its location indeces
-# Note that since ivfn_df is a matrix of lists, we have to define the new ivfn object as the first element of the list at index [1, 2], hence the need for [[1]].
-ivfn_df[1, 1][[1]] <- list(ivfn(0, 0))
-ivfn_df[1, 2][[1]] <- list(ivfn(0.4, 0.6))
-ivfn_df[2, 1][[1]] <- list(ivfn(0.7, 0.8))
-ivfn_df[2, 2][[1]] <- list(ivfn(0, 0))
+# Then, place the ivfn/tfn within a list and define its location indices
+# Note that since ivfn_df is a matrix of lists, we have to define the new 
+# ivfn object as the first element of the list at index [1, 2], hence the
+# need for [[1]] at the end.
+ivfn_fcm[1, 1][[1]] <- list(ivfn(0, 0))
+ivfn_fcm[1, 2][[1]] <- list(ivfn(0.4, 0.6))
+ivfn_fcm[2, 1][[1]] <- list(ivfn(0.7, 0.8))
+ivfn_fcm[2, 2][[1]] <- list(ivfn(0, 0))
 ```
 
 ::: {style="text-align: center;"}
-![Note that the console output for ivfn_df will vary depending on whether it is loaded as a matrix or dataframe. As a dataframe it will printout the IVFN values, while as a matrix it will printout the object types, ivfn, 2 . We interact with both matrices the same way even though the console outputs are different.](images/clipboard-1503284098.png){width="70%"}
+![Note that the console output for `ivfn_fcm` will vary depending on whether it is loaded as a matrix or dataframe. As a dataframe it will print out the IVFN values, while as a matrix it will print out the object types, `ivfn, 2`. These differences do not impact the way we interact with `ivfn_fcm`.](images/clipboard-1503284098.png){width="70%"}
 :::
 
 <br>
 
-To get the `ivfn` at a particular location, then, if we simply call `ivfn_df[row, col]` that will return a list containing an `ivfn`. To get the `ivfn` by itself, add `[[1]]` to indicate the first value of the list object
+To report the IVFN of a particular edge within an IVFN matrix, we can call `ivfn_fcm[row, col]` which returns a `list` object or `ivfn_fcm[row, col][[1]]` to return the first value record in the `list` object, the IVFN itself.
 
 ::: {style="text-align: center;"}
-![](images/clipboard-1371053499.png){width="50%"}
+![](images/ivfn_example.png){width="50%"}
 :::
 
 <br>
 
-Now, say we want to separate the IVFN adjacency matrix back to its components of an adjacency matrix of lower bounds and another of upper bounds. Pairing `apply` with the above indexing strategy is an effective method here:
+To decompose an IVFN matrix into its upper and lower bounds, we can run the following:
 
 ```{r eval=FALSE}
 lower_adj_matrix <- apply(ivfn_df, c(1, 2), function(element) element[[1]]$lower)
@@ -156,9 +136,9 @@ upper_adj_matrix <- apply(ivfn_df, c(1, 2), function(element) element[[1]]$upper
 
 ### 1.5 Viewing FCMs
 
-Users may display FCMs in RStudio's Viewer pane using `fcm_view()` that plots an FCM (adjacency matrix) as a `visNetwork` object. The interactive plot is fairly rudimentary in that users may only manipulate node positions (i.e., node layout).
+Users may display FCMs in RStudio's Viewer pane using `fcm_view()`, which plots an FCM (adjacency matrix) as a `visNetwork` object. The resulting plot is interactive. Users can manipulate node positions (i.e. node layout) to explore the FCM from different angles. The function can be used with any of the three FCM types recognized by `fcmconfr`. For IVFN and TFN-FCMs, `fcm_view()` plots the average edge weight to simplify the output.
 
-Two basic uses of `fcm_view()` are given below.
+Two basic applications of `fcm_view()` are illustrated below, one that plots the FCM in the Viewer pane and one that plots the FCM in a separate Shiny App.
 
 ```{r eval=FALSE}
 # Loading FCM from sample_fcms data
@@ -167,49 +147,55 @@ adj_matrix <- sample_fcms$simple_fcms$conventional_fcms[[1]]
 # Show FCM in Viewer Pane
 fcm_view(fcm_adj_matrix = adj_matrix)
 
-# Show FCM in Separate Shiny App (returns visNetwork object in Global Environment)
+# Show FCM in Separate Shiny App (returns a visNetwork object in the Global Environment)
 fcm_view(fcm_adj_matrix = adj_matrix, with_shiny = TRUE)
 ```
 
 ::: {style="text-align: center;"}
-![visNetwork Output of fcm_view. Drag nodes to rearrange layout.](images/fcm_view_output.png){alt="visNetwork Output of fcm_view. Drag nodes to rearrange layout." width="80%"}
+![visNetwork Output of fcm_view. Drag nodes to rearrange layout.](images/fcm_view_output.png){width="80%"}
 :::
 
-`fcm_view()` has an additional argument `with_shiny` (default `with_shiny = FALSE`). If set to TRUE, plots FCM in a shiny app that records the `visNetwork` output in the global environment as `view_fcm_visNetwork_output`. This has two functionalities, 1) the output variable will store node coordinates so nodes will be plotted in the same position if manipulated by the user and 2) the output variable may be interacted with as a typical `visNetwork` object for users wanting additional customization.
+`fcm_view()` has an additional argument `with_shiny` (default `= FALSE`). If set to TRUE, `fcm_view()` records the `visNetwork` output in the Global Environment as `view_fcm_visNetwork_output`. This output stores node coordinates so nodes can be plotted in the same position if manipulated by the user and can be interacted with as a typical `visNetwork` object for users interested in additional customization.
 
-Note: For IVFN and TFN FCMs, `fcm_view()` plots the average edge weight to simplify the output. At its core, `fcm_view()` is just a call to a few `visNetwork` functions. Users with experience with `visNetwork` should feel free to plot FCMs directly with `visNetwork` for outputs with greater detail.
+Note: At its core, `fcm_view()` is just a call to a few `visNetwork` functions. Users with experience with `visNetwork` should feel free to plot FCMs directly with `visNetwork` for greater flexibility.
 
-## 2. Use `fcmconfr_gui()` to Set Up Parameters
+## 2. Set Simulation Parameters using `fcmconfr_gui()`
 
-The primary `fcmconfr()` function is the central function of the package and performs many different analyses, so as a result it has many different parameters. `fcmconfr` includes the `fcmconfr_gui()` function to help guide users through parameter selection.
+The primary `fcmconfr()` function is the central function of the package and requires specifying many different parameters. The `fcmconfr_gui()` function is intended to help guide users through that process.
 
-`fcmconfr_gui()` performs two tasks: at runtime it launches a shiny app that lets users interactively select parameters and then outputs the corresponding call to `fcmconfr()` in the console that users can copy-and-paste to run in their own scripts.
+`fcmconfr_gui()` performs two tasks: (1) it launches a Shiny app that lets users interactively select parameters and (2) it outputs a corresponding call to `fcmconfr()` that users can copy-and-paste to run in their own scripts.
 
-While `fcmconfr_gui()` cannot itself be passed any inputs, it does require the local environment to have either an individual FCM or a list of FCMs object (which are selected within the gui) to work (accepts Conventional FCMs, IVFN FCMs, or TFN FCMs).
+No inputs are provided to `fcmconfr_gui()`, but the local environment must have an individual FCM or a `list` object containing multiple FCMs in order for `fcmconfr_gui()` to be used. Once `fcmconfr_gui()` is running the user selects the appropriate FCMs to analyze from a dropdown menu titled Adj. Matrix or List of Adj. Matrices.
 
-Once the FCMs are imported into the Global Environment and grouped in a `list` object, call `fcmconfr_gui()` by itself to launch the gui.
+Matrices conforming to any of the above-noted FCM types (conventional, IVFN, or TFN) can be selected for Analysis.
 
 ```{r eval=FALSE}
 fcmconfr_gui()
 ```
 
 ::: {style="text-align: center;"}
-![A screenshot of fcmconfr_gui with an example list of FCMs selected in the dropdown menu.](images/fcmconfr_gui_screenshot.png){width="90%"}
+![A screenshot of `fcmconfr_gui()` with an example list of FCMs selected in the dropdown menu.](images/fcmconfr_gui_screenshot.png){width="90%"}
 :::
 
-`fcmconfr_gui` is organized into four tabs: Data, Agg. and Monte Carlo Options, Simulation Options, and Runtime Options.
+The GUI interface is organized into four tabs: Data, Agg. and Monte Carlo Options, Simulation Options, and Runtime Options, which are described further below.
 
--   Data: Select FCMs to analyze and change values in the Initial State (Pulse) Vector or Clamping Vector to see how different concepts influence the system. (Note: Best practices in the FCM literature leave every value in the Initial State Vector at 1 and set only the node-of-interest to 1 in the Clamping Vector)
+-   Data: The Data tab is where the user selects the FCMs they want to analyze (drop-down menu titled Adj. Matrix or List of Adj. Matrices). It is also where they manipulate values in the Initial State (Pulse) Vector or Clamping Vector to identify the dynamic simulations they wish to explore.
 
--   Agg. and Monte Carlo Options: What methods should be used for Aggregation and Monte Carlo sampling? Users may toggle either on/off depending on whether they want to perform only one or the other. Also contains Bootstrap sampling parameters for estimating confidence intervals about the average inferences from simulations of the Monte Carlo-generated FCMs.
+    *(Note: It is best practice to set every value in the Initial State (Pulse) Vector to 1 and to set only the node(s)-of-interest to 1 in the Clamping Vector. In this configuration, the Initial State (Pulse) Vector is used to determine the network's state at equilibrium and the clamping vector is used to determine the network's state in response to continuous activation of one or more nodes. The difference between the two is a measure of the impact of those particular nodes on the system.)*
 
--   Simulation Options: Select the activation and squashing functions along with the lambda value and additional relevant parameters (most are fine as their default values)
+-   Agg. and Monte Carlo Options: The Agg. and Monte Carlo Options tab is where the user specifies their preferences regarding FCM aggregation and Monte Carlo sampling. Aggregation options are only available when datasets contain multiple FCMs. Monte Carlo sampling requires not available for individual conventional FCMs, but is for individual IVFN-/TFN-FCMs as well as `list` objects of all three FCM types. Aggregation and Monte Carlo options can be toggled off to speed up the simulation process.
 
--   Runtime Options: Options for parallel processing and progress bars to display in the console at runtime. These have no impact on the actual output, and only influence how long `fcmconfr()` takes to run and what the user sees while `fcmconfr()` is running.
+    -   Aggregation options allow the user to specify whether multiple FCMs should be aggregated into a single collective model so that dynamic simulations can be performed on the aggregate in addition to individual FCMs. The user can specify the aggregation method (mean or median) and whether or not zero-weighted edges should be included in the aggregation process.
 
-Note: There are many resources across the FCM literature that describe each parameter in `fcmconfr_gui` in greater detail. Users seeking a brief summary of each parameter, however, can find these in a glossary stored in a side tab opened from the arrow in the top-right of the gui.
+    -   Monte Carlo options allow the user to specify whether Monte Carlo sampling should be performed to estimate uncertainty in dynamic simulation outputs. If yes, the user must specify the number of FCMs that will be generated by Monte Carlo sampling (we recommend 1000 or more). Dynamic simulations will be performed on each of these FCMs, providing a range of inferences for each node, from which the median state and quantiles (25^th^, 75^th^) will be estimated. The user also has the option to perform nonparametric bootstrapping and estimate confidence bounds about the average inference for each node. These bounds are estimated at user specified confidence limits (i.e., 95^th^ percentile, 90^th^ percentile, etc.).
 
-Once finished selecting parameters, scroll down in the gui and click the Submit button to get the corresponding call to `fcmconfr()` in the console (Exiting out of the gui will NOT work, users must select Submit to get the text output in the console). The following code is an example output from `fcmconfr_gui()`.
+-   Simulation Options: The Simulation Options tab is where users specify the type of dynamic simulation to perform. This includes specifying (1) the activation function (Kosko, Modified-Kosko, or Rescale; default of Kosko), (2) the squashing function (sigmoid or hyperbolic tangent; default of sigmoid), (3) the squashing function's key parameter, lambda (default of 1), (4) the final simulation output (i.e., the peak estimate for each node or its final resting state; default of final), (5) the maximum number of iterations to perform per simulation (default of 100), and (6) the minimum acceptable error between iterations (default of 1x10^-5^)
+
+-   Runtime Options: The Runtime Options tab allows the user to specify whether they want to use parallel processing and have a progress bar displayed in the console at runtime. These options have no impact on the simulation outputs. They do, however, influence how long `fcmconfr()` takes to run and what the user sees at runtime.
+
+Note: A brief summary of each parameter within the `fcmconfr_gui()` is provided in a glossary stored in a side tab within the GUI. The side tab can be opened by clicking the arrow symbol in the top-right-hand-corner of the GUI.
+
+Once parameter selection is complete, click the Submit button at the bottom of the GUI to receive the corresponding code for a call to `fcmconfr()`. This code will be reported in the console. DO NOT simply Exit the GUI. Doing so WILL NOT create a call to `fcmconfr()` and all previously entered information will be lost. The following code is an example output from `fcmconfr_gui()`.
 
 ```{r eval=FALSE}
 fcmconfr(
@@ -243,10 +229,10 @@ fcmconfr(
 )
 ```
 
-Copy-and-paste the console output into another file and define the call to `fcmconfr()` in a variable (such as `sample_fcms_fcmconfr`) to store the output.
+Once the call to `fcmconfr()` has been generated by the GUI, copy-and-paste it into another file and define it as a variable (see example below):
 
 ```{r eval=FALSE}
-sample_fcms_fcmconfr <- fcmconfr(
+fcmconfr_obj <- fcmconfr(
   adj_matrices = sample_fcm_list,
   # Aggregation and Monte Carlo Sampling
   agg_function = 'mean',
@@ -279,15 +265,15 @@ sample_fcms_fcmconfr <- fcmconfr(
 
 ## 3. Run `fcmconfr()`
 
-Since `fcmconfr_gui()` did all the hard work of putting together the call to `fcmconfr()` with our selected parameters, users just need to run that output script and `fcmconfr` takes it from there.
+`fcmconfr_gui()` has done all the hard work of putting together the call to `fcmconfr()`. Running `fcmconfr()` is now as simple as executing that output script.
 
 ## 4. Explore `fcmconfr()` Results
 
-Across running simulations for each individual FCM, calculating an aggregate FCM, generating many empirical FCMs from monte carlo sampling, and bootstrapping confidence intervals, `fcmconfr()` returns a fairly large object that contains a lot of data. Users are encouraged to explore the `fcmconfr()` output data structure, but `fcmconfr` comes with a few functions to help parse through it.
+The output of `fcmconfr()` is a large object that contains a lot of data. The `fcmconfr` package includes several functions to help users identify and explore the most important outputs.
 
 ### 4.1 Getting Inferences
 
-Inferences are the main result from an FCM simulation, representing how much a node was influenced by a particular change or action. In an `fcmconfr()` output object, inferences are stored a few layers in at:
+Simulation inferences (individual, aggregate, Monte Carlo) are the main output from `fcmconfr()`. They indicate how much each node is influenced by a particular change or action. Inferences can be accessed from the output of `fcmconfr()` as follows:
 
 ```{r eval=FALSE}
 individual_fcm_inferences <- fcmconfr_obj$inferences$individual_fcms$inferences
@@ -296,23 +282,23 @@ mc_fcm_inferences <- fcmconfr_obj$inferences$monte_carlo_fcms$all_inferences
 CIs_of_avg_mc_fcm_inferences <- fcmconfr_obj$inferences$monte_carlo_fcms$bootstrap$CIs_and_quantiles_by_node
 ```
 
-Rather than search for inference data manually like above, `fcmconfr` offers the `get_inferences()` function to retrieve and store inference results in a single line. Compare the code above to the following line:
+In addition to accessing inference data manually (as shown above), `fcmconfr` provides the `get_inferences()` function to retrieve and store inference results.
 
 ```{r eval=FALSE}
 fcmconfr_inferences <- get_inferences(fcmconfr_obj, analysis = c("individual", "aggregate", "mc"))
 ```
 
-`get_inferences()` returns a list of dataframes with the inferences for each analysis (by default, `analysis = c("individual", "aggregate", "mc")`, but users may select any one or two as well to reduce the size of the output.
+The output of `get_inferences()` is a `list` of dataframes that contain the inferences for each analysis. By default, `analysis = c("individual", "aggregate", "mc")`, but users can also specify a subset of these categories.
 
-When "mc" is included in `analysis`, `get_inferences()` returns both the inferences from each empirical monte carlo FCM and a dataframe that includes the bootstrapped confidence intervals about the average monte carlo FCM inferences.
+When `"mc"` is included and the box for bootstrapped confidence intervals is checked, `get_inferences()` returns two types of MC outputs: (1) inferences from each empirical FCM generated by Monte Carlo sampling of input FCMs and (2) a dataframe that includes the user specified bootstrapped confidence bounds about the average of those inferences.
 
-### 4.2 Plotting `fcmconfr()` Results
+### 4.2 Visualizing `fcmconfr()` Results
 
-Run `plot(fcmconfr_obj)` to generate a plot of all inferences included in the output of `fcmconfr()`.
+A plot of all inferences included in the output of `fcmconfr()` can be generated using the command `plot(fcmconfr_obj)`.
 
-Note that `plot()` is a versatile function in R in that it works differently depending on the type of input or what package is calling it. To view the documentation for the version of `plot()` used for `fcmconfr` output objects, type `?plot.fcmconfr` into the console.
+To view the documentation for the version of `plot()` used for `fcmconfr` output objects, type `?plot.fcmconfr` into the console. This provides definitions for all possible inputs to plot (i.e., beyond the `fcmconfr` object itself) that can be used to customize the resultant figure. Most inputs describe how points from different analyses are plotted (color, shape, transparency).
 
-`plot.fcmconfr()` takes many additional inputs, the defaults of which are given below. This is what `plot` calls if passed only an `fcmconfr` output object without any additional parameters.
+The defaults for each input are indicated below:
 
 ```{r eval=FALSE}
 # Plot Defaults
@@ -320,34 +306,32 @@ plot(fcmconfr_obj,
      interactive = FALSE, # Set to TRUE to open shiny app
      # Plot Formatting Parameters
      filter_limit = 1e-4,
-     xlim = NA, # Accepts c(lower_limit, upper_limit) inputs
+     xlim = NA, # Axes limits - accepts c(lower_limit, upper_limit) inputs
      coord_flip = FALSE,
      # Plot Aesthetic Parameters
      mc_avg_and_CIs_color = "blue",
      mc_inferences_color = "blue",
-     mc_inferences_alpha = 0.1,
-     mc_inferences_shape = 3,
+     mc_inferences_alpha = 0.1, # scale from 0:transparent to 1:opaque
+     mc_inferences_shape = 3, # R PCH point shape value (vertical cross)
      ind_inferences_color = "black",
-     ind_inferences_alpha = 1,
-     ind_inferences_shape = 16,
+     ind_inferences_alpha = 1, # scale from 0:transparent to 1:opaque
+     ind_inferences_shape = 16, # R PCH point shape value (small circle)
      agg_inferences_color = "red",
-     agg_inferences_alpha = 1,
-     agg_inferences_shape = 17,
+     agg_inferences_alpha = 1, # scale from 0:transparent to 1:opaque
+     agg_inferences_shape = 17, # R PCH point shape value (triangle)
      ind_ivfn_and_tfn_linewidth = 0.1,
      agg_ivfn_and_tfn_linewidth = 0.6
 )
 ```
 
-A majority of these parameters describe how points from different analyses are plotted. Any or all of these parameters can be included in a call to `plot` when plotting `fcmconfr` output objects. Alpha changes the point transparency with 1 being opaque and 0 being completely transparent.
-
-Notice the `interactive` parameter. Include `interactive = TRUE` to launch the plot inside a shiny app to toggle the results from different analyses on/off. This is a great option for exploring early results. (You may need to play with the text font size in the app to get a better view of the axis labels).
+The `interactive` parameter allows the user to launch the plot inside a Shiny app wherein the results from different analyses can be toggled on/off (`interactive = TRUE`). This is a great option for exploring early results. (*It may be necessary to experiment with font size within the app to clearly view axis labels*). An example call where the `interactive` parameter is set to `TRUE` and the x-axis is constrained between -0.5 and 0.5 has been provided below:
 
 ```{r eval=FALSE}
-plot(stkhldr_fcms_fcmconfr_guidance_docs,
+plot(fcmconfr_obj,
      interactive = TRUE,
      xlim = c(-0.5, 0.5))
 ```
 
 ::: {style="text-align: center;"}
-![](images/interactive_plot_gui.png){width="100%"}
+![A screenshot of an example `fcmconfr()` object launched inside the Shiny app (user controls on left; plot on right).](images/interactive_plot_gui.png){width="100%"}
 :::
