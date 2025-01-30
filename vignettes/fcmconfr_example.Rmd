@@ -1,7 +1,7 @@
 ---
 title: "fcmconfr_Example"
-output: rmarkdown::pdf_document
-# output: rmarkdown::html_vignette
+# output: rmarkdown::pdf_document
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{fcmconfr_Example}
   %\VignetteEngine{knitr::rmarkdown}
@@ -668,4 +668,3 @@ plot(stkhldr_fcms_fcmconfr_guidance_docs,
 ::: {style="text-align: center;"}
 ![](images/interactive_plot_gui.png){width="100%"}
 :::
-

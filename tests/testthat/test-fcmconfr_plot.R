@@ -213,7 +213,7 @@ test_that("fcmconfr_plot additional inputs work", {
   # ----
 
   # acceptable/unacceptable inputs ----
-  expect_error(
+  expect_warning(
     plot(tfn_clamping_inputs_agg_and_mc_w_bs, wrong_input = "asdfads")
   )
   # ----
@@ -231,7 +231,7 @@ test_that("fcmconfr_plot additional inputs work", {
            mc_inferences_color = "orange",
            mc_inferences_shape = 25,
            ind_inferences_color = "black",
-           ind_inferences_shape = 14,
+           ind_inferences_shape = 4,
            agg_inferences_color = "red",
            agg_inferences_shape = 2,
            ind_ivfn_and_tfn_linewidth = 0.1,

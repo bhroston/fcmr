@@ -1,7 +1,7 @@
 ---
 title: "Importing_FCMs"
-output: rmarkdown::pdf_document
-# output: rmarkdown::html_vignette
+# output: rmarkdown::pdf_document
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Importing_FCMs}
   %\VignetteEngine{knitr::rmarkdown}

@@ -19,6 +19,36 @@
 #   - plot.rtriangular_dist
 #
 ################################################################################
+#' Defuzz (IVFN or TFN)
+#'
+#' @description
+#' Convert a fuzzy number to a crisp value. For IVFNs, return the average of the
+#' upper and lower bounds. For TFNs, return the average of the lower bound, the
+#' mode, and the upper bound.
+#'
+#' @param fuzzy_number A fuzzy number object. Either an ivfn or tfn
+#'
+#' @returns A crisp value representative of the input IVFN or TFN
+#'
+#' @export
+#' @examples
+#' defuzz_ivfn_or_tfn(ivfn(-1, 1))
+#' defuzz_ivfn_or_tfn(tfn(-1, 0, 1))
+defuzz_ivfn_or_tfn <- function(fuzzy_number) {
+  fuzzy_class <- methods::is(fuzzy_number)[1]
+  if (fuzzy_class == "numeric" | fuzzy_class == "integer") {
+    crisp_value <- fuzzy_number
+  } else if (fuzzy_class == "ivfn") {
+    crisp_value <- (fuzzy_number$lower + fuzzy_number$upper)/2
+  } else if (fuzzy_class == "tfn") {
+    crisp_value <- (fuzzy_number$lower + fuzzy_number$mode + fuzzy_number$upper)/3
+  } else {
+    stop("Cannot defuzz input fuzzy_number. Must be either an ivfn or tfn. (Accepts numerics but does nothing with them.)")
+  }
+  crisp_value
+}
+
+
 # INTERVAL-VALUED FUZZY NUMBERS ----
 #' Create Adj. Matrix w/ Edges Represented as IVFNs
 #'

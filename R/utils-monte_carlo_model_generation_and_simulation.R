@@ -1,0 +1,661 @@
+
+
+#' Calculate Inferences (w/ Confidence Intervals via Bootstrap) of MC FCM Simulations
+#'
+#' @family monte-carlo-model-generation-and-simulation
+#'
+#' @description
+#' This gets the mean of the distribution of simulated values
+#' across a given iter. Also returns the bootstrapped mean of means of the
+#' distribution of simulated values across a given iter if called.
+#'
+#' @details
+#' This function is designed to streamline the process of getting the mean or bootstrapped
+#' mean of means of a distribution of simulated values across individual iterations. Use get_bootstrapped_means
+#' to estimate the confidence intervals for the mean value across simulations.
+#'
+#' The show_progress and parallel inputs change the functions called, but do NOT
+#' change the output! These are allowed to be toggled on/off to increase user
+#' control at runtime.
+#'
+#' @param mc_simulations_inference_df The final values of a set of fcm simulations; also the inference of a infer_fmcm object
+#' @param inference_function Estimate confidence intervals about the "mean" or "median" of
+#' inferences from the monte carlo simulations
+#' @param confidence_interval What are of the distribution should be bounded by the
+#' confidence intervals? (e.g. 0.95)
+#' @param bootstrap_reps Repetitions for bootstrap process, if chosen
+#' @param parallel TRUE/FALSE Whether to perform the function using parallel processing
+#' @param n_cores Number of cores to use in parallel processing. If no input given,
+#' will use all available cores in the machine.
+#' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
+#' from the pbapply package as the underlying function.
+#'
+#' @returns A list of raw bootstrap draws and a dataframe of confidence intervals
+#'
+#' @keywords internal
+#'
+#' @export
+#' @example man/examples/ex-get_mc_sims_inference_CIs_w_bootstrap.R
+get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inference_df = data.frame(),
+                                                         inference_function = "mean",
+                                                         confidence_interval = 0.95,
+                                                         bootstrap_reps = 1000,
+                                                         parallel = TRUE,
+                                                         n_cores = integer(),
+                                                         show_progress = TRUE) {
+  # Adding for R CMD Check. Does not impact logic.
+  iter <- NULL
+
+  # Write checks to confirm mc_simulations_inference_df object is correct... Also write a better name
+  # so it is understood that it works for simulate_fmcm objects too
+  if (!identical(class(mc_simulations_inference_df), "data.frame")) {
+    stop("Input mc_simulations_inference_df must be a data.frame object from the
+         output of simulate_fmcm_models (final_states_across_sims) or infer_fmcm
+         (inference)")
+  }
+
+  # Check function inputs
+  mcbc_checks <- check_monte_carlo_bootstrap_inputs(inference_function, confidence_interval, bootstrap_reps, parallel, n_cores, show_progress)
+  ci_centering_function <- mcbc_checks$ci_centering_function
+  parallel <- mcbc_checks$parallel
+  n_cores <- mcbc_checks$n_cores
+  show_progress <- mcbc_checks$show_progress
+
+  bootstrap_draws_per_rep <- nrow(mc_simulations_inference_df)
+
+  node_names <- colnames(mc_simulations_inference_df)
+
+  # if (parallel) {
+  #   max_possible_cores <- parallel::detectCores()
+  #   if (identical(n_cores, integer())) {
+  #     warning(cli::format_warning(c(
+  #       "!" = "Warning: {.var n_cores} not defined",
+  #       "~~~~~ Assuming {.var n_cores} is the maximum available on the machine: n_cores = {max_possible_cores}"
+  #     )))
+  #     n_cores <- max_possible_cores
+  #   }
+  #   if (n_cores > max_possible_cores) {
+  #     warning(cli::format_warning(c(
+  #       "!" = "Warning: {.var n_cores} is {n_cores} which is greater than the max. cores available on the machine (n = {max_possible_cores})",
+  #       "~~~~~ Reducing {.var n_cores} to {max_possible_cores}"
+  #     )))
+  #   }
+  # }
+  # if (!parallel & !identical(n_cores, integer())) {
+  #   warning(cli::format_warning(c(
+  #     "!" = "Warning: {.var n_cores} is ignored since {.var parallel} = FALSE"
+  #   )))
+  # }
+
+  if (parallel & show_progress) {
+    print("Performing bootstrap simulations", quote = FALSE)
+    print("Initializing cluster", quote = FALSE)
+    cl <- parallel::makeCluster(n_cores)
+    # Have to store variables in new env that can be accessed by parLapply. There
+    # is surely a better way to do this, but this way works
+    # start <- Sys.time()
+    vars <- list("mc_simulations_inference_df",
+                 "bootstrap_reps",
+                 "bootstrap_draws_per_rep"
+    )
+    parallel::clusterExport(cl, varlist = vars, envir = environment())
+    print("Sampling means", quote = FALSE)
+    doSNOW::registerDoSNOW(cl)
+    invisible(utils::capture.output(pb <- utils::txtProgressBar(min = 0, max = ceiling(bootstrap_reps/n_cores), width = 50, style = 3)))
+    progress <- function(n) utils::setTxtProgressBar(pb, n)
+    opts <- list(progress = progress)
+    if (inference_function == "mean") {
+      bootstrapped_means_of_inference_by_node <- foreach::foreach(
+        i = 1:bootstrap_reps, .options.snow = opts) %dopar% {
+          data.frame(apply(
+            mc_simulations_inference_df, 2,
+            function(inference) {
+              random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
+              mean(random_draws)
+            },
+            simplify = FALSE
+          ))
+        }
+    } else if (inference_function == "median") {
+      bootstrapped_medians_of_inference_by_node <- foreach::foreach(
+        i = 1:bootstrap_reps, .options.snow = opts) %dopar% {
+          data.frame(apply(
+            mc_simulations_inference_df, 2,
+            function(inference) {
+              random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
+              stats::median(random_draws)
+            },
+            simplify = FALSE
+          ))
+        }
+    }
+    close(pb)
+    parallel::stopCluster(cl)
+
+  } else if (parallel & !show_progress) {
+    print("Performing bootstrap simulations", quote = FALSE)
+    print("Initializing cluster", quote = FALSE)
+    cl <- parallel::makeCluster(n_cores)
+    # Have to store variables in new env that can be accessed by parLapply. There
+    # is surely a better way to do this, but this way works
+    # start <- Sys.time()
+    vars <- list("mc_simulations_inference_df",
+                 "bootstrap_reps",
+                 "bootstrap_draws_per_rep"
+    )
+    parallel::clusterExport(cl, varlist = vars, envir = environment())
+    print("Sampling means", quote = FALSE)
+    rep_inference_by_node <- vector(mode = "list", length = bootstrap_reps)
+    rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- mc_simulations_inference_df)
+    if (inference_function == "mean") {
+      bootstrapped_means_of_inference_by_node <- parallel::parLapply(
+        cl,
+        rep_inference_by_node,
+        function(inference_by_node_duplicate) {
+          apply(
+            inference_by_node_duplicate, 2,
+            function(inference) {
+              random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
+              mean(random_draws)
+            }
+          )
+        }
+      )
+    } else if (inference_function == "median") {
+      bootstrapped_medians_of_inference_by_node <- parallel::parLapply(
+        cl,
+        rep_inference_by_node,
+        function(inference_by_node_duplicate) {
+          apply(
+            inference_by_node_duplicate, 2,
+            function(inference) {
+              random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
+              stats::median(random_draws)
+            }
+          )
+        }
+      )
+    }
+    parallel::stopCluster(cl)
+
+  } else if (!parallel & show_progress) {
+    bootstrapped_means_of_inference_by_node <- vector(mode = "list", length = bootstrap_reps)
+    rep_inference_by_node <- vector(mode = "list", length = bootstrap_reps)
+    rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- mc_simulations_inference_df)
+
+    if (inference_function == "mean") {
+      bootstrapped_means_of_inference_by_node <- pbapply::pblapply(
+        rep_inference_by_node,
+        function(inference_by_node_duplicate) {
+          apply(
+            inference_by_node_duplicate, 2,
+            function(inference) {
+              random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
+              mean(random_draws)
+            }
+          )
+        }
+      )
+    } else if (inference_function == "median") {
+      bootstrapped_medians_of_inference_by_node <- pbapply::pblapply(
+        rep_inference_by_node,
+        function(inference_by_node_duplicate) {
+          apply(
+            inference_by_node_duplicate, 2,
+            function(inference) {
+              random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
+              stats::median(random_draws)
+            }
+          )
+        }
+      )
+    }
+  } else if (!parallel & !show_progress) {
+    rep_inference_by_node <- vector(mode = "list", length = bootstrap_reps)
+    rep_inference_by_node <- lapply(rep_inference_by_node, function(duplicate) duplicate <- mc_simulations_inference_df)
+    if (inference_function == "mean") {
+      bootstrapped_means_of_inference_by_node <- lapply(
+        rep_inference_by_node,
+        function(inference_by_node_duplicate) {
+          apply(
+            inference_by_node_duplicate, 2,
+            function(inference) {
+              random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
+              mean(random_draws)
+            }
+          )
+        }
+      )
+    } else if (inference_function == "median") {
+      bootstrapped_medians_of_inference_by_node <- lapply(
+        rep_inference_by_node,
+        function(inference_by_node_duplicate) {
+          apply(
+            inference_by_node_duplicate, 2,
+            function(inference) {
+              random_draws <- sample(inference, bootstrap_draws_per_rep, replace = TRUE)
+              stats::median(random_draws)
+            }
+          )
+        }
+      )
+    }
+  }
+
+  if (inference_function == "mean") {
+    bootstrapped_expectations_of_inference_by_node <- do.call(rbind, bootstrapped_means_of_inference_by_node)
+  } else if (inference_function == "median") {
+    bootstrapped_expectations_of_inference_by_node <- do.call(rbind, bootstrapped_medians_of_inference_by_node)
+  }
+  colnames(bootstrapped_expectations_of_inference_by_node) <- node_names
+  expected_value_of_inference_by_node <- apply(bootstrapped_expectations_of_inference_by_node, 2, mean)
+
+  # print("Getting upper and lower quantile estimates of mean", quote = FALSE)
+  lower_CI <- (1 - confidence_interval)/2
+  upper_CI <- (1 + confidence_interval)/2
+  lower_CIs_by_node <- data.frame(apply(bootstrapped_expectations_of_inference_by_node, 2, function(bootstrapped_expectations) stats::quantile(bootstrapped_expectations, lower_CI), simplify = FALSE))
+  upper_CIs_by_node <- data.frame(apply(bootstrapped_expectations_of_inference_by_node, 2, function(bootstrapped_expectations) stats::quantile(bootstrapped_expectations, upper_CI), simplify = FALSE))
+
+  nodes <- ifelse(colnames(lower_CIs_by_node) == colnames(upper_CIs_by_node), colnames(lower_CIs_by_node), stop("Error with quantiles calculation"))
+
+  CIs_by_node <- data.frame(
+    node = nodes,
+    expected_value = expected_value_of_inference_by_node,
+    lower_CI = vector(mode = "numeric", length = length(nodes)),
+    upper_CI = vector(mode = "numeric", length = length(nodes))
+  )
+  for (i in seq_along(nodes)) {
+    CIs_by_node$lower_CI[i] <- lower_CIs_by_node[i][[1]] # not sure why this [[1]] is necessary but it is
+    CIs_by_node$upper_CI[i] <- upper_CIs_by_node[i][[1]] # not sure why this [[1]] is necessary but it is
+  }
+
+
+
+  quantiles_of_mc_simulation_inferences <- data.frame(t(apply(mc_simulations_inference_df, 2, stats::quantile)))
+  mc_inference_distributions_df <- data.frame(cbind(
+    CIs_by_node$node, CIs_by_node$expected_value, CIs_by_node$lower_CI, CIs_by_node$upper_CI,
+    quantiles_of_mc_simulation_inferences$X0., quantiles_of_mc_simulation_inferences$X25., quantiles_of_mc_simulation_inferences$X50.,
+    quantiles_of_mc_simulation_inferences$X75., quantiles_of_mc_simulation_inferences$X100.
+  ))
+
+  colnames(mc_inference_distributions_df) <- c(
+    "node", "expected_value", paste0(lower_CI, "_CI"), paste0(upper_CI, "_CI"),
+    "min",  "0.25_quantile", "median", "0.75_quantile", "max"
+  )
+
+  for (col in 2:ncol(mc_inference_distributions_df)) {
+    mc_inference_distributions_df[, col] <- as.numeric(mc_inference_distributions_df[, col])
+  }
+
+  print("Done", quote = FALSE)
+
+  structure(
+    .Data = list(
+      CIs_and_quantiles_by_node = mc_inference_distributions_df,
+      bootstrap_expected_values = bootstrapped_expectations_of_inference_by_node
+    )
+  )
+}
+
+
+
+
+#' Check inputs for running infer_fcm on a list of adj. matrices
+#'
+#' @family monte-carlo-model-generation-and-simulation
+#'
+#' @param adj_matrices A list of adjecency matrices
+#' @param initial_state_vector A list state values at the start of an fcm simulation
+#' @param clamping_vector A list of values representing specific actions taken to
+#' control the behavior of an FCM. Specifically, non-zero values defined in this vector
+#' will remain constant throughout the entire simulation as if they were "clamped" at those values.
+#' @param activation The activation function to be applied. Must be one of the following:
+#' 'kosko', 'modified-kosko', or 'papageorgiou'.
+#' @param squashing A squashing function to apply. Must be one of the following:
+#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' @param lambda A numeric value that defines the steepness of the slope of the
+#' squashing function when tanh or sigmoid are applied
+#' @param point_of_inference The point along the simulation time-series to be
+#' identified as the inference. Must be one of the following: 'peak' or 'final'
+#' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
+#' @param min_error The lowest error (sum of the absolute value of the current state
+#' vector minus the previous state vector) at which no more iterations are necessary
+#' and the simulation will stop
+#' @param parallel TRUE/FALSE Whether to utilize parallel processing
+#' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
+#' from the pbapply package as the underlying function.
+#' @param n_cores Number of cores to use in parallel processing. If no input given,
+#' will use all available cores in the machine.
+#' @param mc_sims_in_output TRUE/FALSE whether to include simulations of monte-carlo-generated
+#' FCM. Will dramatically increase size of output if TRUE.
+#'
+#' @returns NULL; Errors if checks fail
+#'
+#' @keywords internal
+#'
+#' @export
+#' @examples
+#' NULL
+check_infer_fcm_set_inputs <- function(adj_matrices = list(matrix()),
+                                       initial_state_vector = c(),
+                                       clamping_vector = c(),
+                                       activation = c("kosko", "modified-kosko", "rescale"),
+                                       squashing = c("sigmoid", "tanh"),
+                                       lambda = 1,
+                                       point_of_inference = c("peak", "final"),
+                                       max_iter = 100,
+                                       min_error = 1e-5,
+                                       parallel = TRUE,
+                                       n_cores = integer(),
+                                       show_progress = TRUE,
+                                       mc_sims_in_output = FALSE) {
+
+  # Check adj_matrices ----
+  adj_matrices_input_type <- get_adj_matrices_input_type(adj_matrices)
+  fcm_class <- adj_matrices_input_type$fcm_class
+  if (!adj_matrices_input_type$adj_matrices_input_is_list) {
+    adj_matrices <- list(adj_matrices)
+  }
+  adj_matrices_dims <- lapply(adj_matrices, dim)
+  if (length(unique(unlist(adj_matrices_dims))) > 1) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var adj_matrices} are either different sizes or contain non-square matrices",
+      "+++++> Call standardize_adj_matrices() to standardize the sizes of {.var adj. matrices}"
+    )))
+  }
+  n_nodes <- unique(unlist(adj_matrices_dims))
+  dummy_adj_matrix <- matrix(0, n_nodes, n_nodes)
+
+  identified_concepts <- unique(lapply(adj_matrices, colnames))
+  if (length(identified_concepts) != 1) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var adj_matrices} must have the same concepts",
+      "+++++> Call standardize_adj_matrices() to standardize concepts across {.var adj. matrices}"
+    )))
+  } else {
+    concept_names <- unlist(identified_concepts)
+  }
+
+  if (identical(adj_matrices_input_type$object_types_in_list, c("conventional", "sparseMatrix"))) {
+    adj_matrices <- lapply(adj_matrices, as.matrix)
+    warning(cli::format_warning(c(
+      "!" = "Warning: Changed {.var adj_matrices} from sparseMatrix to an ordinary matrix (i.e. using as.matrix)"
+    )))
+  }
+  # ----
+
+  # Check Simulation Inputs ----
+  sim_checks <- check_simulation_inputs(dummy_adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
+  initial_state_vector <- sim_checks$initial_state_vector
+  clamping_vector <- sim_checks$clamping_vector
+  activation <- sim_checks$activation
+  squashing <- sim_checks$squashing
+  point_of_inference <- sim_checks$point_of_inference
+  # ----
+
+  # Check Runtime Options ----
+  show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
+  parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
+  if (parallel) {
+    if (identical(n_cores, integer())) {
+      warning(cli::format_warning(c(
+        "!" = "Warning: No {.var n_cores} given.",
+        "~~~~~ Assuming {.var n_cores} is {parallel::detectCores() - 1} (i.e. the max available cores minus 1)"
+      )))
+      n_cores <- parallel::detectCores() - 1
+    }
+    if (!is.numeric(n_cores)) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var n_cores} must be a positive integer",
+        "+++++ Input {.var n_cores} was '{n_cores}'"
+      )))
+    }
+    if (!(n_cores == round(n_cores))) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var n_cores} must be a positive integer",
+        "+++++ Input {.var n_cores} was {n_cores}"
+      )))
+    }
+    if (n_cores <= 0) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var n_cores} must be a positive integer",
+        "+++++ Input {.var n_cores} was {n_cores}"
+      )))
+    }
+    if (n_cores > parallel::detectCores()) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var n_cores} must be a positive integer less than or equal to {parallel::detectCores()} (i.e. the max available cores on your machine)",
+        "+++++ Input {.var n_cores} was {n_cores}"
+      )))
+    }
+  }
+  if (!parallel & !identical(n_cores, integer())) {
+    warning(cli::format_warning(c(
+      "!" = "Warning: {.var n_cores} given but {.var parallel} = FALSE.",
+      "~~~~~ Ignoring {.var n_cores} input."
+    )))
+  }
+  # ----
+
+  # Check Output Options ----
+  if (!is.logical(mc_sims_in_output)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var mc_sims_in_output} must be logical (TRUE/FALSE)",
+      "+++++> Input {.var mc_sims_in_output} was {mc_sims_in_output}"
+    )))
+  }
+  # ----
+
+  list(
+    fcm_class = fcm_class,
+    adj_matrices = adj_matrices,
+    concept_names = concept_names,
+    initial_state_vector = initial_state_vector,
+    clamping_vector = clamping_vector,
+    activation = activation,
+    squashing = squashing,
+    point_of_inference = point_of_inference,
+    show_progress = show_progress,
+    parallel = parallel
+  )
+}
+
+
+
+#' Check inputs for building monte carlo fcm inputs
+#'
+#' @family monte-carlo-model-generation-and-simulation
+#'
+#' @param adj_matrix_list A list of n x n adjacency matrices representing fcms
+#' @param N_samples The number of samples to draw from the corresponding distribution
+#' @param include_zeroes TRUE/FALSE Whether to incorporate zeroes as intentionally-defined
+#' edge weights or ignore them in aggregation
+#' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
+#' from the pbapply package as the underlying function.
+#'
+#' @returns NULL; Errors if checks fail
+#'
+#' @keywords internal
+#'
+#' @export
+#' @examples
+#' NULL
+check_build_monte_carlo_fcms_inputs <- function(adj_matrix_list,
+                                                N_samples,
+                                                include_zeroes,
+                                                show_progress) {
+
+  adj_matrix_list_class <- get_adj_matrices_input_type(adj_matrix_list)$object_types_in_list[1]
+
+  # Check N_samples
+  if (!is.numeric(N_samples)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var N_samples} must be a positive integer",
+      "+++++> Input {.var N_samples} was {N_samples}"
+    )))
+  }
+
+  if (!(N_samples == round(N_samples))) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var N_samples} must be a positive integer",
+      "+++++> Input {.var N_samples} was {N_samples}"
+    )))
+  }
+  # ----
+
+  # Check include_zeroes
+  if (!is.logical(include_zeroes)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var include_zeroes} must be logical (TRUE/FALSE)",
+      "+++++> Input {.var include_zeroes} was {include_zeroes}"
+    )))
+  }
+
+  # Check show_progress
+  show_progress = check_if_local_machine_has_access_to_show_progress_functionalities(use_parallel = FALSE, show_progress)
+
+  list(
+    adj_matrix_list_class = adj_matrix_list_class,
+    show_progress = show_progress
+  )
+}
+
+
+
+#' Check inputs for monte carlo bootstrap analysis
+#'
+#' @family monte-carlo-model-generation-and-simulation
+#'
+#' @param ci_centering_function Estimate confidence intervals about the "mean" or "median" of
+#' inferences from the monte carlo simulations
+#' @param confidence_interval What are of the distribution should be bounded by the
+#' confidence intervals? (e.g. 0.95)
+#' @param num_ci_bootstraps Repetitions for bootstrap process, if chosen
+#' @param parallel TRUE/FALSE Whether to perform the function using parallel processing
+#' @param n_cores Number of cores to use in parallel processing. If no input given,
+#' will use all available cores in the machine.
+#' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
+#' from the pbapply package as the underlying function.
+#'
+#' @returns NULL; Errors if checks fail
+#'
+#' @keywords internal
+#'
+#' @export
+#' @examples
+#' NULL
+check_monte_carlo_bootstrap_inputs <- function(ci_centering_function = c("mean", "median"),
+                                               confidence_interval = 0.95,
+                                               num_ci_bootstraps = 1000,
+                                               parallel = TRUE,
+                                               n_cores = integer(),
+                                               show_progress = TRUE) {
+
+  # Check ci_centering_function ----
+  if (identical(ci_centering_function, c("mean", "median"))) {
+    warning(cli::format_warning(c(
+      "!" = "Warning: No {.var ci_centering_function} given",
+      "~~~~~ Assuming {.var ci_centering_function} is 'mean'"
+    )))
+    ci_centering_function <- "mean"
+  }
+  if (!(ci_centering_function %in% c("mean", "median"))) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var ci_centering_function} must be one of the following: 'mean' or 'median'",
+      "+++++> Input {.var ci_centering_function} was '{ci_centering_function}'"
+    )))
+  }
+  # ----
+
+  # Check confidence_interval ----
+
+  if (!is.numeric(confidence_interval)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var confidence_interval} must be a positive value between 0 and 1",
+      "+++++> Input {.var confidence_interval} was '{confidence_interval}'"
+    )))
+  }
+
+  if (confidence_interval < 0 | confidence_interval >= 1) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var confidence_interval} must be a positive value between 0 and 1",
+      "+++++> Input {.var confidence_interval} was {confidence_interval}"
+    )))
+  }
+  # ----
+
+  # Check num_ci_bootstraps
+  if (!is.numeric(num_ci_bootstraps)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var num_ci_bootstraps} must be a positive integer, typically greater than 1000",
+      "+++++> Input {.var num_ci_bootstraps} was '{num_ci_bootstraps}'"
+    )))
+  }
+
+  if (!(num_ci_bootstraps == round(num_ci_bootstraps))) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var num_ci_bootstraps} must be a positive integer, typically greater than 1000",
+      "+++++> Input {.var num_ci_bootstraps} was {num_ci_bootstraps}"
+    )))
+  }
+  if (num_ci_bootstraps <= 0) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var num_ci_bootstraps} must be a positive value (typically > 1000)",
+      "+++++> Input {.var num_ci_bootstraps} was {num_ci_bootstraps}"
+    )))
+  }
+  # ----
+
+  # Check Runtime Options ----
+  show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
+  parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
+  if (parallel) {
+    if (identical(n_cores, integer())) {
+      warning(cli::format_warning(c(
+        "!" = "Warning: No {.var n_cores} given.",
+        "~~~~~ Assuming {.var n_cores} is {parallel::detectCores() - 1} (i.e. the max available cores minus 1)"
+      )))
+      n_cores <- parallel::detectCores() - 1
+    }
+    if (!is.numeric(n_cores)) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var n_cores} must be a positive integer",
+        "+++++ Input {.var n_cores} was '{n_cores}'"
+      )))
+    }
+    if (!(n_cores == round(n_cores))) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var n_cores} must be a positive integer",
+        "+++++ Input {.var n_cores} was {n_cores}"
+      )))
+    }
+    if (n_cores <= 0) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var n_cores} must be a positive integer",
+        "+++++ Input {.var n_cores} was {n_cores}"
+      )))
+    }
+    if (n_cores > parallel::detectCores()) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var n_cores} must be a positive integer less than or equal to {parallel::detectCores()} (i.e. the max available cores on your machine)",
+        "+++++ Input {.var n_cores} was {n_cores}"
+      )))
+    }
+  }
+  if (!parallel & !identical(n_cores, integer())) {
+    warning(cli::format_warning(c(
+      "!" = "Warning: {.var n_cores} given but {.var parallel} = FALSE.",
+      "~~~~~ Ignoring {.var n_cores} input."
+    )))
+  }
+  # ----
+
+  list(
+    ci_centering_function = ci_centering_function,
+    parallel = parallel,
+    n_cores = n_cores,
+    show_progress = show_progress
+  )
+}
+
+
