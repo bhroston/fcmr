@@ -21,8 +21,7 @@ tfn_example_fcmconfr <- fcmconfr(
   num_ci_bootstraps = 1000,
   # Runtime Options
   show_progress = TRUE,
-  parallel = TRUE,
-  n_cores = 2,
+  parallel = FALSE,
   # Additional Options
   run_agg_calcs = TRUE,
   run_mc_calcs = TRUE,
@@ -39,10 +38,11 @@ plot(tfn_example_fcmconfr,
      filter_limit = 1e-4,
      xlim = c(-1, 1),
      coord_flip = FALSE,
+     text_font_size = NA,
      # Plot Aesthetic Parameters
      mc_avg_and_CIs_color = "blue",
      mc_inferences_color = "blue",
-     mc_inferences_alpha = 1,
+     mc_inferences_alpha = 0.3,
      mc_inferences_shape = 3,
      ind_inferences_color = "black",
      ind_inferences_alpha = 1,
@@ -54,7 +54,7 @@ plot(tfn_example_fcmconfr,
      agg_ivfn_and_tfn_linewidth = 0.6
 )
 
-# Changed from Plot Defaults
+# Different from Plot Defaults
 plot(tfn_example_fcmconfr,
      interactive = FALSE, # Set to TRUE to open shiny app
      # Plot Formatting Parameters
