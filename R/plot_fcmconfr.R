@@ -335,16 +335,53 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
 #' Autoplot fcmconfr
 #'
 #' @description
-#' Generate a generic plot visualizing \code{\link{fcmconfr}} results. Call the
+#' Generates a generic plot visualizing \code{\link{fcmconfr}} results. Call the
 #' function name directly (\code{\link{autoplot.fcmconfr}})) without parentheses
 #' to see the exact code to generate the plots, then copy-and-paste and edit
 #' as needed.
 #'
-#' @details
-#' This function produces slightly different outputs for \code{\link{fcmconfr}}
-#' outputs generated from conventional, ivfn, and tfn FCMs.
-#'
 #' @param object A direct output of the \code{\link{fcmconfr}} function
+#' @param filter_limit Only nodes with inferences above the filter_limit
+#' across any analysis will be plotted. This removes nodes with mostly 0-valued
+#' inferences indicating they were not impacted in the simulation.
+#' @param xlim The x-axis plot limits. xlim = NA lets ggplot determine the
+#' x-axis limits. xlim = c(lower_limit, upper_limit) for manual input limits.
+#' See ?ggplot2::xlim for additional info.
+#' @param coord_flip Swap x- and y-axes (i.e. rotate plot). See
+#' ?ggplot2::coord_flip for additional info.
+#' @param text_font_size The font size of axis labels. text_font_size = NA lets
+#' ggplot determine the axis label font size.
+#' @param mc_avg_and_CIs_color Color of the crossbar (lines) indicating the
+#' avg inferences of empirical FCMs generated via Monte Carlo sampling and the
+#' confidence intervals about those averages.
+#' @param mc_inferences_color Color of the points representing inferences of
+#' empirical FCMs generated via Monte Carlo sampling
+#' @param mc_inferences_alpha Transparency of the points representing inferences
+#' of empirical FCMs generated via Monte Carlo sampling. Range from 0 to 1
+#' (0: Transparent to 1: Opaque).
+#' @param mc_inferences_shape Point shapes of the points representing inferences
+#' of empirical FCMs generated via Monte Carlo sampling. Accepts PCH point
+#' values and character strings.
+#' @param ind_inferences_color Color of the points representing inferences of
+#' individual FCMs
+#' @param ind_inferences_alpha Transparency of the points representing
+#' inferences of individual FCMs. Range from 0 to 1 (0: Transparent to
+#' 1: Opaque).
+#' @param ind_inferences_shape Point shapes of the points representing
+#' inferences of individual FCMs. Accepts PCH point values and character
+#' strings.
+#' @param agg_inferences_color Color of the points representing inferences of
+#' the aggregate FCM
+#' @param agg_inferences_alpha Transparency of the points representing
+#' inferences of the aggregate FCM. Range from 0 to 1 (0: Transparent to
+#' 1: Opaque).
+#' @param agg_inferences_shape Point shapes of the points representing
+#' inferences of the aggregate FCM. Accepts PCH point values and character
+#' strings.
+#' @param ind_ivfn_and_tfn_linewidth Linewidth of lines representing
+#' inferences for analyses of individual IVFN- and TFN- FCMs.
+#' @param agg_ivfn_and_tfn_linewidth Linewidth of lines representing inferences
+#' for analyses of aggregate IVFN- and TFN- FCMs
 #' @param ... Additional inputs
 #'
 #' @importFrom ggplot2 autoplot ggplot aes
@@ -355,41 +392,55 @@ get_plot_data <- function(fcmconfr_object, filter_limit = 10e-3) {
 #' @export
 #' @examples
 #' NULL
-autoplot.fcmconfr <- function(object, ...) {
-                              # additional_inputs = list(
-                              #   filter_limit
-                              #   coord_flip
-                              #
-                              # )
+autoplot.fcmconfr <- function(object,
+                              interactive = FALSE,
+                              # Plot Format Parameters
+                              filter_limit = 1e-3,
+                              xlim = NA, # c(lower_limit, upper_limit)
+                              coord_flip = FALSE,
+                              text_font_size = NA, # NA: let ggplot determine
+                              # Plot Aesthetic Parameters
+                              mc_avg_and_CIs_color = "blue",
+                              mc_inferences_color = "blue",
+                              mc_inferences_alpha = 0.3, # 0:transparent to 1:opaque
+                              mc_inferences_shape = 3, # R PCH point shape values
+                              ind_inferences_color = "black",
+                              ind_inferences_alpha = 1, # 0:transparent to 1:opaque
+                              ind_inferences_shape = 16, # R PCH point shape values
+                              agg_inferences_color = "red",
+                              agg_inferences_alpha = 1, # 0:transparent to 1:opaque
+                              agg_inferences_shape = 17, # R PCH point shape values
+                              ind_ivfn_and_tfn_linewidth = 0.1,
+                              agg_ivfn_and_tfn_linewidth = 0.6,
+                              ...) {
 
-  # Parse additional_inputs ----
-  additional_inputs <- list(...)[[1]]
-
-  # Plot formatting parameters
-  filter_limit <- additional_inputs$filter_limit
-  xlim <- additional_inputs$xlim
-  coord_flip <- additional_inputs$coord_flip
-  text_font_size <- additional_inputs$text_font_size
-  # Plot aesthetic parameters
-  mc_avg_and_CIs_color <- additional_inputs$mc_avg_and_CIs_color
-  mc_avg_and_CIs_alpha <- additional_inputs$mc_avg_and_CIs_alpha
-  mc_inferences_color <- additional_inputs$mc_inferences_color
-  mc_inferences_alpha <- additional_inputs$mc_inferences_alpha
-  mc_inferences_shape <- additional_inputs$mc_inferences_shape
-  ind_inferences_color <- additional_inputs$ind_inferences_color
-  ind_inferences_alpha <- additional_inputs$ind_inferences_alpha
-  ind_inferences_shape <- additional_inputs$ind_inferences_shape
-  agg_inferences_color <- additional_inputs$agg_inferences_color
-  agg_inferences_alpha <- additional_inputs$agg_inferences_alpha
-  agg_inferences_shape <- additional_inputs$agg_inferences_shape
-  ind_ivfn_and_tfn_linewidth <- additional_inputs$ind_ivfn_and_tfn_linewidth
-  agg_ivfn_and_tfn_linewidth <- additional_inputs$agg_ivfn_and_tfn_linewidth
+  # Parse additional_inputs [DEPRECATED] ----
+  # additional_inputs <- list(...)[[1]]
+  # # Plot formatting parameters
+  # filter_limit <- additional_inputs$filter_limit
+  # xlim <- additional_inputs$xlim
+  # coord_flip <- additional_inputs$coord_flip
+  # text_font_size <- additional_inputs$text_font_size
+  # # Plot aesthetic parameters
+  # mc_avg_and_CIs_color <- additional_inputs$mc_avg_and_CIs_color
+  # mc_avg_and_CIs_alpha <- additional_inputs$mc_avg_and_CIs_alpha
+  # mc_inferences_color <- additional_inputs$mc_inferences_color
+  # mc_inferences_alpha <- additional_inputs$mc_inferences_alpha
+  # mc_inferences_shape <- additional_inputs$mc_inferences_shape
+  # ind_inferences_color <- additional_inputs$ind_inferences_color
+  # ind_inferences_alpha <- additional_inputs$ind_inferences_alpha
+  # ind_inferences_shape <- additional_inputs$ind_inferences_shape
+  # agg_inferences_color <- additional_inputs$agg_inferences_color
+  # agg_inferences_alpha <- additional_inputs$agg_inferences_alpha
+  # agg_inferences_shape <- additional_inputs$agg_inferences_shape
+  # ind_ivfn_and_tfn_linewidth <- additional_inputs$ind_ivfn_and_tfn_linewidth
+  # agg_ivfn_and_tfn_linewidth <- additional_inputs$agg_ivfn_and_tfn_linewidth
+  # ----
 
   if (object$fcm_class == "ivfn") {
     ind_inferences_shape <- NA
     agg_inferences_shape <- NA
   }
-  # ----
 
   # Get Plotting Data ----
   plot_data <- get_plot_data(object, filter_limit)
@@ -647,25 +698,58 @@ autoplot.fcmconfr <- function(object, ...) {
 #' Plot fcmconfr
 #'
 #' @description
-#' Print the output of the autoplot function (\code{\link{autoplot.fcmconfr}})
+#' This plots the output of fcmconfr() using ggplot. Set interactive = TRUE to
+#' load plot in a Shiny app and toggle on/off results from different analyses.
+#'
+#' @details
+#' Generates a generic plot visualizing \code{\link{fcmconfr}} results. Call the
+#' function name directly (\code{\link{autoplot.fcmconfr}})) without parentheses
+#' to see the exact code to generate the plots, then copy-and-paste and edit
+#' as needed.
 #'
 #' @param x A direct output of the \code{\link{fcmconfr}} function
-#' @param ... Additional inputs:
-#'  - interactive Open plot in interactive shiny app
-#'  # Plot Formatting Parameters
-#'  - filter_limit Remove concepts whose inferences do not exceed this value
-#'  - coord_flip Swap x- and y-axes (i.e. rotate plot)
-#'  - text_font_size (Mainly for shiny use, i.e. leave blank) Set text font size
-#'  # Plot Aesthetic Parameters (and defaults)
-#'  - mc_avg_and_CIs_color = "blue"
-#'  - mc_inferences_color = "blue"
-#'  - mc_inferences_shape = 3
-#'  - ind_inferences_color = "black"
-#'  - ind_inferences_shape = 16
-#'  - agg_inferences_color = "red"
-#'  - agg_inferences_shape = 17
-#'  - ind_ivfn_and_tfn_linewidth = 0.1
-#'  - agg_ivfn_and_tfn_linewidth = 0.6
+#' @param filter_limit Only nodes with inferences above the filter_limit
+#' across any analysis will be plotted. This removes nodes with mostly 0-valued
+#' inferences indicating they were not impacted in the simulation.
+#' @param xlim The x-axis plot limits. xlim = NA lets ggplot determine the
+#' x-axis limits. xlim = c(lower_limit, upper_limit) for manual input limits.
+#' See ?ggplot2::xlim for additional info.
+#' @param coord_flip Swap x- and y-axes (i.e. rotate plot). See
+#' ?ggplot2::coord_flip for additional info.
+#' @param text_font_size The font size of axis labels. text_font_size = NA lets
+#' ggplot determine the axis label font size.
+#' @param mc_avg_and_CIs_color Color of the crossbar (lines) indicating the
+#' avg inferences of empirical FCMs generated via Monte Carlo sampling and the
+#' confidence intervals about those averages.
+#' @param mc_inferences_color Color of the points representing inferences of
+#' empirical FCMs generated via Monte Carlo sampling
+#' @param mc_inferences_alpha Transparency of the points representing inferences
+#' of empirical FCMs generated via Monte Carlo sampling. Range from 0 to 1
+#' (0: Transparent to 1: Opaque).
+#' @param mc_inferences_shape Point shapes of the points representing inferences
+#' of empirical FCMs generated via Monte Carlo sampling. Accepts PCH point
+#' values and character strings.
+#' @param ind_inferences_color Color of the points representing inferences of
+#' individual FCMs
+#' @param ind_inferences_alpha Transparency of the points representing
+#' inferences of individual FCMs. Range from 0 to 1 (0: Transparent to
+#' 1: Opaque).
+#' @param ind_inferences_shape Point shapes of the points representing
+#' inferences of individual FCMs. Accepts PCH point values and character
+#' strings. Ignored for IVFN FCMs.
+#' @param agg_inferences_color Color of the points representing inferences of
+#' the aggregate FCM
+#' @param agg_inferences_alpha Transparency of the points representing
+#' inferences of the aggregate FCM. Range from 0 to 1 (0: Transparent to
+#' 1: Opaque).
+#' @param agg_inferences_shape Point shapes of the points representing
+#' inferences of the aggregate FCM. Accepts PCH point values and character
+#' strings. Ignored for IVFN FCMs.
+#' @param ind_ivfn_and_tfn_linewidth Linewidth of lines representing
+#' inferences for analyses of individual IVFN- and TFN- FCMs.
+#' @param agg_ivfn_and_tfn_linewidth Linewidth of lines representing inferences
+#' for analyses of aggregate IVFN- and TFN- FCMs
+#' @param ... Additional inputs
 #'
 #' @importFrom graphics plot
 #'
@@ -673,7 +757,28 @@ autoplot.fcmconfr <- function(object, ...) {
 #'
 #' @export
 #' @example man/examples/ex-plot_fcmconfr.R
-plot.fcmconfr <- function(x, ...) {
+plot.fcmconfr <- function(x,
+                          interactive = FALSE,
+                          # Plot Format Parameters
+                          filter_limit = 1e-3,
+                          xlim = NA, # c(lower_limit, upper_limit)
+                          coord_flip = FALSE,
+                          text_font_size = NA, # NA: let ggplot determine
+                          # Plot Aesthetic Parameters
+                          mc_avg_and_CIs_color = "blue",
+                          mc_inferences_color = "blue",
+                          mc_inferences_alpha = 0.3, # 0:transparent to 1:opaque
+                          mc_inferences_shape = 3, # R PCH point shape values
+                          ind_inferences_color = "black",
+                          ind_inferences_alpha = 1, # 0:transparent to 1:opaque
+                          ind_inferences_shape = 16, # R PCH point shape values
+                          agg_inferences_color = "red",
+                          agg_inferences_alpha = 1, # 0:transparent to 1:opaque
+                          agg_inferences_shape = 17, # R PCH point shape values
+                          ind_ivfn_and_tfn_linewidth = 0.1,
+                          agg_ivfn_and_tfn_linewidth = 0.6,
+                          ...) {
+
   additional_inputs = list(...)
 
   # input validation template functions ----
@@ -704,93 +809,93 @@ plot.fcmconfr <- function(x, ...) {
   # ----
 
   # interactive ----
-  if (!"interactive" %in% names(additional_inputs)) {
-    interactive = FALSE
-    additional_inputs$interactive <- interactive
-  }
-  if (is_not_logical(additional_inputs$interactive)) {
+  # if (!"interactive" %in% names(additional_inputs)) {
+  #   interactive = FALSE
+  #   additional_inputs$interactive <- interactive
+  # }
+  if (is_not_logical(interactive)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var interactive} must be logical (TRUE/FALSE)",
-      "+++++> Input {.var interactive} was of type: {methods::is(additional_inputs$interactive)[1]}"
+      "+++++> Input {.var interactive} was of type: {methods::is(interactive)[1]}"
     )))
   }
   # ----
 
   # Plot Format Parameters
   # filter_limit ----
-  if (!("filter_limit" %in% names(additional_inputs))) {
-    filter_limit <- 1e-3
-    additional_inputs$filter_limit <- filter_limit
-  }
-  if (is_not_numeric(additional_inputs$filter_limit)) {
+  # if (!("filter_limit" %in% names(additional_inputs))) {
+  #   filter_limit <- 1e-3
+  #   additional_inputs$filter_limit <- filter_limit
+  # }
+  if (is_not_numeric(filter_limit)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var filter_limit} must be a positive numeric value",
-      "+++++> Input {.var filter_limit} was of type: {methods::is(additional_inputs$filter_limit)[1]}"
+      "+++++> Input {.var filter_limit} was of type: {methods::is(filter_limit)[1]}"
     )))
   }
-  if (additional_inputs$filter_limit <= 0) {
+  if (filter_limit <= 0) {
     stop(cli::format_error(c(
       "x" = "Error: {.var filter_limit} must be a positive numeric value greater than 0",
-      "+++++> Input {.var filter_limit} was: {additional_inputs$filter_limit}"
+      "+++++> Input {.var filter_limit} was: {filter_limit}"
     )))
   }
   # ----
 
   # xlim ----
-  if (!("xlim" %in% names(additional_inputs))) {
-    xlim <- NA
-    additional_inputs$xlim <- xlim
-  }
-  if (!all(is.na(additional_inputs$xlim)) & length(additional_inputs$xlim) != 2) {
+  # if (!("xlim" %in% names(additional_inputs))) {
+  #   xlim <- NA
+  #   additional_inputs$xlim <- xlim
+  # }
+  if (!all(is.na(xlim)) & length(xlim) != 2) {
     stop(cli::format_error(c(
       "x" = "Error: {.var xlim} must be a set of two values in the form of c(lower_x_limit, upper_x_limit)",
-      "+++++> Input {.var xlim} was: {additional_inputs$xlim}"
+      "+++++> Input {.var xlim} was: {xlim}"
     )))
   }
-  if (!all(is.na(additional_inputs$xlim)) & !is.numeric(additional_inputs$xlim)) {
+  if (!all(is.na(xlim)) & !is.numeric(xlim)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var xlim} must be a set of two values in the form of c(lower_x_limit, upper_x_limit)",
-      "+++++> Input {.var xlim} was: {additional_inputs$xlim}"
+      "+++++> Input {.var xlim} was: {xlim}"
     )))
   }
-  if (!all(is.na(additional_inputs$xlim)) & (additional_inputs$xlim[1] >= additional_inputs$xlim[2])) {
+  if (!all(is.na(xlim)) & (xlim[1] >= xlim[2])) {
     stop(cli::format_error(c(
       "x" = "Error: {.var xlim} must be a set of two values in the form of c(lower_x_limit, upper_x_limit)",
-      "+++++> Input {.var xlim} was: {additional_inputs$xlim}",
+      "+++++> Input {.var xlim} was: {xlim}",
       "+++++> Note - The lower_x_limit was greater than or equal to the upper_x_limit"
     )))
   }
   # ----
 
   # coord_flip ----
-  if (!("coord_flip" %in% names(additional_inputs))) {
-    coord_flip = FALSE
-    additional_inputs$coord_flip <- coord_flip
-  }
-  if (is_not_logical(additional_inputs$coord_flip)) {
+  # if (!("coord_flip" %in% names(additional_inputs))) {
+  #   coord_flip = FALSE
+  #   additional_inputs$coord_flip <- coord_flip
+  # }
+  if (is_not_logical(coord_flip)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var coord_flip} must be logical (TRUE/FALSE)",
-      "+++++> Input {.var coord_flip} was of type: {methods::is(additional_inputs$coord_flip)[1]}"
+      "+++++> Input {.var coord_flip} was of type: {methods::is(coord_flip)[1]}"
     )))
   }
   # ----
 
   # text_font_size ----
-  if (!("text_font_size" %in% names(additional_inputs))) {
-    text_font_size <- NA
-    additional_inputs$text_font_size <- text_font_size
-  }
-  if (!is.na(additional_inputs$text_font_size)) {
-    if (is_not_numeric(additional_inputs$text_font_size)) {
+  # if (!("text_font_size" %in% names(additional_inputs))) {
+  #   text_font_size <- NA
+  #   additional_inputs$text_font_size <- text_font_size
+  # }
+  if (!is.na(text_font_size)) {
+    if (is_not_numeric(text_font_size)) {
       stop(cli::format_error(c(
         "x" = "Error: {.var text_font_size} must be a positive numeric value",
-        "+++++> Input {.var text_font_size} was of type: {methods::is(additional_inputs$text_font_size)[1]}"
+        "+++++> Input {.var text_font_size} was of type: {methods::is(text_font_size)[1]}"
       )))
     }
-    if (additional_inputs$text_font_size <= 0) {
+    if (text_font_size <= 0) {
       stop(cli::format_error(c(
         "x" = "Error: {.var text_font_size} must be a positive numeric value greater than 0",
-        "+++++> Input {.var text_font_size} was: {additional_inputs$text_font_size}"
+        "+++++> Input {.var text_font_size} was: {text_font_size}"
       )))
     }
   }
@@ -799,20 +904,20 @@ plot.fcmconfr <- function(x, ...) {
 
   # Plot Aesthetic Parameters
   # mc_avg_and_CIs_color ----
-  if (!"mc_avg_and_CIs_color" %in% names(additional_inputs)) {
-    mc_avg_and_CIs_color <- "blue"
-    additional_inputs$mc_avg_and_CIs_color <- mc_avg_and_CIs_color
-  }
-  if (is_not_char(additional_inputs$mc_avg_and_CIs_color)) {
+  # if (!"mc_avg_and_CIs_color" %in% names(additional_inputs)) {
+  #   mc_avg_and_CIs_color <- "blue"
+  #   additional_inputs$mc_avg_and_CIs_color <- mc_avg_and_CIs_color
+  # }
+  if (is_not_char(mc_avg_and_CIs_color)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var mc_avg_and_CIs_color} must be a string (i.e. of type 'char')",
-      "+++++> Input {.var mc_avg_and_CIs_color} was: {methods::is(additional_inputs$mc_avg_and_CIs_color)[1]}"
+      "+++++> Input {.var mc_avg_and_CIs_color} was: {methods::is(mc_avg_and_CIs_color)[1]}"
     )))
   }
-  if (is_not_color(additional_inputs$mc_avg_and_CIs_color)) {
+  if (is_not_color(mc_avg_and_CIs_color)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var mc_avg_and_CIs_color} must be a valid color",
-      "+++++> Input {.var mc_avg_and_CIs_color} was '{additional_inputs$mc_avg_and_CIs_color}'"
+      "+++++> Input {.var mc_avg_and_CIs_color} was '{mc_avg_and_CIs_color}'"
     )))
   }
   # ----
@@ -824,42 +929,42 @@ plot.fcmconfr <- function(x, ...) {
       "~~~~~ Set {.var mc_avg_and_CIs_color} = 'transparent' to make invisible",
       "~~~~~ Ignoring input {.var mc_avg_and_CIs_alpha}"
     )))
-    mc_avg_and_CIs_alpha <- 1
-    additional_inputs$mc_avg_and_CIs_alpha <- mc_avg_and_CIs_alpha
+    # mc_avg_and_CIs_alpha <- 1
+    # additional_inputs$mc_avg_and_CIs_alpha <- mc_avg_and_CIs_alpha
   }
   # ----
 
   # mc_inferences_color ----
-  if (!"mc_inferences_color" %in% names(additional_inputs)) {
-    mc_inferences_color <- "blue"
-    additional_inputs$mc_inferences_color <- mc_inferences_color
-  }
-  if (is_not_char(additional_inputs$mc_inferences_color)) {
+  # if (!"mc_inferences_color" %in% names(additional_inputs)) {
+  #   mc_inferences_color <- "blue"
+  #   additional_inputs$mc_inferences_color <- mc_inferences_color
+  # }
+  if (is_not_char(mc_inferences_color)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var mc_inferences_color} must be a string (i.e. of type 'char')",
-      "+++++> Input {.var mc_inferences_color} was: {methods::is(additional_inputs$mc_inferences_color)[1]}"
+      "+++++> Input {.var mc_inferences_color} was: {methods::is(mc_inferences_color)[1]}"
     )))
   }
-  if (is_not_color(additional_inputs$mc_inferences_color)) {
+  if (is_not_color(mc_inferences_color)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var mc_inferences_color} must be a valid color",
-      "+++++> Input {.var mc_inferences_color} was '{additional_inputs$mc_inferences_color}'"
+      "+++++> Input {.var mc_inferences_color} was '{mc_inferences_color}'"
     )))
   }
   # ----
 
   # mc_inferences_alpha ----
-  if (!"mc_inferences_alpha" %in% names(additional_inputs)) {
-    mc_inferences_alpha <- 0.2
-    additional_inputs$mc_inferences_alpha <- mc_inferences_alpha
-  }
-  if (is_not_numeric(additional_inputs$mc_inferences_alpha)) {
+  # if (!"mc_inferences_alpha" %in% names(additional_inputs)) {
+  #   mc_inferences_alpha <- 0.2
+  #   additional_inputs$mc_inferences_alpha <- mc_inferences_alpha
+  # }
+  if (is_not_numeric(mc_inferences_alpha)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var mc_inferences_alpha} must be a positive numeric value between 0 and 1",
       "+++++> Input {.var mc_inferences_alpha} was: {mc_inferences_alpha}"
     )))
   }
-  if (additional_inputs$mc_inferences_alpha < 0 | additional_inputs$mc_inferences_alpha > 1) {
+  if (mc_inferences_alpha < 0 | mc_inferences_alpha > 1) {
     stop(cli::format_error(c(
       "x" = "Error: {.var mc_inferences_alpha} must be a positive numeric value between 0 and 1",
       "+++++> Input {.var mc_inferences_alpha} was: {mc_inferences_alpha}"
@@ -868,64 +973,64 @@ plot.fcmconfr <- function(x, ...) {
   # ----
 
   # mc_inferences_shape ----
-  if (!"mc_inferences_shape" %in% names(additional_inputs)) {
-    mc_inferences_shape <- 3
-    additional_inputs$mc_inferences_shape <- mc_inferences_shape
-  }
-  if (is.numeric(additional_inputs$mc_inferences_shape)) {
-    if (is_not_integer(additional_inputs$mc_inferences_shape) | is_not_shape_value(additional_inputs$mc_inferences_shape)) {
+  # if (!"mc_inferences_shape" %in% names(additional_inputs)) {
+  #   mc_inferences_shape <- 3
+  #   additional_inputs$mc_inferences_shape <- mc_inferences_shape
+  # }
+  if (is.numeric(mc_inferences_shape)) {
+    if (is_not_integer(mc_inferences_shape) | is_not_shape_value(mc_inferences_shape)) {
       stop(cli::format_error(c(
         "x" = "Error: {.var mc_inferences_shape} must be a either an integer or a valid character string",
         "+++++> Integer inputs must be a valid pch value (i.e. 0:25)",
-        "+++++> Input {.var mc_inferences_shape} was: {additional_inputs$mc_inferences_shape}",
+        "+++++> Input {.var mc_inferences_shape} was: {mc_inferences_shape}",
         "+++++> Run ?points or ?gglpot2::translate_shape_string in the console for additional info"
       )))
     }
   } else {
-    if (is_not_char(additional_inputs$mc_inferences_shape) | is_not_shape_string(additional_inputs$mc_inferences_shape)) {
+    if (is_not_char(mc_inferences_shape) | is_not_shape_string(mc_inferences_shape)) {
       stop(cli::format_error(c(
         "x" = "Error: {.var mc_inferences_shape} must be a either an integer or a valid character string",
         "+++++> Character string inputs must reference a valid pch value",
-        "+++++> Input {.var mc_inferences_shape} was: '{additional_inputs$mc_inferences_shape}'",
+        "+++++> Input {.var mc_inferences_shape} was: '{mc_inferences_shape}'",
         "+++++> Run ?points or ?gglpot2::translate_shape_string in the console for additional info"
       )))
     } else {
-      additional_inputs$mc_inferences_shape <- ggplot2::translate_shape_string(additional_inputs$mc_inferences_shape)
+      mc_inferences_shape <- ggplot2::translate_shape_string(mc_inferences_shape)
     }
   }
   # ----
 
   # ind_inferences_color ----
-  if (!"ind_inferences_color" %in% names(additional_inputs)) {
-    ind_inferences_color = "black"
-    additional_inputs$ind_inferences_color <- ind_inferences_color
-  }
-  if (is_not_char(additional_inputs$ind_inferences_color)) {
+  # if (!"ind_inferences_color" %in% names(additional_inputs)) {
+  #   ind_inferences_color = "black"
+  #   additional_inputs$ind_inferences_color <- ind_inferences_color
+  # }
+  if (is_not_char(ind_inferences_color)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var ind_inferences_color} must be a string (i.e. of type 'char')",
-      "+++++> Input {.var ind_inferences_color} was: {methods::is(additional_inputs$ind_inferences_color)[1]}"
+      "+++++> Input {.var ind_inferences_color} was: {methods::is(ind_inferences_color)[1]}"
     )))
   }
-  if (is_not_color(additional_inputs$ind_inferences_color)) {
+  if (is_not_color(ind_inferences_color)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var ind_inferences_color} must be a valid color",
-      "+++++> Input {.var ind_inferences_color} was '{additional_inputs$ind_inferences_color}'"
+      "+++++> Input {.var ind_inferences_color} was '{ind_inferences_color}'"
     )))
   }
   # ----
 
   # ind_inferences_alpha ----
-  if (!"ind_inferences_alpha" %in% names(additional_inputs)) {
-    ind_inferences_alpha <- 1
-    additional_inputs$ind_inferences_alpha <- ind_inferences_alpha
-  }
-  if (is_not_numeric(additional_inputs$ind_inferences_alpha)) {
+  # if (!"ind_inferences_alpha" %in% names(additional_inputs)) {
+  #   ind_inferences_alpha <- 1
+  #   additional_inputs$ind_inferences_alpha <- ind_inferences_alpha
+  # }
+  if (is_not_numeric(ind_inferences_alpha)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var ind_inferences_alpha} must be a positive numeric value between 0 and 1",
       "+++++> Input {.var ind_inferences_alpha} was: {ind_inferences_alpha}"
     )))
   }
-  if (additional_inputs$ind_inferences_alpha < 0 | additional_inputs$ind_inferences_alpha > 1) {
+  if (ind_inferences_alpha < 0 | ind_inferences_alpha > 1) {
     stop(cli::format_error(c(
       "x" = "Error: {.var ind_inferences_alpha} must be a positive numeric value between 0 and 1",
       "+++++> Input {.var ind_inferences_alpha} was: {ind_inferences_alpha}"
@@ -934,64 +1039,64 @@ plot.fcmconfr <- function(x, ...) {
   # ----
 
   # ind_inferences_shape ----
-  if (!"ind_inferences_shape" %in% names(additional_inputs)) {
-    ind_inferences_shape <- 16
-    additional_inputs$ind_inferences_shape <- ind_inferences_shape
-  }
-  if (is.numeric(additional_inputs$ind_inferences_shape)) {
-    if (is_not_integer(additional_inputs$ind_inferences_shape) | is_not_shape_value(additional_inputs$ind_inferences_shape)) {
+  # if (!"ind_inferences_shape" %in% names(additional_inputs)) {
+  #   ind_inferences_shape <- 16
+  #   additional_inputs$ind_inferences_shape <- ind_inferences_shape
+  # }
+  if (is.numeric(ind_inferences_shape)) {
+    if (is_not_integer(ind_inferences_shape) | is_not_shape_value(ind_inferences_shape)) {
       stop(cli::format_error(c(
         "x" = "Error: {.var ind_inferences_shape} must be a either an integer or a valid character string",
         "+++++> Integer inputs must be a valid pch value (i.e. 0:25)",
-        "+++++> Input {.var ind_inferences_shape} was: {additional_inputs$ind_inferences_shape}",
+        "+++++> Input {.var ind_inferences_shape} was: {ind_inferences_shape}",
         "+++++> Run ?points or ?gglpot2::translate_shape_string in the console for additional info"
       )))
     }
   } else {
-    if (is_not_char(additional_inputs$ind_inferences_shape) | is_not_shape_string(additional_inputs$ind_inferences_shape)) {
+    if (is_not_char(ind_inferences_shape) | is_not_shape_string(ind_inferences_shape)) {
       stop(cli::format_error(c(
         "x" = "Error: {.var ind_inferences_shape} must be a either an integer or a valid character string",
         "+++++> Character string inputs must reference a valid pch value",
-        "+++++> Input {.var ind_inferences_shape} was: '{additional_inputs$ind_inferences_shape}'",
+        "+++++> Input {.var ind_inferences_shape} was: '{ind_inferences_shape}'",
         "+++++> Run ?points or ?gglpot2::translate_shape_string in the console for additional info"
       )))
     } else {
-      additional_inputs$ind_inferences_shape <- ggplot2::translate_shape_string(additional_inputs$ind_inferences_shape)
+      ind_inferences_shape <- ggplot2::translate_shape_string(ind_inferences_shape)
     }
   }
   # ----
 
   # agg_inferences_color ----
-  if (!"agg_inferences_color" %in% names(additional_inputs)) {
-    agg_inferences_color = "red"
-    additional_inputs$agg_inferences_color <- agg_inferences_color
-  }
-  if (is_not_char(additional_inputs$agg_inferences_color)) {
+  # if (!"agg_inferences_color" %in% names(additional_inputs)) {
+  #   agg_inferences_color = "red"
+  #   additional_inputs$agg_inferences_color <- agg_inferences_color
+  # }
+  if (is_not_char(agg_inferences_color)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var agg_inferences_color} must be a string (i.e. of type 'char')",
-      "+++++> Input {.var agg_inferences_color} was: {methods::is(additional_inputs$agg_inferences_color)[1]}"
+      "+++++> Input {.var agg_inferences_color} was: {methods::is(agg_inferences_color)[1]}"
     )))
   }
-  if (is_not_color(additional_inputs$agg_inferences_color)) {
+  if (is_not_color(agg_inferences_color)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var agg_inferences_color} must be a valid color",
-      "+++++> Input {.var agg_inferences_color} was '{additional_inputs$agg_inferences_color}'"
+      "+++++> Input {.var agg_inferences_color} was '{agg_inferences_color}'"
     )))
   }
   # ----
 
   # agg_inferences_alpha ----
-  if (!"agg_inferences_alpha" %in% names(additional_inputs)) {
-    agg_inferences_alpha <- 1
-    additional_inputs$agg_inferences_alpha <- agg_inferences_alpha
-  }
-  if (is_not_numeric(additional_inputs$agg_inferences_alpha)) {
+  # if (!"agg_inferences_alpha" %in% names(additional_inputs)) {
+  #   agg_inferences_alpha <- 1
+  #   additional_inputs$agg_inferences_alpha <- agg_inferences_alpha
+  # }
+  if (is_not_numeric(agg_inferences_alpha)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var agg_inferences_alpha} must be a positive numeric value between 0 and 1",
       "+++++> Input {.var agg_inferences_alpha} was: {agg_inferences_alpha}"
     )))
   }
-  if (additional_inputs$agg_inferences_alpha < 0 | additional_inputs$agg_inferences_alpha > 1) {
+  if (agg_inferences_alpha < 0 | agg_inferences_alpha > 1) {
     stop(cli::format_error(c(
       "x" = "Error: {.var agg_inferences_alpha} must be a positive numeric value between 0 and 1",
       "+++++> Input {.var agg_inferences_alpha} was: {agg_inferences_alpha}"
@@ -1000,67 +1105,67 @@ plot.fcmconfr <- function(x, ...) {
   # ----
 
   # agg_inferences_shape ----
-  if (!"agg_inferences_shape" %in% names(additional_inputs)) {
-    agg_inferences_shape = 17
-    additional_inputs$agg_inferences_shape <- agg_inferences_shape
-  }
-  if (is.numeric(additional_inputs$agg_inferences_shape)) {
-    if (is_not_integer(additional_inputs$agg_inferences_shape) | is_not_shape_value(additional_inputs$agg_inferences_shape)) {
+  # if (!"agg_inferences_shape" %in% names(additional_inputs)) {
+  #   agg_inferences_shape = 17
+  #   agg_inferences_shape <- agg_inferences_shape
+  # }
+  if (is.numeric(agg_inferences_shape)) {
+    if (is_not_integer(agg_inferences_shape) | is_not_shape_value(agg_inferences_shape)) {
       stop(cli::format_error(c(
         "x" = "Error: {.var agg_inferences_shape} must be a either an integer or a valid character string",
         "+++++> Integer inputs must be a valid pch value (i.e. 0:25)",
-        "+++++> Input {.var agg_inferences_shape} was: {additional_inputs$agg_inferences_shape}",
+        "+++++> Input {.var agg_inferences_shape} was: {agg_inferences_shape}",
         "+++++> Run ?points or ?gglpot2::translate_shape_string in the console for additional info"
       )))
     }
   } else {
-    if (is_not_char(additional_inputs$agg_inferences_shape) | is_not_shape_string(additional_inputs$agg_inferences_shape)) {
+    if (is_not_char(agg_inferences_shape) | is_not_shape_string(agg_inferences_shape)) {
       stop(cli::format_error(c(
         "x" = "Error: {.var agg_inferences_shape} must be a either an integer or a valid character string",
         "+++++> Character string inputs must reference a valid pch value",
-        "+++++> Input {.var agg_inferences_shape} was: '{additional_inputs$agg_inferences_shape}'",
+        "+++++> Input {.var agg_inferences_shape} was: '{agg_inferences_shape}'",
         "+++++> Run ?points or ?gglpot2::translate_shape_string in the console for additional info"
       )))
     } else {
-      additional_inputs$agg_inferences_shape <- ggplot2::translate_shape_string(additional_inputs$agg_inferences_shape)
+      agg_inferences_shape <- ggplot2::translate_shape_string(agg_inferences_shape)
     }
   }
   # ----
 
   # ind_ivfn_and_tfn_linewidth ----
-  if (!"ind_ivfn_and_tfn_linewidth" %in% names(additional_inputs)) {
-    ind_ivfn_and_tfn_linewidth = 0.1
-    additional_inputs$ind_ivfn_and_tfn_linewidth <- ind_ivfn_and_tfn_linewidth
-  }
-  if (is_not_numeric(additional_inputs$ind_ivfn_and_tfn_linewidth)) {
+  # if (!"ind_ivfn_and_tfn_linewidth" %in% names(additional_inputs)) {
+  #   ind_ivfn_and_tfn_linewidth = 0.1
+  #   additional_inputs$ind_ivfn_and_tfn_linewidth <- ind_ivfn_and_tfn_linewidth
+  # }
+  if (is_not_numeric(ind_ivfn_and_tfn_linewidth)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var ind_ivfn_and_tfn_linewidth} must be a value greater than or equal to 0 (i.e. positive)",
-      "+++++> Input {.var ind_ivfn_and_tfn_linewidth} was: {additional_inputs$ind_ivfn_and_tfn_linewidth}"
+      "+++++> Input {.var ind_ivfn_and_tfn_linewidth} was: {ind_ivfn_and_tfn_linewidth}"
     )))
   }
-  if (is_not_positive(additional_inputs$ind_ivfn_and_tfn_linewidth)) {
+  if (is_not_positive(ind_ivfn_and_tfn_linewidth)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var ind_ivfn_and_tfn_linewidth} must be a value greater than or equal to 0 (i.e. positive)",
-      "+++++> Input {.var ind_ivfn_and_tfn_linewidth} was: {additional_inputs$ind_ivfn_and_tfn_linewidth}"
+      "+++++> Input {.var ind_ivfn_and_tfn_linewidth} was: {ind_ivfn_and_tfn_linewidth}"
     )))
   }
   # ----
 
   # agg_ivfn_and_tfn_linewidth ----
-  if (!"agg_ivfn_and_tfn_linewidth" %in% names(additional_inputs)) {
-    agg_ivfn_and_tfn_linewidth = 0.6
-    additional_inputs$agg_ivfn_and_tfn_linewidth <- agg_ivfn_and_tfn_linewidth
-  }
-  if (is_not_numeric(additional_inputs$agg_ivfn_and_tfn_linewidth)) {
+  # if (!"agg_ivfn_and_tfn_linewidth" %in% names(additional_inputs)) {
+  #   agg_ivfn_and_tfn_linewidth = 0.6
+  #   additional_inputs$agg_ivfn_and_tfn_linewidth <- agg_ivfn_and_tfn_linewidth
+  # }
+  if (is_not_numeric(agg_ivfn_and_tfn_linewidth)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var agg_ivfn_and_tfn_linewidth} must be a value greater than or equal to 0 (i.e. positive)",
-      "+++++> Input {.var agg_ivfn_and_tfn_linewidth} was: {additional_inputs$agg_ivfn_and_tfn_linewidth}"
+      "+++++> Input {.var agg_ivfn_and_tfn_linewidth} was: {agg_ivfn_and_tfn_linewidth}"
     )))
   }
-  if (is_not_positive(additional_inputs$agg_ivfn_and_tfn_linewidth)) {
+  if (is_not_positive(agg_ivfn_and_tfn_linewidth)) {
     stop(cli::format_error(c(
       "x" = "Error: {.var agg_ivfn_and_tfn_linewidth} must be a value greater than or equal to 0 (i.e. positive)",
-      "+++++> Input {.var agg_ivfn_and_tfn_linewidth} was: {additional_inputs$agg_ivfn_and_tfn_linewidth}"
+      "+++++> Input {.var agg_ivfn_and_tfn_linewidth} was: {agg_ivfn_and_tfn_linewidth}"
     )))
   }
   # ----
@@ -1088,7 +1193,7 @@ plot.fcmconfr <- function(x, ...) {
   }
   # ----
 
-  if (!additional_inputs$interactive) {
+  if (!interactive) {
     suppressWarnings(print(autoplot(x, additional_inputs)))
   } else {
     suppressWarnings(interactive_plot_fcmconfr(x, additional_inputs))
