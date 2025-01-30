@@ -515,23 +515,23 @@ shiny_server <- function(input, output, session) {
         shiny::fluidRow(
           shiny::column(
             width = 6, align = "right",
-            shiny::h5("# Bootstraps (Repetitions)", style = "padding: 25px;")
+            shiny::h5("# Bootstraps", style = "padding: 25px;")
           ),
           shiny::column(
             width = 6, align = "left",
             shiny::numericInput("mc_inference_bootstrap_reps", "", value = 1000, min = 100, step = 100)
           )
-        ),
-        shiny::fluidRow(
-          shiny::column(
-            width = 6, align = "right",
-            shiny::h5("# Draws per Bootstrap (Repetition)", style = "padding: 25px;")
-          ),
-          shiny::column(
-            width = 6, align = "left",
-            shiny::numericInput("mc_inference_bootstrap_draws_per_rep", "", value = 1000, min = 100, step = 100)
-          )
-        )
+        )# ,
+        # shiny::fluidRow(
+        #   shiny::column(
+        #     width = 6, align = "right",
+        #     shiny::h5("# Draws per Bootstrap (Repetition)", style = "padding: 25px;")
+        #   ),
+        #   shiny::column(
+        #     width = 6, align = "left",
+        #     shiny::numericInput("mc_inference_bootstrap_draws_per_rep", "", value = 1000, min = 100, step = 100)
+        #   )
+        # )
       )
     } else if (!can_perform_monte_carlo_analysis()) {
       shiny::fluidRow(
