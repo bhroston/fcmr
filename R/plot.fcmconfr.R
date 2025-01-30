@@ -92,7 +92,6 @@ plot.fcmconfr <- function(x,
       "~~~~~ Ignoring additional inputs: {names(additional_inputs)}"
     )))
   }
-  # if ()
 
   check_plot_fcmconfr_inputs(
     interactive,
