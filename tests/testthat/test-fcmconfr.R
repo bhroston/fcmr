@@ -59,7 +59,7 @@ test_that("streamlined fcmconfr works", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -94,7 +94,7 @@ test_that("streamlined fcmconfr works", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -153,7 +153,7 @@ test_that("streamlined fcmconfr works", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -220,7 +220,7 @@ test_that("streamlined fcmconfr works", {
         run_mc_calcs = FALSE,
         run_ci_calcs = FALSE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = FALSE
+        include_sims_in_output = FALSE
       )
     ))
   )
@@ -252,7 +252,7 @@ test_that("streamlined fcmconfr works", {
   # n_cores = 10
   # # Additional Options
   # include_zeroes_in_sampling = FALSE
-  # mc_sims_in_output = TRUE
+  # include_sims_in_output = TRUE
   # estimate_inference_CI_w_bootstrap = TRUE
 
   # ggplot() +
@@ -294,7 +294,7 @@ test_that("pulse only fcmconfr works", {
         run_mc_calcs = FALSE,
         run_ci_calcs = FALSE,
         include_zeroes_in_sampling = TRUE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -335,7 +335,7 @@ test_that("pulse only fcmconfr works", {
         run_mc_calcs = FALSE,
         run_ci_calcs = FALSE,
         include_zeroes_in_sampling = TRUE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -389,7 +389,7 @@ test_that("fcmconfr works with igraph inputs", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -449,7 +449,7 @@ test_that("check_fcmconfr_inputs work", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -478,7 +478,7 @@ test_that("check_fcmconfr_inputs work", {
       run_mc_calcs = FALSE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = FALSE
+      include_sims_in_output = FALSE
     )
   ))
   )
@@ -506,7 +506,7 @@ test_that("check_fcmconfr_inputs work", {
         run_mc_calcs = 2,
         run_ci_calcs = FALSE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = FALSE
+        include_sims_in_output = FALSE
       )
     ))
   )
@@ -534,7 +534,7 @@ test_that("check_fcmconfr_inputs work", {
       run_mc_calcs = FALSE,
       run_ci_calcs = 2,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = FALSE
+      include_sims_in_output = FALSE
     )
   ))
   )
@@ -562,12 +562,12 @@ test_that("check_fcmconfr_inputs work", {
       run_mc_calcs = FALSE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = 2,
-      mc_sims_in_output = FALSE
+      include_sims_in_output = FALSE
     )
   ))
   )
 
-  # Expect error if mc_sims_in_output is not logical()
+  # Expect error if include_sims_in_output is not logical()
   expect_error(
   invisible(capture.output(
     tfn_clamping_inputs_only <- fcmconfr(
@@ -590,13 +590,13 @@ test_that("check_fcmconfr_inputs work", {
       run_mc_calcs = FALSE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = TRUE,
-      mc_sims_in_output = 2
+      include_sims_in_output = 2
     )
   ))
   )
 
 
-  # Expect warning w/ blank initial_state_vector, clamping_vector, activation, or squashin
+  # Expect warning w/ blank initial_state_vector, clamping_vector, activation, or squashing
   test_adj_matrix_1 <- data.frame(
     "A" = c(0, 0, 0, 0),
     "B" = c(1, 0, 0, 1),
@@ -647,7 +647,7 @@ test_that("check_fcmconfr_inputs work", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -682,7 +682,7 @@ test_that("check_fcmconfr_inputs work", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -716,7 +716,7 @@ test_that("check_fcmconfr_inputs work", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -750,7 +750,7 @@ test_that("check_fcmconfr_inputs work", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -785,7 +785,7 @@ test_that("check_fcmconfr_inputs work", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -841,7 +841,7 @@ test_that("check_fcmconfr_inputs work", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -882,7 +882,7 @@ test_that("check_fcmconfr_inputs work", {
         run_mc_calcs = FALSE,
         run_ci_calcs = FALSE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -927,7 +927,7 @@ test_that("check_fcmconfr_inputs work", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -962,7 +962,7 @@ test_that("check_fcmconfr_inputs work", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -1012,7 +1012,7 @@ test_that("check_fcmconfr_inputs work", {
         run_mc_calcs = FALSE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -1046,7 +1046,7 @@ test_that("check_fcmconfr_inputs work", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -1081,7 +1081,7 @@ test_that("check_fcmconfr_inputs work", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -1116,7 +1116,7 @@ test_that("check_fcmconfr_inputs work", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -1151,7 +1151,7 @@ test_that("check_fcmconfr_inputs work", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -1186,7 +1186,7 @@ test_that("check_fcmconfr_inputs work", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -1221,7 +1221,7 @@ test_that("check_fcmconfr_inputs work", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -1256,7 +1256,7 @@ test_that("check_fcmconfr_inputs work", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -1291,7 +1291,7 @@ test_that("check_fcmconfr_inputs work", {
         run_mc_calcs = TRUE,
         run_ci_calcs = TRUE,
         include_zeroes_in_sampling = FALSE,
-        mc_sims_in_output = TRUE
+        include_sims_in_output = TRUE
       )
     ))
   )
@@ -1355,7 +1355,7 @@ test_that("print.fcmconfr works", {
       run_mc_calcs = TRUE,
       run_ci_calcs = TRUE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   expect_snapshot(print(test))
@@ -1389,7 +1389,7 @@ test_that("print.fcmconfr works", {
       run_mc_calcs = TRUE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   expect_snapshot(print(test))
@@ -1423,7 +1423,7 @@ test_that("print.fcmconfr works", {
       run_mc_calcs = TRUE,
       run_ci_calcs = TRUE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   expect_snapshot(test)
@@ -1457,7 +1457,7 @@ test_that("print.fcmconfr works", {
       run_mc_calcs = TRUE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   expect_snapshot(test)
@@ -1491,7 +1491,7 @@ test_that("print.fcmconfr works", {
       run_mc_calcs = FALSE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   expect_snapshot(test)
@@ -1525,7 +1525,7 @@ test_that("print.fcmconfr works", {
       run_mc_calcs = FALSE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   expect_snapshot(test)

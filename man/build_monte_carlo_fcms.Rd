@@ -8,7 +8,8 @@ build_monte_carlo_fcms(
   adj_matrix_list = list(matrix()),
   N_samples = 1000,
   include_zeroes = TRUE,
-  show_progress = TRUE
+  show_progress = TRUE,
+  skip_checks = FALSE
 )
 }
 \arguments{
@@ -22,6 +23,9 @@ edge weights or ignore them in aggregation}
 
 \item{show_progress}{TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 from the pbapply package as the underlying function.}
+
+\item{skip_checks}{FOR DEVELOPER USE ONLY. TRUE if infer_fcm is called within
+fcmconfr() and checks have already been performed}
 }
 \value{
 A list of empirical (Conventional) FCM adj. matrices generated via monte carlo methods

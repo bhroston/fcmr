@@ -61,8 +61,10 @@
 #' from the pbapply package as the underlying function.
 #' @param n_cores Number of cores to use in parallel processing. If no input given,
 #' will use all available cores in the machine.
-#' @param mc_sims_in_output TRUE/FALSE whether to include simulations of monte-carlo-generated
+#' @param include_sims_in_output TRUE/FALSE whether to include simulations of monte-carlo-generated
 #' FCM. Will dramatically increase size of output if TRUE.
+#' @param skip_checks FOR DEVELOPER USE ONLY. TRUE if infer_fcm is called within
+#' fcmconfr() and checks have already been performed
 #'
 #' @returns A list of two dataframes: the first contains all inference estimates
 #' across the empirical (monte carlo) FCM inferences, and the second is an
@@ -83,26 +85,37 @@ infer_fcm_set <- function(adj_matrices = list(matrix()),
                           parallel = TRUE,
                           n_cores = integer(),
                           show_progress = TRUE,
-                          mc_sims_in_output = FALSE) {
+                          include_sims_in_output = FALSE,
+                          skip_checks = FALSE) {
 
   # Adding for R CMD check. Does not impact logic.
   i <- NULL
 
+  if (!is.logical(skip_checks)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var skip_checks} must be a logical value (TRUE/FALSE)",
+      "+++++> Input {.var skip_checks} was: {skip_checks}"
+    )))
+  }
   # Perform input checks ----
-  checks <- check_infer_fcm_set_inputs(
-    adj_matrices,
-    initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error,
-    parallel, n_cores, show_progress, mc_sims_in_output
-  )
-  fcm_class <- checks$fcm_class
-  adj_matrices <- checks$adj_matrices
-  initial_state_vector <- checks$initial_state_vector
-  clamping_vector <- checks$clamping_vector
-  activation <- checks$activation
-  squashing <- checks$squashing
-  point_of_inference <- checks$point_of_inference
-  show_progress <- checks$show_progress
-  parallel <- checks$parallel
+  if (!skip_checks) {
+    checks <- check_infer_fcm_set_inputs(
+      adj_matrices,
+      initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error,
+      parallel, n_cores, show_progress, include_sims_in_output
+    )
+    fcm_class <- checks$fcm_class
+    adj_matrices <- checks$adj_matrices
+    initial_state_vector <- checks$initial_state_vector
+    clamping_vector <- checks$clamping_vector
+    activation <- checks$activation
+    squashing <- checks$squashing
+    point_of_inference <- checks$point_of_inference
+    show_progress <- checks$show_progress
+    parallel <- checks$parallel
+  } else {
+    fcm_class <- get_adj_matrices_input_type(adj_matrices)$object_types_in_list[1]
+  }
   # ----
 
   if (parallel & show_progress) {
@@ -211,7 +224,7 @@ infer_fcm_set <- function(adj_matrices = list(matrix()),
   inference_values_by_sim <- do.call(rbind, inference_values_by_sim)
   rownames(inference_values_by_sim) <- 1:nrow(inference_values_by_sim)
 
-  if (mc_sims_in_output) {
+  if (include_sims_in_output) {
     structure(
       .Data = list(
         inference = inference_values_by_sim,
@@ -269,6 +282,8 @@ infer_fcm_set <- function(adj_matrices = list(matrix()),
 #' @param min_error The lowest error (sum of the absolute value of the current state
 #' vector minus the previous state vector) at which no more iterations are necessary
 #' and the simulation will stop
+#' @param skip_checks FOR DEVELOPER USE ONLY. TRUE if infer_fcm is called within
+#' fcmconfr() and checks have already been performed
 #'
 #' @returns A list of fcm inference results (including baseline and simulation outputs)
 #'
@@ -283,18 +298,28 @@ infer_fcm <- function(adj_matrix = matrix(),
                       lambda = 1,
                       point_of_inference = c("peak", "final"),
                       max_iter = 100,
-                      min_error = 1e-5) {
+                      min_error = 1e-5,
+                      skip_checks = FALSE) {
 
-  # return(check_simulation_inputs)
+  if (!is.logical(skip_checks)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var skip_checks} must be a logical value (TRUE/FALSE)",
+      "+++++> Input {.var skip_checks} was: {skip_checks}"
+    )))
+  }
 
-  checks <- check_simulation_inputs(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
-  fcm_class <- checks$fcm_class
-  adj_matrix <- checks$adj_matrix
-  initial_state_vector <- checks$initial_state_vector
-  clamping_vector <- checks$clamping_vector
-  activation <- checks$activation
-  squashing <- checks$squashing
-  point_of_inference <- checks$point_of_inference
+  if (!skip_checks) {
+    checks <- check_simulation_inputs(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
+    fcm_class <- checks$fcm_class
+    adj_matrix <- checks$adj_matrix
+    initial_state_vector <- checks$initial_state_vector
+    clamping_vector <- checks$clamping_vector
+    activation <- checks$activation
+    squashing <- checks$squashing
+    point_of_inference <- checks$point_of_inference
+  } else {
+    fcm_class <- get_adj_matrices_input_type(adj_matrix)$object_types_in_list[1]
+  }
 
   if (fcm_class == "conventional") {
     inference <- infer_conventional_fcm(adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)

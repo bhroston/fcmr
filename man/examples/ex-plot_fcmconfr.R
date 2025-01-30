@@ -27,7 +27,7 @@ tfn_example_fcmconfr <- fcmconfr(
   run_mc_calcs = TRUE,
   run_ci_calcs = TRUE,
   include_zeroes_in_sampling = TRUE,
-  mc_sims_in_output = TRUE
+  include_sims_in_output = TRUE
 )
 
 

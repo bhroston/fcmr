@@ -26,7 +26,7 @@ ex_conventional_fcmconfr <- fcmconfr(
   run_mc_calcs = TRUE,
   run_ci_calcs = TRUE,
   include_zeroes_in_sampling = TRUE,
-  mc_sims_in_output = TRUE
+  include_sims_in_output = TRUE
 )
 get_inferences(ex_conventional_fcmconfr, analysis = c("individual"))
 get_inferences(ex_conventional_fcmconfr, analysis = c("individual", "aggregate"))
@@ -62,7 +62,7 @@ ex_ivfn_fcmconfr <- fcmconfr(
   run_mc_calcs = TRUE,
   run_ci_calcs = TRUE,
   include_zeroes_in_sampling = TRUE,
-  mc_sims_in_output = TRUE
+  include_sims_in_output = TRUE
 )
 get_inferences(ex_ivfn_fcmconfr, analysis = c("individual"))
 get_inferences(ex_ivfn_fcmconfr, analysis = c("individual", "aggregate"))
@@ -98,7 +98,7 @@ ex_tfn_fcmconfr <- fcmconfr(
   run_mc_calcs = TRUE,
   run_ci_calcs = TRUE,
   include_zeroes_in_sampling = TRUE,
-  mc_sims_in_output = TRUE
+  include_sims_in_output = TRUE
 )
 get_inferences(ex_tfn_fcmconfr, analysis = c("individual"))
 get_inferences(ex_tfn_fcmconfr, analysis = c("individual", "aggregate"))
