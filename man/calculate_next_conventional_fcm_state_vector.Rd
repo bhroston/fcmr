@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils-infer_and_simulate_fcm.R
 \name{calculate_next_conventional_fcm_state_vector}
 \alias{calculate_next_conventional_fcm_state_vector}
-\title{[INTENDED FOR DEVELOPER USE ONLY] Calculate Next (Conventional) FCM State
+\title{Calculate Next (Conventional) FCM State
 Vector}
 \usage{
 calculate_next_conventional_fcm_state_vector(

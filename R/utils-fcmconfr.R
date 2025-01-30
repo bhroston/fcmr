@@ -52,7 +52,7 @@
 #' @param run_ci_calcs TRUE/FALSE Run the code to estimate the 95 percent CI bounds about the means of the inferences of the monte carlo adj matrices
 #' @param include_zeroes_in_sampling TRUE/FALSE Whether to incorporate zeroes as intentionally-defined edge weights or ignore
 #' them when aggregating adj. matrices and sampling for monte carlo FCMs
-#' @param mc_sims_in_output TRUE/FALSE Whether to include simulations of monte carlo FCMs. Switch to FALSE if concerned
+#' @param include_sims_in_output TRUE/FALSE Whether to include simulations of monte carlo FCMs. Switch to FALSE if concerned
 #' about the size of the output of fcmconfr (simulations are necessary and will run regardless)
 #'
 #' @returns A list of resolved inputs to pass to \code{\link{fcmconfr}}
@@ -88,7 +88,9 @@ check_fcmconfr_inputs <- function(adj_matrices = list(matrix()),
                                   run_mc_calcs = TRUE,
                                   run_ci_calcs = TRUE,
                                   include_zeroes_in_sampling = FALSE,
-                                  mc_sims_in_output = TRUE) {
+                                  include_sims_in_output = TRUE) {
+
+  options(warn = 1) # Print warnings to console as they occur
 
   # Perform Checks ----
   adj_matrices_input_type <- get_adj_matrices_input_type(adj_matrices)
@@ -122,10 +124,10 @@ check_fcmconfr_inputs <- function(adj_matrices = list(matrix()),
       "+++++> Input {.var include_zeroes_in_sampling} was {include_zeroes_in_sampling}"
     )))
   }
-  if (!is.logical(mc_sims_in_output)) {
+  if (!is.logical(include_sims_in_output)) {
     stop(cli::format_error(c(
-      "x" = "Error: {.var mc_sims_in_output} must be logical (TRUE/FALSE)",
-      "+++++> Input {.var mc_sims_in_output} was {mc_sims_in_output}"
+      "x" = "Error: {.var include_sims_in_output} must be logical (TRUE/FALSE)",
+      "+++++> Input {.var include_sims_in_output} was {include_sims_in_output}"
     )))
   }
   # ----
@@ -276,6 +278,18 @@ check_fcmconfr_inputs <- function(adj_matrices = list(matrix()),
   }
   # ----
 
+
+  # browser()
+  # if (length(warnings()) > 0) {
+  #   print("  ~   ~   ~   ~   ~   ~   ~   ~   ~  ~  ~", quote = FALSE)
+  #   print("~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~", quote = FALSE)
+  #   print("fcmconfr found the following ~~Warnings~~", quote = FALSE)
+  #   print(warnings())
+  #   print("", quote = FALSE)
+  #   readline("")
+  # }
+
+
   list(
     fcm_class = fcm_class,
     adj_matrices = adj_matrices,
@@ -370,7 +384,7 @@ organize_fcmconfr_output <- function(...) {
                                                show_progress = variables$show_progress)
     fcmconfr_output$params$additional_opts = list(
       include_zeroes_in_sampling = variables$include_zeroes_in_sampling,
-      mc_sims_in_output = variables$mc_sims_in_output,
+      include_sims_in_output = variables$include_sims_in_output,
       run_ci_calcs = variables$run_ci_calcs,
       run_agg_calcs = variables$run_agg_calcs,
       run_mc_calcs = variables$run_mc_calcs
@@ -388,6 +402,8 @@ organize_fcmconfr_output <- function(...) {
       num_ci_bootstraps = variables$num_ci_bootstraps
     )
   }
+
+  options(warn = 0) # Set back to default
 
   fcmconfr_output
 }

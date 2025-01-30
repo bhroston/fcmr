@@ -5,7 +5,6 @@
 # These functions assist in generating empirical FCMs via monte carlo methods
 # and simulating the generated FCMs in bulk.
 #
-#   - infer_fcm_set
 #   - get_mc_simulations_inference_CIs_w_bootstrap
 #   - build_monte_carlo_fcms
 #   - build_monte_carlo_fcms_from_conventional_adj_matrices
@@ -44,6 +43,8 @@
 #' edge weights or ignore them in aggregation
 #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 #' from the pbapply package as the underlying function.
+#' @param skip_checks FOR DEVELOPER USE ONLY. TRUE if infer_fcm is called within
+#' fcmconfr() and checks have already been performed
 #'
 #' @returns A list of empirical (Conventional) FCM adj. matrices generated via monte carlo methods
 #'
@@ -52,11 +53,22 @@
 build_monte_carlo_fcms <- function(adj_matrix_list = list(matrix()),
                                    N_samples = 1000,
                                    include_zeroes = TRUE,
-                                   show_progress = TRUE) {
+                                   show_progress = TRUE,
+                                   skip_checks = FALSE) {
 
-  checks <- check_build_monte_carlo_fcms_inputs(adj_matrix_list, N_samples, include_zeroes, show_progress)
-  adj_matrix_list_class <- checks$adj_matrix_list_class
-  show_progress <- checks$show_progress
+  if (!is.logical(skip_checks)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var skip_checks} must be a logical value (TRUE/FALSE)",
+      "+++++> Input {.var skip_checks} was: {skip_checks}"
+    )))
+  }
+  if (!skip_checks) {
+    checks <- check_build_monte_carlo_fcms_inputs(adj_matrix_list, N_samples, include_zeroes, show_progress)
+    adj_matrix_list_class <- checks$adj_matrix_list_class
+    show_progress <- checks$show_progress
+  } else {
+    adj_matrix_list_class <- get_adj_matrices_input_type(adj_matrix_list)$object_types_in_list[1]
+  }
 
   if (adj_matrix_list_class == "conventional") {
     sampled_adj_matrices <- build_monte_carlo_fcms_from_conventional_adj_matrices(adj_matrix_list, N_samples, include_zeroes, show_progress)

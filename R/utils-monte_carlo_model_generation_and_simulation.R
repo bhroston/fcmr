@@ -29,6 +29,8 @@
 #' will use all available cores in the machine.
 #' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 #' from the pbapply package as the underlying function.
+#' @param skip_checks FOR DEVELOPER USE ONLY. TRUE if infer_fcm is called within
+#' fcmconfr() and checks have already been performed
 #'
 #' @returns A list of raw bootstrap draws and a dataframe of confidence intervals
 #'
@@ -42,7 +44,8 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
                                                          bootstrap_reps = 1000,
                                                          parallel = TRUE,
                                                          n_cores = integer(),
-                                                         show_progress = TRUE) {
+                                                         show_progress = TRUE,
+                                                         skip_checks = FALSE) {
   # Adding for R CMD Check. Does not impact logic.
   iter <- NULL
 
@@ -55,11 +58,19 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
   }
 
   # Check function inputs
-  mcbc_checks <- check_monte_carlo_bootstrap_inputs(inference_function, confidence_interval, bootstrap_reps, parallel, n_cores, show_progress)
-  ci_centering_function <- mcbc_checks$ci_centering_function
-  parallel <- mcbc_checks$parallel
-  n_cores <- mcbc_checks$n_cores
-  show_progress <- mcbc_checks$show_progress
+  if (!is.logical(skip_checks)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var skip_checks} must be a logical value (TRUE/FALSE)",
+      "+++++> Input {.var skip_checks} was: {skip_checks}"
+    )))
+  }
+  if (!skip_checks) {
+    mcbc_checks <- check_monte_carlo_bootstrap_inputs(inference_function, confidence_interval, bootstrap_reps, parallel, n_cores, show_progress)
+    ci_centering_function <- mcbc_checks$ci_centering_function
+    parallel <- mcbc_checks$parallel
+    n_cores <- mcbc_checks$n_cores
+    show_progress <- mcbc_checks$show_progress
+  }
 
   bootstrap_draws_per_rep <- nrow(mc_simulations_inference_df)
 
@@ -294,169 +305,6 @@ get_mc_simulations_inference_CIs_w_bootstrap <- function(mc_simulations_inferenc
       CIs_and_quantiles_by_node = mc_inference_distributions_df,
       bootstrap_expected_values = bootstrapped_expectations_of_inference_by_node
     )
-  )
-}
-
-
-
-
-#' Check inputs for running infer_fcm on a list of adj. matrices
-#'
-#' @family monte-carlo-model-generation-and-simulation
-#'
-#' @param adj_matrices A list of adjecency matrices
-#' @param initial_state_vector A list state values at the start of an fcm simulation
-#' @param clamping_vector A list of values representing specific actions taken to
-#' control the behavior of an FCM. Specifically, non-zero values defined in this vector
-#' will remain constant throughout the entire simulation as if they were "clamped" at those values.
-#' @param activation The activation function to be applied. Must be one of the following:
-#' 'kosko', 'modified-kosko', or 'papageorgiou'.
-#' @param squashing A squashing function to apply. Must be one of the following:
-#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
-#' @param lambda A numeric value that defines the steepness of the slope of the
-#' squashing function when tanh or sigmoid are applied
-#' @param point_of_inference The point along the simulation time-series to be
-#' identified as the inference. Must be one of the following: 'peak' or 'final'
-#' @param max_iter The maximum number of iterations to run if the minimum error value is not achieved
-#' @param min_error The lowest error (sum of the absolute value of the current state
-#' vector minus the previous state vector) at which no more iterations are necessary
-#' and the simulation will stop
-#' @param parallel TRUE/FALSE Whether to utilize parallel processing
-#' @param show_progress TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
-#' from the pbapply package as the underlying function.
-#' @param n_cores Number of cores to use in parallel processing. If no input given,
-#' will use all available cores in the machine.
-#' @param mc_sims_in_output TRUE/FALSE whether to include simulations of monte-carlo-generated
-#' FCM. Will dramatically increase size of output if TRUE.
-#'
-#' @returns NULL; Errors if checks fail
-#'
-#' @keywords internal
-#'
-#' @export
-#' @examples
-#' NULL
-check_infer_fcm_set_inputs <- function(adj_matrices = list(matrix()),
-                                       initial_state_vector = c(),
-                                       clamping_vector = c(),
-                                       activation = c("kosko", "modified-kosko", "rescale"),
-                                       squashing = c("sigmoid", "tanh"),
-                                       lambda = 1,
-                                       point_of_inference = c("peak", "final"),
-                                       max_iter = 100,
-                                       min_error = 1e-5,
-                                       parallel = TRUE,
-                                       n_cores = integer(),
-                                       show_progress = TRUE,
-                                       mc_sims_in_output = FALSE) {
-
-  # Check adj_matrices ----
-  adj_matrices_input_type <- get_adj_matrices_input_type(adj_matrices)
-  fcm_class <- adj_matrices_input_type$fcm_class
-  if (!adj_matrices_input_type$adj_matrices_input_is_list) {
-    adj_matrices <- list(adj_matrices)
-  }
-  adj_matrices_dims <- lapply(adj_matrices, dim)
-  if (length(unique(unlist(adj_matrices_dims))) > 1) {
-    stop(cli::format_error(c(
-      "x" = "Error: {.var adj_matrices} are either different sizes or contain non-square matrices",
-      "+++++> Call standardize_adj_matrices() to standardize the sizes of {.var adj. matrices}"
-    )))
-  }
-  n_nodes <- unique(unlist(adj_matrices_dims))
-  dummy_adj_matrix <- matrix(0, n_nodes, n_nodes)
-
-  identified_concepts <- unique(lapply(adj_matrices, colnames))
-  if (length(identified_concepts) != 1) {
-    stop(cli::format_error(c(
-      "x" = "Error: {.var adj_matrices} must have the same concepts",
-      "+++++> Call standardize_adj_matrices() to standardize concepts across {.var adj. matrices}"
-    )))
-  } else {
-    concept_names <- unlist(identified_concepts)
-  }
-
-  if (identical(adj_matrices_input_type$object_types_in_list, c("conventional", "sparseMatrix"))) {
-    adj_matrices <- lapply(adj_matrices, as.matrix)
-    warning(cli::format_warning(c(
-      "!" = "Warning: Changed {.var adj_matrices} from sparseMatrix to an ordinary matrix (i.e. using as.matrix)"
-    )))
-  }
-  # ----
-
-  # Check Simulation Inputs ----
-  sim_checks <- check_simulation_inputs(dummy_adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
-  initial_state_vector <- sim_checks$initial_state_vector
-  clamping_vector <- sim_checks$clamping_vector
-  activation <- sim_checks$activation
-  squashing <- sim_checks$squashing
-  point_of_inference <- sim_checks$point_of_inference
-  # ----
-
-  # Check Runtime Options ----
-  show_progress <- check_if_local_machine_has_access_to_show_progress_functionalities(parallel, show_progress)
-  parallel <- check_if_local_machine_has_access_to_parallel_processing_functionalities(parallel, show_progress)
-  if (parallel) {
-    if (identical(n_cores, integer())) {
-      warning(cli::format_warning(c(
-        "!" = "Warning: No {.var n_cores} given.",
-        "~~~~~ Assuming {.var n_cores} is {parallel::detectCores() - 1} (i.e. the max available cores minus 1)"
-      )))
-      n_cores <- parallel::detectCores() - 1
-    }
-    if (!is.numeric(n_cores)) {
-      stop(cli::format_error(c(
-        "x" = "Error: {.var n_cores} must be a positive integer",
-        "+++++ Input {.var n_cores} was '{n_cores}'"
-      )))
-    }
-    if (!(n_cores == round(n_cores))) {
-      stop(cli::format_error(c(
-        "x" = "Error: {.var n_cores} must be a positive integer",
-        "+++++ Input {.var n_cores} was {n_cores}"
-      )))
-    }
-    if (n_cores <= 0) {
-      stop(cli::format_error(c(
-        "x" = "Error: {.var n_cores} must be a positive integer",
-        "+++++ Input {.var n_cores} was {n_cores}"
-      )))
-    }
-    if (n_cores > parallel::detectCores()) {
-      stop(cli::format_error(c(
-        "x" = "Error: {.var n_cores} must be a positive integer less than or equal to {parallel::detectCores()} (i.e. the max available cores on your machine)",
-        "+++++ Input {.var n_cores} was {n_cores}"
-      )))
-    }
-  }
-  if (!parallel & !identical(n_cores, integer())) {
-    warning(cli::format_warning(c(
-      "!" = "Warning: {.var n_cores} given but {.var parallel} = FALSE.",
-      "~~~~~ Ignoring {.var n_cores} input."
-    )))
-  }
-  # ----
-
-  # Check Output Options ----
-  if (!is.logical(mc_sims_in_output)) {
-    stop(cli::format_error(c(
-      "x" = "Error: {.var mc_sims_in_output} must be logical (TRUE/FALSE)",
-      "+++++> Input {.var mc_sims_in_output} was {mc_sims_in_output}"
-    )))
-  }
-  # ----
-
-  list(
-    fcm_class = fcm_class,
-    adj_matrices = adj_matrices,
-    concept_names = concept_names,
-    initial_state_vector = initial_state_vector,
-    clamping_vector = clamping_vector,
-    activation = activation,
-    squashing = squashing,
-    point_of_inference = point_of_inference,
-    show_progress = show_progress,
-    parallel = parallel
   )
 }
 

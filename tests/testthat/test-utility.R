@@ -524,7 +524,7 @@ test_that("get_inferences works", {
       run_mc_calcs = TRUE,
       run_ci_calcs = TRUE,
       include_zeroes_in_sampling = TRUE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
 
@@ -565,7 +565,7 @@ test_that("get_inferences works", {
       run_mc_calcs = TRUE,
       run_ci_calcs = TRUE,
       include_zeroes_in_sampling = TRUE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   expect_no_error(get_inferences(ivfn_fcmconfr))
@@ -599,7 +599,7 @@ test_that("get_inferences works", {
       run_mc_calcs = TRUE,
       run_ci_calcs = TRUE,
       include_zeroes_in_sampling = TRUE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   expect_no_error(get_inferences(tfn_fcmconfr))

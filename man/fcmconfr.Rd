@@ -26,7 +26,7 @@ fcmconfr(
   run_mc_calcs = TRUE,
   run_ci_calcs = TRUE,
   include_zeroes_in_sampling = FALSE,
-  mc_sims_in_output = TRUE
+  include_sims_in_output = TRUE
 )
 }
 \arguments{
@@ -92,7 +92,7 @@ will use all available cores in the machine.}
 \item{include_zeroes_in_sampling}{TRUE/FALSE Whether to incorporate zeroes as intentionally-defined edge weights or ignore
 them when aggregating adj. matrices and sampling for monte carlo FCMs}
 
-\item{mc_sims_in_output}{TRUE/FALSE Whether to include simulations of monte carlo FCMs. Switch to FALSE if concerned
+\item{include_sims_in_output}{TRUE/FALSE Whether to include simulations of monte carlo FCMs. Switch to FALSE if concerned
 about the size of the output of fcmconfr (simulations are necessary and will run regardless)}
 }
 \value{
@@ -217,7 +217,7 @@ ex_conventional_fcmconfr <- fcmconfr(
   run_mc_calcs = TRUE,
   run_ci_calcs = TRUE,
   include_zeroes_in_sampling = FALSE,
-  mc_sims_in_output = TRUE
+  include_sims_in_output = TRUE
 )
 
 
@@ -272,7 +272,7 @@ ex_ivfn_fcmconfr <- fcmconfr(
   run_mc_calcs = TRUE,
   run_ci_calcs = TRUE,
   include_zeroes_in_sampling = FALSE,
-  mc_sims_in_output = TRUE
+  include_sims_in_output = TRUE
 )
 
 
@@ -336,7 +336,7 @@ ex_tfn_fcmconfr <- fcmconfr(
   run_mc_calcs = TRUE,
   run_ci_calcs = TRUE,
   include_zeroes_in_sampling = FALSE,
-  mc_sims_in_output = TRUE
+  include_sims_in_output = TRUE
 )
 
 

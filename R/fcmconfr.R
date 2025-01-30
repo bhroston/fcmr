@@ -108,7 +108,7 @@
 #' @param run_ci_calcs TRUE/FALSE Run the code to estimate the 95 percent CI bounds about the means of the inferences of the monte carlo adj matrices
 #' @param include_zeroes_in_sampling TRUE/FALSE Whether to incorporate zeroes as intentionally-defined edge weights or ignore
 #' them when aggregating adj. matrices and sampling for monte carlo FCMs
-#' @param mc_sims_in_output TRUE/FALSE Whether to include simulations of monte carlo FCMs. Switch to FALSE if concerned
+#' @param include_sims_in_output TRUE/FALSE Whether to include simulations of monte carlo FCMs. Switch to FALSE if concerned
 #' about the size of the output of fcmconfr (simulations are necessary and will run regardless)
 #'
 #' @importFrom Rdpack reprompt
@@ -146,7 +146,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
                      run_mc_calcs = TRUE,
                      run_ci_calcs = TRUE,
                      include_zeroes_in_sampling = FALSE,
-                     mc_sims_in_output = TRUE) {
+                     include_sims_in_output = TRUE) {
 
   # Perform input checks ----
   checks <- check_fcmconfr_inputs(
@@ -160,7 +160,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     # Runtime Options
     show_progress, parallel, n_cores, run_agg_calcs,
     # Additional Options
-    run_mc_calcs, run_ci_calcs, include_zeroes_in_sampling, mc_sims_in_output
+    run_mc_calcs, run_ci_calcs, include_zeroes_in_sampling, include_sims_in_output
   )
   fcm_class <- checks$fcm_class
   adj_matrices <- checks$adj_matrices
@@ -181,12 +181,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
 
   # Individual Adj. Matrices Simulations ----
   print("Simulating Input FCMs", quote = FALSE)
-  individual_adj_matrices_inferences <- infer_fcm_set(adj_matrices, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error, parallel, n_cores, show_progress, mc_sims_in_output = TRUE)$sims
-  # } else if (show_progress & !parallel) {
-  #   individual_adj_matrices_inferences <- pbapply::pblapply(adj_matrices, infer_fcm, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
-  # } else {
-  #   individual_adj_matrices_inferences <- lapply(adj_matrices, infer_fcm, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
-  # }
+  individual_adj_matrices_inferences <- infer_fcm_set(adj_matrices, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error, parallel, n_cores, show_progress, include_sims_in_output = TRUE, skip_checks = TRUE)$sims
 
   if (fcm_class == "conventional") {
     individual_adj_matrices_inferences_df <- do.call(rbind, lapply(individual_adj_matrices_inferences, function(inference) inference$inferences))
@@ -204,13 +199,13 @@ fcmconfr <- function(adj_matrices = list(matrix()),
     # Build aggregate adj_matrix
     aggregate_adj_matrix <- aggregate_fcms(adj_matrices, agg_function, include_zeroes_in_sampling)
     # Infer aggregate adj_matrix
-    aggregate_fcm_inference <- infer_fcm(aggregate_adj_matrix$adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
+    aggregate_fcm_inference <- infer_fcm(aggregate_adj_matrix$adj_matrix, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error, skip_checks = TRUE)
   }
 
   # Monte Carlo Analysis
   if (run_mc_calcs) {
     # Build monte carlo models
-    mc_adj_matrices <- build_monte_carlo_fcms(adj_matrices, num_mc_fcms, include_zeroes_in_sampling, show_progress)
+    mc_adj_matrices <- build_monte_carlo_fcms(adj_matrices, num_mc_fcms, include_zeroes_in_sampling, show_progress, skip_checks = TRUE)
     mc_adj_matrices <- lapply(
       mc_adj_matrices,
       function(sampled_adj_matrix) {
@@ -232,11 +227,11 @@ fcmconfr <- function(adj_matrices = list(matrix()),
       parallel = parallel,
       show_progress = show_progress,
       n_cores = n_cores,
-      mc_sims_in_output = mc_sims_in_output
+      include_sims_in_output = include_sims_in_output
     )
 
     if (run_ci_calcs) {
-      CIs_of_expected_values_of_mc_simulation_inferences <- get_mc_simulations_inference_CIs_w_bootstrap(mc_inferences$inference, ci_centering_function, confidence_interval, num_ci_bootstraps, parallel, n_cores, show_progress)
+      CIs_of_expected_values_of_mc_simulation_inferences <- get_mc_simulations_inference_CIs_w_bootstrap(mc_inferences$inference, ci_centering_function, confidence_interval, num_ci_bootstraps, parallel, n_cores, show_progress, skip_checks = TRUE)
     }
   }
   # ----
