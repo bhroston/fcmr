@@ -680,7 +680,8 @@ fcm_view <- function(fcm_adj_matrix = matrix(), with_shiny = FALSE) {
 
   # Translate fcm into an igraph object and then convert to visNetwork
   fcm_as_igraph_obj <- igraph::graph_from_adjacency_matrix(as.matrix(conventional_fcm), weighted = TRUE, mode = "directed")
-  fcm_as_visNetwork_obj <- visNetwork::visIgraph(fcm_as_igraph_obj)
+  fcm_as_visNetwork_obj <- visNetwork::visIgraph(fcm_as_igraph_obj) %>%
+    visNetwork::visIgraphLayout()
 
   # Add aesthetics for nodes
   fcm_as_visNetwork_obj$x$nodes$color <- "lightgrey"
@@ -725,3 +726,138 @@ fcm_view <- function(fcm_adj_matrix = matrix(), with_shiny = FALSE) {
     shiny::runApp(app)
   }
 }
+
+
+
+#' #' optimize_fcm_lambda
+#' #'
+#' #' @description
+#' #' This calculates optimum lambda value for the sigmoid and tanh squashing
+#' #' function that guarantees convergence of the simulation
+#' #'
+#' #' It estimates lambda such that the 'squashed' values will be contained within
+#' #' the near-linear region of the sigmoid or tanh function, and then re-normalizes
+#' #' those values back to the total possibility spaces of those functions ([0, 1]
+#' #' and [-1, 1] respectively).
+#' #'
+#' #' @details
+#' #' This algorithm was first explored in Kottas et al. 2010 (https://doi.org/10.1007/978-3-642-03220-2_5),
+#' #' expanded upon in Koutsellis et al. 2022 (https://doi.org/10.1007/s12351-022-00717-x), and
+#' #' further further developed in Koutsellis et al. 2022 (https://doi.org/10.1109/IISA56318.2022.9904369).
+#' #'
+#' #' This applies an algorithm to optimize lambda. Currently, the author only
+#' #' identifies one such algorithm, but generalizes the function to leave flexibility
+#' #' for the addition of newly-discovered algorithms in the future.
+#' #'
+#' #' @param adj_matrix An n x n adjacency matrix that represents an FCM
+#' #' @param squashing A squashing function to apply. Must be one of the following: 'tanh', or 'sigmoid'.
+#' #'
+#' #' @export
+#' estimate_optimal_lambda <- function(fcm_adj_matrix = matrix(),
+#'                            squashing = c("sigmoid", "tanh")) {
+#'
+#'   fcm_class <- get_adj_matrices_input_type(fcm_adj_matrix)$object_types_in_list[1]
+#'   if (fcm_class == "conventional") {
+#'     as_conventional_adj_matrix <- fcm_adj_matrix
+#'   } else if (fcm_class == "ivfn") {
+#'     as_conventional_adj_matrix <- apply(fcm_adj_matrix, c(1, 2), function(element) (element[[1]]$lower + element[[1]]$upper)/2)
+#'   } else if (fcm_class == "tfn") {
+#'     as_conventional_adj_matrix <- apply(fcm_adj_matrix, c(1, 2), function(element) (element[[1]]$lower + element[[1]]$mode + element[[1]]$upper)/3)
+#'   }
+#'
+#'   if (!(squashing %in% c("sigmoid", "tanh"))) {
+#'     stop(cli::format_error(c(
+#'       "x" = "Error: {.var squashing} amust be either 'sigmoid' or 'tanh'",
+#'       "+++++> Input {.var squashing} was: {squashing}"
+#'     )))
+#'   }
+#'
+#'   source_only_nodes <- which(rowSums(as_conventional_adj_matrix) == 0)
+#'   if (length(source_only_nodes) > 0) {
+#'     weight_matrix_of_nonsteady_nodes <- as.matrix(as_conventional_adj_matrix[-source_only_nodes, ])
+#'   } else {
+#'     weight_matrix_of_nonsteady_nodes <- as.matrix(as_conventional_adj_matrix)
+#'   }
+#'
+#'   frobenius_norm <- sqrt(sum(apply(weight_matrix_of_nonsteady_nodes, c(1, 2), function(element) element^2)))
+#'
+#'   if (squashing == "sigmoid") {
+#'     lambda_prime <- 4/frobenius_norm
+#'
+#'     # Calculate lambda_star
+#'     row_wise_max_norms <- vector(mode = "numeric", length = nrow(fcm_adj_matrix))
+#'     for (i in seq_along(1:nrow(weight_matrix_of_nonsteady_nodes))) {
+#'       row_edge_weights <- weight_matrix_of_nonsteady_nodes[i, ]
+#'       positive_row_edge_weights <- row_edge_weights[row_edge_weights > 0]
+#'       negative_row_edge_weights <- row_edge_weights[row_edge_weights < 0]
+#'       row_wise_max_norms[i] <- max(
+#'         abs(0.211*sum(positive_row_edge_weights) + 0.789*sum(negative_row_edge_weights)),
+#'         abs(0.211*sum(negative_row_edge_weights) + 0.789*sum(positive_row_edge_weights))
+#'       )
+#'     }
+#'     s_norm <- max(row_wise_max_norms)
+#'     lambda_star <- 1.317/s_norm
+#'   } else if (squashing == "tanh") {
+#'     lambda_prime <- 1/frobenius_norm
+#'
+#'     # Calculate lambda_star
+#'     abs_weight_matrix_of_nonsteady_nodes <- abs(weight_matrix_of_nonsteady_nodes)
+#'     max_abs_row_sum_norm <- max(apply(weight_matrix_of_nonsteady_nodes, 1, sum))
+#'     infinum_norm <- max_abs_row_sum_norm
+#'     lambda_star <- 1.14/infinum_norm
+#'   }
+#'
+#'   optimal_lambda <- min(lambda_prime, lambda_star)
+#'
+#'   optimal_lambda
+#'
+#'   #
+#'   #
+#'   #
+#'   # # The get_adj_matrix_from_edgelist() function mimics the outputs of mentalmodeler
+#'   # # and igraph. However, it is possible for the transpose of an adjacency matrix
+#'   # # to represent the same edgelist if it is understood that the source-target
+#'   # # axes are switched. In their paper, Koutsellis et al. use the transpose
+#'   # # of the matrix that mentalmodeler and igraph implement, so we incorporate that
+#'   # # here.
+#'   # adj_matrix <- t(adj_matrix)
+#'   # input_node_locs <- which(colSums(adj_matrix) == 0)
+#'   # adj_matrix_has_input_only_nodes <- length(input_node_locs) > 0
+#'   # if (adj_matrix_has_input_only_nodes) {
+#'   #   extended_adj_matrix <- as.matrix(adj_matrix[, -input_node_locs])
+#'   # } else {
+#'   #   extended_adj_matrix <- as.matrix(adj_matrix)
+#'   # }
+#'   #
+#'   # frobenius_norm_of_extended_adj_matrix <- norm(extended_adj_matrix, type = "2") # ||W||_F; The authors use "2" over "F" so replicating here
+#'   # if (squashing == "sigmoid") {
+#'   #   s_norm_of_extended_adj_matrix <- max( # As defined in Koutsellis et al. 2022 (https://doi.org/10.1007/s12351-022-00717-x)
+#'   #     apply(adj_matrix, 1, function(row) {
+#'   #       max(
+#'   #         abs(0.211*sum(row[row > 0]) + 0.789*sum(row[row < 0])),
+#'   #         abs(0.211*sum(row[row < 0]) + 0.789*sum(row[row > 0]))
+#'   #       )
+#'   #     })
+#'   #   )
+#'   #   lambda_prime <- 4/frobenius_norm_of_extended_adj_matrix
+#'   #   lambda_star <- 1.317/s_norm_of_extended_adj_matrix
+#'   # } else if (squashing == "tanh") {
+#'   #   infinity_norm_of_extended_adj_matrix <- norm(extended_adj_matrix, type = "I") # ||W||_inf
+#'   #   lambda_prime <- 1/frobenius_norm_of_extended_adj_matrix
+#'   #   lambda_star <- 1.14/infinity_norm_of_extended_adj_matrix
+#'   # } else {
+#'   #   stop("Invalid squashing input. Must be either 'sigmoid' or 'tanh'")
+#'   # }
+#'   #
+#'   #   minimum_lambda <- min(lambda_prime, lambda_star)
+#'   #
+#'   #   # "For the sake of simplicity, we propose as close to infimum 𝜆 value, which
+#'   #   # is derived after rounding the final bound of Eq. (21) or Eq. (22) at the
+#'   #   # third decimal digit." (Koutsellis et al. 2021 - https://doi.org/10.1007/s12351-022-00717-x)
+#'   #   optimized_lambda <- round(minimum_lambda, digits = 3)
+#'   #
+#'   #   optimized_lambda
+#'   # } else {
+#'   #   stop("Unable to interpret input method. Must be one of the following: 'koutsellis' or 'none'")
+#'   # }
+#' }

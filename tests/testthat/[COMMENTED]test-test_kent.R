@@ -255,3 +255,26 @@
 #   include_zeroes_in_sampling = FALSE,
 #   include_sims_in_output = FALSE
 # )
+
+
+#
+# Edges <- read.csv(file = file.path(
+#   paths$data_paths$output,
+#   graph_directory_name,
+#   paste0(graph_directory_name, "_EDGES.csv")))
+# Nodes <- read.csv(file = file.path(
+#   paths$data_paths$output,
+#   graph_directory_name,
+#   paste0(graph_directory_name, "_NODES.csv")))
+#
+# network_visual <- visNetwork(
+#   Nodes, Edges, width = "100%", height = "610px") %>%
+#   visNodes(font = list(size = 16, face = "Times"),
+#            physics = FALSE) %>%
+#   visLayout(randomSeed = 3)  %>%
+#   visOptions(manipulation = TRUE)  %>%
+#   visInteraction(multiselect = TRUE) %>%
+#   visOptions(nodesIdSelection = TRUE,
+#              highlightNearest = list(
+#                enabled = TRUE, degree = 0,
+#                labelOnly = TRUE))
