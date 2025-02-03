@@ -267,6 +267,8 @@ fcmconfr_obj <- fcmconfr(
 
 `fcmconfr_gui()` has done all the hard work of putting together the call to `fcmconfr()`. Running `fcmconfr()` is now as simple as executing that output script.
 
+Note: When using parallel processing, the following error can occur: `Error in serialize(data, node$con) : error writing to connection`. This appears to be a potential bug with the `foreach` package. Try restarting the R session and a) re-running `fcmconfr()` or b) re-running `fcmconfr()` with a lower value for `n_cores`.
+
 ## 4. Explore `fcmconfr()` Results
 
 The output of `fcmconfr()` is a large object that contains a lot of data. The `fcmconfr` package includes several functions to help users identify and explore the most important outputs.
