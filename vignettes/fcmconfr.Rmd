@@ -33,6 +33,8 @@ library(fcmconfr)
 
 This guide walks through each of these steps, from data import to visualization.
 
+Note: This guide frequently references data from the `sample_fcms` object that users can access after loading `fcmconfr` via `library(fcmconfr)`.
+
 ## 1. Import FCMs
 
 `fcmconfr` can handle three different types of FCMs: (1) conventional, where each edge weight is represented using numeric values, (2) interval-value fuzzy number FCMs (IVFN-FCMs), where each edge weight is represented using two numeric values (lower bound, upper bound; i.e., an IVFN), and (3) triangular fuzzy number FCMs (TFN-FCMs), where each edge weight is represented using three numeric values (lower bound, mode, upper bound; i.e., a TFN).
@@ -262,6 +264,51 @@ fcmconfr_obj <- fcmconfr(
   mc_sims_in_output = FALSE
 )
 ```
+
+### Optional: Estimating Lambda
+
+The `fcmconfr_gui()` sets lambda to a value of 1 by default but there is no one "correct" value for `lambda`. In fact, a value for lambda that works with one FCM may not cooperate well with another.
+
+`fcmconfr` offers the `estimate_lambda()` function to give users a starting point in selecting lambda, which implements an algorithm developed in Koutsellis et al. (2022) - <https://doi.org/10.1007/s12351-022-00717-x>.
+
+`estimate_lambda()` returns the maximum lambda value that guarantees FCM simulation convergence (i.e. the max. usable value for lambda) based on the input adjacency matrix and varies based on which squashing function will be used in the simulation, `sigmoid` or `tanh`.
+
+```{r}
+example_fcm <- sample_fcms$simple_fcms$conventional_fcms[[1]]
+estimate_lambda(example_fcm, squashing = "sigmoid")
+estimate_lambda(example_fcm, squashing = "tanh")
+```
+
+The [Koutsellis et al. (2022)](https://doi.org/10.1007/s12351-022-00717-x) algorithm is limited to conventional FCMs only, but if given an IVFN-FCM or TFN-FCM `estimate_lambda()` will create a conventional FCM of their average edge weights to inform its calculations.
+
+```{r}
+example_ivfn_fcm <- sample_fcms$simple_fcms$ivfn_fcms[[1]]
+example_tfn_fcm <- sample_fcms$simple_fcms$tfn_fcms[[1]]
+estimate_lambda(example_ivfn_fcm, squashing = "sigmoid")
+estimate_lambda(example_tfn_fcm, squashing = "sigmoid")
+```
+
+It is important to note that `estimate_lambda()` returns a [potential]{.underline} lambda value, not a perfect lambda value, though values less than the `estimate_lambda()` output are more likely to be appropriate than values greater than the `estimate_lambda()` output.
+
+Since `estimate_lambda()` returns a different value for each adjacency matrix, users will want to determine a value of lambda that will work well with all FCMs being analyzed in a call to `fcmconfr()`. We recommend using `estimate_lambda()` on each adjacency matrix and using the minimum value as the lambda input for `fcmconfr()`.
+
+```{r}
+example_fcms <- sample_fcms$simple_fcms$conventional_fcms
+
+# This example estimates lambda for a simulation using 
+# the sigmoid squashing function.
+
+# Use lapply() to use estimate_lambda() on a list of FCMs.
+lambda_estimates <- lapply(
+  example_fcms, function(fcm) estimate_lambda(fcm, squashing = "sigmoid")
+)
+
+# Since lapply() returns a list() object and min() requires
+# a vector input, have to use unlist()
+lambda_for_example_fcms <- min(unlist(lambda_estimates))
+```
+
+In addition to using `estimate_lambda()` as a guide, users are encouraged to compare how different values of lambda influence their results (e.g. lambda = 1, lambda = 0.1, lambda = 0.01, ...).
 
 ## 3. Run `fcmconfr()`
 

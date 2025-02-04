@@ -606,56 +606,38 @@ test_that("get_inferences works", {
 })
 
 
-# test_that("get_max_lambda works", {
-#   # Test that function above works
-#   # Test from Koutsellis et al. 2022 - https://doi.org/10.1007/s12351-022-00717-x
-#   # Confirmed to reproduce results
-#   test_source_nodes <- c(
-#     "C1", "C1", "C1", "C2", "C2", "C3", "C3", "C3", "C4", "C4",
-#     "C4", "C5", "C6", "C7", "C8", "C8", "C9", "C10", "C10", "C11",
-#     "C12", "C13", "C14", "C14", "C15", "C15", "C15", "C15", "C16", "C16",
-#     "C17", "C17", "C18", "C19", "C20", "C20", "C21", "C22", "C23", "C23",
-#     "C24", "C25", "C28", "C29"
-#   )
-#   test_target_nodes <- c(
-#     "C15", "C20", "C23", "C12", "C25", "C14", "C16", "C23", "C15", "C20",
-#     "C23", "C16", "C15", "C15", "C10", "C12", "C23", "C11", "C13", "C26",
-#     "C14", "C28", "C13", "C23", "C17", "C18", "C24", "C30", "C15", "C28",
-#     "C21", "C22", "C19", "C20", "C26", "C28", "C27", "C29", "C19", "C24",
-#     "C29", "C15", "C27", "C27"
-#   )
-#   test_edge_weights <- c(
-#     -0.442, -0.375, -0.348, 0.549, 0.706, -0.421, -0.132, -0.245, -0.52, 0.261,
-#     -0.29, 0.651, 0.487, 0.229, 0.776, 0.319, 0.792, 0.319, 0.391, -0.402,
-#     -0.381, 0.481, 0.097, 0.11, -0.852, 0.902, 0.226, -0.852, -0.719, -0.274,
-#     0.722, 0.888, -0.521, -0.311, -0.932, -0.419, 0.322, 0.21, 0.9, 0.189,
-#     0.196, -0.311, 0.481, 0.378
-#   )
-#
-#   edgelist <- data.frame(
-#     "source" = test_source_nodes,
-#     "target" = test_target_nodes,
-#     "weight" = test_edge_weights
-#   )
-#
-#   igraph_obj <- igraph::graph_from_data_frame(edgelist, directed = TRUE)
-#   igraph::E(igraph_obj)$weight <- edgelist$weight
-#   test_adj_matrix <- igraph::as_adjacency_matrix(igraph_obj, attr = "weight", sparse = FALSE)
-#
-#   estimate_optimal_lambda(test_adj_matrix, "sigmoid") # Should = 0.927
-#   estimate_optimal_lambda(test_adj_matrix, "tanh") # Should = 0.421
-#
-#
-#
-#   estimate_optimal_lambda(sample_fcms$simple_fcms$conventional_fcms[[1]], "sigmoid")
-#
-#   estimate_optimal_lambda(sample_fcms$simple_fcms$ivfn_fcms[[1]], "sigmoid")
-#
-#   estimate_optimal_lambda(sample_fcms$simple_fcms$tfn_fcms[[1]], "sigmoid")
-# })
-#
-# #######
-#
+test_that("estimate_lambda works", {
+  expect_equal(
+    round(estimate_optimal_lambda(sample_fcms$simple_fcms$conventional_fcms[[1]], "sigmoid"), 2),
+    2.23
+  )
+  expect_equal(
+    round(estimate_optimal_lambda(sample_fcms$simple_fcms$conventional_fcms[[1]], "tanh"), 2),
+    0.89
+  )
+
+  expect_equal(
+    round(estimate_optimal_lambda(sample_fcms$simple_fcms$ivfn_fcms[[1]], "sigmoid"), 2),
+    2.47
+  )
+  expect_equal(
+    round(estimate_optimal_lambda(sample_fcms$simple_fcms$ivfn_fcms[[1]], "tanh"), 2),
+    0.92
+  )
+
+  expect_equal(
+    round(estimate_optimal_lambda(sample_fcms$simple_fcms$tfn_fcms[[1]], "sigmoid"), 2),
+    2.38
+  )
+  expect_equal(
+    round(estimate_optimal_lambda(sample_fcms$simple_fcms$tfn_fcms[[1]], "tanh"), 2),
+    0.91
+  )
+
+})
+
+#######
+
 # # test_that("here works for R CMD Check", {
 # #   expect_no_error(here::here())
 # # })
