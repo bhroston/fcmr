@@ -689,14 +689,14 @@ fcm_view <- function(fcm_adj_matrix = matrix(), with_shiny = FALSE) {
 
   # Add aesthetics for edges
   edges_df <- fcm_as_visNetwork_obj$x$edges
-  edges_df$label <- paste(edges_df$weight)
+  edges_df$label <- paste(round(edges_df$weight, 2))
   edges_df$color <- ifelse(edges_df$weight >= 0, "black", "red")
   edges_df$width <- abs(edges_df$weight*2)
   fcm_as_visNetwork_obj$x$edges <- edges_df
 
   # Load plot
   fcm_as_network_obj <- fcm_as_visNetwork_obj %>%
-    visNetwork::visEdges(smooth = list(enabled = TRUE, type = "dynamic", roundness = 0.6)) %>%
+    visNetwork::visEdges(smooth = list(enabled = TRUE, type = "continuous", roundness = 0.2), physics = FALSE) %>%
     visNetwork::visLayout(randomSeed = sample(1:1e10, 1))
 
   node_x_coords <- fcm_as_network_obj$x$nodes$x
