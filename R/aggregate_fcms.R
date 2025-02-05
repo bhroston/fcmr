@@ -62,8 +62,6 @@ aggregate_fcms <- function(adj_matrices = list(matrix()),
     stop("All input adjacency matrices must have the same dimensions (n x n) throughout the entire list")
   }
 
-  # browser()
-
   concepts_in_adj_matrices <- lapply(adj_matrices, function(x) get_node_IDs_from_input(x))
   node_names <- unlist(unique(concepts_in_adj_matrices))
 
@@ -137,11 +135,9 @@ aggregate_conventional_fcms <- function(adj_matrices = list(matrix()),
   if (!include_zeroes_in_sampling & identical(false_zero_locs_by_adj_matrix, list())) {
     adj_matrices <- lapply(adj_matrices, function(x) replace(x, x == 0, NA))
   } else if (!include_zeroes_in_sampling & !identical(false_zero_locs_by_adj_matrix, list())) {
-    # browser()
     adj_matrices <- lapply(adj_matrices, function(x) replace(x, x == 0, NA))
     adj_matrices <- mapply(
       function(adj_matrix, false_zero_locs) {
-        #browser()
         adj_matrix[false_zero_locs] <- 0
         adj_matrix
       },
@@ -150,8 +146,6 @@ aggregate_conventional_fcms <- function(adj_matrices = list(matrix()),
       SIMPLIFY = FALSE
     )
   }
-
-  # browser()
 
   if (agg_function == "mean") {
     aggregate_adj_matrix <- apply(
