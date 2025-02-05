@@ -181,17 +181,18 @@ fcmconfr <- function(adj_matrices = list(matrix()),
 
   # Individual Adj. Matrices Simulations ----
   print("Simulating Input FCMs", quote = FALSE)
-  individual_adj_matrices_inferences <- infer_fcm_set(adj_matrices, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error, parallel, n_cores, show_progress, include_sims_in_output = TRUE, skip_checks = TRUE)$sims
+  individual_adj_matrices_inferences <- infer_fcm_set(adj_matrices, initial_state_vector, clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error, parallel, n_cores, show_progress, include_sims_in_output = TRUE, skip_checks = TRUE)
 
   if (fcm_class == "conventional") {
-    individual_adj_matrices_inferences_df <- do.call(rbind, lapply(individual_adj_matrices_inferences, function(inference) inference$inferences))
-    individual_adj_matrices_inferences_df <- cbind(input = paste0("adj_matrix_", 1:length(adj_matrices)), individual_adj_matrices_inferences_df)
+    # individual_adj_matrices_inferences_df <- do.call(rbind, lapply(individual_adj_matrices_inferences$inferences, function(inference) inference$inferences))
+    individual_adj_matrices_inferences_df <- cbind(input = paste0("adj_matrix_", 1:length(adj_matrices)), individual_adj_matrices_inferences$inferences)
     rownames(individual_adj_matrices_inferences_df) <- NULL
   } else if (fcm_class %in% c("ivfn", "tfn")) {
-    individual_adj_matrices_inferences_df <- lapply(individual_adj_matrices_inferences, function(inference) inference$inferences)
+    # individual_adj_matrices_inferences_df <- lapply(individual_adj_matrices_inferences$inferences, function(inference) inference$inferences)
+    individual_adj_matrices_inferences_df <- individual_adj_matrices_inferences$inferences
     names(individual_adj_matrices_inferences_df) <- paste0("adj_matrix_", 1:length(adj_matrices))
   }
-  names(individual_adj_matrices_inferences) <- paste0("adj_matrix_", 1:length(adj_matrices))
+  names(individual_adj_matrices_inferences$simulations) <- paste0("adj_matrix_", 1:length(adj_matrices))
   # ----
 
   # Aggregation Analysis ----
@@ -241,114 +242,4 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   fcmconfr_output <- organize_fcmconfr_output(env_variables)
 
   fcmconfr_output
-}
-
-
-
-#' print.fcmconfr
-#'
-#' @description
-#' This improves the readability of the fcmconfr output
-#'
-#' @details
-#' Show the objects listed in the fcmconfr output \code{$inference} and \code{$params},
-#' as well as \code{$bootstrap} if present in output. Additionally, this prints
-#' descriptions/summaries of objects within each sub-list like inference_opts,
-#' bootstrap_input_opts, etc.
-#'
-#' @param x an fcmconfr object
-#' @param ... additional inputs
-#'
-#' @returns A console printout of fcmconfr results
-#'
-#' @export
-#' @examples
-#' NULL
-print.fcmconfr <- function(x, ...) {
-  performed_aggregate <- x$params$additional_opts$run_agg_calcs
-  performed_mc <- x$params$additional_opts$run_mc_calcs
-  performed_bootstrap <- x$params$additional_opts$run_ci_calcs
-
-  n_input_fcm <- length(x$params$adj_matrices)
-
-  if (performed_aggregate & performed_mc & performed_bootstrap) {
-    n_mc_sims <- x$params$num_mc_fcms
-
-    cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),
-        "\n$inference\n",
-        paste0(" - individual_fcms: Inferences and data from the ", n_input_fcm, " input fcm adj. matrices.\n"),
-        paste0(" - aggregate_fcm: Inferences and data from the aggregate (", x$params$agg_function, ") of the ",  n_input_fcm, " input fcm adj. matrices.\n"),
-        paste0(" - monte_carlo_fcms: Inferences of data from the ", n_mc_sims, " fcms constructed from the ", n_input_fcm, " input fcm adj. matrices."),
-        "\n$bootstrap\n",
-        paste0(" - CIs_about_means_and_quantiles_by_node: ", x$params$mc_confidence_intervals_opts$confidence_interval, "% CI of means of inferences and quantiles by node\n"),
-        paste0(" - bootstrapped_means: ", x$params$mc_confidence_intervals_opts$num_ci_bootstraps),
-        "\n$params\n",
-        " - simulation_opts:",
-        paste0("act = ", x$params$simulation_opts$activation, "; squash = ", x$params$simulation_opts$squashing, "; lambda = ", x$params$simulation_opts$lambda),
-        paste0("\n  - additional_opts: ", "Perform Aggregate Analysis = ", x$params$additional_opts$run_agg_calcs, "; Perform MC Analysis = ", x$params$additional_opts$run_mc_calcs)
-    )
-  } else if (performed_aggregate & performed_mc & !performed_bootstrap) {
-    # browser()
-    n_mc_sims <- x$params$num_mc_fcms
-
-    cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),
-        "\n$inference\n",
-        paste0(" - individual_fcms: Inferences and data from the ", n_input_fcm, " input fcm adj. matrices.\n"),
-        paste0(" - aggregate_fcm: Inferences and data from the aggregate (", x$params$agg_function, ") of the ",  n_input_fcm, " input fcm adj. matrices.\n"),
-        paste0(" - monte_carlo_fcms: Inferences of data from the ", n_mc_sims, " fcms constructed from the ", n_input_fcm, " input fcm adj. matrices."),
-        "\n$params\n",
-        " - simulation_opts:",
-        paste0("act = ", x$params$simulation_opts$activation, "; squash = ", x$params$simulation_opts$squashing, "; lambda = ", x$params$simulation_opts$lambda),
-        paste0("\n  - additional_opts: ", "Perform Aggregate Analysis = ", x$params$additional_opts$run_agg_calcs, "; Perform MC Analysis = ", x$params$additional_opts$run_mc_calcs)
-    )
-  } else if (!performed_aggregate & performed_mc & performed_bootstrap) {
-    n_mc_sims <- x$params$num_mc_fcms
-
-    cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),
-        "\n$inference\n",
-        paste0(" - individual_fcms: Inferences and data from the ", n_input_fcm, " input fcm adj. matrices.\n"),
-        paste0(" - monte_carlo_fcms: Inferences of data from the ", n_mc_sims, " fcms constructed from the ", n_input_fcm, " input fcm adj. matrices."),
-        "\n$bootstrap\n",
-        paste0(" - CIs_about_means_and_quantiles_by_node: ", x$params$mc_confidence_intervals_opts$confidence_interval, "% CI of means of inferences and quantiles by node\n"),
-        paste0(" - bootstrapped_means: ", x$params$mc_confidence_intervals_opts$num_ci_bootstraps),
-        "\n$params\n",
-        " - simulation_opts:",
-        paste0("act = ", x$params$simulation_opts$activation, "; squash = ", x$params$simulation_opts$squashing, "; lambda = ", x$params$simulation_opts$lambda),
-        paste0("\n  - additional_opts: ", "Perform Aggregate Analysis = ", x$params$additional_opts$run_agg_calcs, "; Perform MC Analysis = ", x$params$additional_opts$run_mc_calcs)
-    )
-  } else if (!performed_aggregate & performed_mc & !performed_bootstrap) {
-    # browser()
-    n_mc_sims <- x$params$num_mc_fcms
-
-    cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),
-        "\n$inference\n",
-        paste0(" - individual_fcms: Inferences and data from the ", n_input_fcm, " input fcm adj. matrices.\n"),
-        paste0(" - monte_carlo_fcms: Inferences of data from the ", n_mc_sims, " fcms constructed from the ", n_input_fcm, " input fcm adj. matrices."),
-        "\n$params\n",
-        " - simulation_opts:",
-        paste0("act = ", x$params$simulation_opts$activation, "; squash = ", x$params$simulation_opts$squashing, "; lambda = ", x$params$simulation_opts$lambda),
-        paste0("\n  - additional_opts: ", "Perform Aggregate Analysis = ", x$params$additional_opts$run_agg_calcs, "; Perform MC Analysis = ", x$params$additional_opts$run_mc_calcs)
-    )
-  } else if (performed_aggregate & !performed_mc) {
-    # browser()
-    cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),
-        "\n$inference\n",
-        paste0(" - individual_fcms: Inferences and data from the ", n_input_fcm, " input fcm adj. matrices.\n"),
-        paste0(" - aggregate_fcm: Inferences and data from the aggregate (", x$params$agg_function, ") of the ",  n_input_fcm, " input fcm adj. matrices.\n"),
-        "\n$params\n",
-        " - simulation_opts:",
-        paste0("act = ", x$params$simulation_opts$activation, "; squash = ", x$params$simulation_opts$squashing, "; lambda = ", x$params$simulation_opts$lambda),
-        paste0("\n  - additional_opts: ", "Perform Aggregate Analysis = ", x$params$additional_opts$run_agg_calcs, "; Perform MC Analysis = ", x$params$additional_opts$run_mc_calcs)
-    )
-  } else if (!performed_aggregate & !performed_mc) {
-    # browser()
-    cat(paste0("fcmconfr: ", n_input_fcm, " input adj. matrices (", x$params$fcm_class, ")"),
-        "\n$inference\n",
-        paste0(" - individual_fcms: Inferences and data from the ", n_input_fcm, " input fcm adj. matrices."),
-        "\n$params\n",
-        " - simulation_opts:",
-        paste0("act = ", x$params$simulation_opts$activation, "; squash = ", x$params$simulation_opts$squashing, "; lambda = ", x$params$simulation_opts$lambda),
-        paste0("\n  - additional_opts: ", "Perform Aggregate Analysis = ", x$params$additional_opts$run_agg_calcs, "; Perform MC Analysis = ", x$params$additional_opts$run_mc_calcs)
-    )
-  }
 }
