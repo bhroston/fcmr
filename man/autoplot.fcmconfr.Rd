@@ -34,7 +34,7 @@ across any analysis will be plotted. This removes nodes with mostly 0-valued
 inferences indicating they were not impacted in the simulation.}
 
 \item{xlim}{The x-axis plot limits. xlim = NA lets ggplot determine the
-x-axis limits. xlim = c(lower_limit, upper_limit) for manual input limits.
+x-axis limits. xlim = c(lower_limit, upper_limit) for manual individual limits.
 See ?ggplot2::xlim for additional info.}
 
 \item{coord_flip}{Swap x- and y-axes (i.e. rotate plot). See

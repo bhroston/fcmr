@@ -190,7 +190,7 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   } else if (fcm_class %in% c("ivfn", "tfn")) {
     # individual_adj_matrices_inferences_df <- lapply(individual_adj_matrices_inferences$inferences, function(inference) inference$inferences)
     individual_adj_matrices_inferences_df <- individual_adj_matrices_inferences$inferences
-    names(individual_adj_matrices_inferences_df) <- paste0("adj_matrix_", 1:length(adj_matrices))
+    rownames(individual_adj_matrices_inferences_df) <- paste0("adj_matrix_", 1:length(adj_matrices))
   }
   names(individual_adj_matrices_inferences$simulations) <- paste0("adj_matrix_", 1:length(adj_matrices))
   # ----

@@ -536,22 +536,6 @@ get_inferences <- function(fcmconfr_obj = list(),
       lower_values = lower_individual_inferences,
       upper_values = upper_individual_inferences
     )
-    # individual_inferences <- apply(
-    #   individual_inferences, 2,
-    #   function(inferences) {
-    #     inference_observations <- lapply(
-    #       inferences,
-    #       function(value) {
-    #         data.frame(
-    #           crisp = (value$lower + value$upper)/2,
-    #           lower = value$lower,
-    #           upper = value$upper
-    #         )
-    #       })
-    #     inference_observations <- data.frame(do.call(rbind, inference_observations))
-    #     rownames(inference_observations) <- NULL
-    #     data.frame(cbind(input = paste0("adj_matrix_", 1:nrow(inference_observations)), inference_observations))
-    #   })
   } else if (fcm_class == "tfn") {
     individual_inferences_df <- data.frame(t(do.call(rbind, fcmconfr_obj$inferences$individual_fcms$inferences)))
     lower_individual_inferences <- data.frame(apply(individual_inferences_df, c(1, 2), function(element) element[[1]]$lower))
@@ -563,24 +547,6 @@ get_inferences <- function(fcmconfr_obj = list(),
       mode_values = mode_individual_inferences,
       upper_values = upper_individual_inferences
     )
-    # individual_inferences <- do.call(rbind, fcmconfr_obj$inferences$individual_fcms$inferences)
-    # individual_inferences <- apply(
-    #   individual_inferences, 2,
-    #   function(inferences) {
-    #     inference_observations <- lapply(
-    #       inferences,
-    #       function(value) {
-    #         data.frame(
-    #           crisp = (value$lower + value$mode + value$upper)/3,
-    #           lower = value$lower,
-    #           mode = value$mode,
-    #           upper = value$upper
-    #         )
-    #       })
-    #     inference_observations <- data.frame(do.call(rbind, inference_observations))
-    #     rownames(inference_observations) <- NULL
-    #     data.frame(cbind(input = paste0("adj_matrix_", 1:nrow(inference_observations)), inference_observations))
-    #   })
   }
 
   inferences_list <- list(
@@ -621,7 +587,7 @@ get_inferences <- function(fcmconfr_obj = list(),
   }
 
   if (fcmconfr_obj$params$additional_opts$run_mc_calcs) {
-    mc_inferences_transposed <- t(fcmconfr_obj$inferences$monte_carlo_fcms$all_inferences)
+    mc_inferences_transposed <- t(fcmconfr_obj$inferences$monte_carlo_fcms$inferences)
     colnames(mc_inferences_transposed) <- paste0("mc_", 1:ncol(mc_inferences_transposed))
     inferences_list$mc_inferences = mc_inferences_transposed
   }
@@ -696,8 +662,8 @@ fcm_view <- function(fcm_adj_matrix = matrix(), with_shiny = FALSE) {
 
   # Load plot
   fcm_as_network_obj <- fcm_as_visNetwork_obj %>%
-    visNetwork::visEdges(smooth = list(enabled = TRUE, type = "continuous", roundness = 0.2), physics = FALSE) %>%
-    visNetwork::visLayout(randomSeed = sample(1:1e10, 1))
+    visNetwork::visEdges(smooth = list(enabled = TRUE, type = "continuous", roundness = 0.4), physics = FALSE) %>%
+    visNetwork::visIgraphLayout()
 
   node_x_coords <- fcm_as_network_obj$x$nodes$x
   node_y_coords <- fcm_as_network_obj$x$nodes$y
