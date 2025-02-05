@@ -39,7 +39,7 @@ weights as Triangular Fuzzy Numbers (TFNs)}
 either the mean or median of the edge weights for edges included in multiple maps}
 
 \item{num_mc_fcms}{The number of FCMs to generate via monte carlo
-sampling from the input adj. matrices}
+sampling from the individual adj. matrices}
 
 \item{initial_state_vector}{A list state values at the start of an fcm simulation}
 
