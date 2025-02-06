@@ -15,7 +15,7 @@ on:
 
 jobs:
   pkgcheck:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, ubuntu-latest]
     permissions:
       issues: write
     steps:
