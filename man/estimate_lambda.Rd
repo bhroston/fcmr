@@ -7,9 +7,9 @@
 estimate_lambda(fcm_adj_matrix = matrix(), squashing = c("sigmoid", "tanh"))
 }
 \arguments{
-\item{squashing}{A squashing function to apply. Must be one of the following: 'tanh', or 'sigmoid'.}
+\item{fcm_adj_matrix}{An n x n adjacency matrix that represents an FCM}
 
-\item{adj_matrix}{An n x n adjacency matrix that represents an FCM}
+\item{squashing}{A squashing function to apply. Must be one of the following: 'tanh', or 'sigmoid'.}
 }
 \description{
 This calculates optimum lambda value for the sigmoid and tanh squashing
