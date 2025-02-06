@@ -679,7 +679,7 @@ fcm_view <- function(fcm_adj_matrix = matrix(), with_shiny = FALSE) {
   fcm_as_visNetwork_obj$x$nodes$y <- spaced_node_y_coords
 
   if (!with_shiny) {
-    fcm_as_network_obj
+    fcm_as_visNetwork_obj
   } else {
     # Calculate optimal sidebar width so all variable names fit on individual lines
     # with their corresponding check box
