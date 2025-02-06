@@ -6,13 +6,12 @@ on:
   pull_request:
     branches: [main]
 
-runs-on: self-hosted
-
 name: R-CMD-check
 
 jobs:
   R-CMD-check:
-    runs-on: ${{ matrix.config.os }}
+    # runs-on: ${{ matrix.config.os }}
+    runs-on: self-hosted
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
 
