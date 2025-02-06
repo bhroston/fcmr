@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: [main]
 
+runs-on: self-hosted
+
 name: R-CMD-check
 
 jobs:
