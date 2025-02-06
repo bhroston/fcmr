@@ -3,6 +3,7 @@
 <url><loc>/CONTRIBUTING.html</loc></url>
 <url><loc>/LICENSE-text.html</loc></url>
 <url><loc>/articles/Importing_FCMs.html</loc></url>
+<url><loc>/articles/fcmconfr.html</loc></url>
 <url><loc>/articles/fcmconfr_example.html</loc></url>
 <url><loc>/articles/index.html</loc></url>
 <url><loc>/authors.html</loc></url>
@@ -26,11 +27,13 @@
 <url><loc>/reference/check_if_local_machine_has_access_to_show_progress_functionalities.html</loc></url>
 <url><loc>/reference/check_infer_fcm_set_inputs.html</loc></url>
 <url><loc>/reference/check_monte_carlo_bootstrap_inputs.html</loc></url>
+<url><loc>/reference/check_plot_fcmconfr_inputs.html</loc></url>
 <url><loc>/reference/check_simulation_inputs.html</loc></url>
 <url><loc>/reference/clean_simulation_output.html</loc></url>
 <url><loc>/reference/convert_element_to_ivfn_or_tfn_if_numeric.html</loc></url>
 <url><loc>/reference/convert_fuzzy_set_elements_in_matrix_to_distributions.html</loc></url>
 <url><loc>/reference/defuzz_ivfn_or_tfn.html</loc></url>
+<url><loc>/reference/estimate_lambda.html</loc></url>
 <url><loc>/reference/fcm_view.html</loc></url>
 <url><loc>/reference/fcmconfr.html</loc></url>
 <url><loc>/reference/fcmconfr_default_theme.html</loc></url>

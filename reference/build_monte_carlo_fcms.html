@@ -25,7 +25,8 @@ control at runtime."><meta property="og:image" content="/logo.png"></head><body>
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/fcmconfr.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/fcmconfr_example.html">fcmconfr_Example</a></li>
@@ -62,7 +63,8 @@ control at runtime.</p>
 <span>  adj_matrix_list <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  N_samples <span class="op">=</span> <span class="fl">1000</span>,</span>
 <span>  include_zeroes <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  show_progress <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  show_progress <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  skip_checks <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -87,6 +89,11 @@ edge weights or ignore them in aggregation</p></dd>
 <dt id="arg-show-progress">show_progress<a class="anchor" aria-label="anchor" href="#arg-show-progress"></a></dt>
 <dd><p>TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 from the pbapply package as the underlying function.</p></dd>
+
+
+<dt id="arg-skip-checks">skip_checks<a class="anchor" aria-label="anchor" href="#arg-skip-checks"></a></dt>
+<dd><p>FOR DEVELOPER USE ONLY. TRUE if infer_fcm is called within
+fcmconfr() and checks have already been performed</p></dd>
 
 </dl></div>
     <div class="section level2">

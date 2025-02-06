@@ -38,6 +38,7 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="articles/fcmconfr.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
@@ -62,110 +63,117 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header">
-<img src="logo.png" class="logo" alt=""><h1 id="fcmconfr-">fcmconfr 
-<a class="anchor" aria-label="anchor" href="#fcmconfr-"></a>
+<img src="logo.png" class="logo" alt=""><h1 id="fcmconfr-a-hrefhttpsgithubcombhrostonfcmconfrgit">fcmconfr &lt;a href=‘<a href="https://github.com/bhroston/fcmconfr.git/" class="external-link uri">https://github.com/bhroston/fcmconfr.git/</a>’<a class="anchor" aria-label="anchor" href="#fcmconfr-a-hrefhttpsgithubcombhrostonfcmconfrgit"></a>
 </h1>
 </div>
 <!-- badges: start -->
 
 <!-- badges: end -->
-<div class="section level2">
-<h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
-</h2>
-<p>fcmconfr is a tool to evaluate sets of Fuzzy Cognitive Maps (FCMs) to generate inferences that leverage uncertainty in individual FCMs and across the collective.</p>
-<p><code><a href="reference/fcmconfr.html">fcmconfr()</a></code> is the package’s primary function which takes a list of FCM adjacency matrices (or an individual adjacency matrix) and performs the following analyses:</p>
-<ul>
-<li><p>Simulate Input FCMs</p></li>
-<li><p>Generate an Aggregate FCM and Simulate the result</p></li>
-<li><p>Generate Bulk Monte-Carlo FCMs and Simulate them</p></li>
-</ul>
-<p><code><a href="reference/fcmconfr_gui.html">fcmconfr_gui()</a></code> provides a graphical user interface (GUI) to help users identify the appropriate inputs for their preferred analyses and generally improve the overall user-experience in defining the many inputs required by the primary <code><a href="reference/fcmconfr.html">fcmconfr()</a></code> function.</p>
-<p><strong>fcmconfr aims to consolidate existing software and theory into a centralized package:</strong> The landscape of software tools to analyse FCMs is diverse, with approaches and outputs varying across them. This is reflective of the decentralized nature of FCM theory as a whole which features an array of analysis methods, each having their strengths and weaknesses, without one in particular being consistently adopted throughout the literature.</p>
-<p><strong>fcmconfr offers novel tools to analyze FCMs with edge weights that incorporate uncertainty:</strong> One limitation of the conventional FCM approach is that it restricts edge weights to discrete values. Many extensions of the conventional approach have been introduced in the literature that allow edge weights to be represented as intervals, distributions, and a numerous other abstractions. fcmconfr offers novel tools that streamline access to two such extensions: one represents edge weights as Interval-Value Fuzzy Numbers (IVFNs, named here as IVFN-FCMs) and the other represents edge weights as Triangular Fuzzy Numbers (TFNs, named here as TFN-FCMs).</p>
-</div>
+<p><code>fcmconfr</code> streamlines Fuzzy Cognitive Map (FCM) simulation and offers uncertainty analysis features using Monte Carlo methods. Interval-Value Fuzzy Numbers (IVFNs), and Triangular Fuzzy Numbers (TFNs).</p>
+<p>FCM simulation and uncertainty analysis methods vary with most requiring programming and mathematical backgrounds (alongside a potentially lengthy amount of time to spare) to implement for there own uses.</p>
+<p>The <code>fcmconfr</code> package gives researchers accessible tools to simulate FCMs and incorporate uncertainty in their analyses with just a few function calls. Developed with a strong focus on accessibility (ease-of-use), <code>fcmconfr</code> aims to give users a more direct route to interact with FCMs in their projects.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install the development version of <code><a href="reference/fcmconfr.html">fcmconfr()</a></code> from GitHub with:</p>
+<p>You can install the development version of fcmconfr from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
+<code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
+<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"bhroston/fcmconfr"</span><span class="op">)</span></span>
+<span><span class="co"># Or</span></span>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"bhroston/fcmconfr"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="using-fcmconfr-example">Using fcmconfr (Example)<a class="anchor" aria-label="anchor" href="#using-fcmconfr-example"></a>
+<h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
 </h2>
-<p>Issue: Be able to load adj.matrices from igraph as well as ordinary adj. matrices</p>
+<p>A typical <code>fcmconfr</code> workflow follows a four-step process:</p>
+<ol style="list-style-type: decimal">
+<li><p>Import FCMs</p></li>
+<li><p>Set simulation parameters using <code><a href="reference/fcmconfr_gui.html">fcmconfr_gui()</a></code></p></li>
+<li><p>Run simulations using <code><a href="reference/fcmconfr.html">fcmconfr()</a></code></p></li>
+<li><p>Explore outputs using <code><a href="reference/get_inferences.html">get_inferences()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code></p></li>
+</ol>
+<p>See <code><a href="articles/fcmconfr.html">vignette("fcmconfr", package = "fcmconfr")</a></code> for a thorough walkthrough of each of the above steps.</p>
+<div class="section level3">
+<h3 id="id_1-import-fcms">1. Import FCMs<a class="anchor" aria-label="anchor" href="#id_1-import-fcms"></a>
+</h3>
+<p>FCMs are fundamentally matrix objects and can be imported into R as such using functions like <code>readxl::read_excel()</code>, <code><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv()</a></code>, etc.</p>
+<p>See <code><a href="articles/Importing_FCMs.html">vignette("Importing_FCMs", package = "fcmconfr")</a></code> for a detailed guide on importing conventional FCMs, FCMs with edge weights represented as IVFNs (IVFN-FCMs), and FCMs with edge weights represented as TFNs (TFN-FCMs).</p>
+</div>
+<div class="section level3">
+<h3 id="id_2-set-simulation-parameters-using-fcmconfr_gui">2. Set Simulation Parameters using <code>fcmconfr_gui()</code>
+<a class="anchor" aria-label="anchor" href="#id_2-set-simulation-parameters-using-fcmconfr_gui"></a>
+</h3>
+<p>The primary <code><a href="reference/fcmconfr.html">fcmconfr()</a></code> function is the central function of the package and requires specifying many different parameters. The <code><a href="reference/fcmconfr_gui.html">fcmconfr_gui()</a></code> function is intended to help guide users through that process.</p>
+<div style="text-align: center;">
+<p><img src="articles/images/cluster_1_fcmconfr_gui.png" style="width:70.0%"></p>
+</div>
+<p>Calling <code><a href="reference/fcmconfr_gui.html">fcmconfr_gui()</a></code> launches a Shiny app that lets users interactively select parameters and returns a corresponding call to <code><a href="reference/fcmconfr.html">fcmconfr()</a></code> in the console that users can copy-and-paste to run in their own scripts.</p>
+<p>Note: A brief summary of each parameter within the <code><a href="reference/fcmconfr_gui.html">fcmconfr_gui()</a></code> is provided in a glossary stored in a side tab within the GUI. The side tab can be opened by clicking the arrow symbol in the top-right-hand-corner of the GUI.</p>
+</div>
+<div class="section level3">
+<h3 id="id_3-run-simulations-using-fcmconfr">3. Run Simulations using <code>fcmconfr()</code>
+<a class="anchor" aria-label="anchor" href="#id_3-run-simulations-using-fcmconfr"></a>
+</h3>
+<p><code><a href="reference/fcmconfr_gui.html">fcmconfr_gui()</a></code> does all the hard work of putting together the call to <code><a href="reference/fcmconfr.html">fcmconfr()</a></code>. Running <code><a href="reference/fcmconfr.html">fcmconfr()</a></code> is now as simple as executing that output script.</p>
+<p>The following uses an example FCM from the <code>sample_fcms</code> data included in the package.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/bhroston/fcmconfr" class="external-link">fcmconfr</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># This example uses the salinization_ses_fcms dataset included within the package</span></span>
-<span></span>
-<span><span class="co"># set.seed(81)</span></span>
-<span></span>
-<span><span class="co"># Use fcmconfr_gui() to select inputs or manually identify input parameters</span></span>
-<span><span class="co"># fcmconfr_gui()</span></span>
-<span></span>
-<span><span class="co"># Use fcmconfr() to perform the analysis</span></span>
-<span><span class="va">fcmconfr_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fcmconfr.html">fcmconfr</a></span><span class="op">(</span></span>
-<span>  adj_matrices <span class="op">=</span> <span class="va">salinization_ses_fcms</span>,</span>
-<span>  <span class="co"># Aggregation and Monte Carlo Sampling</span></span>
-<span>  aggregation_function <span class="op">=</span> <span class="st">'mean'</span>,</span>
-<span>  monte_carlo_sampling_draws <span class="op">=</span> <span class="fl">100</span>,</span>
-<span>  <span class="co"># Simulation</span></span>
-<span>  initial_state_vector <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>  clamping_vector <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
-<span>  activation <span class="op">=</span> <span class="st">'modified-kosko'</span>,</span>
-<span>  squashing <span class="op">=</span> <span class="st">'sigmoid'</span>,</span>
-<span>  lambda <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  max_iter <span class="op">=</span> <span class="fl">100</span>,</span>
-<span>  min_error <span class="op">=</span> <span class="fl">1e-05</span>,</span>
-<span>  <span class="co"># Inference Estimation (bootstrap)</span></span>
-<span>  inference_estimation_function <span class="op">=</span> <span class="va">mean</span>,</span>
-<span>  inference_estimation_CI <span class="op">=</span> <span class="fl">0.95</span>,</span>
-<span>  inference_estimation_bootstrap_reps <span class="op">=</span> <span class="fl">1000</span>,</span>
-<span>  inference_estimation_bootstrap_draws_per_rep <span class="op">=</span> <span class="fl">1000</span>,</span>
-<span>  <span class="co"># Runtime Options</span></span>
-<span>  show_progress <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  n_cores <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  <span class="co"># Additional Options</span></span>
-<span>  perform_aggregate_analysis <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  perform_monte_carlo_analysis <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  perform_monte_carlo_inference_bootstrap_analysis <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  include_zero_weighted_edges_in_aggregation_and_mc_sampling <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  include_monte_carlo_FCM_simulations_in_output <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu">fcmconfr_plot</span><span class="op">(</span><span class="va">fcmconfr_results</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># This call to fcmconfr() was generated from fcmconfr_gui()!</span></span>
+<span><span class="co"># Store the output in a variable to explore it later</span></span>
+<span><span class="va">fcmconfr_obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fcmconfr.html">fcmconfr</a></span><span class="op">(</span></span>
+<span>    adj_matrices <span class="op">=</span> <span class="va">sample_fcms</span><span class="op">$</span><span class="va">simple_fcms</span><span class="op">$</span><span class="va">conventional_fcms</span>,</span>
+<span>    <span class="co"># Aggregation and Monte Carlo Sampling</span></span>
+<span>    agg_function <span class="op">=</span> <span class="st">'mean'</span>,</span>
+<span>    num_mc_fcms <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>    <span class="co"># Simulation</span></span>
+<span>    initial_state_vector <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>    clamping_vector <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
+<span>    activation <span class="op">=</span> <span class="st">'rescale'</span>,</span>
+<span>    squashing <span class="op">=</span> <span class="st">'sigmoid'</span>,</span>
+<span>    lambda <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>    point_of_inference <span class="op">=</span> <span class="st">'final'</span>,</span>
+<span>    max_iter <span class="op">=</span> <span class="fl">100</span>,</span>
+<span>    min_error <span class="op">=</span> <span class="fl">1e-05</span>,</span>
+<span>    <span class="co"># Inference Estimation (bootstrap)</span></span>
+<span>    ci_centering_function <span class="op">=</span> <span class="st">'mean'</span>,</span>
+<span>    confidence_interval <span class="op">=</span> <span class="fl">0.95</span>,</span>
+<span>    num_ci_bootstraps <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>    <span class="co"># Runtime Options</span></span>
+<span>    show_progress <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    parallel <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    n_cores <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>    <span class="co"># Additional Options</span></span>
+<span>    run_agg_calcs <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    run_mc_calcs <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    run_ci_calcs <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    include_zeroes_in_sampling <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>    include_sims_in_output <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
-</h2>
+<div class="section level3">
+<h3 id="id_4-explore-fcmconfr-results">4. Explore <code>fcmconfr()</code> Results<a class="anchor" aria-label="anchor" href="#id_4-explore-fcmconfr-results"></a>
+</h3>
+<p>The <code><a href="reference/fcmconfr.html">fcmconfr()</a></code> output is a large object that contains a lot of data, so the package includes additional functions to help users identify and explore its most important components.</p>
+<p>Simulation inferences are the main output from <code><a href="reference/fcmconfr.html">fcmconfr()</a></code> as they indicate how much each node is influenced by a particular change or action. The <code><a href="reference/get_inferences.html">get_inferences()</a></code> function gives users access to that data without having to parsing through the <code><a href="reference/fcmconfr.html">fcmconfr()</a></code> output directly.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"fcmconfr"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; To cite fcmconfr in publications use:</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Roston &amp; Rippy, (2024). FCMConfR: FCM Uncertainty Analysis Tools.</span></span>
-<span><span class="co">#&gt;   https://github.com/bhroston/fcmconfr.git.</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; A BibTeX entry for LaTeX users is</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   @bibentry{,</span></span>
-<span><span class="co">#&gt;     bibtype = {Manual}</span></span>
-<span><span class="co">#&gt;     title = {FCMConfR: FCM Uncertainty Analysis Tools},</span></span>
-<span><span class="co">#&gt;     author = {Ben Roston and Megan Rippy},</span></span>
-<span><span class="co">#&gt;     year = {2024},</span></span>
-<span><span class="co">#&gt;     url = {https://github.com/bhroston/fcmconfr},</span></span>
-<span><span class="co">#&gt;     copyright = {GNU General Public License}</span></span>
-<span><span class="co">#&gt;   }</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">fcmconfr_inferences</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/get_inferences.html">get_inferences</a></span><span class="op">(</span><span class="va">fcmconfr_obj</span><span class="op">)</span></span></code></pre></div>
+<p>A plot of all inferences can be generated using the <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> command.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fcmconfr_obj</span><span class="op">)</span></span></code></pre></div>
+<div style="text-align: center;">
+<p><img src="articles/images/fcmconfr_obj_plot.png" style="width:90.0%"></p>
+</div>
+<p>Note: <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> is unique in that its documentation must be accessed via <code><a href="reference/plot.fcmconfr.html">?plot.fcmconfr</a></code> (<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">?plot</a></code> returns the documentation for the Base R version of the function).</p>
+</div>
 </div>
 <div class="section level2">
-<h2 id="further-reading">Further Reading<a class="anchor" aria-label="anchor" href="#further-reading"></a>
+<h2 id="related-packages">Related Packages<a class="anchor" aria-label="anchor" href="#related-packages"></a>
 </h2>
-<p>See package vignettes:</p>
 <ul>
-<li><p>Getting started with fcmconfr</p></li>
-<li><p>Detailed example</p></li>
+<li>The <a href="https://search.r-project.org/CRAN/refmans/fcm/html/fcm.html" class="external-link"><code>fcm</code></a> R package offers the <code>fcm.infer()</code> function to simulate FCMs.</li>
+<li>
+<a href="https://github.com/payamaminpour/PyFCM" class="external-link"><code>PyFCM</code></a> is a Python package that includes functions for FCM simulation and aggregation.</li>
+<li>
+<a href="https://github.com/megadix/jfcm?tab=readme-ov-file" class="external-link"><code>jFCM</code></a> is a java-based suite of functions to simulate FCMs.</li>
 </ul>
 </div>
 <div class="section level2">
@@ -176,18 +184,6 @@
 <li><p>If you think you have encountered a bug, please <a href="https://github.com/bhroston/fcmconfr/issues" class="external-link">submit an issue</a>.</p></li>
 <li><p>Please include a <a href="https://reprex.tidyverse.org/articles/articles/learn-reprex.html" class="external-link">reprex</a> (a minimal, reproducible example) to clearly communicate about your code.</p></li>
 </ul>
-<hr>
-<p>However, most remain untested, and their mathematical complexity leaves many largely inaccessible (citation).</p>
-<p>Package to FCM packages across the R (<a href="https://cran.r-project.org/web/packages/fcm/index.html" title="CRAN: fcm" class="external-link">fcm</a>) and Python (<a href="https://github.com/payamaminpour/PyFCM.git" class="external-link">PyFCM</a>) ecosystems as well</p>
-<p>(Dikopoulou and Papageorgiou 2017; Aminpour 2018)</p>
-<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
-<div id="ref-aminpourPyFCM2018" class="csl-entry">
-Aminpour, Payam. 2018. “PyFCM.”
-</div>
-<div id="ref-dikopoulouFcmInferenceFuzzy2017" class="csl-entry">
-Dikopoulou, Zoumpoulia, and Elpiniki Papageorgiou. 2017. “Fcm: Inference of Fuzzy Cognitive Maps (FCMs).”
-</div>
-</div>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

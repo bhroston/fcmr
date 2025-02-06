@@ -3,5 +3,6 @@ pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   fcmconfr_example: fcmconfr_example.html
+  fcmconfr: fcmconfr.html
   Importing_FCMs: Importing_FCMs.html
-last_built: 2025-02-06T18:47Z
+last_built: 2025-02-06T21:47Z
