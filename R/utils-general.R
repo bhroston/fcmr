@@ -686,7 +686,7 @@ fcm_view <- function(fcm_adj_matrix = matrix(), with_shiny = FALSE) {
     node_names <- fcm_as_visNetwork_obj$x$nodes$id
     nchars_in_node_names <- vapply(node_names, nchar, numeric(1))
     node_name_w_max_nchars <- node_names[nchars_in_node_names == max(nchars_in_node_names)]
-    max_node_name_px_width <- strwidth(node_name_w_max_nchars, font = 12, units = 'in')*96 # 1px = 1/96in
+    max_node_name_px_width <- graphics::strwidth(node_name_w_max_nchars, font = 12, units = 'in')*96 # 1px = 1/96in
     sidebar_width <- as.character(round(max_node_name_px_width + 101)) # The +101 adds room for the checkboxes
     sidebar_width <- paste0(sidebar_width, "px")
 
