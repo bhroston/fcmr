@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# fcmconfr <a href='https://github.com/bhroston/fcmconfr.git/'><img src="man/figures/logo.png" align="right" height="138"/></a>
+# fcmconfr <a href='https://github.com/bhroston/fcmconfr.git/'<img src="man/figures/logo.png" align="right" height="138"/></a>
 
 <!-- badges: start -->
 
@@ -15,133 +15,163 @@ v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/li
 
 <!-- badges: end -->
 
-## Overview
+`fcmconfr` streamlines Fuzzy Cognitive Map (FCM) simulation and offers
+uncertainty analysis features using Monte Carlo methods. Interval-Value
+Fuzzy Numbers (IVFNs), and Triangular Fuzzy Numbers (TFNs).
 
-fcmconfr is a tool to evaluate sets of Fuzzy Cognitive Maps (FCMs) to
-generate inferences that leverage uncertainty in individual FCMs and
-across the collective.
+FCM simulation and uncertainty analysis methods vary with most requiring
+programming and mathematical backgrounds (alongside a potentially
+lengthy amount of time to spare) to implement for there own uses.
 
-`fcmconfr()` is the package’s primary function which takes a list of FCM
-adjacency matrices (or an individual adjacency matrix) and performs the
-following analyses:
-
-- Simulate Input FCMs
-
-- Generate an Aggregate FCM and Simulate the result
-
-- Generate Bulk Monte-Carlo FCMs and Simulate them
-
-`fcmconfr_gui()` provides a graphical user interface (GUI) to help users
-identify the appropriate inputs for their preferred analyses and
-generally improve the overall user-experience in defining the many
-inputs required by the primary `fcmconfr()` function.
-
-**fcmconfr aims to consolidate existing software and theory into a
-centralized package:** The landscape of software tools to analyse FCMs
-is diverse, with approaches and outputs varying across them. This is
-reflective of the decentralized nature of FCM theory as a whole which
-features an array of analysis methods, each having their strengths and
-weaknesses, without one in particular being consistently adopted
-throughout the literature.
-
-**fcmconfr offers novel tools to analyze FCMs with edge weights that
-incorporate uncertainty:** One limitation of the conventional FCM
-approach is that it restricts edge weights to discrete values. Many
-extensions of the conventional approach have been introduced in the
-literature that allow edge weights to be represented as intervals,
-distributions, and a numerous other abstractions. fcmconfr offers novel
-tools that streamline access to two such extensions: one represents edge
-weights as Interval-Value Fuzzy Numbers (IVFNs, named here as IVFN-FCMs)
-and the other represents edge weights as Triangular Fuzzy Numbers (TFNs,
-named here as TFN-FCMs).
+The `fcmconfr` package gives researchers accessible tools to simulate
+FCMs and incorporate uncertainty in their analyses with just a few
+function calls. Developed with a strong focus on accessibility
+(ease-of-use), `fcmconfr` aims to give users a more direct route to
+interact with FCMs in their projects.
 
 ## Installation
 
-You can install the development version of `fcmconfr()` from GitHub
-with:
+You can install the development version of fcmconfr from
+[GitHub](https://github.com/) with:
 
 ``` r
-# install.packages("remotes")
+# install.packages("pak")
+pak::pak("bhroston/fcmconfr")
+# Or
 remotes::install_github("bhroston/fcmconfr")
 ```
 
-## Using fcmconfr (Example)
+## Example
 
-Issue: Be able to load adj.matrices from igraph as well as ordinary adj.
-matrices
+A typical `fcmconfr` workflow follows a four-step process:
+
+1.  Import FCMs
+
+2.  Set simulation parameters using `fcmconfr_gui()`
+
+3.  Run simulations using `fcmconfr()`
+
+4.  Explore outputs using `get_inferences()` and `plot()`
+
+See `vignette("fcmconfr", package = "fcmconfr")` for a thorough
+walkthrough of each of the above steps.
+
+### 1. Import FCMs
+
+FCMs are fundamentally matrix objects and can be imported into R as such
+using functions like `readxl::read_excel()`, `read.csv()`, etc.
+
+See `vignette("Importing_FCMs", package = "fcmconfr")` for a detailed
+guide on importing conventional FCMs, FCMs with edge weights represented
+as IVFNs (IVFN-FCMs), and FCMs with edge weights represented as TFNs
+(TFN-FCMs).
+
+### 2. Set Simulation Parameters using `fcmconfr_gui()`
+
+The primary `fcmconfr()` function is the central function of the package
+and requires specifying many different parameters. The `fcmconfr_gui()`
+function is intended to help guide users through that process.
+
+<div style="text-align: center;">
+
+<img src="vignettes/images/cluster_1_fcmconfr_gui.png"
+style="width:70.0%" />
+
+</div>
+
+Calling `fcmconfr_gui()` launches a Shiny app that lets users
+interactively select parameters and returns a corresponding call to
+`fcmconfr()` in the console that users can copy-and-paste to run in
+their own scripts.
+
+Note: A brief summary of each parameter within the `fcmconfr_gui()` is
+provided in a glossary stored in a side tab within the GUI. The side tab
+can be opened by clicking the arrow symbol in the top-right-hand-corner
+of the GUI.
+
+### 3. Run Simulations using `fcmconfr()`
+
+`fcmconfr_gui()` does all the hard work of putting together the call to
+`fcmconfr()`. Running `fcmconfr()` is now as simple as executing that
+output script.
+
+The following uses an example FCM from the `sample_fcms` data included
+in the package.
 
 ``` r
-library(fcmconfr)
-
-# This example uses the salinization_ses_fcms dataset included within the package
-
-# set.seed(81)
-
-# Use fcmconfr_gui() to select inputs or manually identify input parameters
-# fcmconfr_gui()
-
-# Use fcmconfr() to perform the analysis
-fcmconfr_results <- fcmconfr(
-  adj_matrices = salinization_ses_fcms,
-  # Aggregation and Monte Carlo Sampling
-  aggregation_function = 'mean',
-  monte_carlo_sampling_draws = 100,
-  # Simulation
-  initial_state_vector = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
-  clamping_vector = c(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-  activation = 'modified-kosko',
-  squashing = 'sigmoid',
-  lambda = 1,
-  max_iter = 100,
-  min_error = 1e-05,
-  # Inference Estimation (bootstrap)
-  inference_estimation_function = mean,
-  inference_estimation_CI = 0.95,
-  inference_estimation_bootstrap_reps = 1000,
-  inference_estimation_bootstrap_draws_per_rep = 1000,
-  # Runtime Options
-  show_progress = TRUE,
-  parallel = FALSE,
-  n_cores = 1,
-  # Additional Options
-  perform_aggregate_analysis = TRUE,
-  perform_monte_carlo_analysis = TRUE,
-  perform_monte_carlo_inference_bootstrap_analysis = TRUE,
-  include_zero_weighted_edges_in_aggregation_and_mc_sampling = FALSE,
-  include_monte_carlo_FCM_simulations_in_output = FALSE
-)
-
-fcmconfr_plot(fcmconfr_results)
+# This call to fcmconfr() was generated from fcmconfr_gui()!
+# Store the output in a variable to explore it later
+fcmconfr_obj <- fcmconfr(
+    adj_matrices = sample_fcms$simple_fcms$conventional_fcms,
+    # Aggregation and Monte Carlo Sampling
+    agg_function = 'mean',
+    num_mc_fcms = 1000,
+    # Simulation
+    initial_state_vector = c(1, 1, 1, 1, 1, 1, 1),
+    clamping_vector = c(1, 0, 0, 0, 0, 0, 0),
+    activation = 'rescale',
+    squashing = 'sigmoid',
+    lambda = 1,
+    point_of_inference = 'final',
+    max_iter = 100,
+    min_error = 1e-05,
+    # Inference Estimation (bootstrap)
+    ci_centering_function = 'mean',
+    confidence_interval = 0.95,
+    num_ci_bootstraps = 1000,
+    # Runtime Options
+    show_progress = TRUE,
+    parallel = TRUE,
+    n_cores = 2,
+    # Additional Options
+    run_agg_calcs = TRUE,
+    run_mc_calcs = TRUE,
+    run_ci_calcs = TRUE,
+    include_zeroes_in_sampling = FALSE,
+    include_sims_in_output = FALSE
+  )
 ```
 
-## Citation
+### 4. Explore `fcmconfr()` Results
+
+The `fcmconfr()` output is a large object that contains a lot of data,
+so the package includes additional functions to help users identify and
+explore its most important components.
+
+Simulation inferences are the main output from `fcmconfr()` as they
+indicate how much each node is influenced by a particular change or
+action. The `get_inferences()` function gives users access to that data
+without having to parsing through the `fcmconfr()` output directly.
 
 ``` r
-citation("fcmconfr")
-#> To cite fcmconfr in publications use:
-#> 
-#>   Roston & Rippy, (2024). FCMConfR: FCM Uncertainty Analysis Tools.
-#>   https://github.com/bhroston/fcmconfr.git.
-#> 
-#> A BibTeX entry for LaTeX users is
-#> 
-#>   @bibentry{,
-#>     bibtype = {Manual}
-#>     title = {FCMConfR: FCM Uncertainty Analysis Tools},
-#>     author = {Ben Roston and Megan Rippy},
-#>     year = {2024},
-#>     url = {https://github.com/bhroston/fcmconfr},
-#>     copyright = {GNU General Public License}
-#>   }
+fcmconfr_inferences <- get_inferences(fcmconfr_obj)
 ```
 
-## Further Reading
+A plot of all inferences can be generated using the `plot()` command.
 
-See package vignettes:
+``` r
+plot(fcmconfr_obj)
+```
 
-- Getting started with fcmconfr
+<div style="text-align: center;">
 
-- Detailed example
+<img src="vignettes/images/fcmconfr_obj_plot.png" style="width:90.0%" />
+
+</div>
+
+Note: `plot()` is unique in that its documentation must be accessed via
+`?plot.fcmconfr` (`?plot` returns the documentation for the Base R
+version of the function).
+
+## Related Packages
+
+- The
+  [`fcm`](https://search.r-project.org/CRAN/refmans/fcm/html/fcm.html) R
+  package offers the `fcm.infer()` function to simulate FCMs.
+- [`PyFCM`](https://github.com/payamaminpour/PyFCM) is a Python package
+  that includes functions for FCM simulation and aggregation.
+- [`jFCM`](https://github.com/megadix/jfcm?tab=readme-ov-file) is a
+  java-based suite of functions to simulate FCMs.
 
 ## Contributing
 
@@ -156,33 +186,3 @@ project, you agree to abide by its terms.
   [reprex](https://reprex.tidyverse.org/articles/articles/learn-reprex.html)
   (a minimal, reproducible example) to clearly communicate about your
   code.
-
-------------------------------------------------------------------------
-
-However, most remain untested, and their mathematical complexity leaves
-many largely inaccessible (citation).
-
-Package to FCM packages across the R
-([fcm](https://cran.r-project.org/web/packages/fcm/index.html "CRAN: fcm"))
-and Python ([PyFCM](https://github.com/payamaminpour/PyFCM.git))
-ecosystems as well
-
-(Dikopoulou and Papageorgiou 2017; Aminpour 2018)
-
-<div id="refs" class="references csl-bib-body hanging-indent"
-entry-spacing="0">
-
-<div id="ref-aminpourPyFCM2018" class="csl-entry">
-
-Aminpour, Payam. 2018. “PyFCM.”
-
-</div>
-
-<div id="ref-dikopoulouFcmInferenceFuzzy2017" class="csl-entry">
-
-Dikopoulou, Zoumpoulia, and Elpiniki Papageorgiou. 2017. “Fcm: Inference
-of Fuzzy Cognitive Maps (FCMs).”
-
-</div>
-
-</div>

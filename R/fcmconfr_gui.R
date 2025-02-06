@@ -69,8 +69,8 @@ fcmconfr_gui <- function() {
     fcmconfr_gui_input$include_zeroes_in_sampling <- FALSE
   }
 
-  if (!("mc_sims_in_output" %in% fcmconfr_gui_vars)) {
-    fcmconfr_gui_input$mc_sims_in_output <- FALSE
+  if (!("include_sims_in_output" %in% fcmconfr_gui_vars)) {
+    fcmconfr_gui_input$include_sims_in_output <- FALSE
   }
 
   fcmconfr_gui_input$initial_state_vector <- paste0("c(", paste(fcmconfr_gui_input$initial_state_vector, collapse = ", "), ")")
@@ -107,12 +107,16 @@ print.fcmconfr_gui_input <- function(x, ...) {
   performed_mc <- x$perform_monte_carlo
   performed_bootstrap <- x$perform_inference_bootstrap
 
+  if (x$parallel == "FALSE") {
+    x$n_cores <- "integer()"
+  }
+
   if (performed_aggregation & !performed_mc & !performed_bootstrap) {
     cat(
       "fcmconfr(", "\n",
       "  adj_matrices = ", x$adj_matrices, ",\n",
       "  # Aggregation", "\n",
-      "  agg_function = ", paste0("'", x$agg_function, "'"), ",\n",
+      "  agg_function = ", paste0("'", x$aggregation_fun, "'"), ",\n",
       "  # Simulation", "\n",
       "  initial_state_vector = ", x$initial_state_vector, ",\n",
       "  clamping_vector = ", x$clamping_vector, ",\n",
@@ -136,7 +140,7 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "fcmconfr(", "\n",
       "  adj_matrices = ", x$adj_matrices, ",\n",
       "  # Aggregation and Monte Carlo Sampling", "\n",
-      "  agg_function = ", paste0("'", x$agg_function, "'"), ",\n",
+      "  agg_function = ", paste0("'", x$aggregation_fun, "'"), ",\n",
       "  num_mc_fcms = ", x$monte_carlo_samples, ",\n",
       "  # Simulation", "\n",
       "  initial_state_vector = ", x$initial_state_vector, ",\n",
@@ -156,7 +160,7 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "  run_mc_calcs = ", x$perform_monte_carlo, ",\n",
       "  run_ci_calcs = ", x$perform_inference_bootstrap, ",\n",
       "  include_zeroes_in_sampling = ", x$include_zeroes_in_sampling, ",\n",
-      "  mc_sims_in_output = ",  x$mc_sims_in_output, "\n",
+      "  include_sims_in_output = ",  x$include_sims_in_output, "\n",
       ")", sep = ""
     )
   } else if (performed_aggregation & performed_mc & performed_bootstrap) {
@@ -164,7 +168,7 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "fcmconfr(", "\n",
       "  adj_matrices = ", x$adj_matrices, ",\n",
       "  # Aggregation and Monte Carlo Sampling", "\n",
-      "  agg_function = ", paste0("'", x$agg_function, "'"), ",\n",
+      "  agg_function = ", paste0("'", x$aggregation_fun, "'"), ",\n",
       "  num_mc_fcms = ", x$monte_carlo_samples, ",\n",
       "  # Simulation", "\n",
       "  initial_state_vector = ", x$initial_state_vector, ",\n",
@@ -188,7 +192,7 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "  run_mc_calcs = ", x$perform_monte_carlo, ",\n",
       "  run_ci_calcs = ", x$perform_inference_bootstrap, ",\n",
       "  include_zeroes_in_sampling = ", x$include_zeroes_in_sampling, ",\n",
-      "  mc_sims_in_output = ",  x$mc_sims_in_output, "\n",
+      "  include_sims_in_output = ",  x$include_sims_in_output, "\n",
       ")", sep = ""
     )
   } else if (!performed_aggregation & performed_mc & !performed_bootstrap) {
@@ -215,7 +219,7 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "  run_mc_calcs = ", x$perform_monte_carlo, ",\n",
       "  run_ci_calcs = ", x$perform_inference_bootstrap, ",\n",
       "  include_zeroes_in_sampling = ", x$include_zeroes_in_sampling, ",\n",
-      "  mc_sims_in_output = ",  x$mc_sims_in_output, "\n",
+      "  include_sims_in_output = ",  x$include_sims_in_output, "\n",
       ")", sep = ""
     )
   } else if (!performed_aggregation & performed_mc & performed_bootstrap) {
@@ -246,7 +250,7 @@ print.fcmconfr_gui_input <- function(x, ...) {
       "  run_mc_calcs = ", x$perform_monte_carlo, ",\n",
       "  run_ci_calcs = ", x$perform_inference_bootstrap, ",\n",
       "  include_zeroes_in_sampling = ", x$include_zeroes_in_sampling, ",\n",
-      "  mc_sims_in_output = ",  x$mc_sims_in_output, "\n",
+      "  include_sims_in_output = ",  x$include_sims_in_output, "\n",
       ")", sep = ""
     )
   } else if (!performed_aggregation & !performed_mc & !performed_bootstrap) {

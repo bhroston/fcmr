@@ -37,7 +37,7 @@ test_that("fcmconfr_plot additional inputs work", {
       run_mc_calcs = TRUE,
       run_ci_calcs = TRUE,
       include_zeroes_in_sampling = TRUE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   # ----
@@ -213,7 +213,7 @@ test_that("fcmconfr_plot additional inputs work", {
   # ----
 
   # acceptable/unacceptable inputs ----
-  expect_error(
+  expect_warning(
     plot(tfn_clamping_inputs_agg_and_mc_w_bs, wrong_input = "asdfads")
   )
   # ----
@@ -231,7 +231,7 @@ test_that("fcmconfr_plot additional inputs work", {
            mc_inferences_color = "orange",
            mc_inferences_shape = 25,
            ind_inferences_color = "black",
-           ind_inferences_shape = 14,
+           ind_inferences_shape = 4,
            agg_inferences_color = "red",
            agg_inferences_shape = 2,
            ind_ivfn_and_tfn_linewidth = 0.1,
@@ -282,7 +282,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       run_mc_calcs = FALSE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = FALSE
+      include_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -311,7 +311,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       run_mc_calcs = FALSE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = FALSE
+      include_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -342,7 +342,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       run_mc_calcs = FALSE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = TRUE,
-      mc_sims_in_output = FALSE
+      include_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -373,7 +373,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       run_mc_calcs = FALSE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = FALSE
+      include_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -406,7 +406,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       run_mc_calcs = TRUE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = TRUE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   # vdiffr is too sensitive for this test, run in personal testing only
@@ -440,7 +440,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       run_mc_calcs = TRUE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   # vdiffr is too sensitive for this test, run in personal testing only
@@ -481,7 +481,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       run_mc_calcs = TRUE,
       run_ci_calcs = TRUE,
       include_zeroes_in_sampling = TRUE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   # vdiffr is too sensitive for this test, run in personal testing only
@@ -520,7 +520,7 @@ test_that("fcmconfr_plot works with Conventional FCMs", {
       run_mc_calcs = TRUE,
       run_ci_calcs = TRUE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   # vdiffr is too sensitive for this test, run in personal testing only
@@ -571,7 +571,7 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       run_mc_calcs = FALSE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = FALSE
+      include_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -600,7 +600,7 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       run_mc_calcs = FALSE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = FALSE
+      include_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -632,7 +632,7 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       run_mc_calcs = FALSE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = TRUE,
-      mc_sims_in_output = FALSE
+      include_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -663,7 +663,7 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       run_mc_calcs = FALSE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = FALSE
+      include_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -696,7 +696,7 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       run_mc_calcs = TRUE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = TRUE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   # vdiffr is too sensitive for this test, run in personal testing only
@@ -730,7 +730,7 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       run_mc_calcs = TRUE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   # vdiffr is too sensitive for this test, run in personal testing only
@@ -771,7 +771,7 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       run_mc_calcs = TRUE,
       run_ci_calcs = TRUE,
       include_zeroes_in_sampling = TRUE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   # vdiffr is too sensitive for this test, run in personal testing only
@@ -813,7 +813,7 @@ test_that("fcmconfr_plot works with IVFN FCMs", {
       run_mc_calcs = TRUE,
       run_ci_calcs = TRUE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
 
@@ -859,7 +859,7 @@ test_that("fcmconfr_plot works with TFN FCMs", {
       run_mc_calcs = FALSE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = FALSE
+      include_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -888,7 +888,7 @@ test_that("fcmconfr_plot works with TFN FCMs", {
       run_mc_calcs = FALSE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = FALSE
+      include_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -920,7 +920,7 @@ test_that("fcmconfr_plot works with TFN FCMs", {
       run_mc_calcs = FALSE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = TRUE,
-      mc_sims_in_output = FALSE
+      include_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -951,7 +951,7 @@ test_that("fcmconfr_plot works with TFN FCMs", {
       run_mc_calcs = FALSE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = FALSE
+      include_sims_in_output = FALSE
     )
   ))
   suppressWarnings(
@@ -984,7 +984,7 @@ test_that("fcmconfr_plot works with TFN FCMs", {
       run_mc_calcs = TRUE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = TRUE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   # vdiffr is too sensitive for this test, run in personal testing only
@@ -1018,7 +1018,7 @@ test_that("fcmconfr_plot works with TFN FCMs", {
       run_mc_calcs = TRUE,
       run_ci_calcs = FALSE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   # vdiffr is too sensitive for this test, run in personal testing only
@@ -1059,7 +1059,7 @@ test_that("fcmconfr_plot works with TFN FCMs", {
       run_mc_calcs = TRUE,
       run_ci_calcs = TRUE,
       include_zeroes_in_sampling = TRUE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   # vdiffr is too sensitive for this test, run in personal testing only
@@ -1101,7 +1101,7 @@ test_that("fcmconfr_plot works with TFN FCMs", {
       run_mc_calcs = TRUE,
       run_ci_calcs = TRUE,
       include_zeroes_in_sampling = FALSE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
 

@@ -62,8 +62,6 @@ aggregate_fcms <- function(adj_matrices = list(matrix()),
     stop("All input adjacency matrices must have the same dimensions (n x n) throughout the entire list")
   }
 
-  # browser()
-
   concepts_in_adj_matrices <- lapply(adj_matrices, function(x) get_node_IDs_from_input(x))
   node_names <- unlist(unique(concepts_in_adj_matrices))
 
@@ -85,6 +83,7 @@ aggregate_fcms <- function(adj_matrices = list(matrix()),
 
   aggregate_adj_matrix
 }
+
 
 
 
@@ -119,6 +118,8 @@ aggregate_fcms <- function(adj_matrices = list(matrix()),
 #' @returns An aggregate adj. matrix (of class 'aggregate') with edges represented
 #' as numeric data types
 #'
+#' @keywords internal
+#'
 #' @export
 #' @example man/examples/ex-aggregate_conventional_fcms.R
 aggregate_conventional_fcms <- function(adj_matrices = list(matrix()),
@@ -131,16 +132,12 @@ aggregate_conventional_fcms <- function(adj_matrices = list(matrix()),
   n_nodes <- length(node_names)
   n_maps <- length(adj_matrices)
 
-  # browser()
-
   if (!include_zeroes_in_sampling & identical(false_zero_locs_by_adj_matrix, list())) {
     adj_matrices <- lapply(adj_matrices, function(x) replace(x, x == 0, NA))
   } else if (!include_zeroes_in_sampling & !identical(false_zero_locs_by_adj_matrix, list())) {
-    # browser()
     adj_matrices <- lapply(adj_matrices, function(x) replace(x, x == 0, NA))
     adj_matrices <- mapply(
       function(adj_matrix, false_zero_locs) {
-        #browser()
         adj_matrix[false_zero_locs] <- 0
         adj_matrix
       },
@@ -149,8 +146,6 @@ aggregate_conventional_fcms <- function(adj_matrices = list(matrix()),
       SIMPLIFY = FALSE
     )
   }
-
-  # browser()
 
   if (agg_function == "mean") {
     aggregate_adj_matrix <- apply(
@@ -212,6 +207,8 @@ aggregate_conventional_fcms <- function(adj_matrices = list(matrix()),
 #'
 #' @returns An aggregate adj. matrix (of class 'aggregate') with edges represented
 #' as IVFN data types
+#'
+#' @keywords internal
 #'
 #' @export
 #' @example  man/examples/ex-aggregate_fcms_w_ivfns.R
@@ -283,6 +280,8 @@ aggregate_fcms_w_ivfns <- function(adj_matrices = list(matrix()),
 #' @returns An aggregate adj. matrix (of class 'aggregate') with edges represented
 #' as TFN data types
 #'
+#' @keywords internal
+#'
 #' @export
 #' @example  man/examples/ex-aggregate_fcms_w_tfns.R
 aggregate_fcms_w_tfns <- function(adj_matrices = list(matrix()),
@@ -301,7 +300,7 @@ aggregate_fcms_w_tfns <- function(adj_matrices = list(matrix()),
   if (include_zeroes_in_sampling) {
     lower_aggregate_adj_matrix <- aggregate_conventional_fcms(lower_adj_matrices, agg_function, include_zeroes_in_sampling)
     mode_aggregate_adj_matrix <- aggregate_conventional_fcms(mode_adj_matrices, agg_function, include_zeroes_in_sampling)
-    } else {
+  } else {
     # Do NOT count TFNs with a 0-lower and 0-mode bounds as 0-weighted edges!!!!!!
     false_zero_lower_tfn_locs_across_adj_matrices <- lapply(adj_matrices, function(adj_matrix) {
       which(apply(adj_matrix, c(1, 2), function(element) (element[[1]]$lower == 0 & element[[1]]$upper != 0)), arr.ind = TRUE)
@@ -343,6 +342,8 @@ aggregate_fcms_w_tfns <- function(adj_matrices = list(matrix()),
 #'
 #' @returns A console printout of aggregate_fcm output
 #'
+#' @keywords internal
+#'
 #' @export
 #' @examples
 #' NULL
@@ -350,6 +351,4 @@ print.aggregate <- function(x, ...) {
   print(x$adj_matrix)
   cat(paste0("\nAggregate (", x$params$aggregation_fun, ") of ", length(x$params$input_adj_matrices), " adj. matrices"))
 }
-
-
 

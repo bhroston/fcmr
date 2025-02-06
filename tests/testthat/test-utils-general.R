@@ -524,7 +524,7 @@ test_that("get_inferences works", {
       run_mc_calcs = TRUE,
       run_ci_calcs = TRUE,
       include_zeroes_in_sampling = TRUE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
 
@@ -565,7 +565,7 @@ test_that("get_inferences works", {
       run_mc_calcs = TRUE,
       run_ci_calcs = TRUE,
       include_zeroes_in_sampling = TRUE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   expect_no_error(get_inferences(ivfn_fcmconfr))
@@ -599,18 +599,48 @@ test_that("get_inferences works", {
       run_mc_calcs = TRUE,
       run_ci_calcs = TRUE,
       include_zeroes_in_sampling = TRUE,
-      mc_sims_in_output = TRUE
+      include_sims_in_output = TRUE
     )
   ))
   expect_no_error(get_inferences(tfn_fcmconfr))
 })
 
 
+test_that("estimate_lambda works", {
+  expect_equal(
+    round(estimate_lambda(sample_fcms$simple_fcms$conventional_fcms[[1]], "sigmoid"), 2),
+    2.23
+  )
+  expect_equal(
+    round(estimate_lambda(sample_fcms$simple_fcms$conventional_fcms[[1]], "tanh"), 2),
+    0.89
+  )
+
+  expect_equal(
+    round(estimate_lambda(sample_fcms$simple_fcms$ivfn_fcms[[1]], "sigmoid"), 2),
+    2.47
+  )
+  expect_equal(
+    round(estimate_lambda(sample_fcms$simple_fcms$ivfn_fcms[[1]], "tanh"), 2),
+    0.92
+  )
+
+  expect_equal(
+    round(estimate_lambda(sample_fcms$simple_fcms$tfn_fcms[[1]], "sigmoid"), 2),
+    2.38
+  )
+  expect_equal(
+    round(estimate_lambda(sample_fcms$simple_fcms$tfn_fcms[[1]], "tanh"), 2),
+    0.91
+  )
+
+})
+
 #######
 
-# test_that("here works for R CMD Check", {
-#   expect_no_error(here::here())
-# })
-
-
-
+# # test_that("here works for R CMD Check", {
+# #   expect_no_error(here::here())
+# # })
+#
+#
+#

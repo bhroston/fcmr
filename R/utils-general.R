@@ -536,22 +536,6 @@ get_inferences <- function(fcmconfr_obj = list(),
       lower_values = lower_individual_inferences,
       upper_values = upper_individual_inferences
     )
-    # individual_inferences <- apply(
-    #   individual_inferences, 2,
-    #   function(inferences) {
-    #     inference_observations <- lapply(
-    #       inferences,
-    #       function(value) {
-    #         data.frame(
-    #           crisp = (value$lower + value$upper)/2,
-    #           lower = value$lower,
-    #           upper = value$upper
-    #         )
-    #       })
-    #     inference_observations <- data.frame(do.call(rbind, inference_observations))
-    #     rownames(inference_observations) <- NULL
-    #     data.frame(cbind(input = paste0("adj_matrix_", 1:nrow(inference_observations)), inference_observations))
-    #   })
   } else if (fcm_class == "tfn") {
     individual_inferences_df <- data.frame(t(do.call(rbind, fcmconfr_obj$inferences$individual_fcms$inferences)))
     lower_individual_inferences <- data.frame(apply(individual_inferences_df, c(1, 2), function(element) element[[1]]$lower))
@@ -563,24 +547,6 @@ get_inferences <- function(fcmconfr_obj = list(),
       mode_values = mode_individual_inferences,
       upper_values = upper_individual_inferences
     )
-    # individual_inferences <- do.call(rbind, fcmconfr_obj$inferences$individual_fcms$inferences)
-    # individual_inferences <- apply(
-    #   individual_inferences, 2,
-    #   function(inferences) {
-    #     inference_observations <- lapply(
-    #       inferences,
-    #       function(value) {
-    #         data.frame(
-    #           crisp = (value$lower + value$mode + value$upper)/3,
-    #           lower = value$lower,
-    #           mode = value$mode,
-    #           upper = value$upper
-    #         )
-    #       })
-    #     inference_observations <- data.frame(do.call(rbind, inference_observations))
-    #     rownames(inference_observations) <- NULL
-    #     data.frame(cbind(input = paste0("adj_matrix_", 1:nrow(inference_observations)), inference_observations))
-    #   })
   }
 
   inferences_list <- list(
@@ -621,13 +587,13 @@ get_inferences <- function(fcmconfr_obj = list(),
   }
 
   if (fcmconfr_obj$params$additional_opts$run_mc_calcs) {
-    mc_inferences_transposed <- t(fcmconfr_obj$inferences$monte_carlo_fcms$all_inferences)
+    mc_inferences_transposed <- t(fcmconfr_obj$inferences$monte_carlo_fcms$inferences)
     colnames(mc_inferences_transposed) <- paste0("mc_", 1:ncol(mc_inferences_transposed))
     inferences_list$mc_inferences = mc_inferences_transposed
   }
 
   if (fcmconfr_obj$params$additional_opts$run_ci_calcs) {
-    mc_CIs_and_quantiles <- fcmconfr_obj$inferences$monte_carlo_fcms$bootstrap$CIs_and_quantiles_by_node
+    mc_CIs_and_quantiles <- fcmconfr_obj$inferences$monte_carlo_fcms$confidence_intervals$CIs_and_quantiles_by_node
     inferences_list$mc_CIs_and_quantiles = mc_CIs_and_quantiles
   }
 
@@ -680,41 +646,57 @@ fcm_view <- function(fcm_adj_matrix = matrix(), with_shiny = FALSE) {
 
   # Translate fcm into an igraph object and then convert to visNetwork
   fcm_as_igraph_obj <- igraph::graph_from_adjacency_matrix(as.matrix(conventional_fcm), weighted = TRUE, mode = "directed")
-  fcm_as_visNetwork_obj <- visNetwork::visIgraph(fcm_as_igraph_obj)
+  fcm_as_visNetwork_obj <- visNetwork::visIgraph(fcm_as_igraph_obj) %>%
+    visNetwork::visIgraphLayout()
 
   # Add aesthetics for nodes
   fcm_as_visNetwork_obj$x$nodes$color <- "lightgrey"
   fcm_as_visNetwork_obj$x$nodes$physics <- FALSE
+  fcm_as_visNetwork_obj$x$nodes$font <- list(size = 14)
+  # fcm_as_visNetwork_obj$x$nodes$hidden <- FALSE
 
   # Add aesthetics for edges
   edges_df <- fcm_as_visNetwork_obj$x$edges
-  edges_df$label <- paste(edges_df$weight)
+  edges_df$label <- paste(round(edges_df$weight, 2))
   edges_df$color <- ifelse(edges_df$weight >= 0, "black", "red")
   edges_df$width <- abs(edges_df$weight*2)
+  # edges_df$hidden <- FALSE
   fcm_as_visNetwork_obj$x$edges <- edges_df
 
   # Load plot
-  fcm_as_network_obj <- fcm_as_visNetwork_obj %>%
-    visNetwork::visEdges(smooth = list(enabled = TRUE, type = "dynamic", roundness = 0.6)) %>%
-    visNetwork::visLayout(randomSeed = sample(1:1e10, 1))
+  fcm_as_visNetwork_obj <- fcm_as_visNetwork_obj %>%
+  #test <- fcm_as_visNetwork_obj %>%
+    visNetwork::visEdges(smooth = list(enabled = TRUE, type = "continuous", roundness = 0.4), physics = FALSE) %>%
+    visNetwork::visIgraphLayout()
 
-  node_x_coords <- fcm_as_network_obj$x$nodes$x
-  node_y_coords <- fcm_as_network_obj$x$nodes$y
+  node_x_coords <- fcm_as_visNetwork_obj$x$nodes$x
+  node_y_coords <- fcm_as_visNetwork_obj$x$nodes$y
 
   spaced_node_x_coords <- node_x_coords*1.5
   spaced_node_y_coords <- node_y_coords*2
 
-  fcm_as_network_obj$x$nodes$x <- spaced_node_x_coords
-  fcm_as_network_obj$x$nodes$y <- spaced_node_y_coords
+  fcm_as_visNetwork_obj$x$nodes$x <- spaced_node_x_coords
+  fcm_as_visNetwork_obj$x$nodes$y <- spaced_node_y_coords
 
   if (!with_shiny) {
-    fcm_as_network_obj
+    fcm_as_visNetwork_obj
   } else {
+    # Calculate optimal sidebar width so all variable names fit on individual lines
+    # with their corresponding check box
+    node_names <- fcm_as_visNetwork_obj$x$nodes$id
+    nchars_in_node_names <- vapply(node_names, nchar, numeric(1))
+    node_name_w_max_nchars <- node_names[nchars_in_node_names == max(nchars_in_node_names)]
+    max_node_name_px_width <- graphics::strwidth(node_name_w_max_nchars, font = 12, units = 'in')*96 # 1px = 1/96in
+    sidebar_width <- as.character(round(max_node_name_px_width + 101)) # The +101 adds room for the checkboxes
+    sidebar_width <- paste0(sidebar_width, "px")
+
+    shiny_env <- new.env()
+    assign("fcm_as_visNetwork_obj", fcm_as_visNetwork_obj, shiny_env)
+    assign("sidebar_width", sidebar_width, shiny_env)
+
     server <- source(system.file(file.path('shiny', 'view_fcm', 'server.R'), package = 'fcmconfr'), local = TRUE)$value
     ui <- source(system.file(file.path('shiny', 'view_fcm', 'ui.R'), package = 'fcmconfr'), local = TRUE)$value
 
-    shiny_env <- new.env()
-    assign("fcm_as_network_obj", fcm_as_network_obj, shiny_env)
     environment(ui) <- shiny_env
     environment(server) <- shiny_env
     app <- shiny::shinyApp(
@@ -723,5 +705,123 @@ fcm_view <- function(fcm_adj_matrix = matrix(), with_shiny = FALSE) {
     )
 
     shiny::runApp(app)
+
+    shiny_nodes <- shiny_env$nodes
+    shiny_edges <- shiny_env$edges
+    shiny_coords <- shiny_env$coords
+    shiny_nodes_to_display <- shiny_env$nodes_to_display
+    shiny_nodes_shape <- shiny_env$nodes_shape
+    shiny_nodes_size <- shiny_env$nodes_size
+    shiny_edge_roundness <- shiny_env$edge_roundness
+    shiny_edge_smoothing <- shiny_env$edge_smoothing
+    shiny_font_size <- shiny_env$font_size
+
+    nodes_to_return_indices <- which(shiny_nodes$id %in% shiny_nodes_to_display)
+    nodes_to_return_df <- shiny_nodes[nodes_to_return_indices, ]
+    nodes_to_return_df$x <- nodes_to_return_df$x/100
+    nodes_to_return_df$y <- nodes_to_return_df$y/100
+    nodes_to_return_df$font <- NULL
+    nodes_to_return_df$size <- shiny_nodes_size
+
+    edges_to_return_indices <- which(shiny_nodes_to_display %in% shiny_edges$from) # | shiny_edges$to %in% shiny_nodes_to_display)
+    edges_to_return_df <- shiny_edges[edges_to_return_indices, ]
+    edges_to_return_df$color <- ifelse(edges_to_return_df$weight > 0, "black", "red")
+    edges_to_return_df$hidden <- NULL
+
+    fcm_as_visNetwork_obj$x$nodes <- nodes_to_return_df
+    fcm_as_visNetwork_obj$x$edges <- edges_to_return_df
+
+    fcm_as_visNetwork_obj <- fcm_as_visNetwork_obj %>%
+      visNetwork::visEdges(smooth = list(enabled = TRUE, type = shiny_edge_smoothing, roundness = shiny_edge_roundness),
+                           font = list(size = shiny_font_size),
+                           physics = FALSE) %>%
+      visNetwork::visNodes(font = list(size = shiny_font_size))
+
+    fcm_as_visNetwork_obj
   }
+}
+
+
+
+#' Estimate lambda
+#'
+#' @description
+#' This calculates optimum lambda value for the sigmoid and tanh squashing
+#' function that guarantees convergence of the simulation
+#'
+#' It estimates lambda such that the 'squashed' values will be contained within
+#' the near-linear region of the sigmoid or tanh function, and then re-normalizes
+#' those values back to the total possibility spaces of those functions ([0, 1]
+#' and [-1, 1] respectively).
+#'
+#' @details
+#' This algorithm was first explored in Kottas et al. 2010 (https://doi.org/10.1007/978-3-642-03220-2_5),
+#' expanded upon in Koutsellis et al. 2022 (https://doi.org/10.1007/s12351-022-00717-x), and
+#' further further developed in Koutsellis et al. 2022 (https://doi.org/10.1109/IISA56318.2022.9904369).
+#'
+#' This applies an algorithm to optimize lambda. Currently, the author only
+#' identifies one such algorithm, but generalizes the function to leave flexibility
+#' for the addition of newly-discovered algorithms in the future.
+#'
+#' @param fcm_adj_matrix An n x n adjacency matrix that represents an FCM
+#' @param squashing A squashing function to apply. Must be one of the following: 'tanh', or 'sigmoid'.
+#'
+#' @export
+estimate_lambda <- function(fcm_adj_matrix = matrix(),
+                            squashing = c("sigmoid", "tanh")) {
+
+  fcm_class <- get_adj_matrices_input_type(fcm_adj_matrix)$object_types_in_list[1]
+  if (fcm_class == "conventional") {
+    as_conventional_adj_matrix <- fcm_adj_matrix
+  } else if (fcm_class == "ivfn") {
+    as_conventional_adj_matrix <- apply(fcm_adj_matrix, c(1, 2), function(element) (element[[1]]$lower + element[[1]]$upper)/2)
+  } else if (fcm_class == "tfn") {
+    as_conventional_adj_matrix <- apply(fcm_adj_matrix, c(1, 2), function(element) (element[[1]]$lower + element[[1]]$mode + element[[1]]$upper)/3)
+  }
+
+  if (!(squashing %in% c("sigmoid", "tanh"))) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var squashing} amust be either 'sigmoid' or 'tanh'",
+      "+++++> Input {.var squashing} was: {squashing}"
+    )))
+  }
+
+  source_only_nodes <- which(rowSums(as_conventional_adj_matrix) == 0)
+  if (length(source_only_nodes) > 0) {
+    weight_matrix_of_nonsteady_nodes <- as.matrix(as_conventional_adj_matrix[-source_only_nodes, ])
+  } else {
+    weight_matrix_of_nonsteady_nodes <- as.matrix(as_conventional_adj_matrix)
+  }
+
+  frobenius_norm <- sqrt(sum(apply(weight_matrix_of_nonsteady_nodes, c(1, 2), function(element) element^2)))
+
+  if (squashing == "sigmoid") {
+    lambda_prime <- 4/frobenius_norm
+
+    # Calculate lambda_star
+    row_wise_max_norms <- vector(mode = "numeric", length = nrow(fcm_adj_matrix))
+    for (i in seq_along(1:nrow(weight_matrix_of_nonsteady_nodes))) {
+      row_edge_weights <- weight_matrix_of_nonsteady_nodes[i, ]
+      positive_row_edge_weights <- row_edge_weights[row_edge_weights > 0]
+      negative_row_edge_weights <- row_edge_weights[row_edge_weights < 0]
+      row_wise_max_norms[i] <- max(
+        abs(0.211*sum(positive_row_edge_weights) + 0.789*sum(negative_row_edge_weights)),
+        abs(0.211*sum(negative_row_edge_weights) + 0.789*sum(positive_row_edge_weights))
+      )
+    }
+    s_norm <- max(row_wise_max_norms)
+    lambda_star <- 1.317/s_norm
+  } else if (squashing == "tanh") {
+    lambda_prime <- 1/frobenius_norm
+
+    # Calculate lambda_star
+    abs_weight_matrix_of_nonsteady_nodes <- abs(weight_matrix_of_nonsteady_nodes)
+    max_abs_row_sum_norm <- max(apply(weight_matrix_of_nonsteady_nodes, 1, sum))
+    infinum_norm <- max_abs_row_sum_norm
+    lambda_star <- 1.14/infinum_norm
+  }
+
+  lambda_estimate <- min(lambda_prime, lambda_star)
+
+  lambda_estimate
 }

@@ -90,3 +90,4 @@ Other aggregate_fcms:
 \code{\link{print.aggregate}()}
 }
 \concept{aggregate_fcms}
+\keyword{internal}

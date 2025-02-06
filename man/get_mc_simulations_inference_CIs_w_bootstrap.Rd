@@ -2,7 +2,7 @@
 % Please edit documentation in R/monte_carlo_model_generation_and_simulation.R
 \name{get_mc_simulations_inference_CIs_w_bootstrap}
 \alias{get_mc_simulations_inference_CIs_w_bootstrap}
-\title{[INTENDED FOR DEVELOPER USE ONLY] Calculate Inferences (w/ Confidence Intervals via Bootstrap) of MC FCM Simulations}
+\title{Calculate Inferences (w/ Confidence Intervals via Bootstrap) of MC FCM Simulations}
 \usage{
 get_mc_simulations_inference_CIs_w_bootstrap(
   mc_simulations_inference_df = data.frame(),
@@ -11,7 +11,8 @@ get_mc_simulations_inference_CIs_w_bootstrap(
   bootstrap_reps = 1000,
   parallel = TRUE,
   n_cores = integer(),
-  show_progress = TRUE
+  show_progress = TRUE,
+  skip_checks = FALSE
 )
 }
 \arguments{
@@ -32,6 +33,9 @@ will use all available cores in the machine.}
 
 \item{show_progress}{TRUE/FALSE Show progress bar when creating fmcm. Uses pbmapply
 from the pbapply package as the underlying function.}
+
+\item{skip_checks}{FOR DEVELOPER USE ONLY. TRUE if infer_fcm is called within
+fcmconfr() and checks have already been performed}
 }
 \value{
 A list of raw bootstrap draws and a dataframe of confidence intervals
@@ -113,3 +117,4 @@ Other monte-carlo-model-generation-and-simulation:
 \code{\link{infer_fcm_set}()}
 }
 \concept{monte-carlo-model-generation-and-simulation}
+\keyword{internal}
