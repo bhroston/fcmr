@@ -216,7 +216,7 @@ infer_fcm_set <- function(adj_matrices = list(matrix()),
   }
 
   if (identical(fcm_class, "conventional")) {
-    inference_values_by_sim <- lapply(inferences_for_adj_matrices, function(sim) sim$inference)
+    inference_values_by_sim <- lapply(inferences_for_adj_matrices, function(sim) sim$inferences)
   } else {
     inference_values_by_sim <- lapply(inferences_for_adj_matrices, function(sim) sim$inferences)
   }
@@ -227,15 +227,15 @@ infer_fcm_set <- function(adj_matrices = list(matrix()),
   if (include_sims_in_output) {
     structure(
       .Data = list(
-        inference = inference_values_by_sim,
-        sims = inferences_for_adj_matrices
+        inferences = inference_values_by_sim,
+        simulations = inferences_for_adj_matrices
       ),
       class = "inference_of_fcm_set"
     )
   } else {
     structure(
       .Data = list(
-        inference = inference_values_by_sim
+        inferences = inference_values_by_sim
       ),
       class = "inference_of_fcm_set"
     )
@@ -444,8 +444,10 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
   structure(
     .Data = list(
       inferences = inferences,
-      scenario_simulation = scenario_simulation,
-      baseline_simulation = baseline_simulation
+      simulations = list(
+        scenario_simulation = scenario_simulation,
+        baseline_simulation = baseline_simulation
+      )
     ),
     class = "infer_conventional_fcm"
   )
@@ -598,9 +600,11 @@ infer_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
     .Data = list(
       inferences = inferences,
       inferences_df = inferences_df,
-      inferences_for_plotting = inferences_plot_data,
-      scenario_simulation = scenario_simulation,
-      baseline_simulation = baseline_simulation
+      # inferences_for_plotting = inferences_plot_data,
+      simulations = list(
+        scenario_simulation = scenario_simulation,
+        baseline_simulation = baseline_simulation
+      )
     ),
     class = "infer_ivfn_or_tfn_fcm"
   )

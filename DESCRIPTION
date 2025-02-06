@@ -36,6 +36,7 @@ Imports:
     tidyr (>= 1.3.0),
     shinyWidgets (>= 0.8.7),
     bslib (>= 0.8.0),
+    graphics (>= 4.3.2),
     tibble (>= 3.2.1),
     ggplot2 (>= 3.4.2),
     visNetwork (>= 2.1.2),
