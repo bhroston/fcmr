@@ -392,12 +392,7 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
 
   iter <- NULL # for R CMD Check, does not impact logic
 
-  # return(get_adj_matrices_input_type)
-
-  # return(evaluate::evaluate(get_adj_matrices_input_type(adj_matrix)))
-
   fcm_class <- get_adj_matrices_input_type(adj_matrix)$fcm_class
-  # return(get_adj_matrices_input_type(adj_matrix))
   if (!(fcm_class %in% c("conventional"))) {
     stop(cli::format_error(c(
       "x" = "{.var adj_matrix} must be an adjacency matrix with edges represented as discrete numeric values (Conventional) only",
@@ -405,11 +400,8 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
     )))
   }
 
-  # return("Got here after fcm_class") - definitely did not get here
-
   # Get scenario simulation
   scenario_initial_state_vector <- initial_state_vector
-  # scenario_initial_state_vector <- c(1, 0, 0)
   scenario_clamping_vector <- clamping_vector
   scenario_simulation <- simulate_fcm(adj_matrix, scenario_initial_state_vector, scenario_clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
 
@@ -423,7 +415,6 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
   } else {
     # Get baseline simulation
     baseline_initial_state_vector <- rep(1, length(initial_state_vector))
-    # baseline_initial_state_vector <- initial_state_vector
     baseline_clamping_vector <- rep(0, length(clamping_vector))
     baseline_simulation <- simulate_fcm(adj_matrix, baseline_initial_state_vector, baseline_clamping_vector, activation, squashing, lambda, point_of_inference, max_iter, min_error)
     baseline_simulation_is_dummy <- FALSE
