@@ -112,7 +112,7 @@ ivfn_fcm[2, 2][[1]] <- list(ivfn(0, 0))
 ```
 
 ::: {style="text-align: center;"}
-![`ivfn_df` formatis. The console output for `ivfn_fcm` will vary depending on whether it is loaded as a matrix or dataframe. As a dataframe it will print out the IVFN values, while as a matrix it will print out the object types, `ivfn, 2`. These differences do not impact the way we interact with `ivfn_fcm`.](images/clipboard-1503284098.png){width="70%"}
+![`ivfn_df` formats. The console output for `ivfn_fcm` will vary depending on whether it is loaded as a matrix or dataframe. As a dataframe it will print out the IVFN values, while as a matrix it will print out the object types, `ivfn, 2`. These differences do not impact the way we interact with `ivfn_fcm`.](images/ivfn_df_formats.png){width="70%"}
 :::
 
 <br>
