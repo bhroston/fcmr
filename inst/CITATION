@@ -1,11 +1,6 @@
-citHeader("To cite the fcmconfr package in publications please use:")
-
-bibentry(
-  bibtype = "Manual",
-  author = "Ben Roston",
-  title = "FCMConfR: FCM Uncertainty Analysis Tools",
-  year = "2024",
-  note = "R package version 0.2.1",
-  url = "https://github.com/bhroston/fcmconfr",
-  copyright = "GNU General Public License"
-)
+bibentry(bibtype="software",
+         header="To cite 'fcmconfr' in publications use:",
+         title="fcmconfr: Fuzzy Cognitive Map Analysis in R",
+         author=c(as.person("Ben Roston"), as.person("Meg Rippy")),
+         year=2025,
+         url="https://github.com/bhroston/fcmconfr")

@@ -2,12 +2,24 @@ Package: fcmconfr
 Type: Package
 Title: Fuzzy Cognitive Map Analysis in R
 Version: 0.2.3
-Authors@R: person(
-  "Ben", "Roston",
-  email = "bhroston@vt.edu",
-  role = c("aut", "cre", "cph"),
-  comment = c(ORCID = "0000-0001-9201-7579"))
-Description: Create and analyse fuzzy cognitive maps.
+Authors@R: c(
+  person(
+    "Ben", "Roston",
+    email = "bhroston@vt.edu",
+    role = c("aut", "cre", "cph"),
+    comment = c(ORCID = "0000-0001-9201-7579")
+  ),
+  person(
+    "Meg", "Rippy",
+    email = "mrippy@vt.edu",
+    role = c("aut", "cre", "cph", "ths"),
+    comment = c(ORCID = "0000-0002-0575-8342")
+  ))
+Description: fcmconfr streamlines the process of conducting dynamic simulations 
+  using Fuzzy Cognitive Maps (FCMs). The package supports multiple FCM types 
+  (conventional, Interval-Value Fuzzy Number (IVFN) and Triangular Fuzzy Number 
+  (TFN)) and provides tools for model aggregation and the propagation of 
+  uncertainty from individual FCMs through to the aggregate.
 License: GPL (>= 3) + file LICENSE
 Encoding: UTF-8
 LazyData: true
