@@ -1,3 +1,18 @@
+
+################################################################################
+# utils-fcmconfr.R
+#
+# These utility functions are involved with running the primary fcmconfr()
+# function
+#
+#   - check_fcmconfr_inputs
+#   - organize_fcmconfr_output
+#   - print.fcmconfr
+#
+################################################################################
+
+
+
 #' Check fcmconfr Inputs
 #'
 #' @description
@@ -24,9 +39,9 @@
 #' control the behavior of an FCM. Specifically, non-zero values defined in this vector
 #' will remain constant throughout the entire simulation as if they were "clamped" at those values.
 #' @param activation The activation function to be applied. Must be one of the following:
-#' 'kosko', 'modified-kosko', or 'papageorgiou'.
+#' 'kosko', 'modified-kosko', or 'rescale'.
 #' @param squashing A squashing function to apply. Must be one of the following:
-#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' 'tanh', or 'sigmoid'.
 #' @param lambda A numeric value that defines the steepness of the slope of the
 #' squashing function when tanh or sigmoid are applied
 #' @param point_of_inference The point along the simulation time-series to be
@@ -70,7 +85,7 @@ check_fcmconfr_inputs <- function(adj_matrices = list(matrix()),
                                   initial_state_vector = c(),
                                   clamping_vector = c(),
                                   activation = c("kosko", "modified-kosko", "rescale"),
-                                  squashing = c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"),
+                                  squashing = c("sigmoid", "tanh"),
                                   lambda = 1,
                                   point_of_inference = c("peak", "final"),
                                   max_iter = 100,

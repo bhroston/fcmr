@@ -4,6 +4,8 @@
 #
 # These functions manage and interact with IVFN and TFN objects
 #
+#   - defuzz_ivfn_or_tfn
+#
 #   Interval-Valued Fuzzy Numbers (IVFNs)
 #   - make_adj_matrix_w_ivfns
 #   - ivfn
@@ -19,6 +21,7 @@
 #   - plot.rtriangular_dist
 #
 ################################################################################
+
 #' Defuzz (IVFN or TFN)
 #'
 #' @description
