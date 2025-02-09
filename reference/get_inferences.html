@@ -36,7 +36,7 @@ specific analysis"><meta property="og:image" content="/logo.png"></head><body>
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Get inferences from an fcmconfr output</h1>
-      <small class="dont-index">Source: <a href="https://github.com/bhroston/fcmconfr/blob/main/R/utils-general.R" class="external-link"><code>R/utils-general.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/bhroston/fcmconfr/blob/main/R/fcmconfr.R" class="external-link"><code>R/fcmconfr.R</code></a></small>
       <div class="d-none name"><code>get_inferences.Rd</code></div>
     </div>
 
@@ -808,20 +808,20 @@ analysis (analyses)</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $mc_CIs_and_quantiles</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                           node expected_value      0.025_CI</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1            Guidance.Docs.for.Salt.Management   1.000000e+00  1.0000000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    Public.Education.Programs   2.336524e-03  0.0000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    Public.Education.Programs   2.564298e-03  0.0000000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3           Salts.Added.during.Water.Treatment   0.000000e+00  0.0000000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Salts.Added.by.Winter.Maintenance.Activities  -1.334393e-01 -0.1596934308</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                             Ecosystem.Health   3.281512e-02  0.0231073553</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   Public.Awareness.of.Reservoir.Salinization  -4.319855e-05 -0.0001260658</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                Salinization.of.the.Reservoir  -8.639380e-02 -0.1036467774</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Salts.Added.by.Winter.Maintenance.Activities  -1.332928e-01 -0.1587264913</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                             Ecosystem.Health   3.287967e-02  0.0229746937</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   Public.Awareness.of.Reservoir.Salinization  -4.290439e-05 -0.0001260658</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                Salinization.of.the.Reservoir  -8.599552e-02 -0.1060401882</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0.975_CI          min 0.25_quantile      median 0.75_quantile       max</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1  1.00000000  1.000000000     1.0000000  1.00000000    1.00000000 1.0000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2  0.00734756  0.000000000     0.0000000  0.00000000    0.00000000 0.2449187</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3  0.00000000  0.000000000     0.0000000  0.00000000    0.00000000 0.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -0.10626919 -0.379948962    -0.2913126 -0.09966799    0.00000000 0.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  0.04428833  0.000000000     0.0000000  0.01429921    0.03781606 0.3363755</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -0.10871625 -0.379948962    -0.2913126 -0.09966799    0.00000000 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  0.04498736  0.000000000     0.0000000  0.01429921    0.03781606 0.3363755</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6  0.00000000 -0.004202193     0.0000000  0.00000000    0.00000000 0.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7 -0.06822526 -0.358691305    -0.1342016 -0.05499946    0.00000000 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7 -0.06732086 -0.358691305    -0.1342016 -0.05499946    0.00000000 0.0000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="fu">get_inferences</span><span class="op">(</span><span class="va">ex_conventional_fcmconfr</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $individual_inferences</span>
@@ -1249,20 +1249,20 @@ analysis (analyses)</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $mc_CIs_and_quantiles</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                           node expected_value      0.025_CI</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1            Guidance.Docs.for.Salt.Management   1.000000e+00  1.0000000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    Public.Education.Programs   2.336524e-03  0.0000000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    Public.Education.Programs   2.564298e-03  0.0000000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3           Salts.Added.during.Water.Treatment   0.000000e+00  0.0000000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Salts.Added.by.Winter.Maintenance.Activities  -1.334393e-01 -0.1596934308</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                             Ecosystem.Health   3.281512e-02  0.0231073553</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   Public.Awareness.of.Reservoir.Salinization  -4.319855e-05 -0.0001260658</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                Salinization.of.the.Reservoir  -8.639380e-02 -0.1036467774</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Salts.Added.by.Winter.Maintenance.Activities  -1.332928e-01 -0.1587264913</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                             Ecosystem.Health   3.287967e-02  0.0229746937</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   Public.Awareness.of.Reservoir.Salinization  -4.290439e-05 -0.0001260658</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                Salinization.of.the.Reservoir  -8.599552e-02 -0.1060401882</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0.975_CI          min 0.25_quantile      median 0.75_quantile       max</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1  1.00000000  1.000000000     1.0000000  1.00000000    1.00000000 1.0000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2  0.00734756  0.000000000     0.0000000  0.00000000    0.00000000 0.2449187</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3  0.00000000  0.000000000     0.0000000  0.00000000    0.00000000 0.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -0.10626919 -0.379948962    -0.2913126 -0.09966799    0.00000000 0.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  0.04428833  0.000000000     0.0000000  0.01429921    0.03781606 0.3363755</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -0.10871625 -0.379948962    -0.2913126 -0.09966799    0.00000000 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  0.04498736  0.000000000     0.0000000  0.01429921    0.03781606 0.3363755</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6  0.00000000 -0.004202193     0.0000000  0.00000000    0.00000000 0.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7 -0.06822526 -0.358691305    -0.1342016 -0.05499946    0.00000000 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7 -0.06732086 -0.358691305    -0.1342016 -0.05499946    0.00000000 0.0000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
@@ -2780,20 +2780,20 @@ analysis (analyses)</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $mc_CIs_and_quantiles</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                           node expected_value      0.025_CI</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1            Guidance.Docs.for.Salt.Management   1.000000e+00  1.000000e+00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    Public.Education.Programs   3.178368e-03  2.713686e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3           Salts.Added.during.Water.Treatment   3.880544e-07  1.898842e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Salts.Added.by.Winter.Maintenance.Activities  -9.512616e-02 -1.182316e-01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                             Ecosystem.Health   5.259528e-02  3.787800e-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   Public.Awareness.of.Reservoir.Salinization  -1.089108e-03 -3.522496e-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                Salinization.of.the.Reservoir  -8.730382e-02 -1.074015e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    Public.Education.Programs   3.220569e-03  2.432252e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3           Salts.Added.during.Water.Treatment   3.879079e-07  1.864111e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Salts.Added.by.Winter.Maintenance.Activities  -9.497122e-02 -1.184187e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                             Ecosystem.Health   5.297491e-02  3.852052e-02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   Public.Awareness.of.Reservoir.Salinization  -1.112131e-03 -3.093713e-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                Salinization.of.the.Reservoir  -8.705542e-02 -1.060193e-01</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        0.975_CI           min 0.25_quantile        median 0.75_quantile</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1  1.000000e+00  1.000000e+00     1.0000000  1.000000e+00  1.000000e+00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  8.421537e-03 -8.611379e-07     0.0000000  0.000000e+00  4.036584e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  6.283287e-07 -8.611379e-07     0.0000000  0.000000e+00  4.036584e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -7.214998e-02 -3.436719e-01    -0.1911404 -3.463501e-07  0.000000e+00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  6.724506e-02  0.000000e+00     0.0000000  1.166261e-02  8.514194e-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  5.013571e-07 -8.807533e-02     0.0000000  0.000000e+00  3.431096e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7 -6.643298e-02 -3.441630e-01    -0.1588922 -4.242514e-02  0.000000e+00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  9.465761e-03 -8.611379e-07     0.0000000  0.000000e+00  4.036584e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  6.245713e-07 -8.611379e-07     0.0000000  0.000000e+00  4.036584e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -7.263637e-02 -3.436719e-01    -0.1911404 -3.463501e-07  0.000000e+00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  6.830501e-02  0.000000e+00     0.0000000  1.166261e-02  8.514194e-02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  4.867624e-07 -8.807533e-02     0.0000000  0.000000e+00  3.431096e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7 -6.672082e-02 -3.441630e-01    -0.1588922 -4.242514e-02  0.000000e+00</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            max</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 1.000000e+00</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 2.110842e-01</span>
@@ -3495,20 +3495,20 @@ analysis (analyses)</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $mc_CIs_and_quantiles</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                           node expected_value      0.025_CI</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1            Guidance.Docs.for.Salt.Management   1.000000e+00  1.000000e+00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    Public.Education.Programs   3.178368e-03  2.713686e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3           Salts.Added.during.Water.Treatment   3.880544e-07  1.898842e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Salts.Added.by.Winter.Maintenance.Activities  -9.512616e-02 -1.182316e-01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                             Ecosystem.Health   5.259528e-02  3.787800e-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   Public.Awareness.of.Reservoir.Salinization  -1.089108e-03 -3.522496e-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                Salinization.of.the.Reservoir  -8.730382e-02 -1.074015e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    Public.Education.Programs   3.220569e-03  2.432252e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3           Salts.Added.during.Water.Treatment   3.879079e-07  1.864111e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Salts.Added.by.Winter.Maintenance.Activities  -9.497122e-02 -1.184187e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                             Ecosystem.Health   5.297491e-02  3.852052e-02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   Public.Awareness.of.Reservoir.Salinization  -1.112131e-03 -3.093713e-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                Salinization.of.the.Reservoir  -8.705542e-02 -1.060193e-01</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        0.975_CI           min 0.25_quantile        median 0.75_quantile</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1  1.000000e+00  1.000000e+00     1.0000000  1.000000e+00  1.000000e+00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  8.421537e-03 -8.611379e-07     0.0000000  0.000000e+00  4.036584e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  6.283287e-07 -8.611379e-07     0.0000000  0.000000e+00  4.036584e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -7.214998e-02 -3.436719e-01    -0.1911404 -3.463501e-07  0.000000e+00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  6.724506e-02  0.000000e+00     0.0000000  1.166261e-02  8.514194e-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  5.013571e-07 -8.807533e-02     0.0000000  0.000000e+00  3.431096e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7 -6.643298e-02 -3.441630e-01    -0.1588922 -4.242514e-02  0.000000e+00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  9.465761e-03 -8.611379e-07     0.0000000  0.000000e+00  4.036584e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  6.245713e-07 -8.611379e-07     0.0000000  0.000000e+00  4.036584e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -7.263637e-02 -3.436719e-01    -0.1911404 -3.463501e-07  0.000000e+00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  6.830501e-02  0.000000e+00     0.0000000  1.166261e-02  8.514194e-02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  4.867624e-07 -8.807533e-02     0.0000000  0.000000e+00  3.431096e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7 -6.672082e-02 -3.441630e-01    -0.1588922 -4.242514e-02  0.000000e+00</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            max</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 1.000000e+00</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 2.110842e-01</span>
@@ -5707,20 +5707,20 @@ analysis (analyses)</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $mc_CIs_and_quantiles</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                           node expected_value      0.025_CI</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1            Guidance.Docs.for.Salt.Management   1.000000e+00  1.000000e+00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    Public.Education.Programs   7.894567e-03  1.587060e-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3           Salts.Added.during.Water.Treatment   5.634782e-07  3.096577e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Salts.Added.by.Winter.Maintenance.Activities  -1.273866e-01 -1.522599e-01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                             Ecosystem.Health   6.550061e-02  5.079255e-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   Public.Awareness.of.Reservoir.Salinization  -8.333124e-05 -2.470606e-04</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                Salinization.of.the.Reservoir  -1.101425e-01 -1.308315e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    Public.Education.Programs   7.750201e-03  1.586947e-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3           Salts.Added.during.Water.Treatment   5.689498e-07  2.847103e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Salts.Added.by.Winter.Maintenance.Activities  -1.276823e-01 -1.520156e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                             Ecosystem.Health   6.522146e-02  5.102492e-02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   Public.Awareness.of.Reservoir.Salinization  -7.994925e-05 -2.469868e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                Salinization.of.the.Reservoir  -1.103839e-01 -1.303387e-01</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        0.975_CI           min 0.25_quantile        median 0.75_quantile</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1  1.000000e+00  1.000000e+00     1.0000000  1.000000e+00  1.000000e+00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  1.607627e-02 -2.583414e-06     0.0000000  9.923268e-08  7.534956e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  8.691578e-07 -2.583414e-06     0.0000000  8.745931e-08  7.534956e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -1.037099e-01 -3.643925e-01    -0.2546410 -1.142495e-01  0.000000e+00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  8.009111e-02 -4.086272e-06     0.0000000  4.224042e-02  1.126836e-01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  7.271609e-07 -8.246127e-03     0.0000000  8.073167e-08  7.534956e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7 -9.054401e-02 -3.415059e-01    -0.1934424 -7.505759e-02  0.000000e+00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  1.562046e-02 -2.583414e-06     0.0000000  9.923268e-08  7.534956e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  8.693232e-07 -2.583414e-06     0.0000000  8.745931e-08  7.534956e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -1.050949e-01 -3.643925e-01    -0.2546410 -1.142495e-01  0.000000e+00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  7.948185e-02 -4.086272e-06     0.0000000  4.224042e-02  1.126836e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  7.788553e-07 -8.246127e-03     0.0000000  8.073167e-08  7.534956e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7 -8.997065e-02 -3.415059e-01    -0.1934424 -7.505759e-02  0.000000e+00</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            max</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 1.000000e+00</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 2.198448e-01</span>
@@ -6657,20 +6657,20 @@ analysis (analyses)</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $mc_CIs_and_quantiles</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                           node expected_value      0.025_CI</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1            Guidance.Docs.for.Salt.Management   1.000000e+00  1.000000e+00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    Public.Education.Programs   7.894567e-03  1.587060e-03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3           Salts.Added.during.Water.Treatment   5.634782e-07  3.096577e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Salts.Added.by.Winter.Maintenance.Activities  -1.273866e-01 -1.522599e-01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                             Ecosystem.Health   6.550061e-02  5.079255e-02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   Public.Awareness.of.Reservoir.Salinization  -8.333124e-05 -2.470606e-04</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                Salinization.of.the.Reservoir  -1.101425e-01 -1.308315e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                    Public.Education.Programs   7.750201e-03  1.586947e-03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3           Salts.Added.during.Water.Treatment   5.689498e-07  2.847103e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Salts.Added.by.Winter.Maintenance.Activities  -1.276823e-01 -1.520156e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                             Ecosystem.Health   6.522146e-02  5.102492e-02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   Public.Awareness.of.Reservoir.Salinization  -7.994925e-05 -2.469868e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                Salinization.of.the.Reservoir  -1.103839e-01 -1.303387e-01</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        0.975_CI           min 0.25_quantile        median 0.75_quantile</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1  1.000000e+00  1.000000e+00     1.0000000  1.000000e+00  1.000000e+00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  1.607627e-02 -2.583414e-06     0.0000000  9.923268e-08  7.534956e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  8.691578e-07 -2.583414e-06     0.0000000  8.745931e-08  7.534956e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -1.037099e-01 -3.643925e-01    -0.2546410 -1.142495e-01  0.000000e+00</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  8.009111e-02 -4.086272e-06     0.0000000  4.224042e-02  1.126836e-01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  7.271609e-07 -8.246127e-03     0.0000000  8.073167e-08  7.534956e-07</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7 -9.054401e-02 -3.415059e-01    -0.1934424 -7.505759e-02  0.000000e+00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  1.562046e-02 -2.583414e-06     0.0000000  9.923268e-08  7.534956e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  8.693232e-07 -2.583414e-06     0.0000000  8.745931e-08  7.534956e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -1.050949e-01 -3.643925e-01    -0.2546410 -1.142495e-01  0.000000e+00</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  7.948185e-02 -4.086272e-06     0.0000000  4.224042e-02  1.126836e-01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  7.788553e-07 -8.246127e-03     0.0000000  8.073167e-08  7.534956e-07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7 -8.997065e-02 -3.415059e-01    -0.1934424 -7.505759e-02  0.000000e+00</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            max</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 1.000000e+00</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2 2.198448e-01</span>
@@ -6687,7 +6687,7 @@ analysis (analyses)</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Ben Roston.</p>
+  <p>Developed by Ben Roston, Meg Rippy.</p>
 </div>
 
 <div class="pkgdown-footer-right">

@@ -77,68 +77,49 @@
 <div class="section level2">
 <h2 id="loading-fcms-into-r-for-fcmconfr">Loading FCMs into R for fcmconfr<a class="anchor" aria-label="anchor" href="#loading-fcms-into-r-for-fcmconfr"></a>
 </h2>
-<p>Imagine asking a stakeholder to provide a weight for the edge (link)
-connecting <em>Sunscreen Application</em> to <em>Likelihood of
-Sunburn</em>. In the conventional FCM framework (like that implemented
-by <a href="https://www.mentalmodeler.com/" class="external-link">MentalModeler</a> , a
-popular FCM construction and analysis application) edge weights are
-weighted with individual values. So, in the example, a stakeholder may
-weight the edge connecting <em>Sunscreen Application</em> to
-<em>Likelihood of Sunburn</em> as -0.4 or -0.5, or - 0.6 or any other
-value that broadly describes that as <em>Sunscreen Application</em>
-increases they expect the <em>Likelihood of Sunburn</em> to decrease
-some amount.</p>
+<div class="section level3">
+<h3 id="types-of-fcms">Types of FCMs<a class="anchor" aria-label="anchor" href="#types-of-fcms"></a>
+</h3>
+<p>When people create fuzzy cognitive maps (FCMs) they are asked to
+provide weights for all edges between causally connected concepts in the
+map.</p>
+<p>In conventional FCMs, edge weights are individual values (e.g., -0.5,
+0.25, etc.) that express a relationship between two concepts without
+uncertainty. However, FCMs can also describe edge weights using (1)
+Interval-Value Fuzzy Numbers (IVFNs) where weights are expressed as
+ranges and no one value is moire likely than another (e.g., [min, max])
+or (2) Triangular Fuzzy Numbers (TFNs) where weights are expressed as
+ranges, but with values more likely to be near a particular value within
+those ranges (e.g., [min, mode, max]).</p>
+<p>The figure below illustrates the probability density functions
+associated with. each type of edge weight. <code>fcmconfr</code> can
+accomodate FCMs with all three edge weight types. This vignette
+illustrates the workflow for preparing and importing these FCMs into R
+and analysis with <code>fcmconfr</code>.</p>
 <div style="text-align: center;">
 <div class="float">
-<img src="images%2Fsunscreen_sunburn_fcm.png" style="width:100.0%" alt="A simple FCM describing the influence of Sunscreen Application on the Likelihood of Sunburn. The negative arrow indicates that this is a balancing relationship such that as Sunscreen Application increases, the Likelihood of Sunburn decreases and vice versa."><div class="figcaption">A simple FCM describing the influence of
-<em>Sunscreen Application</em> on the <em>Likelihood of Sunburn</em>.
-The negative arrow indicates that this is a balancing relationship such
-that as <em>Sunscreen Application</em> increases, the <em>Likelihood of
-Sunburn</em> decreases and vice versa.</div>
+<img src="images%2Fedge_weight_value_type_pdfs.png" style="width:100.0%" alt="Probability density functions for different types of edge weights (conventional, IVFN, TFN)."><div class="figcaption">Probability density functions for different
+types of edge weights (conventional, IVFN, TFN).</div>
 </div>
-</div>
-<p><br></p>
-<p>A limitation of requiring the stakeholder to assign the edge weight a
-single value that they may not feel comfortable describing the
-connection with such precision. Rather than saying an edge weight may be
-either -0.4 or -0.5 or -0.6, they may prefer describing an edge weight
-with a range of values (e.g. somewhere between -0.4 and -0.6).</p>
-<p>FCMs may describe these edge weights using Interval-Value Fuzzy
-Numbers (IVFNs) which are defined by two values, the minimum and maximum
-value of an interval (e.g. [-0.6, -0.4]. Further, they may feel
-confident enough to suggest an edge may exist within some range but is
-more likely to be a particular value within that range. These edge
-weights may be described using minimum and maximum bounds of a range and
-a mode value describing the most likely value (i.e. mode) the edge
-weight could take.</p>
-<p>The figure below illustrates conventional numeric edge weights,
-IVFNs, and TFNs as probability density functions (PDFs). Note how the
-PDF for an IVFN can be described completely with only a lower and upper
-bound, while the pdf for a TFN includes an additional mode parameter to
-describe the most likely value of the distribution.</p>
-<div style="text-align: center;">
-<div class="float">
-<img src="images%2Fedge_weight_value_type_pdfs.png" style="width:100.0%" alt="FCMs with edge weights described with individual values, IVFNs, or TFNs can be analyzed by fcmconfr."><div class="figcaption">FCMs with edge weights described with individual
-values, IVFNs, or TFNs can be analyzed by <code>fcmconfr</code>.</div>
 </div>
 </div>
 <div class="section level3">
 <h3 id="conventional-fcms">1. Conventional FCMs<a class="anchor" aria-label="anchor" href="#conventional-fcms"></a>
 </h3>
-<p>Conventional FCMs use individual numeric values as edge weights. The
-below examples show how to load these FCMs from .xlsx files, but a
-similar process is used for .csv, .xml or other file types.</p>
-<p>Note: Use <code><a href="https://rdrr.io/r/base/file.choose.html" class="external-link">file.choose()</a></code> to get the path to a file
-interactively. There is not a similar function to get the path to a
+<p>We recommend storing conventional FCM adjacency matrices in excel
+workbooks or .csv files and importing them into R.</p>
+<p>Weights are read from row to column (i.e., a value of 0.25 in row 2,
+column 3 indicates that increasing the node in row 2 is perceived to
+increase the node in column 3 by 0.25). The examples below show how to
+load adjacency matrices from .xlsx files. A similar process is used for
+.csv, .xml or other file types.</p>
+<p><em>Note: Use <code><a href="https://rdrr.io/r/base/file.choose.html" class="external-link">file.choose()</a></code> to get the path to a file
+you want to import. There is not a similar function to get the path to a
 directory, but users may extrapolate from the output of
-<code><a href="https://rdrr.io/r/base/file.choose.html" class="external-link">file.choose()</a></code> as needed.</p>
-<div class="section level5">
-<h5 id="conventional-fcm-from-a-single--xlsx-file">1.1 - Conventional FCM from a Single .xlsx File<a class="anchor" aria-label="anchor" href="#conventional-fcm-from-a-single--xlsx-file"></a>
-</h5>
+<code><a href="https://rdrr.io/r/base/file.choose.html" class="external-link">file.choose()</a></code> as needed.</em></p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># For an individual FCM adjacency matrix</span></span>
 <span><span class="va">adj_matrix</span> <span class="op">&lt;-</span> <span class="fu">readxl</span><span class="fu">::</span><span class="fu">read_excel</span><span class="op">(</span><span class="va">filepath</span><span class="op">)</span></span></code></pre></div>
-</div>
 <div class="section level5">
 <h5 id="conventional-fcms-from-different-sheets-in-a-single--xlsx-file">1.1 - Conventional FCMs from Different Sheets in a Single .xlsx
 File<a class="anchor" aria-label="anchor" href="#conventional-fcms-from-different-sheets-in-a-single--xlsx-file"></a>
@@ -150,12 +131,8 @@ File<a class="anchor" aria-label="anchor" href="#conventional-fcms-from-differen
 <span>  <span class="va">sheets</span>, </span>
 <span>  <span class="kw">function</span><span class="op">(</span><span class="va">sheet</span><span class="op">)</span> <span class="fu">readxl</span><span class="fu">::</span><span class="fu">read_excel</span><span class="op">(</span><span class="va">filepath</span>, sheet <span class="op">=</span> <span class="va">sheet</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level5">
-<h5 id="conventional-fcms-from--xlsx-files-in-a-directory">1.2 - Conventional FCMs from .xlsx Files in a Directory<a class="anchor" aria-label="anchor" href="#conventional-fcms-from--xlsx-files-in-a-directory"></a>
-</h5>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># For multiple FCM adjacency matrices stored in separate .xlsx files stored in the</span></span>
+<code class="sourceCode R"><span><span class="co"># For multiple FCM adjacency matrices stored in separate .xlsx files in the</span></span>
 <span><span class="co"># same directory</span></span>
 <span><span class="va">filepaths</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">list.files</a></span><span class="op">(</span><span class="va">directory_path</span>, full.names <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">adj_matrices</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span></span>
@@ -167,25 +144,21 @@ File<a class="anchor" aria-label="anchor" href="#conventional-fcms-from-differen
 <div class="section level3">
 <h3 id="ivfn-fcms">2. IVFN FCMs<a class="anchor" aria-label="anchor" href="#ivfn-fcms"></a>
 </h3>
-<p>IVFN FCMs are more complicated data objects because edge weights are
-described by two values (an upper and lower bound) but common file
-formats like .xlsx and .csv can only store one value per cell (or
-similar for .csv and others).</p>
-<div class="section level5">
-<h5 id="using-make_adj_matrix_w_ivfns">2.1 - Using <code>make_adj_matrix_w_ivfns</code><a class="anchor" aria-label="anchor" href="#using-make_adj_matrix_w_ivfns"></a>
-</h5>
-<p>We recommend creating an IVFN FCM from two adjacency matrices, one
-with edge weights as the intended lower bounds and one with edge weights
-as the intended upper bounds. Then, use
-<code>make_adj_matrix_w_ivfns</code> to construct an IVFN FCM adjacency
-matrix.</p>
-<div class="section level6">
-<h6 id="make_adj_matrix_w_ivfns-from-a-single--xlsx--file">2.1.1 - <code>make_adj_matrix_w_ivfns</code> from a Single .xlsx.
-File<a class="anchor" aria-label="anchor" href="#make_adj_matrix_w_ivfns-from-a-single--xlsx--file"></a>
-</h6>
-<p>If loading an IVFN FCM from a single .xlsx file, the file must
-contain two sheets, one for the lower bounds adjacency matrix and one
-for the upper bounds adjacency matrix.</p>
+<p>IVFN FCMs are more complicated data objects because each edge weight
+is described by two values (an upper and a lower bound) and common file
+formats like .xlsx and .csv can only store one value per cell.</p>
+<p>We recommend importing two separate adjacency matrices for each
+IVFN-FCM, one that contains only lower bound edge weights and one that
+contains only upper bound edge weights. Once these matrices have been
+imported, the <code>fcmconfr</code> function
+<code><a href="../reference/make_adj_matrix_w_ivfns.html">make_adj_matrix_w_ivfns()</a></code> can be used to create a single
+IVFN-FCM adjacency matrix.</p>
+<div class="section level4">
+<h4 id="loading-an-ivfn-fcm-from-a-single--xlsx-file">2.1 - Loading an IVFN-FCM from a single .xlsx file:<a class="anchor" aria-label="anchor" href="#loading-an-ivfn-fcm-from-a-single--xlsx-file"></a>
+</h4>
+<p>To load an IVFN-FCM from a single .xlsx file, the file must contain
+two sheets, one for the lower bound adjacency matrix and one for the
+upper bound adjacency matrix. See example below:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sheets</span> <span class="op">&lt;-</span> <span class="fu">readxl</span><span class="fu">::</span><span class="fu">excel_sheets</span><span class="op">(</span><span class="va">filepath</span><span class="op">)</span></span>
 <span></span>
@@ -199,12 +172,12 @@ for the upper bounds adjacency matrix.</p>
 <span></span>
 <span><span class="va">ivfn_adj_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_adj_matrix_w_ivfns.html">make_adj_matrix_w_ivfns</a></span><span class="op">(</span><span class="va">lower_adj_matrix</span>, <span class="va">upper_adj_matrix</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level6">
-<h6 id="make_adj_matrix_from_ivfns-from-separate--xlsx-files-in-the-same-directory">2.1.2 - <code>make_adj_matrix_from_ivfns</code> from Separate .xlsx
-Files in the Same Directory<a class="anchor" aria-label="anchor" href="#make_adj_matrix_from_ivfns-from-separate--xlsx-files-in-the-same-directory"></a>
-</h6>
-<p>Use this method if loading data from separate .csv, .xml, etc., files
-that by nature cannot contain multiple sheets in the same file.</p>
+<div class="section level4">
+<h4 id="loading-an-ivfn-fcm-from-separate-files-in-the-same-directory">2.2 - Loading an IVFN-FCM from Separate Files in the Same
+Directory<a class="anchor" aria-label="anchor" href="#loading-an-ivfn-fcm-from-separate-files-in-the-same-directory"></a>
+</h4>
+<p>This method must be used if loading data from separate .xlsx, .csv,
+etc., files.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># If lower and upper adjacency matrices are in separate .xlsx files</span></span>
 <span><span class="va">lower_adj_matrix_filepath</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">directory_path</span>, <span class="st">"fcm_1_lower.xlsx"</span><span class="op">)</span> <span class="co"># Your filename here</span></span>
@@ -215,14 +188,19 @@ that by nature cannot contain multiple sheets in the same file.</p>
 <span></span>
 <span><span class="va">ivfn_adj_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_adj_matrix_w_ivfns.html">make_adj_matrix_w_ivfns</a></span><span class="op">(</span><span class="va">lower_adj_matrix</span>, <span class="va">upper_adj_matrix</span><span class="op">)</span></span></code></pre></div>
 </div>
-</div>
-<div class="section level5">
-<h5 id="ivfn-fcms-from-a-directory-of-adj--matrices-in-single--xlsx-files">2.2 - IVFN FCMs from a Directory of Adj. Matrices in Single .xlsx
-Files<a class="anchor" aria-label="anchor" href="#ivfn-fcms-from-a-directory-of-adj--matrices-in-single--xlsx-files"></a>
-</h5>
+<div class="section level4">
+<h4 id="loading-multiple-ivfn-fcms-from-separate-files-in-the-same-directory">2.3 - Loading Multiple IVFN-FCMs from Separate Files in the Same
+Directory<a class="anchor" aria-label="anchor" href="#loading-multiple-ivfn-fcms-from-separate-files-in-the-same-directory"></a>
+</h4>
+<p>Use this method when loading a set IVFN-FCMs in the same directory
+from .xlsx files with both the lower and upper bound adjacency matrices
+stored in the same file.</p>
 <div style="text-align: center;">
 <div class="float">
-<img src="images%2Fivfn_single_dir.png" style="width:24.0%" alt="IVFN FCMs Stored in Individual .xlsx Files"><div class="figcaption">IVFN FCMs Stored in Individual .xlsx Files</div>
+<img src="images%2Fivfn_single_dir.png" style="width:24.0%" alt="A directory of .xlsx files with each containing sheets for both the lower and upper bound adjacency matrix. For example, ivfn_fcm_1.xlsx has a sheet for the lower bound adjacency matrix and another sheet for the upper bound adjacency matrix."><div class="figcaption">A directory of .xlsx files with each containing
+sheets for both the lower and upper bound adjacency matrix. For example,
+<code>ivfn_fcm_1.xlsx</code> has a sheet for the lower bound adjacency
+matrix and another sheet for the upper bound adjacency matrix.</div>
 </div>
 </div>
 <p><br></p>
@@ -257,14 +235,22 @@ example workflow in fewer lines of code or repetitively in a
 <span>  <span class="kw">function</span><span class="op">(</span><span class="va">filepath</span><span class="op">)</span> <span class="fu">import_ivfn_fcm_from_single_xlsx</span><span class="op">(</span><span class="va">filepath</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level5">
-<h5 id="ivfn-fcms-from-a-adj--matrices-in-separate--xlsx-files-stored-in-different-directories">2.3 - IVFN FCMs from a Adj. Matrices in Separate .xlsx Files Stored
-in Different Directories<a class="anchor" aria-label="anchor" href="#ivfn-fcms-from-a-adj--matrices-in-separate--xlsx-files-stored-in-different-directories"></a>
-</h5>
+<div class="section level4">
+<h4 id="loading-multiple-ivfn-fcms-from-separate-files-in-different-directories">2.4 - Loading Multiple IVFN-FCMs from Separate Files in Different
+Directories<a class="anchor" aria-label="anchor" href="#loading-multiple-ivfn-fcms-from-separate-files-in-different-directories"></a>
+</h4>
+<p>Use this method when loading a set of IVFN-FCMs where the lower and
+upper bound adjacency matrices for a single IVFN-FCM are stored in
+separate files.</p>
 <div style="text-align: center;">
 <div class="float">
-<img src="images%2Fivfn_multiple_dirs.png" style="width:26.0%" alt="IVFN FCMs stored in different files across different directories"><div class="figcaption">IVFN FCMs stored in different files across
-different directories</div>
+<img src="images%2Fivfn_multiple_dirs.png" style="width:26.0%" alt="A directory of sub-directories (fcm_1, fcm_2, etc.,) with each sub-directory containing separate .xlsx files for the lower and upper adjacency matrices. For example, the an IVFN-FCM can be created from the fcm_1 sub-directory with fcm_1_lower.xlsx and fcm_1_upper.xlsx containing data for the lower and upper bound adjacency matrices respectively."><div class="figcaption">A directory of sub-directories
+(<code>fcm_1</code>, <code>fcm_2</code>, etc.,) with each sub-directory
+containing separate .xlsx files for the lower and upper adjacency
+matrices. For example, the an IVFN-FCM can be created from the
+<code>fcm_1</code> sub-directory with <code>fcm_1_lower.xlsx</code> and
+<code>fcm_1_upper.xlsx</code> containing data for the lower and upper
+bound adjacency matrices respectively.</div>
 </div>
 </div>
 <p><br></p>
@@ -315,29 +301,25 @@ example workflow in fewer lines of code or repetitively in a
 <h3 id="tfn-fcms">3. TFN FCMs<a class="anchor" aria-label="anchor" href="#tfn-fcms"></a>
 </h3>
 <p>TFN FCMs are the most complicated edge weights because they are
-described by three values, an upper and lower bound as well as a mode
-describing the most-likely value for the edge. TFN FCMs are imported
-using a similar strategy as with IVFN FCMs, just with the added mode
-adjacency matrix to load.</p>
-<div class="section level5">
-<h5 id="using-make_adj_matrix_w_tfns">3.1 - Using <code>make_adj_matrix_w_tfns</code><a class="anchor" aria-label="anchor" href="#using-make_adj_matrix_w_tfns"></a>
-</h5>
-<p>TFN FCMs are constructed from three adjacency matrices, an adjacency
-matrix of lower bounds, one of upper bounds, and another of modes or
-most-likely values. Use <code>make_adj_matrix_w_tfns</code> to combine
-the three input matrices into a TFN FCM.</p>
-<div class="section level6">
-<h6 id="make_adj_matrix_w_tfns-from-a-single--xlsx--file">3.1.1 - <code>make_adj_matrix_w_tfns</code> from a Single .xlsx.
-File<a class="anchor" aria-label="anchor" href="#make_adj_matrix_w_tfns-from-a-single--xlsx--file"></a>
-</h6>
-<p>If loading an TFN FCM from a single .xlsx file, the file must contain
-three sheets, one for the lower bounds adjacency matrix, one for the
-upper bounds adjacency matrix, and another for the modes adjacency
+described by three values, an upper bound, a lower bound and a mode that
+indicates the most-likely value for the edge. TFN-FCMs are imported
+using the same general approach as IVFN-FCMs, but require 3 adjacency
+matrices rather than 2. Once the three adjacency matrices have been
+imported, the <code>fcmconfr</code> function
+<code><a href="../reference/make_adj_matrix_w_tfns.html">make_adj_matrix_w_tfns()</a></code> can be used to create a single
+TFN-FCM adjacency matrix.</p>
+<div class="section level4">
+<h4 id="loading-a-tfn-fcm-from-a-single--xlsx-file">3.1 - Loading a TFN-FCM from a Single .xlsx File<a class="anchor" aria-label="anchor" href="#loading-a-tfn-fcm-from-a-single--xlsx-file"></a>
+</h4>
+<p>To load a TFN-FCM from a single .xlsx file, the file must contain
+three sheets, one for the lower bound adjacency matrix, one for the
+upper bound adjacency matrix, and another for the mode adjacency
 matrix.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sheets</span> <span class="op">&lt;-</span> <span class="fu">readxl</span><span class="fu">::</span><span class="fu">excel_sheets</span><span class="op">(</span><span class="va">filepath</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># If lower and upper adjacency matrices are in the same .xlsx file across two different sheets</span></span>
+<span><span class="co"># If lower, upper and mode adjacency matrices are in the </span></span>
+<span><span class="co"># same .xlsx file across 3 different sheets</span></span>
 <span><span class="va">lower_mode_and_upper_adj_matrices</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span></span>
 <span>  <span class="va">sheets</span>, </span>
 <span>  <span class="kw">function</span><span class="op">(</span><span class="va">sheet</span><span class="op">)</span> <span class="fu">readxl</span><span class="fu">::</span><span class="fu">read_excel</span><span class="op">(</span><span class="va">filepath</span>, sheet <span class="op">=</span> <span class="va">sheet</span><span class="op">)</span></span>
@@ -348,12 +330,12 @@ matrix.</p>
 <span></span>
 <span><span class="va">tfn_adj_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_adj_matrix_w_tfns.html">make_adj_matrix_w_tfns</a></span><span class="op">(</span><span class="va">lower_adj_matrix</span>, <span class="va">mode_adj_matrix</span>, <span class="va">upper_adj_matrix</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level6">
-<h6 id="make_adj_matrix_from_tfns-from-separate--xlsx-files-in-the-same-directory">3.1.2 - <code>make_adj_matrix_from_tfns</code> from Separate .xlsx
-Files in the Same Directory<a class="anchor" aria-label="anchor" href="#make_adj_matrix_from_tfns-from-separate--xlsx-files-in-the-same-directory"></a>
-</h6>
-<p>Use this method if loading data from separate .csv, .xml, etc., files
-that by nature cannot contain multiple sheets in the same file.</p>
+<div class="section level4">
+<h4 id="loading-a-tfn-fcm-from-separate-files-in-the-same-directory">3.2 - Loading a TFN-FCM from Separate Files in the Same
+Directory<a class="anchor" aria-label="anchor" href="#loading-a-tfn-fcm-from-separate-files-in-the-same-directory"></a>
+</h4>
+<p>Use this method if loading data from separate .xlsx, .csv, etc.,
+files.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># If lower, mode, and upper adjacency matrices are in separate .xlsx files</span></span>
 <span><span class="va">lower_adj_matrix_filepath</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">directory_path</span>, <span class="st">"fcm_1_lower.xlsx"</span><span class="op">)</span> <span class="co"># Your filename here</span></span>
@@ -365,15 +347,20 @@ that by nature cannot contain multiple sheets in the same file.</p>
 <span><span class="va">upper_adj_matrix</span> <span class="op">&lt;-</span> <span class="fu">readxl</span><span class="fu">::</span><span class="fu">read_excel</span><span class="op">(</span><span class="va">upper_adj_matrix_filepath</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">tfn_adj_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_adj_matrix_w_tfns.html">make_adj_matrix_w_tfns</a></span><span class="op">(</span><span class="va">lower_adj_matrix</span>, <span class="va">mode_adj_matrix</span>, <span class="va">upper_adj_matrix</span><span class="op">)</span></span></code></pre></div>
-</div>
-</div>
 <div class="section level5">
 <h5 id="tfn-fcms-from-a-directory-of-adj--matrices-in-single--xlsx-files">3.2 - TFN FCMs from a Directory of Adj. Matrices in Single .xlsx
 Files<a class="anchor" aria-label="anchor" href="#tfn-fcms-from-a-directory-of-adj--matrices-in-single--xlsx-files"></a>
 </h5>
+<p>Use this method when loading a set TFN-FCMs in the same directory
+from .xlsx files with the lower, mode and upper bound adjacency matrices
+stored in the same file.</p>
 <div style="text-align: center;">
 <div class="float">
-<img src="images%2Ftfn_single_dir.png" style="width:28.0%" alt="TFN FCMs Stored in Individual .xlsx Files"><div class="figcaption">TFN FCMs Stored in Individual .xlsx Files</div>
+<img src="images%2Ftfn_single_dir.png" style="width:28.0%" alt="A directory of .xlsx files with each containing sheets for the lower, upper and mode adjacency matrices. For example, tfn_fcm_1.xlsx has a sheet for the lower bound adjacency matrix, the mode adjacency matrix, and another sheet for the upper bound adjacency matrix."><div class="figcaption">A directory of .xlsx files with each containing
+sheets for the lower, upper and mode adjacency matrices. For example,
+<code>tfn_fcm_1.xlsx</code> has a sheet for the lower bound adjacency
+matrix, the mode adjacency matrix, and another sheet for the upper bound
+adjacency matrix.</div>
 </div>
 </div>
 <p><br></p>
@@ -402,8 +389,8 @@ example workflow in fewer lines of code or repetitively in a
 <code>import_tfn_fcm_from_single_xlsx</code> function within
 <code>lapply</code> or a loop.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># For multiple IVFN FCM adjacency matrices stored in separate .xlsx files stored in the</span></span>
-<span><span class="co"># same directory</span></span>
+<code class="sourceCode R"><span><span class="co"># For multiple TFN FCM adjacency matrices stored in </span></span>
+<span><span class="co"># separate .xlsx files stored in the same directory</span></span>
 <span><span class="va">filepaths</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">list.files</a></span><span class="op">(</span><span class="va">directory_path</span>, full.names <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">tfn_adj_matrices</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span></span>
 <span>  <span class="va">filepaths</span>,</span>
@@ -414,10 +401,19 @@ example workflow in fewer lines of code or repetitively in a
 <h5 id="tfn-fcms-from-a-adj--matrices-in-separate--xlsx-files-stored-in-different-directories">3.3 - TFN FCMs from a Adj. Matrices in Separate .xlsx Files Stored
 in Different Directories<a class="anchor" aria-label="anchor" href="#tfn-fcms-from-a-adj--matrices-in-separate--xlsx-files-stored-in-different-directories"></a>
 </h5>
+<p>Use this method when loading a set of TFN-FCMs where the lower, mode
+and upper bound adjacency matrices for a single TFN-FCM are stored in
+separate files.</p>
 <div style="text-align: center;">
 <div class="float">
-<img src="images%2Ftfn_multiple_dirs.png" style="width:30.0%" alt="TFN FCMs stored in different files across different directories"><div class="figcaption">TFN FCMs stored in different files across
-different directories</div>
+<img src="images%2Ftfn_multiple_dirs.png" style="width:30.0%" alt="A directory of sub-directories (fcm_1, fcm_2, etc.,) with each sub-directory containing separate .xlsx files for the lower, mode and upper adjacency matrices. For example, a TFN-FCM can be created from the fcm_1 sub-directory with fcm_1_lower.xlsx, fcm_1_mode.xlsx and fcm_1_upper.xlsx containing data for the lower, mode and upper bound adjacency matrices respectively."><div class="figcaption">A directory of sub-directories
+(<code>fcm_1</code>, <code>fcm_2</code>, etc.,) with each sub-directory
+containing separate .xlsx files for the lower, mode and upper adjacency
+matrices. For example, a TFN-FCM can be created from the
+<code>fcm_1</code> sub-directory with <code>fcm_1_lower.xlsx</code>,
+<code>fcm_1_mode.xlsx</code> and <code>fcm_1_upper.xlsx</code>
+containing data for the lower, mode and upper bound adjacency matrices
+respectively.</div>
 </div>
 </div>
 <p><br></p>
@@ -471,71 +467,6 @@ example workflow in fewer lines of code or repetitively in a
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
-<div class="section level3">
-<h3 id="interacting-with-ivfn-and-tfn-fcm-adjacency-matrix-elements">4. Interacting with IVFN and TFN FCM Adjacency Matrix Elements<a class="anchor" aria-label="anchor" href="#interacting-with-ivfn-and-tfn-fcm-adjacency-matrix-elements"></a>
-</h3>
-<p>Unlike an ordinary matrix of numeric values, elements adjacency
-matrices made of IVFNs are technically list objects. Consider the
-<code>numeric_df</code> matrix given below:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">numeric_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="st">"C1"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0.75</span><span class="op">)</span>, <span class="st">"C2"</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">numeric_df</span></span></code></pre></div>
-<p>We can access elements within <code>numeric_df</code> with indexing.
-For example, to get the element in the second column of the first row we
-can run <code>numeric_df[1, 2]</code> or <code>numeric_df$C2[1]</code> ,
-both of which would return <code>0.5</code> .</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">numeric_df</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">]</span> <span class="co"># Numeric Indexing</span></span>
-<span><span class="va">numeric_df</span><span class="op">$</span><span class="va">C2</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="co"># Column Indexing</span></span></code></pre></div>
-<p>Dataframes traditionally cannot be built from custom object classes
-like the <code>ivfn</code> and <code>tfn</code> classes defined for
-<code>fcmconfr</code>. However, <code>fcmconfr</code> works around this
-by storing <code>ivfn</code> and <code>tfn</code> objects within lists
-and then treating a dataframe of <code>ivfn</code> or <code>tfn</code>
-objects as a dataframe of lists that contain <code>ivfn</code> or
-<code>tfn</code> objects.</p>
-<p>Since users can make <code>ivfn</code> or <code>tfn</code> adjacency
-matrices by importing matrices from files, they will rarely have to
-create an <code>ivfn</code> or <code>tfn</code> matrix from scratch, but
-it is valuable to provide a code example of how <code>fcmconfr</code>
-creates such objects.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># First, create a dataframe from a n x n matrix of lists</span></span>
-<span><span class="va">ivfn_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span>data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">2</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Then, place the ivfn/tfn within a list and define its location indeces</span></span>
-<span><span class="co"># Note that since ivfn_df is a matrix of lists, we have to define the new ivfn object as the first element of the list at index [1, 2], hence the need for [[1]].</span></span>
-<span><span class="va">ivfn_df</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">]</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="../reference/ivfn.html">ivfn</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">ivfn_df</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">]</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="../reference/ivfn.html">ivfn</a></span><span class="op">(</span><span class="fl">0.4</span>, <span class="fl">0.6</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">ivfn_df</span><span class="op">[</span><span class="fl">2</span>, <span class="fl">1</span><span class="op">]</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="../reference/ivfn.html">ivfn</a></span><span class="op">(</span><span class="fl">0.7</span>, <span class="fl">0.8</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">ivfn_df</span><span class="op">[</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">]</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="../reference/ivfn.html">ivfn</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<div style="text-align: center;">
-<div class="float">
-<img src="images%2Fclipboard-1503284098.png" style="width:70.0%" alt="Note that the console output for ivfn_df will vary depending on whether it is loaded as a matrix or dataframe. As a dataframe it will printout the IVFN values, while as a matrix it will printout the object types, ivfn, 2 . We interact with both matrices the same way even though the console outputs are different."><div class="figcaption">Note that the console output for
-<code>ivfn_df</code> will vary depending on whether it is loaded as a
-matrix or dataframe. As a dataframe it will printout the IVFN values,
-while as a matrix it will printout the object types,
-<code>ivfn, 2</code> . We interact with both matrices the same way even
-though the console outputs are different.</div>
-</div>
-</div>
-<p><br></p>
-<p>To get the <code>ivfn</code> at a particular location, then, if we
-simply call <code>ivfn_df[row, col]</code> that will return a list
-containing an <code>ivfn</code>. To get the <code>ivfn</code> by itself,
-add <code>[[1]]</code> to indicate the first value of the list
-object</p>
-<div style="text-align: center;">
-<p><img src="images%2Fclipboard-1371053499.png" style="width:50.0%"></p>
-</div>
-<p><br></p>
-<p>Now, say we want to separate the IVFN adjacency matrix back to its
-components of an adjacency matrix of lower bounds and another of upper
-bounds. Pairing <code>apply</code> with the above indexing strategy is
-an effective method here:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">lower_adj_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">ivfn_df</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">element</span><span class="op">)</span> <span class="va">element</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">lower</span><span class="op">)</span></span>
-<span><span class="va">upper_adj_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">ivfn_df</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">element</span><span class="op">)</span> <span class="va">element</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">upper</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
@@ -545,7 +476,7 @@ an effective method here:</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Ben Roston.</p>
+  <p>Developed by Ben Roston, Meg Rippy.</p>
 </div>
 
 <div class="pkgdown-footer-right">
