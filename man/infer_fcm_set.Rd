@@ -2,7 +2,7 @@
 % Please edit documentation in R/infer_and_simulate_fcm.R
 \name{infer_fcm_set}
 \alias{infer_fcm_set}
-\title{Infer FCMs Generated from Monte Carlo Methods}
+\title{Infer Multiple FCMs in a List}
 \usage{
 infer_fcm_set(
   adj_matrices = list(matrix()),

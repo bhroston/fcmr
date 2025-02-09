@@ -1,4 +1,18 @@
 
+################################################################################
+# utils-plot.fcmconfr.R
+#
+# These utility functions are involved organizing data for plot.fcmconfr
+#
+#   - check_plot_fcmconfr_inputs
+#   - get_concepts_to_plot
+#   - get_plot_data
+#   - autoplot.fcmconfr
+#   - fcmconfr_theme_custom
+#   - fcmconfr_default_theme
+#   - interactive_plot_fcmconfr
+#
+################################################################################
 
 #' Check plot.fcmconfr Inputs
 #'

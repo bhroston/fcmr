@@ -5,27 +5,19 @@
 # These functions help with fcm inference estimation. Note that some are
 # intended for developer use only.
 #
+#   - infer_fcm_set
 #   - infer_fcm
 #   - infer_conventional_fcm
 #   - infer_ivfn_or_tfn_fcm
 #   - simulate_fcm
 #   - simulate_conventional_fcm
 #   - simulate_ivfn_or_tfn_fcm
-#   - calculate_next_conventional_fcm_state_vector
-#   - calculate_next_fuzzy_set_fcm_state_vector
 #   - squash
-#   - defuzz_ivfn_or_tfn
-#   - convert_element_to_ivfn_or_tfn_if_numeric
-#   - convert_fuzzy_set_elements_in_matrix_to_distributions
-#   - clean_simulation_output
-#   - check_simulation_inputs
-#   - print.infer_conventional_fcm
-#   - print.infer_ivfn_or_tfn_fcm
 #
 ################################################################################
 
 
-#' Infer FCMs Generated from Monte Carlo Methods
+#' Infer Multiple FCMs in a List
 #'
 #' @family monte-carlo-model-generation-and-simulation
 #'

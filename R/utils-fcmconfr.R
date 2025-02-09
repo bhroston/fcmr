@@ -1,3 +1,18 @@
+
+################################################################################
+# utils-fcmconfr.R
+#
+# These utility functions are involved with running the primary fcmconfr()
+# function
+#
+#   - check_fcmconfr_inputs
+#   - organize_fcmconfr_output
+#   - print.fcmconfr
+#
+################################################################################
+
+
+
 #' Check fcmconfr Inputs
 #'
 #' @description

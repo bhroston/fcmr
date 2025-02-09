@@ -1,4 +1,13 @@
 
+################################################################################
+# plot.fcmconfr.R
+#
+# This function plots fcmconfr output objects
+#
+#   - plot.fcmconfr
+#
+################################################################################
+
 #' Plot fcmconfr
 #'
 #' @description

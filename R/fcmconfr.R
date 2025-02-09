@@ -1,4 +1,15 @@
 
+################################################################################
+# fcmconfr.R
+#
+# This contains the primary fcmconfr() function and the get_inferences()
+# function.
+#
+#   - fcmconfr
+#   - get_inferences
+#
+################################################################################
+
 
 #' fcmconfr
 #'
@@ -242,4 +253,124 @@ fcmconfr <- function(adj_matrices = list(matrix()),
   fcmconfr_output <- organize_fcmconfr_output(env_variables)
 
   fcmconfr_output
+}
+
+
+
+#' Get inferences from an fcmconfr output
+#'
+#' @family utility
+#'
+#' @description
+#' Given an fcmconfr output object, return the inferences of all or just a
+#' specific analysis
+#'
+#' @param fcmconfr_obj An fcmconfr output object
+#' @param analysis The
+#'
+#' @returns A dataframe (or list of dataframes) of inferences from the selected
+#' analysis (analyses)
+#'
+#' @export
+#' @example man/examples/ex-get_inferences.R
+get_inferences <- function(fcmconfr_obj = list(),
+                           analysis = c("individual", "aggregate", "mc")) {
+
+  # Check fcmconfr_obj
+  if (!identical(methods::is(fcmconfr_obj), "fcmconfr")) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var fcmconfr_obj} must be an fcmconfr object",
+      "+++++> Input {.var fcmconfr_obj} was type '{methods::is(fcmconfr_obj)}'"
+    )))
+  }
+
+  # Check analysis input
+  if (!(all(analysis %in% c("individual", "aggregate", "mc")))) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var analysis} must be within the set of c('individual', 'aggregate', 'mc')",
+      "+++++> Input {.var analysis} was {analysis}"
+    )))
+  }
+
+  fcm_class <- fcmconfr_obj$fcm_class
+
+  if (fcm_class == "conventional") {
+    individual_inferences_df <- fcmconfr_obj$inferences$individual_fcms$inferences
+    individual_inferences_matrix_names <- individual_inferences_df$input
+    individual_inferences <- data.frame(t(individual_inferences_df[, 2:ncol(individual_inferences_df)]))
+    colnames(individual_inferences) <- individual_inferences_matrix_names
+  } else if (fcm_class == "ivfn") {
+    individual_inferences_df <- data.frame(t(do.call(rbind, fcmconfr_obj$inferences$individual_fcms$inferences)))
+    lower_individual_inferences <- data.frame(apply(individual_inferences_df, c(1, 2), function(element) element[[1]]$lower))
+    upper_individual_inferences <- data.frame(apply(individual_inferences_df, c(1, 2), function(element) element[[1]]$upper))
+    individual_inferences <- list(
+      ivfn_df = individual_inferences_df,
+      lower_values = lower_individual_inferences,
+      upper_values = upper_individual_inferences
+    )
+  } else if (fcm_class == "tfn") {
+    individual_inferences_df <- data.frame(t(do.call(rbind, fcmconfr_obj$inferences$individual_fcms$inferences)))
+    lower_individual_inferences <- data.frame(apply(individual_inferences_df, c(1, 2), function(element) element[[1]]$lower))
+    mode_individual_inferences <- data.frame(apply(individual_inferences_df, c(1, 2), function(element) element[[1]]$mode))
+    upper_individual_inferences <- data.frame(apply(individual_inferences_df, c(1, 2), function(element) element[[1]]$upper))
+    individual_inferences <- list(
+      tfn_df = individual_inferences_df,
+      lower_values = lower_individual_inferences,
+      mode_values = mode_individual_inferences,
+      upper_values = upper_individual_inferences
+    )
+  }
+
+  inferences_list <- list(
+    individual_inferences = individual_inferences
+  )
+
+  if (fcmconfr_obj$params$additional_opts$run_agg_calcs) {
+    if (fcm_class == "conventional") {
+      aggregate_inferences_transposed <- data.frame(t(fcmconfr_obj$inferences$aggregate_fcm$inferences))
+      inferences_list$aggregate_inferences = aggregate_inferences_transposed
+    } else if (fcm_class == "ivfn") {
+      aggregate_inferences_df <- data.frame(t(fcmconfr_obj$inferences$aggregate_fcm$inferences))
+      crisp_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) (element[[1]]$lower + element[[1]]$upper)/2)
+      lower_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) element[[1]]$lower)
+      upper_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) element[[1]]$upper)
+      aggregate_inferences <- data.frame(
+        crisp = crisp_aggregate_inferences,
+        lower = lower_aggregate_inferences,
+        upper = upper_aggregate_inferences
+      )
+      colnames(aggregate_inferences) <- c("crisp", "lower", "upper")
+      inferences_list$aggregate_inferences = aggregate_inferences
+    } else if (fcm_class == "tfn") {
+      aggregate_inferences_df <- data.frame(t(fcmconfr_obj$inferences$aggregate_fcm$inferences))
+      crisp_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) (element[[1]]$lower + element[[1]]$mode + element[[1]]$upper)/3)
+      lower_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) element[[1]]$lower)
+      mode_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) element[[1]]$mode)
+      upper_aggregate_inferences <- apply(aggregate_inferences_df, c(1, 2), function(element) element[[1]]$upper)
+      aggregate_inferences <- data.frame(
+        crisp = crisp_aggregate_inferences,
+        lower = lower_aggregate_inferences,
+        mode = mode_aggregate_inferences,
+        upper = upper_aggregate_inferences
+      )
+      colnames(aggregate_inferences) <- c("crisp", "lower", "mode", "upper")
+      inferences_list$aggregate_inferences = aggregate_inferences
+    }
+  }
+
+  if (fcmconfr_obj$params$additional_opts$run_mc_calcs) {
+    mc_inferences_transposed <- t(fcmconfr_obj$inferences$monte_carlo_fcms$inferences)
+    colnames(mc_inferences_transposed) <- paste0("mc_", 1:ncol(mc_inferences_transposed))
+    inferences_list$mc_inferences = mc_inferences_transposed
+  }
+
+  if (fcmconfr_obj$params$additional_opts$run_ci_calcs) {
+    mc_CIs_and_quantiles <- fcmconfr_obj$inferences$monte_carlo_fcms$confidence_intervals$CIs_and_quantiles_by_node
+    inferences_list$mc_CIs_and_quantiles = mc_CIs_and_quantiles
+  }
+
+  output_list_categories <- sub("_.*", "", names(inferences_list))
+  inferences_list <- inferences_list[output_list_categories %in% analysis]
+
+  inferences_list
 }

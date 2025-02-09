@@ -1,15 +1,14 @@
 
 ################################################################################
-# monte_carlo_model_generation_and_simulation.R
+# monte_carlo_model_generation_and_confidence_intervals.R
 #
 # These functions assist in generating empirical FCMs via monte carlo methods
 # and simulating the generated FCMs in bulk.
 #
-#   - get_mc_simulations_inference_CIs_w_bootstrap
 #   - build_monte_carlo_fcms
 #   - build_monte_carlo_fcms_from_conventional_adj_matrices
 #   - build_monte_carlo_fcms_from_fuzzy_set_adj_matrices
-#   - check_monte_carlo_bootstrap_inputs
+#   - get_mc_simulations_inference_CIs_w_bootstrap
 #
 ################################################################################
 
