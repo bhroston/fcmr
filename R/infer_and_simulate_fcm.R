@@ -135,7 +135,7 @@ infer_fcm_set <- function(adj_matrices = list(matrix()),
         cl = cl
       )
     )
-    names(inferences_for_adj_matrices) <- paste0("adj_matrix_", 1:length(inferences_for_adj_matrices))
+    names(inferences_for_adj_matrices) <- paste0("adj_matrix_", seq_along(inferences_for_adj_matrices))
     parallel::stopCluster(cl)
   } else if (parallel & !show_progress) {
     print("Initializing cluster", quote = FALSE)

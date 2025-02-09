@@ -7,7 +7,7 @@
 #
 #   - standardize_adj_matrices
 #   - fcm_view
-#   - estimate_lambda
+#   - estimate_fcm_lambda
 #   - check_if_local_machine_has_access_to_parallel_processing_functionalities
 #   - check_if_local_machine_has_access_to_show_progress_functionalities
 #   - get_adj_matrices_input_type
@@ -261,9 +261,12 @@ fcm_view <- function(fcm_adj_matrix = matrix(), with_shiny = FALSE) {
 #' @param fcm_adj_matrix An n x n adjacency matrix that represents an FCM
 #' @param squashing A squashing function to apply. Must be one of the following: 'tanh', or 'sigmoid'.
 #'
+#' @returns The maximum lambda that ensures FcM simulation convergence for
+#' the input fcm_adj_matrix
+#'
 #' @export
-#' @example man/examples/ex-estimate_lambda.R
-estimate_lambda <- function(fcm_adj_matrix = matrix(),
+#' @example man/examples/ex-estimate_fcm_lambda.R
+estimate_fcm_lambda <- function(fcm_adj_matrix = matrix(),
                             squashing = c("sigmoid", "tanh")) {
 
   fcm_class <- get_adj_matrices_input_type(fcm_adj_matrix)$object_types_in_list[1]

@@ -12,7 +12,7 @@ Authors@R: c(
   person(
     "Meg", "Rippy",
     email = "mrippy@vt.edu",
-    role = c("aut", "cre", "cph", "ths"),
+    role = c("aut", "cph", "ths"),
     comment = c(ORCID = "0000-0002-0575-8342")
   ))
 Description: fcmconfr streamlines the process of conducting dynamic simulations 

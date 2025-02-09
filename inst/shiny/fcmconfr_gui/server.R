@@ -679,7 +679,7 @@ shiny_server <- function(input, output, session) {
     inputs <- shiny::reactiveValuesToList(input)
     inputs$initial_state_vector <- initial_state_vector()
     inputs$clamping_vector <- clamping_vector()
-    inputs$concepts = concepts()
+    inputs$concepts <- concepts()
     inputs
   })
 
