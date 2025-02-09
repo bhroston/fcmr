@@ -13,7 +13,6 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-
 ```
 
 ```{r eval=FALSE}
@@ -22,31 +21,25 @@ library(fcmconfr)
 
 # Loading FCMs into R for fcmconfr
 
-Imagine asking a stakeholder to provide a weight for the edge (link) connecting *Sunscreen Application* to *Likelihood of Sunburn*. In the conventional FCM framework (like that implemented by [MentalModeler](https://www.mentalmodeler.com/) , a popular FCM construction and analysis application) edge weights are weighted with individual values. So, in the example, a stakeholder may weight the edge connecting *Sunscreen Application* to *Likelihood of Sunburn* as -0.4 or -0.5, or - 0.6 or any other value that broadly describes that as *Sunscreen Application* increases they expect the *Likelihood of Sunburn* to decrease some amount.
+## Types of FCMs
+
+When people create fuzzy cognitive maps (FCMs) they are asked to provide weights for all edges between causally connected concepts in the map.
+
+In conventional FCMs, edge weights are individual values (e.g., -0.5, 0.25, etc.) that express a relationship between two concepts without uncertainty. However, FCMs can also describe edge weights using (1) Interval-Value Fuzzy Numbers (IVFNs) where weights are expressed as ranges and no one value is moire likely than another (e.g., [min, max]) or (2) Triangular Fuzzy Numbers (TFNs) where weights are expressed as ranges, but with values more likely to be near a particular value within those ranges (e.g., [min, mode, max]).
+
+The figure below illustrates the probability density functions associated with. each type of edge weight. `fcmconfr` can accomodate FCMs with all three edge weight types. This vignette illustrates the workflow for preparing and importing these FCMs into R and analysis with `fcmconfr`.
 
 ::: {style="text-align: center;"}
-![A simple FCM describing the influence of *Sunscreen Application* on the *Likelihood of Sunburn*. The negative arrow indicates that this is a balancing relationship such that as *Sunscreen Application* increases, the *Likelihood of Sunburn* decreases and vice versa.](images/sunscreen_sunburn_fcm.png){width="100%"}
-:::
-
-<br>
-
-A limitation of requiring the stakeholder to assign the edge weight a single value that they may not feel comfortable describing the connection with such precision. Rather than saying an edge weight may be either -0.4 or -0.5 or -0.6, they may prefer describing an edge weight with a range of values (e.g. somewhere between -0.4 and -0.6).
-
-FCMs may describe these edge weights using Interval-Value Fuzzy Numbers (IVFNs) which are defined by two values, the minimum and maximum value of an interval (e.g. [-0.6, -0.4]. Further, they may feel confident enough to suggest an edge may exist within some range but is more likely to be a particular value within that range. These edge weights may be described using minimum and maximum bounds of a range and a mode value describing the most likely value (i.e. mode) the edge weight could take.
-
-The figure below illustrates conventional numeric edge weights, IVFNs, and TFNs as probability density functions (PDFs). Note how the PDF for an IVFN can be described completely with only a lower and upper bound, while the pdf for a TFN includes an additional mode parameter to describe the most likely value of the distribution.
-
-::: {style="text-align: center;"}
-![FCMs with edge weights described with individual values, IVFNs, or TFNs can be analyzed by `fcmconfr`.](images/edge_weight_value_type_pdfs.png){width="100%"}
+![Probability density functions for different types of edge weights (conventional, IVFN, TFN).](images/edge_weight_value_type_pdfs.png){width="100%"}
 :::
 
 ## 1. Conventional FCMs
 
-Conventional FCMs use individual numeric values as edge weights. The below examples show how to load these FCMs from .xlsx files, but a similar process is used for .csv, .xml or other file types.
+We recommend storing conventional FCM adjacency matrices in excel workbooks or .csv files and importing them into R.
 
-Note: Use `file.choose()` to get the path to a file interactively. There is not a similar function to get the path to a directory, but users may extrapolate from the output of `file.choose()` as needed.
+Weights are read from row to column (i.e., a value of 0.25 in row 2, column 3 indicates that increasing the node in row 2 is perceived to increase the node in column 3 by 0.25). The examples below show how to load adjacency matrices from .xlsx files. A similar process is used for .csv, .xml or other file types.
 
-#### 1.1 - Conventional FCM from a Single .xlsx File
+*Note: Use `file.choose()` to get the path to a file you want to import. There is not a similar function to get the path to a directory, but users may extrapolate from the output of `file.choose()` as needed.*
 
 ```{r eval=FALSE,include=FALSE}
 filepath <- filepath <- system.file(
@@ -71,9 +64,9 @@ adj_matrices <- lapply(
 )
 ```
 
-#### 1.2 - Conventional FCMs from .xlsx Files in a Directory
-
 ```{r eval=FALSE,include=FALSE}
+# For multiple FCM adjacency matrices stored in different sheets
+# in the same .xlsx file
 directory_path <- system.file(
   file.path("vignette_example_data", "conventional_fcms", "conventional_fcms_dir"),
   package = "fcmconfr"
@@ -82,7 +75,7 @@ directory_path <- system.file(
 ```
 
 ```{r eval=FALSE}
-# For multiple FCM adjacency matrices stored in separate .xlsx files stored in the
+# For multiple FCM adjacency matrices stored in separate .xlsx files in the
 # same directory
 filepaths <- list.files(directory_path, full.names = TRUE)
 adj_matrices <- lapply(
@@ -93,13 +86,11 @@ adj_matrices <- lapply(
 
 ## 2. IVFN FCMs
 
-IVFN FCMs are more complicated data objects because edge weights are described by two values (an upper and lower bound) but common file formats like .xlsx and .csv can only store one value per cell (or similar for .csv and others).
+IVFN FCMs are more complicated data objects because each edge weight is described by two values (an upper and a lower bound) and common file formats like .xlsx and .csv can only store one value per cell.
 
-#### 2.1 - Using `make_adj_matrix_w_ivfns`
+We recommend importing two separate adjacency matrices for each IVFN-FCM, one that contains only lower bound edge weights and one that contains only upper bound edge weights. Once these matrices have been imported, the `fcmconfr` function `make_adj_matrix_w_ivfns()` can be used to create a single IVFN-FCM adjacency matrix.
 
-We recommend creating an IVFN FCM from two adjacency matrices, one with edge weights as the intended lower bounds and one with edge weights as the intended upper bounds. Then, use `make_adj_matrix_w_ivfns` to construct an IVFN FCM adjacency matrix.
-
-##### 2.1.1 - `make_adj_matrix_w_ivfns` from a Single .xlsx. File
+### 2.1 - Loading an IVFN-FCM from a single .xlsx file:
 
 ```{r eval=FALSE,include=FALSE}
 filepath <- system.file(
@@ -108,7 +99,7 @@ filepath <- system.file(
 )
 ```
 
-If loading an IVFN FCM from a single .xlsx file, the file must contain two sheets, one for the lower bounds adjacency matrix and one for the upper bounds adjacency matrix.
+To load an IVFN-FCM from a single .xlsx file, the file must contain two sheets, one for the lower bound adjacency matrix and one for the upper bound adjacency matrix. See example below:
 
 ```{r eval=FALSE}
 sheets <- readxl::excel_sheets(filepath)
@@ -124,7 +115,7 @@ upper_adj_matrix <- lower_and_upper_adj_matrices[[2]]
 ivfn_adj_matrix <- make_adj_matrix_w_ivfns(lower_adj_matrix, upper_adj_matrix)
 ```
 
-##### 2.1.2 - `make_adj_matrix_from_ivfns` from Separate .xlsx Files in the Same Directory
+### 2.2 - Loading an IVFN-FCM from Separate Files in the Same Directory
 
 ```{r eval=FALSE,include=FALSE}
 directory_path <- system.file(
@@ -133,7 +124,7 @@ directory_path <- system.file(
 )
 ```
 
-Use this method if loading data from separate .csv, .xml, etc., files that by nature cannot contain multiple sheets in the same file.
+This method must be used if loading data from separate .xlsx, .csv, etc., files.
 
 ```{r eval=FALSE}
 # If lower and upper adjacency matrices are in separate .xlsx files
@@ -146,10 +137,12 @@ upper_adj_matrix <- readxl::read_excel(upper_adj_matrix_filepath)
 ivfn_adj_matrix <- make_adj_matrix_w_ivfns(lower_adj_matrix, upper_adj_matrix)
 ```
 
-#### 2.2 - IVFN FCMs from a Directory of Adj. Matrices in Single .xlsx Files
+### 2.3 - Loading Multiple IVFN-FCMs from Separate Files in the Same Directory
+
+Use this method when loading a set IVFN-FCMs in the same directory from .xlsx files with both the lower and upper bound adjacency matrices stored in the same file.
 
 ::: {style="text-align: center;"}
-![IVFN FCMs Stored in Individual .xlsx Files](images/ivfn_single_dir.png){width="24%"}
+![A directory of .xlsx files with each containing sheets for both the lower and upper bound adjacency matrix. For example, `ivfn_fcm_1.xlsx` has a sheet for the lower bound adjacency matrix and another sheet for the upper bound adjacency matrix.](images/ivfn_single_dir.png){width="24%"}
 :::
 
 <br>
@@ -193,10 +186,12 @@ ivfn_adj_matrices <- lapply(
 )
 ```
 
-#### 2.3 - IVFN FCMs from a Adj. Matrices in Separate .xlsx Files Stored in Different Directories
+### 2.4 - Loading Multiple IVFN-FCMs from Separate Files in Different Directories
+
+Use this method when loading a set of IVFN-FCMs where the lower and upper bound adjacency matrices for a single IVFN-FCM are stored in separate files.
 
 ::: {style="text-align: center;"}
-![IVFN FCMs stored in different files across different directories](images/ivfn_multiple_dirs.png){width="26%"}
+![A directory of sub-directories (`fcm_1`, `fcm_2`, etc.,) with each sub-directory containing separate .xlsx files for the lower and upper adjacency matrices. For example, the an IVFN-FCM can be created from the `fcm_1` sub-directory with `fcm_1_lower.xlsx` and `fcm_1_upper.xlsx` containing data for the lower and upper bound adjacency matrices respectively.](images/ivfn_multiple_dirs.png){width="26%"}
 :::
 
 <br>
@@ -253,13 +248,9 @@ ivfn_adj_matrices <- lapply(
 
 ## 3. TFN FCMs
 
-TFN FCMs are the most complicated edge weights because they are described by three values, an upper and lower bound as well as a mode describing the most-likely value for the edge. TFN FCMs are imported using a similar strategy as with IVFN FCMs, just with the added mode adjacency matrix to load.
+TFN FCMs are the most complicated edge weights because they are described by three values, an upper bound, a lower bound and a mode that indicates the most-likely value for the edge. TFN-FCMs are imported using the same general approach as IVFN-FCMs, but require 3 adjacency matrices rather than 2. Once the three adjacency matrices have been imported, the `fcmconfr` function `make_adj_matrix_w_tfns()` can be used to create a single TFN-FCM adjacency matrix.
 
-#### 3.1 - Using `make_adj_matrix_w_tfns`
-
-TFN FCMs are constructed from three adjacency matrices, an adjacency matrix of lower bounds, one of upper bounds, and another of modes or most-likely values. Use `make_adj_matrix_w_tfns` to combine the three input matrices into a TFN FCM.
-
-##### 3.1.1 - `make_adj_matrix_w_tfns` from a Single .xlsx. File
+### 3.1 - Loading a TFN-FCM from a Single .xlsx File
 
 ```{r eval=FALSE,include=FALSE}
 filepath <- system.file(
@@ -268,12 +259,13 @@ filepath <- system.file(
 )
 ```
 
-If loading an TFN FCM from a single .xlsx file, the file must contain three sheets, one for the lower bounds adjacency matrix, one for the upper bounds adjacency matrix, and another for the modes adjacency matrix.
+To load a TFN-FCM from a single .xlsx file, the file must contain three sheets, one for the lower bound adjacency matrix, one for the upper bound adjacency matrix, and another for the mode adjacency matrix.
 
 ```{r eval=FALSE}
 sheets <- readxl::excel_sheets(filepath)
 
-# If lower and upper adjacency matrices are in the same .xlsx file across two different sheets
+# If lower, upper and mode adjacency matrices are in the 
+# same .xlsx file across 3 different sheets
 lower_mode_and_upper_adj_matrices <- lapply(
   sheets, 
   function(sheet) readxl::read_excel(filepath, sheet = sheet)
@@ -285,7 +277,7 @@ upper_adj_matrix <- lower_mode_and_upper_adj_matrices[[3]]
 tfn_adj_matrix <- make_adj_matrix_w_tfns(lower_adj_matrix, mode_adj_matrix, upper_adj_matrix)
 ```
 
-##### 3.1.2 - `make_adj_matrix_from_tfns` from Separate .xlsx Files in the Same Directory
+### 3.2 - Loading a TFN-FCM from Separate Files in the Same Directory
 
 ```{r eval=FALSE,include=FALSE}
 directory_path <- system.file(
@@ -294,7 +286,7 @@ directory_path <- system.file(
 )
 ```
 
-Use this method if loading data from separate .csv, .xml, etc., files that by nature cannot contain multiple sheets in the same file.
+Use this method if loading data from separate .xlsx, .csv, etc., files.
 
 ```{r eval=FALSE}
 # If lower, mode, and upper adjacency matrices are in separate .xlsx files
@@ -311,8 +303,10 @@ tfn_adj_matrix <- make_adj_matrix_w_tfns(lower_adj_matrix, mode_adj_matrix, uppe
 
 #### 3.2 - TFN FCMs from a Directory of Adj. Matrices in Single .xlsx Files
 
+Use this method when loading a set TFN-FCMs in the same directory from .xlsx files with the lower, mode and upper bound adjacency matrices stored in the same file.
+
 ::: {style="text-align: center;"}
-![TFN FCMs Stored in Individual .xlsx Files](images/tfn_single_dir.png){width="28%"}
+![A directory of .xlsx files with each containing sheets for the lower, upper and mode adjacency matrices. For example, `tfn_fcm_1.xlsx` has a sheet for the lower bound adjacency matrix, the mode adjacency matrix, and another sheet for the upper bound adjacency matrix.](images/tfn_single_dir.png){width="28%"}
 :::
 
 <br>
@@ -349,8 +343,8 @@ import_tfn_fcm_from_single_xlsx <- function(filepath) {
 Then, call the newly-defined `import_tfn_fcm_from_single_xlsx` function within `lapply` or a loop.
 
 ```{r eval=FALSE}
-# For multiple IVFN FCM adjacency matrices stored in separate .xlsx files stored in the
-# same directory
+# For multiple TFN FCM adjacency matrices stored in 
+# separate .xlsx files stored in the same directory
 filepaths <- list.files(directory_path, full.names = TRUE)
 tfn_adj_matrices <- lapply(
   filepaths,
@@ -360,8 +354,10 @@ tfn_adj_matrices <- lapply(
 
 #### 3.3 - TFN FCMs from a Adj. Matrices in Separate .xlsx Files Stored in Different Directories
 
+Use this method when loading a set of TFN-FCMs where the lower, mode and upper bound adjacency matrices for a single TFN-FCM are stored in separate files.
+
 ::: {style="text-align: center;"}
-![TFN FCMs stored in different files across different directories](images/tfn_multiple_dirs.png){width="30%"}
+![A directory of sub-directories (`fcm_1`, `fcm_2`, etc.,) with each sub-directory containing separate .xlsx files for the lower, mode and upper adjacency matrices. For example, a TFN-FCM can be created from the `fcm_1` sub-directory with `fcm_1_lower.xlsx`, `fcm_1_mode.xlsx` and `fcm_1_upper.xlsx` containing data for the lower, mode and upper bound adjacency matrices respectively.](images/tfn_multiple_dirs.png){width="30%"}
 :::
 
 <br>
@@ -421,57 +417,4 @@ tfn_adj_matrices <- lapply(
     imported_tfn_adj_matrices
   }
 )
-```
-
-## 4. Interacting with IVFN and TFN FCM Adjacency Matrix Elements
-
-Unlike an ordinary matrix of numeric values, elements adjacency matrices made of IVFNs are technically list objects. Consider the `numeric_df` matrix given below:
-
-```{r eval=FALSE}
-numeric_df <- data.frame("C1" = c(0, 0.75), "C2" = c(0.5, 0))
-numeric_df
-```
-
-We can access elements within `numeric_df` with indexing. For example, to get the element in the second column of the first row we can run `numeric_df[1, 2]` or `numeric_df$C2[1]` , both of which would return `0.5` .
-
-```{r eval=FALSE}
-numeric_df[1, 2] # Numeric Indexing
-numeric_df$C2[1] # Column Indexing
-```
-
-Dataframes traditionally cannot be built from custom object classes like the `ivfn` and `tfn` classes defined for `fcmconfr`. However, `fcmconfr` works around this by storing `ivfn` and `tfn` objects within lists and then treating a dataframe of `ivfn` or `tfn` objects as a dataframe of lists that contain `ivfn` or `tfn` objects.
-
-Since users can make `ivfn` or `tfn` adjacency matrices by importing matrices from files, they will rarely have to create an `ivfn` or `tfn` matrix from scratch, but it is valuable to provide a code example of how `fcmconfr` creates such objects.
-
-```{r eval=FALSE}
-# First, create a dataframe from a n x n matrix of lists
-ivfn_df <- data.frame(matrix(data = list(), nrow = 2, ncol = 2))
-
-# Then, place the ivfn/tfn within a list and define its location indeces
-# Note that since ivfn_df is a matrix of lists, we have to define the new ivfn object as the first element of the list at index [1, 2], hence the need for [[1]].
-ivfn_df[1, 1][[1]] <- list(ivfn(0, 0))
-ivfn_df[1, 2][[1]] <- list(ivfn(0.4, 0.6))
-ivfn_df[2, 1][[1]] <- list(ivfn(0.7, 0.8))
-ivfn_df[2, 2][[1]] <- list(ivfn(0, 0))
-```
-
-::: {style="text-align: center;"}
-![Note that the console output for `ivfn_df` will vary depending on whether it is loaded as a matrix or dataframe. As a dataframe it will printout the IVFN values, while as a matrix it will printout the object types, `ivfn, 2` . We interact with both matrices the same way even though the console outputs are different.](images/clipboard-1503284098.png){width="70%"}
-:::
-
-<br>
-
-To get the `ivfn` at a particular location, then, if we simply call `ivfn_df[row, col]` that will return a list containing an `ivfn`. To get the `ivfn` by itself, add `[[1]]` to indicate the first value of the list object
-
-::: {style="text-align: center;"}
-![](images/clipboard-1371053499.png){width="50%"}
-:::
-
-<br>
-
-Now, say we want to separate the IVFN adjacency matrix back to its components of an adjacency matrix of lower bounds and another of upper bounds. Pairing `apply` with the above indexing strategy is an effective method here:
-
-```{r eval=FALSE}
-lower_adj_matrix <- apply(ivfn_df, c(1, 2), function(element) element[[1]]$lower)
-upper_adj_matrix <- apply(ivfn_df, c(1, 2), function(element) element[[1]]$upper)
 ```

@@ -643,22 +643,11 @@ test_that("squash works", {
 
   expect_error(squash(1, "sigmoid", lambda = 0))
 
-  expect_equal(squash(-1, "bivalent"), 0)
-  expect_equal(squash(-1, "saturation"), 0)
-  expect_equal(squash(0.5, "saturation"), 0.5)
-
-  expect_equal(squash(0, "trivalent"), 0)
-
   expect_equal(round(squash(1, "sigmoid", lambda = 1), 5), 0.73106)
   expect_equal(round(squash(1, "sigmoid", lambda = 0.5), 5), 0.62246)
 
   expect_equal(round(squash(1, "tanh", lambda = 1), 5), 0.76159)
   expect_equal(round(squash(1, "tanh", lambda = 0.5), 5), 0.46212)
-
-  expect_equal(squash(0.5, "bivalent"), 1)
-  expect_equal(squash(0.5, "trivalent"), 1)
-  expect_equal(squash(-0.5, "trivalent"), -1)
-  expect_equal(squash(2, "saturation"), 1)
 })
 
 
@@ -838,13 +827,13 @@ test_that("check_simulation_inputs works", {
   expect_no_error(
     check_simulation_inputs(adj_matrix = sample_fcms$simple_fcms$conventional_fcms[[1]], initial_state_vector = test_initial_state_vector, clamping_vector = test_clamping_vector, activation = "kosko", squashing = "tanh", point_of_inference = "final")
   )
-  expect_no_error(
+  expect_error(
     check_simulation_inputs(adj_matrix = sample_fcms$simple_fcms$conventional_fcms[[1]], initial_state_vector = test_initial_state_vector, clamping_vector = test_clamping_vector, activation = "kosko", squashing = "saturation", point_of_inference = "final")
   )
-  expect_no_error(
+  expect_error(
     check_simulation_inputs(adj_matrix = sample_fcms$simple_fcms$conventional_fcms[[1]], initial_state_vector = test_initial_state_vector, clamping_vector = test_clamping_vector, activation = "kosko", squashing = "bivalent", point_of_inference = "final")
   )
-  expect_no_error(
+  expect_error(
     check_simulation_inputs(adj_matrix = sample_fcms$simple_fcms$conventional_fcms[[1]], initial_state_vector = test_initial_state_vector, clamping_vector = test_clamping_vector, activation = "kosko", squashing = "trivalent", point_of_inference = "final")
   )
   # ----

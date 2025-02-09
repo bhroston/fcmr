@@ -11,7 +11,7 @@ check_fcmconfr_inputs(
   initial_state_vector = c(),
   clamping_vector = c(),
   activation = c("kosko", "modified-kosko", "rescale"),
-  squashing = c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"),
+  squashing = c("sigmoid", "tanh"),
   lambda = 1,
   point_of_inference = c("peak", "final"),
   max_iter = 100,
@@ -48,10 +48,10 @@ control the behavior of an FCM. Specifically, non-zero values defined in this ve
 will remain constant throughout the entire simulation as if they were "clamped" at those values.}
 
 \item{activation}{The activation function to be applied. Must be one of the following:
-'kosko', 'modified-kosko', or 'papageorgiou'.}
+'kosko', 'modified-kosko', or 'rescale'.}
 
 \item{squashing}{A squashing function to apply. Must be one of the following:
-'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.}
+'tanh', or 'sigmoid'.}
 
 \item{lambda}{A numeric value that defines the steepness of the slope of the
 squashing function when tanh or sigmoid are applied}

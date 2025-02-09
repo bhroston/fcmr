@@ -11,7 +11,7 @@ fcmconfr(
   initial_state_vector = c(),
   clamping_vector = c(),
   activation = c("kosko", "modified-kosko", "rescale"),
-  squashing = c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"),
+  squashing = c("sigmoid", "tanh"),
   lambda = 1,
   point_of_inference = c("peak", "final"),
   max_iter = 100,
@@ -48,10 +48,10 @@ control the behavior of an FCM. Specifically, non-zero values defined in this ve
 will remain constant throughout the entire simulation as if they were "clamped" at those values.}
 
 \item{activation}{The activation function to be applied. Must be one of the following:
-'kosko', 'modified-kosko', or 'papageorgiou'.}
+'kosko', 'modified-kosko', or 'rescale'.}
 
 \item{squashing}{A squashing function to apply. Must be one of the following:
-'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.}
+'tanh', or 'sigmoid'.}
 
 \item{lambda}{A numeric value that defines the steepness of the slope of the
 squashing function when tanh or sigmoid are applied}
@@ -104,7 +104,8 @@ A list of outputs generated from the individual_fcms simulations,
 \description{
 This is the primary function of the fcmconfr package. This function performs
 up to three different analyses of a set of (or an individual) input FCM(s).
-Call \code{\link{fcmconfr_gui}}. for assistance with inputs.
+Use \code{\link{fcmconfr_gui}} to help select fcmconfr parameters using an
+interactive GUI.
 
 \enumerate{
    \item FCM Simulation: Simulate the (raw/unmodified) input FCMs to estimate

@@ -1,4 +1,14 @@
 
+################################################################################
+# utils-monte_carlo_model_generation_and_simulation.R
+#
+# These utility functions are involved with Monte Carlo FCM generation
+#
+#   - check_build_monte_carlo_fcms_inputs
+#   - check_monte_carlo_bootstrap_inputs
+#
+################################################################################
+
 
 #' Check inputs for building monte carlo fcm inputs
 #'

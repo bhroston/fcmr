@@ -2,7 +2,7 @@
 % Please edit documentation in R/infer_and_simulate_fcm.R
 \name{infer_fcm_set}
 \alias{infer_fcm_set}
-\title{Infer FCMs Generated from Monte Carlo Methods}
+\title{Infer Multiple FCMs in a List}
 \usage{
 infer_fcm_set(
   adj_matrices = list(matrix()),
@@ -31,10 +31,10 @@ control the behavior of an FCM. Specifically, non-zero values defined in this ve
 will remain constant throughout the entire simulation as if they were "clamped" at those values.}
 
 \item{activation}{The activation function to be applied. Must be one of the following:
-'kosko', 'modified-kosko', or 'papageorgiou'.}
+'kosko', 'modified-kosko', or 'rescale'.}
 
 \item{squashing}{A squashing function to apply. Must be one of the following:
-'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.}
+'tanh', or 'sigmoid'.}
 
 \item{lambda}{A numeric value that defines the steepness of the slope of the
 squashing function when tanh or sigmoid are applied}

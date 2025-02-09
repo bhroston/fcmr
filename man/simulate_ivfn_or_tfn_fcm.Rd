@@ -8,8 +8,8 @@ simulate_ivfn_or_tfn_fcm(
   adj_matrix = matrix(),
   initial_state_vector = c(),
   clamping_vector = c(),
-  activation = "kosko",
-  squashing = "tanh",
+  activation = c("kosko", "modified-kosko", "rescale"),
+  squashing = c("sigmoid", "tanh"),
   lambda = 1,
   point_of_inference = c("peak", "final"),
   max_iter = 100,
@@ -29,7 +29,7 @@ will remain constant throughout the entire simulation as if they were "clamped" 
 'kosko', 'modified-kosko', or 'rescale'.}
 
 \item{squashing}{A squashing function to apply. Must be one of the following:
-'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.}
+'tanh', or 'sigmoid'.}
 
 \item{lambda}{A numeric value that defines the steepness of the slope of the
 squashing function when tanh or sigmoid are applied}

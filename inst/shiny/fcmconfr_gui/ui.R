@@ -5,7 +5,7 @@
 #'
 shiny_ui <- function() {
   bslib::page_sidebar(
-    title = "FCMconfR GUI",
+    title = "fcmconfr GUI",
     sidebar = bslib::sidebar(
       title = "Definitions", position = "right", open = FALSE, width = "350px",
       shiny::uiOutput("definitions")
@@ -108,6 +108,7 @@ shiny_ui <- function() {
             shinyWidgets::radioGroupButtons("squashing", "",choiceNames = c("Sigmoid", "Tanh"),  choiceValues = c("sigmoid", "tanh"), selected = "sigmoid")
           )
         ),
+        shiny::uiOutput("squashing_function_formulae"),
         shiny::fluidRow(
           shiny::column(
             width = 5, align = "right",

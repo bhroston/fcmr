@@ -29,7 +29,7 @@ will remain constant throughout the entire simulation as if they were "clamped" 
 'kosko', 'modified-kosko', or 'rescale'.}
 
 \item{squashing}{A squashing function to apply. Must be one of the following:
-'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.}
+'tanh', or 'sigmoid'.}
 
 \item{lambda}{A numeric value that defines the steepness of the slope of the
 squashing function when tanh or sigmoid are applied}
