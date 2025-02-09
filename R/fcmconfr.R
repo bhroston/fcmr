@@ -16,7 +16,8 @@
 #' @description
 #' This is the primary function of the fcmconfr package. This function performs
 #' up to three different analyses of a set of (or an individual) input FCM(s).
-#' Call \code{\link{fcmconfr_gui}}. for assistance with inputs.
+#' Use \code{\link{fcmconfr_gui}} to help select fcmconfr parameters using an
+#' interactive GUI.
 #'
 #' \enumerate{
 #'    \item FCM Simulation: Simulate the (raw/unmodified) input FCMs to estimate
