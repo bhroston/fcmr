@@ -262,6 +262,7 @@ fcm_view <- function(fcm_adj_matrix = matrix(), with_shiny = FALSE) {
 #' @param squashing A squashing function to apply. Must be one of the following: 'tanh', or 'sigmoid'.
 #'
 #' @export
+#' @example man/examples/ex-estimate_lambda.R
 estimate_lambda <- function(fcm_adj_matrix = matrix(),
                             squashing = c("sigmoid", "tanh")) {
 
@@ -274,6 +275,12 @@ estimate_lambda <- function(fcm_adj_matrix = matrix(),
     as_conventional_adj_matrix <- apply(fcm_adj_matrix, c(1, 2), function(element) (element[[1]]$lower + element[[1]]$mode + element[[1]]$upper)/3)
   }
 
+  if (identical(squashing, c("sigmoid", "tanh"))) {
+    stop(cli::format_error(c(
+      "x" = "Error: Please include an input for {.var squashing}",
+      "+++++> Input {.var squashing} amust be either 'sigmoid' or 'tanh'"
+    )))
+  }
   if (!(squashing %in% c("sigmoid", "tanh"))) {
     stop(cli::format_error(c(
       "x" = "Error: {.var squashing} amust be either 'sigmoid' or 'tanh'",
