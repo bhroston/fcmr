@@ -1,6 +1,1 @@
-bibentry(bibtype="software",
-         header="To cite 'fcmconfr' in publications use:",
-         title="fcmconfr: Fuzzy Cognitive Map Analysis in R",
-         author=c(as.person("Ben Roston"), as.person("Meg Rippy")),
-         year=2025,
-         url="https://github.com/bhroston/fcmconfr")
+

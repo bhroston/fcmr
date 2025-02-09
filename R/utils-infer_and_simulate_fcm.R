@@ -31,7 +31,7 @@
 #' @param activation The activation function to be applied. Must be one of the following:
 #' 'kosko', 'modified-kosko', or 'papageorgiou'.
 #' @param squashing A squashing function to apply. Must be one of the following:
-#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' 'tanh', or 'sigmoid'.
 #' @param lambda A numeric value that defines the steepness of the slope of the
 #' squashing function when tanh or sigmoid are applied
 #' @param point_of_inference The point along the simulation time-series to be
@@ -491,7 +491,7 @@ clean_simulation_output <- function(output_obj, concepts) {
 #' @param activation The activation function to be applied. Must be one of the following:
 #' 'kosko', 'modified-kosko', or 'rescale'.
 #' @param squashing A squashing function to apply. Must be one of the following:
-#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' 'tanh', or 'sigmoid'.
 #' @param lambda A numeric value that defines the steepness of the slope of the
 #' squashing function when tanh or sigmoid are applied
 #' @param point_of_inference The point along the simulation time-series to be
@@ -512,7 +512,7 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
                                     initial_state_vector = c(),
                                     clamping_vector = c(),
                                     activation = c("kosko", "modified-kosko", "rescale"),
-                                    squashing = c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"),
+                                    squashing = c("sigmoid", "tanh"),
                                     lambda = 1,
                                     point_of_inference = c("peak", "final"),
                                     max_iter = 100,
@@ -641,16 +641,16 @@ check_simulation_inputs <- function(adj_matrix = matrix(),
     )))
   }
 
-  if (identical(squashing, c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"))) {
+  if (identical(squashing, c("sigmoid", "tanh"))) {
     warning(cli::format_warning(c(
       "!" = "Warning: No {.var squashing_function} given",
       "~~~~~ Assuming squashing = 'sigmoid'"
     )))
     squashing <- "sigmoid"
   }
-  if (!(squashing %in% c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"))) {
+  if (!(squashing %in% c("sigmoid", "tanh"))) {
     stop(cli::format_error(c(
-      "x" = "Error: {.var squashing} must be one of the following: 'sigmoid', 'tanh', 'bivalent', 'saturation', 'trivalent'",
+      "x" = "Error: {.var squashing} must be one of the following: 'sigmoid', 'tanh'",
       "+++++ Input {.var squashing} was '{squashing}'"
     )))
   }
