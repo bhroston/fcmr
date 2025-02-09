@@ -521,17 +521,7 @@ shiny_server <- function(input, output, session) {
             width = 6, align = "left",
             shiny::numericInput("mc_inference_bootstrap_reps", "", value = 1000, min = 100, step = 100)
           )
-        )# ,
-        # shiny::fluidRow(
-        #   shiny::column(
-        #     width = 6, align = "right",
-        #     shiny::h5("# Draws per Bootstrap (Repetition)", style = "padding: 25px;")
-        #   ),
-        #   shiny::column(
-        #     width = 6, align = "left",
-        #     shiny::numericInput("mc_inference_bootstrap_draws_per_rep", "", value = 1000, min = 100, step = 100)
-        #   )
-        # )
+        )
       )
     } else if (!can_perform_monte_carlo_analysis()) {
       shiny::fluidRow(
@@ -641,6 +631,28 @@ shiny_server <- function(input, output, session) {
     } else {
       NULL
     }
+  })
+
+  output$squashing_function_formulae <- shiny::renderUI({
+    if (input$squashing == "sigmoid") {
+      formula <- "$$
+        \\begin{gather}
+          f( x) =\\frac{1}{1+e^{\\lambda x}}
+        \\end{gather}
+      $$"
+    } else if (input$squashing == "tanh") {
+      formula <- "$$
+        \\begin{gather}
+          f( x) =\\frac{e^{\\lambda x} -e^{-\\lambda x}}{e^{\\lambda x} +e^{-\\lambda x}}
+        \\end{gather}
+      $$"
+    }
+    shiny::fluidRow(
+      shiny::column(
+        width = 12, align = "center",
+        shiny::withMathJax(tags$p(formula))
+      )
+    )
   })
 
   # Num Cores in Parallel
