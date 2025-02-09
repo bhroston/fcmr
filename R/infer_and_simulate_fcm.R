@@ -45,9 +45,9 @@
 #' control the behavior of an FCM. Specifically, non-zero values defined in this vector
 #' will remain constant throughout the entire simulation as if they were "clamped" at those values.
 #' @param activation The activation function to be applied. Must be one of the following:
-#' 'kosko', 'modified-kosko', or 'papageorgiou'.
+#' 'kosko', 'modified-kosko', or 'rescale'.
 #' @param squashing A squashing function to apply. Must be one of the following:
-#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' 'tanh', or 'sigmoid'.
 #' @param lambda A numeric value that defines the steepness of the slope of the
 #' squashing function when tanh or sigmoid are applied
 #' @param point_of_inference The point along the simulation time-series to be
@@ -273,7 +273,7 @@ infer_fcm_set <- function(adj_matrices = list(matrix()),
 #' @param activation The activation function to be applied. Must be one of the following:
 #' 'kosko', 'modified-kosko', or 'rescale'.
 #' @param squashing A squashing function to apply. Must be one of the following:
-#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' 'tanh', or 'sigmoid'.
 #' @param lambda A numeric value that defines the steepness of the slope of the
 #' squashing function when tanh or sigmoid are applied
 #' @param point_of_inference The point along the simulation time-series to be
@@ -364,7 +364,7 @@ infer_fcm <- function(adj_matrix = matrix(),
 #' @param activation The activation function to be applied. Must be one of the following:
 #' 'kosko', 'modified-kosko', or 'rescale'.
 #' @param squashing A squashing function to apply. Must be one of the following:
-#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' 'tanh', or 'sigmoid'.
 #' @param lambda A numeric value that defines the steepness of the slope of the
 #' squashing function when tanh or sigmoid are applied
 #' @param point_of_inference The point along the simulation time-series to be
@@ -474,7 +474,7 @@ infer_conventional_fcm <- function(adj_matrix = matrix(),
 #' @param activation The activation function to be applied. Must be one of the following:
 #' 'kosko', 'modified-kosko', or 'rescale'.
 #' @param squashing A squashing function to apply. Must be one of the following:
-#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' 'tanh', or 'sigmoid'.
 #' @param lambda A numeric value that defines the steepness of the slope of the
 #' squashing function when tanh or sigmoid are applied
 #' @param point_of_inference The point along the simulation time-series to be
@@ -631,7 +631,7 @@ infer_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
 #' @param activation The activation function to be applied. Must be one of the following:
 #' 'kosko', 'modified-kosko', or 'rescale'.
 #' @param squashing A squashing function to apply. Must be one of the following:
-#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' 'tanh', or 'sigmoid'.
 #' @param lambda A numeric value that defines the steepness of the slope of the
 #' squashing function when tanh or sigmoid are applied
 #' @param point_of_inference The point along the simulation time-series to be
@@ -702,7 +702,7 @@ simulate_fcm <- function(adj_matrix = matrix(),
 #' @param activation The activation function to be applied. Must be one of the following:
 #' 'kosko', 'modified-kosko', or 'rescale'.
 #' @param squashing A squashing function to apply. Must be one of the following:
-#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' 'tanh', or 'sigmoid'.
 #' @param lambda A numeric value that defines the steepness of the slope of the
 #' squashing function when tanh or sigmoid are applied
 #' @param point_of_inference The point along the simulation time-series to be
@@ -829,7 +829,7 @@ simulate_conventional_fcm <- function(adj_matrix = matrix(),
 #' @param activation The activation function to be applied. Must be one of the following:
 #' 'kosko', 'modified-kosko', or 'rescale'.
 #' @param squashing A squashing function to apply. Must be one of the following:
-#' 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'.
+#' 'tanh', or 'sigmoid'.
 #' @param lambda A numeric value that defines the steepness of the slope of the
 #' squashing function when tanh or sigmoid are applied
 #' @param point_of_inference The point along the simulation time-series to be
@@ -846,8 +846,8 @@ simulate_conventional_fcm <- function(adj_matrix = matrix(),
 simulate_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
                                      initial_state_vector = c(),
                                      clamping_vector = c(),
-                                     activation = "kosko",
-                                     squashing = "tanh",
+                                     activation = c("kosko", "modified-kosko", "rescale"),
+                                     squashing = c("sigmoid", "tanh"),
                                      lambda = 1,
                                      point_of_inference = c("peak", "final"),
                                      max_iter = 100,
@@ -1023,7 +1023,7 @@ simulate_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
 #' Gonzales et al. 2018 - https://doi.org/10.1142/S0218213018600102)
 #'
 #' @param value A numeric value to 'squash'
-#' @param squashing A squashing function to apply. Must be one of the following: 'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'
+#' @param squashing A squashing function to apply. Must be one of the following: 'tanh', or 'sigmoid'
 #' @param lambda A numeric value that defines the steepness of the slope of the squashing function when tanh or sigmoid are applied
 #'
 #' @returns A "squashed" value, the output of the selected transfer ("squashing")
@@ -1034,7 +1034,7 @@ simulate_ivfn_or_tfn_fcm <- function(adj_matrix = matrix(),
 #' squash(1, "sigmoid", lambda = 1)
 #' squash(0.6, "tanh", lambda = 0.7)
 squash <- function(value = numeric(),
-                   squashing = c("sigmoid", "tanh", "bivalent", "saturation", "trivalent"),
+                   squashing = c("sigmoid", "tanh"),
                    lambda = 1) {
   if (lambda <= 0) {
     stop("Input lambda must be greater than zero")
@@ -1042,35 +1042,13 @@ squash <- function(value = numeric(),
 
   # Use full names here instead of abbreviations to improve readability even
   # though developers will need to type more characters.
-  if (squashing == "bivalent") {
-    if (value > 0) {
-      squashed_value <- 1
-    } else if (value <= 0) {
-      squashed_value <- 0
-    }
-  } else if (squashing == "saturation") {
-    if (value <= 0) {
-      squashed_value <- 0
-    } else if (value > 0 & value < 1) {
-      squashed_value <- value
-    } else if (value >= 1) {
-      squashed_value <- 1
-    }
-  } else if (squashing == "trivalent") {
-    if (value < 0) {
-      squashed_value <- -1
-    } else if (value == 0) {
-      squashed_value <- 0
-    } else if (value > 0) {
-      squashed_value <- 1
-    }
-  } else if (squashing == "tanh") {
+  if (squashing == "tanh") {
     squashed_value <- (exp(2*lambda*value) - 1)/(exp(2*lambda*value) + 1)
   } else if (squashing == "sigmoid") {
     squashed_value <- 1/(1 + exp(-lambda*value))
   } else {
     stop("squashing value must be one of the following:
-      'bivalent', 'saturation', 'trivalent', 'tanh', or 'sigmoid'")
+      'tanh', or 'sigmoid'")
   }
 
   squashed_value
