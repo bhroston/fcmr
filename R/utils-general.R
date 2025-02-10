@@ -120,58 +120,88 @@ standardize_adj_matrices <- function(adj_matrices = list(matrix())) {
 #'
 #' @export
 #' @example man/examples/ex-fcm_view.R
-fcm_view <- function(fcm_adj_matrix = matrix(), with_shiny = FALSE) {
-  fcm_adj_matrix_input_type <- get_adj_matrices_input_type(fcm_adj_matrix)
+fcm_view <- function(fcm_adj_matrix = matrix(),
+                     fcm_visNetwork = list(), # A visNetwork Object
+                     with_shiny = FALSE) {
 
-  if (!(is.logical(with_shiny))) {
+  if (!identical(fcm_adj_matrix, matrix()) & !identical(fcm_visNetwork, list())) {
     stop(cli::format_error(c(
-      "x" = "Error: {.var with_shiny} must be a logical (TRUE/FALSE) value.",
-      "+++++> Input {.var with_shiny} was: {with_shiny}"
+      "x" = "Error: fcm_view accepts either {.var fcm_adj_matrix} OR {.var fcm_visNetwork} as inputs",
+      "+++++> Either input only a {.var fcm_adj_matrix} OR {.var fcm_visNetwork} (a visNetwork object)"
     )))
   }
 
-  fcm_adj_matrix_class <- fcm_adj_matrix_input_type$fcm_class
-  if (fcm_adj_matrix_class == "conventional") {
-    conventional_fcm <- fcm_adj_matrix
-  } else if (fcm_adj_matrix_class == "ivfn") {
-    conventional_fcm <- apply(fcm_adj_matrix, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$upper))
-  } else if (fcm_adj_matrix_class == "tfn") {
-    conventional_fcm <- apply(fcm_adj_matrix, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$mode,  x[[1]]$upper))
+  if (!identical(fcm_visNetwork, list()) & !identical(methods::is(fcm_visNetwork), "visNetwork")) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var fcm_visNetwork} must be a visNetwork object (preferrably directly from fcm_view",
+      "+++++> Input {.var fcm_visNetwork} was of type: {methods::is(fcm_visNetwork)[1]}"
+    )))
+  } else {
+    fcm_visNetwork_obj <- fcm_visNetwork
   }
 
-  # Translate fcm into an igraph object and then convert to visNetwork
-  fcm_as_igraph_obj <- igraph::graph_from_adjacency_matrix(as.matrix(conventional_fcm), weighted = TRUE, mode = "directed")
-  fcm_as_visNetwork_obj <- visNetwork::visIgraph(fcm_as_igraph_obj) %>%
-    visNetwork::visIgraphLayout()
+  if (!identical(fcm_adj_matrix, matrix())) {
+    fcm_adj_matrix_input_type <- get_adj_matrices_input_type(fcm_adj_matrix)
 
-  # Add aesthetics for nodes
-  fcm_as_visNetwork_obj$x$nodes$color <- "lightgrey"
-  fcm_as_visNetwork_obj$x$nodes$physics <- FALSE
-  fcm_as_visNetwork_obj$x$nodes$font <- list(size = 14)
-  # fcm_as_visNetwork_obj$x$nodes$hidden <- FALSE
+    if ((fcm_adj_matrix_input_type$adj_matrices_input_is_list) & (length(fcm_adj_matrix) > 1)) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var fcm_adj_matrix} must be a single adj. matrix.",
+        "+++++> Input {.var fcm_adj_matrix} was a list of {length(fcm_adj_matrix)} adj. matrices."
+      )))
+    } else if ((fcm_adj_matrix_input_type$adj_matrices_input_is_list) & (length(fcm_adj_matrix) == 1)) {
+      fcm_adj_matrix <- fcm_adj_matrix[[1]]
+    }
 
-  # Add aesthetics for edges
-  edges_df <- fcm_as_visNetwork_obj$x$edges
-  edges_df$label <- paste(round(edges_df$weight, 2))
-  edges_df$color <- ifelse(edges_df$weight >= 0, "black", "red")
-  edges_df$width <- abs(edges_df$weight*2)
-  # edges_df$hidden <- FALSE
-  fcm_as_visNetwork_obj$x$edges <- edges_df
+    if (!(is.logical(with_shiny))) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var with_shiny} must be a logical (TRUE/FALSE) value.",
+        "+++++> Input {.var with_shiny} was: {with_shiny}"
+      )))
+    }
 
-  # Load plot
-  fcm_as_visNetwork_obj <- fcm_as_visNetwork_obj %>%
-    #test <- fcm_as_visNetwork_obj %>%
-    visNetwork::visEdges(smooth = list(enabled = TRUE, type = "continuous", roundness = 0.4), physics = FALSE) %>%
-    visNetwork::visIgraphLayout()
+    fcm_adj_matrix_class <- fcm_adj_matrix_input_type$fcm_class
+    if (fcm_adj_matrix_class == "conventional") {
+      conventional_fcm <- fcm_adj_matrix
+    } else if (fcm_adj_matrix_class == "ivfn") {
+      conventional_fcm <- apply(fcm_adj_matrix, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$upper))
+    } else if (fcm_adj_matrix_class == "tfn") {
+      conventional_fcm <- apply(fcm_adj_matrix, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$mode,  x[[1]]$upper))
+    }
 
-  node_x_coords <- fcm_as_visNetwork_obj$x$nodes$x
-  node_y_coords <- fcm_as_visNetwork_obj$x$nodes$y
+    # Translate fcm into an igraph object and then convert to visNetwork
+    fcm_as_igraph_obj <- igraph::graph_from_adjacency_matrix(as.matrix(conventional_fcm), weighted = TRUE, mode = "directed")
+    fcm_as_visNetwork_obj <- visNetwork::visIgraph(fcm_as_igraph_obj) %>%
+      visNetwork::visIgraphLayout()
 
-  spaced_node_x_coords <- node_x_coords*1.5
-  spaced_node_y_coords <- node_y_coords*2
+    # Add aesthetics for nodes
+    fcm_as_visNetwork_obj$x$nodes$color <- "lightgrey"
+    fcm_as_visNetwork_obj$x$nodes$physics <- FALSE
+    fcm_as_visNetwork_obj$x$nodes$font <- list(size = 14)
+    # fcm_as_visNetwork_obj$x$nodes$hidden <- FALSE
 
-  fcm_as_visNetwork_obj$x$nodes$x <- spaced_node_x_coords
-  fcm_as_visNetwork_obj$x$nodes$y <- spaced_node_y_coords
+    # Add aesthetics for edges
+    edges_df <- fcm_as_visNetwork_obj$x$edges
+    edges_df$label <- paste(round(edges_df$weight, 2))
+    edges_df$color <- ifelse(edges_df$weight >= 0, "black", "red")
+    edges_df$width <- abs(edges_df$weight*2)
+    # edges_df$hidden <- FALSE
+    fcm_as_visNetwork_obj$x$edges <- edges_df
+
+    # Load plot
+    fcm_as_visNetwork_obj <- fcm_as_visNetwork_obj %>%
+      #test <- fcm_as_visNetwork_obj %>%
+      visNetwork::visEdges(smooth = list(enabled = TRUE, type = "continuous", roundness = 0.4), physics = FALSE) %>%
+      visNetwork::visIgraphLayout()
+
+    node_x_coords <- fcm_as_visNetwork_obj$x$nodes$x
+    node_y_coords <- fcm_as_visNetwork_obj$x$nodes$y
+
+    spaced_node_x_coords <- node_x_coords*1.5
+    spaced_node_y_coords <- node_y_coords*2
+
+    fcm_as_visNetwork_obj$x$nodes$x <- spaced_node_x_coords
+    fcm_as_visNetwork_obj$x$nodes$y <- spaced_node_y_coords
+  }
 
   if (!with_shiny) {
     fcm_as_visNetwork_obj
@@ -185,54 +215,65 @@ fcm_view <- function(fcm_adj_matrix = matrix(), with_shiny = FALSE) {
     sidebar_width <- as.character(round(max_node_name_px_width + 101)) # The +101 adds room for the checkboxes
     sidebar_width <- paste0(sidebar_width, "px")
 
+    # Create temp env to pass variables into and out of shiny app
     shiny_env <- new.env()
     assign("fcm_as_visNetwork_obj", fcm_as_visNetwork_obj, shiny_env)
     assign("sidebar_width", sidebar_width, shiny_env)
-
-    server <- source(system.file(file.path('shiny', 'view_fcm', 'server.R'), package = 'fcmconfr'), local = TRUE)$value
-    ui <- source(system.file(file.path('shiny', 'view_fcm', 'ui.R'), package = 'fcmconfr'), local = TRUE)$value
-
+    assign("save_visNetwork", FALSE, shiny_env) # Defaults to FALSE unless user clicks "Save visNetwork" in Shiny app
+    server <- source(system.file(file.path('shiny', 'fcm_view', 'server.R'), package = 'fcmconfr'), local = TRUE)$value
+    ui <- source(system.file(file.path('shiny', 'fcm_view', 'ui.R'), package = 'fcmconfr'), local = TRUE)$value
     environment(ui) <- shiny_env
     environment(server) <- shiny_env
+
+    # Call shinyApp
     app <- shiny::shinyApp(
       ui = ui,
       server = server
     )
-
     shiny::runApp(app)
 
-    shiny_nodes <- shiny_env$nodes
-    shiny_edges <- shiny_env$edges
-    shiny_coords <- shiny_env$coords
-    shiny_nodes_to_display <- shiny_env$nodes_to_display
-    shiny_nodes_shape <- shiny_env$nodes_shape
-    shiny_nodes_size <- shiny_env$nodes_size
-    shiny_edge_roundness <- shiny_env$edge_roundness
-    shiny_edge_smoothing <- shiny_env$edge_smoothing
-    shiny_font_size <- shiny_env$font_size
+    save_visNetwork <- shiny_env$save_visNetwork
+    if (!save_visNetwork) {
+      print("Note: visNetwork plot NOT saved. Click 'Save visNetwork' to save output in the Global Environment", quote = FALSE)
+    } else {
+      # Organize output
+      shiny_nodes <- shiny_env$nodes
+      shiny_edges <- shiny_env$edges
+      shiny_coords <- shiny_env$coords
+      shiny_nodes_to_display <- shiny_env$nodes_to_display
+      shiny_nodes_shape <- shiny_env$nodes_shape
+      shiny_nodes_size <- shiny_env$nodes_size
+      shiny_edge_roundness <- shiny_env$edge_roundness
+      shiny_edge_smoothing <- shiny_env$edge_smoothing
+      shiny_font_size <- shiny_env$font_size
 
-    nodes_to_return_indices <- which(shiny_nodes$id %in% shiny_nodes_to_display)
-    nodes_to_return_df <- shiny_nodes[nodes_to_return_indices, ]
-    nodes_to_return_df$x <- nodes_to_return_df$x/100
-    nodes_to_return_df$y <- nodes_to_return_df$y/100
-    nodes_to_return_df$font <- NULL
-    nodes_to_return_df$size <- shiny_nodes_size
+      nodes_to_return_indices <- which(shiny_nodes$id %in% shiny_nodes_to_display)
+      nodes_to_return_df <- shiny_nodes[nodes_to_return_indices, ]
+      nodes_to_return_df$x <- nodes_to_return_df$x/100
+      nodes_to_return_df$y <- nodes_to_return_df$y/100
+      nodes_to_return_df$font <- NULL
+      nodes_to_return_df$size <- shiny_nodes_size
 
-    edges_to_return_indices <- which(shiny_nodes_to_display %in% shiny_edges$from) # | shiny_edges$to %in% shiny_nodes_to_display)
-    edges_to_return_df <- shiny_edges[edges_to_return_indices, ]
-    edges_to_return_df$color <- ifelse(edges_to_return_df$weight > 0, "black", "red")
-    edges_to_return_df$hidden <- NULL
+      edges_to_return_indices <- which(shiny_nodes_to_display %in% shiny_edges$from) # | shiny_edges$to %in% shiny_nodes_to_display)
+      edges_to_return_df <- shiny_edges[edges_to_return_indices, ]
+      edges_to_return_df$color <- ifelse(edges_to_return_df$weight > 0, "black", "red")
+      edges_to_return_df$hidden <- NULL
 
-    fcm_as_visNetwork_obj$x$nodes <- nodes_to_return_df
-    fcm_as_visNetwork_obj$x$edges <- edges_to_return_df
+      fcm_as_visNetwork_obj$x$nodes <- nodes_to_return_df
+      fcm_as_visNetwork_obj$x$edges <- edges_to_return_df
 
-    fcm_as_visNetwork_obj <- fcm_as_visNetwork_obj %>%
-      visNetwork::visEdges(smooth = list(enabled = TRUE, type = shiny_edge_smoothing, roundness = shiny_edge_roundness),
-                           font = list(size = shiny_font_size),
-                           physics = FALSE) %>%
-      visNetwork::visNodes(font = list(size = shiny_font_size))
+      fcm_as_visNetwork_obj <- fcm_as_visNetwork_obj %>%
+        visNetwork::visEdges(smooth = list(enabled = TRUE, type = shiny_edge_smoothing, roundness = shiny_edge_roundness),
+                             font = list(size = shiny_font_size),
+                             physics = FALSE) %>%
+        visNetwork::visNodes(font = list(size = shiny_font_size))
 
-    fcm_as_visNetwork_obj
+      # browser()
+
+      assign("fcm_as_visNetwork", fcm_as_visNetwork_obj, .GlobalEnv)
+
+      print("Note: visNetwork plot stored as fcm_view_visNetwork in Global Environment", quote = FALSE)
+    }
   }
 }
 

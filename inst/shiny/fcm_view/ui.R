@@ -4,6 +4,14 @@ ui <- shiny::fluidPage(
     sidebar = bslib::sidebar(
       width = sidebar_width,
       shiny::fluidRow(
+        shiny::column(
+          12, align = "center",
+          shiny::actionButton(
+            "save_visNetwork", "Save visNetwork", icon = shiny::icon("floppy-disk"), width = "70%"
+          )
+        )
+      ),
+      shiny::fluidRow(
         shiny::h4("Select Nodes to Display"),
         shiny::uiOutput("nodes_to_display")
       ),

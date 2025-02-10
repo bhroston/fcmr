@@ -35,7 +35,7 @@ server <- function(input, output) {
   })
 
   coords <- shiny::reactive({
-    if (!is.null(input$nodes_to_display)) {
+    if (!is.null(input$fcm_display_positions)) {
       data.frame(do.call(rbind, input$fcm_display_positions))
     }
   })
@@ -133,11 +133,6 @@ server <- function(input, output) {
       updated_fcm_as_visNetwork_obj$x$nodes <- nodes()
       updated_fcm_as_visNetwork_obj$x$edges <- edges()
       updated_fcm_as_visNetwork_obj
-
-      #updated_fcm_visNetwork_proxy <- fcm_as_visNetwork_obj
-      #updated_fcm_visNetwork_proxy$x$nodes <- nodes()
-      #updated_fcm_visNetwork_proxy$x$edges <- edges()
-      #updated_fcm_visNetwork_proxy
     }
   })
 
@@ -153,18 +148,24 @@ server <- function(input, output) {
     }
   })
 
-  shiny::onStop(
-    function() {
-      assign(x = "nodes", value = shiny::isolate(nodes()), envir = shiny_env)
-      assign(x = "edges", value = shiny::isolate(edges()), envir = shiny_env)
-      assign(x = "coords", value = shiny::isolate(coords()), envir = shiny_env)
-      assign(x = "nodes_to_display", value = shiny::isolate(input$nodes_to_display), envir = shiny_env)
-      assign(x = "nodes_shape", value = shiny::isolate(input$node_shape), envir = shiny_env)
-      assign(x = "nodes_size", value = shiny::isolate(input$node_size), envir = shiny_env)
-      assign(x = "edge_roundness", value = shiny::isolate(input$edge_roundness), envir = shiny_env)
-      assign(x = "edge_smoothing", value = shiny::isolate(input$edge_smoothing), envir = shiny_env)
-      assign(x = "font_size", value = shiny::isolate(input$font_size), envir = shiny_env)
-      # print("Note: visNetwork plot stored as fcm_view_visNetwork in Global Environment", quote = FALSE)
-    }
-  )
+  shiny::observeEvent(input$save_visNetwork, {
+    assign(x = "nodes", value = shiny::isolate(nodes()), envir = shiny_env)
+    assign(x = "edges", value = shiny::isolate(edges()), envir = shiny_env)
+    assign(x = "coords", value = shiny::isolate(coords()), envir = shiny_env)
+    assign(x = "nodes_to_display", value = shiny::isolate(input$nodes_to_display), envir = shiny_env)
+    assign(x = "nodes_shape", value = shiny::isolate(input$node_shape), envir = shiny_env)
+    assign(x = "nodes_size", value = shiny::isolate(input$node_size), envir = shiny_env)
+    assign(x = "edge_roundness", value = shiny::isolate(input$edge_roundness), envir = shiny_env)
+    assign(x = "edge_smoothing", value = shiny::isolate(input$edge_smoothing), envir = shiny_env)
+    assign(x = "font_size", value = shiny::isolate(input$font_size), envir = shiny_env)
+    assign(x = "save_visNetwork", value = TRUE, envir = shiny_env)
+    shiny::stopApp()
+  })
+
+  # shiny::onStop(
+  #   function() {
+  #
+  #     # print("Note: visNetwork plot stored as fcm_view_visNetwork in Global Environment", quote = FALSE)
+  #   }
+  # )
 }

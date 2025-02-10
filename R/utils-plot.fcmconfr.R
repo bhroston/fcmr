@@ -1152,8 +1152,8 @@ interactive_plot_fcmconfr <- function(x, ...) {
   bslib::versions()
   shinyWidgets::animations
 
-  server <- source(system.file(file.path('shiny', 'fcmconfr_plot', 'server.R'), package = 'fcmconfr'), local = TRUE)$value
-  ui <- source(system.file(file.path('shiny', 'fcmconfr_plot', 'ui.R'), package = 'fcmconfr'), local = TRUE)$value
+  server <- source(system.file(file.path('shiny', 'plot.fcmconfr', 'server.R'), package = 'fcmconfr'), local = TRUE)$value
+  ui <- source(system.file(file.path('shiny', 'plot.fcmconfr', 'ui.R'), package = 'fcmconfr'), local = TRUE)$value
 
   shiny_env <- new.env()
   assign("fcmconfr_output", x, shiny_env)

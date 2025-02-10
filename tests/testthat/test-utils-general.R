@@ -636,6 +636,42 @@ test_that("estimate_fcm_lambda works", {
 
 })
 
+
+test_that("fcm_view works", {
+
+  expect_error(
+    fcm_view(fcm_adj_matrix = test)
+  )
+
+  expect_error(
+    fcm_view(fcm_adj_matrix = test[[1]], fcm_visNetwork = "nope")
+  )
+
+  expect_error(
+    fcm_view(fcm_visNetwork = "wrong")
+  )
+
+  expect_error(
+    fcm_view(fcm_adj_matrix = test[[1]], with_shiny = "wrong")
+  )
+
+  expect_no_error(
+    fcm_view(fcm_adj_matrix = list(test[[1]]))
+  )
+
+  expect_no_error(
+    fcm_view(fcm_adj_matrix = test[[1]])
+  )
+
+  fcm_view(fcm_adj_matrix = test[[1]], with_shiny = TRUE)
+
+
+
+
+
+
+})
+
 #######
 
 # # test_that("here works for R CMD Check", {
