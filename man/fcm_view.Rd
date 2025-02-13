@@ -4,10 +4,18 @@
 \alias{fcm_view}
 \title{Display FCM in Viewer}
 \usage{
-fcm_view(fcm_adj_matrix = matrix(), with_shiny = FALSE)
+fcm_view(
+  fcm_adj_matrix = matrix(),
+  fcm_visNetwork = list(),
+  with_shiny = FALSE
+)
 }
 \arguments{
-\item{fcm_adj_matrix}{An adjacency matrix representing an FCM}
+\item{fcm_adj_matrix}{An adjacency matrix representing an FCM. fcm_view
+accepts either an fcm_adj_matrix or fcm_visNetwork input but NOT both.}
+
+\item{fcm_visNetwork}{An fcm_view visNetwork object output. fcm_view accepts
+either an fcm_adj_matrix or fcm_visNetwork input but NOT both.}
 
 \item{with_shiny}{View visNetwork output in a shiny app instead of the viewer
 pane. This adds the functionality to store node locations after moving them.}

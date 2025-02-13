@@ -1,45 +1,65 @@
 
 server <- function(input, output) {
 
-  input_nodes <- reactive({
-    fcm_as_visNetwork_obj$x$nodes
+  # Load input visNetwork obj ----
+  input_visNetwork <- shiny::reactive({
+    fcm_as_visNetwork_obj
   })
 
-  input_edges <- reactive({
-    fcm_as_visNetwork_obj$x$edges
+  input_nodes <- shiny::reactive({
+    input_visNetwork()$x$nodes
   })
 
+  input_edges <- shiny::reactive({
+    input_visNetwork()$x$edges
+  })
+
+  input_opts <- shiny::reactive({
+    input_visNetwork()$x$options
+  })
+  # ----
+
+
+  # fcm_display and visNetworkProxy ----
   output$fcm_display <- visNetwork::renderVisNetwork({
     fcm_as_visNetwork_obj %>%
       visNetwork::visOptions(nodesIdSelection = TRUE) %>%
       visNetwork::visInteraction(zoomSpeed = 0.5) %>%
-      visNetwork::visEdges(smooth = list(enabled = TRUE, type = "continuous", roundness = 0.4), physics = FALSE)
+      visNetwork::visEdges(
+        smooth = list(
+          enabled = TRUE,
+          type = input_opts()$edges$smooth$type,
+          roundness = input_opts()$edges$smooth$roundness
+        ),
+        physics = FALSE
+      )
   })
+
+  fcm_display <- visNetwork::visNetworkProxy("fcm_display")
 
   shiny::observe({
     shiny::invalidateLater(1000)
-    visNetwork::visNetworkProxy("fcm_display") %>%
-      visNetwork::visGetNodes()
-  })
-
-  shiny::observe({
-    shiny::invalidateLater(1000)
-    visNetwork::visNetworkProxy("fcm_display") %>%
+    fcm_display %>%
+      visNetwork::visGetNodes() %>%
+      visNetwork::visGetEdges() %>%
       visNetwork::visGetPositions()
   })
 
-  shiny::observe({
-    shiny::invalidateLater(1000)
-    visNetwork::visNetworkProxy("fcm_display") %>%
-      visNetwork::visGetEdges()
-  })
+  shinyWidgets::sendSweetAlert(
+    title = "",
+    text = shiny::tags$div(
+      shiny::HTML(
+        "Store call to fcm_view() in a variable to save changes
+        <br>
+        <br>
+        <pre>fcm_view_output <- fcm_view(...)</pre>"
+      )
+    ), type = "info"
+  )
+  # ----
 
-  coords <- shiny::reactive({
-    if (!is.null(input$fcm_display_positions)) {
-      data.frame(do.call(rbind, input$fcm_display_positions))
-    }
-  })
 
+  # nodes, edges, and coords data ----
   nodes <- shiny::reactive({
     if (!is.null(input$fcm_display_nodes)) {
       nodes_df <- data.frame(do.call(rbind, input$fcm_display_nodes))
@@ -59,113 +79,223 @@ server <- function(input, output) {
     }
   })
 
-  output$nodes_to_display <- shiny::renderUI({
-    shiny::checkboxGroupInput(
-      inputId = "nodes_to_display",
-      label = "",
-      choices = input_nodes()$id,
-      selected = input_nodes()$id
+  coords <- shiny::reactive({
+    if (!is.null(input$fcm_display_positions)) {
+      data.frame(do.call(rbind, input$fcm_display_positions))
+    }
+  })
+  # ----
+
+
+  # uiOutput calls ----
+  output$show_node_labels <- shiny::renderUI({
+    shinyWidgets::prettyCheckbox(
+      inputId = "show_node_labels",
+      label = "Node labels",
+      value = ifelse(all(nodes()$label == ""), FALSE, TRUE),
+      inline = TRUE,
+      status = "primary"
     )
   })
 
+  output$show_edge_labels <- shiny::renderUI({
+    shinyWidgets::prettyCheckbox(
+      inputId = "show_edge_labels",
+      label = "Edge labels",
+      value = ifelse(all(edges()$label == " "), FALSE, TRUE),
+      inline = TRUE,
+      status = "primary"
+    )
+  })
+
+  output$nodes_to_display <- shiny::renderUI({
+    if (!is.null(input_nodes())) {
+      shinyWidgets::virtualSelectInput(
+        inputId = "nodes_to_display",
+        label = "",
+        choices = input_nodes()$id,
+        multiple = TRUE,
+        selected = input_nodes()$id[input_nodes()$color != "transparent"]
+      )
+    }
+  })
+
+  output$node_shape <- shiny::renderUI({
+    shiny::selectInput(
+      inputId = "node_shape",
+      label = "Node shape:",
+      choices = c("dot", "box", "text"),
+      selected = unique(input_nodes()$shape)
+    )
+  })
+
+  output$node_size <- shiny::renderUI({
+    shiny::numericInput(
+      inputId = "node_size",
+      label = "Node size ('dot' only):",
+      value = unique(input_opts()$nodes$size),
+      min = 1,
+      step = 5,
+    )
+  })
+
+  output$arrow_size <- shiny::renderUI({
+    shiny::numericInput(
+      inputId = "arrow_size",
+      label = "Arrow size",
+      value = input_opts()$edges$arrows$to$scaleFactor,
+      min = 0,
+      step = 0.5
+    )
+  })
+
+  output$edge_roundness <- shiny::renderUI({
+    shiny::sliderInput(
+      inputId = "edge_roundness",
+      label = "Edge roundness:",
+      value = input_opts()$edges$smooth$roundness,
+      step = 0.1,
+      min = 0,
+      max = 1
+    )
+  })
+
+  output$edge_smoothing <- shiny::renderUI({
+    shiny::selectInput(
+      inputId = "edge_smoothing",
+      label = "Edge smoothing method:",
+      choices = c(
+        'dynamic', 'continuous', 'discrete', 'diagonalCross', 'straightCross',
+        'horizontal', 'vertical', 'curvedCW', 'curvedCCW', 'cubicBezier'
+      ),
+      selected = input_opts()$edges$smooth$type
+    )
+  })
+
+  output$font_size <- shiny::renderUI({
+    shiny::numericInput(
+      inputId = "font_size",
+      label = "Font size:",
+      value = input_opts()$nodes$font$size,
+      step = 1
+    )
+  })
+  # ----
+
+
+  # ui value updates ----
+  shiny::observeEvent(input$node_shape, {
+    fcm_display %>%
+      visNetwork::visNodes(shape = input$node_shape)
+  })
+
+  shiny::observeEvent(input$node_size, {
+    fcm_display %>%
+      visNetwork::visNodes(size = input$node_size)
+  })
+
+  shiny::observeEvent(input$arrow_size, {
+    fcm_display %>%
+      visNetwork::visEdges(
+        arrows = list(to = list(enabled = TRUE, scaleFactor = input$arrow_size))
+      )
+  })
+
+  shiny::observeEvent(input$edge_roundness, {
+    fcm_display %>%
+      visNetwork::visEdges(
+        smooth = list(
+          roundness = input$edge_roundness
+        )
+      )
+  })
+
+  shiny::observeEvent(input$edge_smoothing, {
+    fcm_display %>%
+      visNetwork::visEdges(
+        smooth = list(
+          type = input$edge_smoothing
+        )
+      )
+  })
+
+  shiny::observeEvent(input$font_size, {
+    fcm_display %>%
+      visNetwork::visNodes(font = list(size = input$font_size)) %>%
+      visNetwork::visEdges(font = list(size = input$font_size))
+  })
+  # ----
+
+
+  # nodes/edges to display ----
   shiny::observe({
-    if (!is.null(input$nodes_to_display) & (!is.null(nodes())) & (!is.null(edges()))) {
+    if (!is.null(input$nodes_to_display) & !is.null(nodes()) & !is.null(edges())) {
       nodes_to_display <- nodes()$id[nodes()$id %in% input$nodes_to_display]
       nodes_to_hide <- nodes()$id[!(nodes()$id %in% input$nodes_to_display)]
 
+      # Filter nodes ----
       nodes_to_display_indices <- which(nodes()$id %in% input$nodes_to_display)
-      node_color <- vector(mode = "numeric", length = nrow(nodes()))
+      node_color <- vector(mode = "character", length = nrow(nodes()))
       for (i in seq_along(node_color)) {
         if (i %in% nodes_to_display_indices) {
-          node_color[i] <- input_nodes()$color[i]
+          node_color[i] <- nodes()$base_color[i]
         } else {
           node_color[i] <- "transparent"
         }
       }
       updated_nodes_df <- nodes()
       updated_nodes_df$color <- node_color
-      updated_nodes_df$label <- ifelse(updated_nodes_df$color == "transparent", " ", input_nodes()$label)
 
+      if (input$show_node_labels) {
+        updated_nodes_df$label <- ifelse(updated_nodes_df$color == "transparent", " ", input_nodes()$id)
+      } else {
+        updated_nodes_df$label = " "
+      }
+      # ----
+
+      # Filter edges ----
       edge_color <- ifelse((edges()$from %in% nodes_to_hide | edges()$to %in% nodes_to_hide), "transparent", input_edges()$color)
       updated_edges_df <- edges()
       updated_edges_df$color <- edge_color
-      updated_edges_df$hidden <- ifelse(edge_color == "transparent", TRUE, FALSE)
 
-      visNetwork::visUpdateEdges(visNetwork::visNetworkProxy("fcm_display"), edges = updated_edges_df)
-      visNetwork::visUpdateNodes(visNetwork::visNetworkProxy("fcm_display"), nodes = updated_nodes_df)
+      if (input$show_edge_labels) {
+        updated_edges_df$label <- ifelse(updated_edges_df$color == "transparent", " ", as.character(input_edges()$weight))
+      } else {
+        updated_edges_df$label = " "
+      }
+      # ----
+
+      visNetwork::visUpdateEdges(fcm_display, edges = updated_edges_df)
+      visNetwork::visUpdateNodes(fcm_display, nodes = updated_nodes_df)
     }
   })
-
-  shiny::observeEvent(input$font_size, {
-    updated_nodes_df <- nodes()
-    updated_nodes_df$font <- list(size = input$font_size)
-    visNetwork::visUpdateNodes(visNetwork::visNetworkProxy("fcm_display"), nodes = updated_nodes_df)
-
-    visNetwork::visNetworkProxy("fcm_display") %>%
-      visNetwork::visEdges(font = list(size = input$font_size))
-  })
-
-  shiny::observeEvent(input$node_shape, {
-    updated_nodes_df <- nodes()
-    updated_nodes_df$shape <- input$node_shape
-
-    visNetwork::visUpdateNodes(visNetwork::visNetworkProxy("fcm_display"), nodes = updated_nodes_df)
-  })
-
-  shiny::observeEvent(input$node_size, {
-    visNetwork::visNetworkProxy("fcm_display") %>%
-      visNetwork::visNodes(size = input$node_size)
-  })
-
-  shiny::observeEvent(input$edge_roundness, {
-    visNetwork::visNetworkProxy("fcm_display") %>%
-      visNetwork::visEdges(smooth = list(enabled = TRUE, roundness = input$edge_roundness), physics = FALSE)
-  })
-
-  shiny::observeEvent(input$edge_smoothing, {
-    visNetwork::visNetworkProxy("fcm_display") %>%
-      visNetwork::visEdges(smooth = list(enabled = TRUE, type = input$edge_smoothing), physics = FALSE)
-  })
+  # ----
 
   updated_fcm_visNetwork <- shiny::reactive({
-    if (!is.null(input$fcm_display_positions)) {
-      updated_fcm_as_visNetwork_obj <- fcm_as_visNetwork_obj
-      updated_fcm_as_visNetwork_obj$x$nodes <- nodes()
-      updated_fcm_as_visNetwork_obj$x$edges <- edges()
-      updated_fcm_as_visNetwork_obj
-    }
-  })
-
-  updated_nodes <- shiny::reactive({
-    if (!is.null(output$fcm_display)) {
-      updated_nodes <- nodes()
-    }
-  })
-
-  updated_edges <- shiny::reactive({
-    if (!is.null(output$fcm_display)) {
-      updated_nodes <- edges()
+    if (!is.null(fcm_display)) {
+      updated_visNetwork <- fcm_as_visNetwork_obj
+      # Node updates
+      updated_visNetwork$x$nodes <- nodes()
+      updated_visNetwork$x$options$nodes$shape <- input$node_shape
+      updated_visNetwork$x$options$nodes$size <- input$node_size
+      updated_visNetwork$x$options$nodes$font <- list(size = input$font_size)
+      # Edge updates
+      updated_visNetwork$x$edges <- edges()
+      updated_visNetwork$x$options$edges$arrows$to$scaleFactor <- input$arrow_size
+      updated_visNetwork$x$options$edges$smooth$roundness <- input$edge_roundness
+      updated_visNetwork$x$options$edges$smooth$type <- input$edge_smoothing
+      updated_visNetwork$x$options$edges$font <- list(size = input$font_size)
+      # Return object
+      updated_visNetwork
     }
   })
 
   shiny::observeEvent(input$save_visNetwork, {
-    assign(x = "nodes", value = shiny::isolate(nodes()), envir = shiny_env)
-    assign(x = "edges", value = shiny::isolate(edges()), envir = shiny_env)
-    assign(x = "coords", value = shiny::isolate(coords()), envir = shiny_env)
-    assign(x = "nodes_to_display", value = shiny::isolate(input$nodes_to_display), envir = shiny_env)
-    assign(x = "nodes_shape", value = shiny::isolate(input$node_shape), envir = shiny_env)
-    assign(x = "nodes_size", value = shiny::isolate(input$node_size), envir = shiny_env)
-    assign(x = "edge_roundness", value = shiny::isolate(input$edge_roundness), envir = shiny_env)
-    assign(x = "edge_smoothing", value = shiny::isolate(input$edge_smoothing), envir = shiny_env)
-    assign(x = "font_size", value = shiny::isolate(input$font_size), envir = shiny_env)
-    assign(x = "save_visNetwork", value = TRUE, envir = shiny_env)
     shiny::stopApp()
   })
 
-  # shiny::onStop(
-  #   function() {
-  #
-  #     # print("Note: visNetwork plot stored as fcm_view_visNetwork in Global Environment", quote = FALSE)
-  #   }
-  # )
+  shiny::onStop(function() {
+    assign(x = "save_visNetwork", value = TRUE, envir = shiny_env)
+    assign(x = "updated_fcm_visNetwork_obj", value = shiny::isolate(updated_fcm_visNetwork()), envir = shiny_env)
+  })
 }

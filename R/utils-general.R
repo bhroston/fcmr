@@ -110,7 +110,10 @@ standardize_adj_matrices <- function(adj_matrices = list(matrix())) {
 #' store its output in the global environment via the view_fcm_visNetwork
 #' variable.
 #'
-#' @param fcm_adj_matrix An adjacency matrix representing an FCM
+#' @param fcm_adj_matrix An adjacency matrix representing an FCM. fcm_view
+#' accepts either an fcm_adj_matrix or fcm_visNetwork input but NOT both.
+#' @param fcm_visNetwork An fcm_view visNetwork object output. fcm_view accepts
+#' either an fcm_adj_matrix or fcm_visNetwork input but NOT both.
 #' @param with_shiny View visNetwork output in a shiny app instead of the viewer
 #' pane. This adds the functionality to store node locations after moving them.
 #'
@@ -124,6 +127,7 @@ fcm_view <- function(fcm_adj_matrix = matrix(),
                      fcm_visNetwork = list(), # A visNetwork Object
                      with_shiny = FALSE) {
 
+  # Checks ----
   if (!identical(fcm_adj_matrix, matrix()) & !identical(fcm_visNetwork, list())) {
     stop(cli::format_error(c(
       "x" = "Error: fcm_view accepts either {.var fcm_adj_matrix} OR {.var fcm_visNetwork} as inputs",
@@ -131,16 +135,36 @@ fcm_view <- function(fcm_adj_matrix = matrix(),
     )))
   }
 
+  if (!(is.logical(with_shiny))) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var with_shiny} must be a logical (TRUE/FALSE) value.",
+      "+++++> Input {.var with_shiny} was: {with_shiny}"
+    )))
+  }
+
+  if (identical(methods::is(fcm_adj_matrix), "visNetwork")) {
+    options(warn = 1) # Make sure warning shows before launching shiny app
+    warning(cli::format_warning(c(
+      "!" = "Warning: {.var fcm_adj_matrix} is a 'visNetwork' object",
+      "~~~~~ Replacing {.var fcm_adj_matrix} with {.var fcm_visNetwork} in function call"
+    )))
+    options(warn = 0)
+    fcm_visNetwork <- fcm_adj_matrix
+    fcm_adj_matrix <- matrix()
+  }
+  # ----
+
   if (!identical(fcm_visNetwork, list()) & !identical(methods::is(fcm_visNetwork), "visNetwork")) {
     stop(cli::format_error(c(
       "x" = "Error: {.var fcm_visNetwork} must be a visNetwork object (preferrably directly from fcm_view",
       "+++++> Input {.var fcm_visNetwork} was of type: {methods::is(fcm_visNetwork)[1]}"
     )))
-  } else {
-    fcm_visNetwork_obj <- fcm_visNetwork
+  } else if (!identical(fcm_visNetwork, list()) & identical(methods::is(fcm_visNetwork), "visNetwork")) {
+    fcm_as_visNetwork_obj <- fcm_visNetwork
   }
 
   if (!identical(fcm_adj_matrix, matrix())) {
+    # Input is fcm_adj_matrix ----
     fcm_adj_matrix_input_type <- get_adj_matrices_input_type(fcm_adj_matrix)
 
     if ((fcm_adj_matrix_input_type$adj_matrices_input_is_list) & (length(fcm_adj_matrix) > 1)) {
@@ -150,13 +174,6 @@ fcm_view <- function(fcm_adj_matrix = matrix(),
       )))
     } else if ((fcm_adj_matrix_input_type$adj_matrices_input_is_list) & (length(fcm_adj_matrix) == 1)) {
       fcm_adj_matrix <- fcm_adj_matrix[[1]]
-    }
-
-    if (!(is.logical(with_shiny))) {
-      stop(cli::format_error(c(
-        "x" = "Error: {.var with_shiny} must be a logical (TRUE/FALSE) value.",
-        "+++++> Input {.var with_shiny} was: {with_shiny}"
-      )))
     }
 
     fcm_adj_matrix_class <- fcm_adj_matrix_input_type$fcm_class
@@ -175,9 +192,10 @@ fcm_view <- function(fcm_adj_matrix = matrix(),
 
     # Add aesthetics for nodes
     fcm_as_visNetwork_obj$x$nodes$color <- "lightgrey"
+    fcm_as_visNetwork_obj$x$nodes$base_color <- "lightgrey"
+    fcm_as_visNetwork_obj$x$options$nodes$size <- 25 # 25 is the default value for visNetwork
+    fcm_as_visNetwork_obj$x$options$nodes$font <- list(size = 14)
     fcm_as_visNetwork_obj$x$nodes$physics <- FALSE
-    fcm_as_visNetwork_obj$x$nodes$font <- list(size = 14)
-    # fcm_as_visNetwork_obj$x$nodes$hidden <- FALSE
 
     # Add aesthetics for edges
     edges_df <- fcm_as_visNetwork_obj$x$edges
@@ -189,9 +207,12 @@ fcm_view <- function(fcm_adj_matrix = matrix(),
 
     # Load plot
     fcm_as_visNetwork_obj <- fcm_as_visNetwork_obj %>%
-      #test <- fcm_as_visNetwork_obj %>%
-      visNetwork::visEdges(smooth = list(enabled = TRUE, type = "continuous", roundness = 0.4), physics = FALSE) %>%
-      visNetwork::visIgraphLayout()
+      visNetwork::visIgraphLayout() %>%
+      visNetwork::visEdges(
+        arrows = list(to = list(enabled = TRUE, scaleFactor = 1)),
+        smooth = list(enabled = TRUE, type = "continuous", roundness = 0.4),
+        physics = FALSE
+      )
 
     node_x_coords <- fcm_as_visNetwork_obj$x$nodes$x
     node_y_coords <- fcm_as_visNetwork_obj$x$nodes$y
@@ -201,11 +222,13 @@ fcm_view <- function(fcm_adj_matrix = matrix(),
 
     fcm_as_visNetwork_obj$x$nodes$x <- spaced_node_x_coords
     fcm_as_visNetwork_obj$x$nodes$y <- spaced_node_y_coords
+    # ----
   }
 
   if (!with_shiny) {
     fcm_as_visNetwork_obj
   } else {
+    # Using shiny ----
     # Calculate optimal sidebar width so all variable names fit on individual lines
     # with their corresponding check box
     node_names <- fcm_as_visNetwork_obj$x$nodes$id
@@ -231,49 +254,37 @@ fcm_view <- function(fcm_adj_matrix = matrix(),
       server = server
     )
     shiny::runApp(app)
-
     save_visNetwork <- shiny_env$save_visNetwork
-    if (!save_visNetwork) {
-      print("Note: visNetwork plot NOT saved. Click 'Save visNetwork' to save output in the Global Environment", quote = FALSE)
-    } else {
-      # Organize output
-      shiny_nodes <- shiny_env$nodes
-      shiny_edges <- shiny_env$edges
-      shiny_coords <- shiny_env$coords
-      shiny_nodes_to_display <- shiny_env$nodes_to_display
-      shiny_nodes_shape <- shiny_env$nodes_shape
-      shiny_nodes_size <- shiny_env$nodes_size
-      shiny_edge_roundness <- shiny_env$edge_roundness
-      shiny_edge_smoothing <- shiny_env$edge_smoothing
-      shiny_font_size <- shiny_env$font_size
 
-      nodes_to_return_indices <- which(shiny_nodes$id %in% shiny_nodes_to_display)
-      nodes_to_return_df <- shiny_nodes[nodes_to_return_indices, ]
-      nodes_to_return_df$x <- nodes_to_return_df$x/100
-      nodes_to_return_df$y <- nodes_to_return_df$y/100
-      nodes_to_return_df$font <- NULL
-      nodes_to_return_df$size <- shiny_nodes_size
+    # browser()
 
-      edges_to_return_indices <- which(shiny_nodes_to_display %in% shiny_edges$from) # | shiny_edges$to %in% shiny_nodes_to_display)
-      edges_to_return_df <- shiny_edges[edges_to_return_indices, ]
-      edges_to_return_df$color <- ifelse(edges_to_return_df$weight > 0, "black", "red")
-      edges_to_return_df$hidden <- NULL
-
-      fcm_as_visNetwork_obj$x$nodes <- nodes_to_return_df
-      fcm_as_visNetwork_obj$x$edges <- edges_to_return_df
-
-      fcm_as_visNetwork_obj <- fcm_as_visNetwork_obj %>%
-        visNetwork::visEdges(smooth = list(enabled = TRUE, type = shiny_edge_smoothing, roundness = shiny_edge_roundness),
-                             font = list(size = shiny_font_size),
-                             physics = FALSE) %>%
-        visNetwork::visNodes(font = list(size = shiny_font_size))
-
-      # browser()
-
-      assign("fcm_as_visNetwork", fcm_as_visNetwork_obj, .GlobalEnv)
-
-      print("Note: visNetwork plot stored as fcm_view_visNetwork in Global Environment", quote = FALSE)
+    shiny_fcm_visNetwork <- shiny_env$updated_fcm_visNetwork_obj
+    if (max(abs(shiny_fcm_visNetwork$x$nodes$x)) > 100) {
+      shiny_fcm_visNetwork$x$nodes$x <- shiny_fcm_visNetwork$x$nodes$x/100
+    } else if ((max(abs(shiny_fcm_visNetwork$x$nodes$x)) > 10)) {
+      shiny_fcm_visNetwork$x$nodes$x <- shiny_fcm_visNetwork$x$nodes$x/10
     }
+    if (max(abs(shiny_fcm_visNetwork$x$nodes$y)) > 100) {
+      shiny_fcm_visNetwork$x$nodes$y <- shiny_fcm_visNetwork$x$nodes$y/100
+    } else if ((max(abs(shiny_fcm_visNetwork$x$nodes$y)) > 10)) {
+      shiny_fcm_visNetwork$x$nodesyx <- shiny_fcm_visNetwork$x$nodes$y/10
+    }
+
+      # assign(
+      #   x = "fcm_view_visNetwork",
+      #   value = shiny_fcm_visNetwork,
+      #   # This function fits best in the workflow if allowed to assign fcm_view_visNetwork
+      #   # to the GlobalEnv which I know is
+      #   envir = as.environment(1)
+      # )
+
+      # cat(
+      #   paste0("Note: Store the call to fcm_view() in a variable like \n",
+      #          "      > fcm_view_output <- fcm_view(...)")
+      # )
+
+    # }
+    # ----
   }
 }
 

@@ -639,6 +639,8 @@ test_that("estimate_fcm_lambda works", {
 
 test_that("fcm_view works", {
 
+  test <- sample_fcms$simple_fcms$conventional_fcms
+
   expect_error(
     fcm_view(fcm_adj_matrix = test)
   )
@@ -663,12 +665,7 @@ test_that("fcm_view works", {
     fcm_view(fcm_adj_matrix = test[[1]])
   )
 
-  fcm_view(fcm_adj_matrix = test[[1]], with_shiny = TRUE)
-
-
-
-
-
+  # fcm_view(fcm_adj_matrix = test[[1]], with_shiny = TRUE)
 
 })
 

@@ -35,8 +35,6 @@ fcmconfr_gui <- function() {
   shiny_env_check <- 1
 
   shiny::runApp(appDir = system.file(file.path('shiny', 'fcmconfr_gui'), package = 'fcmconfr'))
-  # shiny_app <- shiny::shinyAppDir(appDir = system.file('shiny', package = 'fcmconfr'))
-  #shiny::runGadget(shiny_app, viewer = shiny::dialogViewer("", width = 1400, height = 1200))
 
   fcmconfr_gui_vars <- names(fcmconfr_gui_input)
 
@@ -91,6 +89,12 @@ fcmconfr_gui <- function() {
     .Data = fcmconfr_gui_input,
     class = "fcmconfr_gui_input"
   )
+
+  # assign(
+  #   x = "fcmconfr_gui_inputs",
+  #   value = fcmconfr_gui_inputs,
+  #   envir = sys.frame()
+  # )
 
   fcmconfr_gui_inputs
 }
