@@ -692,14 +692,4 @@ shiny_server <- function(input, output, session) {
     )
     shiny::stopApp()
   })
-
-  shiny::onStop(
-    function() {
-      assign(
-        x = "fcmconfr_gui_input",
-        value = structure(.Data = shiny::isolate(form_data()), class = "fcmconfr_gui_input"),
-        envir = sys.frame()
-      )
-    }
-  )
 }

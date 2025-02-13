@@ -400,6 +400,8 @@ plot(fcmconfr_obj,
 ![A screenshot of an example `fcmconfr()` object launched inside the Shiny app (user controls on left; plot on right).](images/interactive_plot_gui.png){width="100%"}
 :::
 
+[]
+
 ### 4.2 Retrieving Inferences
 
 Simulation inferences (individual, aggregate, Monte Carlo) are the main output from `fcmconfr()`. They indicate how much each node is influenced by a particular change or action. Inferences can be accessed as follows:
