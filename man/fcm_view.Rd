@@ -7,7 +7,8 @@
 fcm_view(
   fcm_adj_matrix = matrix(),
   fcm_visNetwork = list(),
-  with_shiny = FALSE
+  shiny = FALSE,
+  ...
 )
 }
 \arguments{
@@ -17,17 +18,20 @@ accepts either an fcm_adj_matrix or fcm_visNetwork input but NOT both.}
 \item{fcm_visNetwork}{An fcm_view visNetwork object output. fcm_view accepts
 either an fcm_adj_matrix or fcm_visNetwork input but NOT both.}
 
-\item{with_shiny}{View visNetwork output in a shiny app instead of the viewer
+\item{shiny}{View visNetwork output in a shiny app instead of the viewer
 pane. This adds the functionality to store node locations after moving them.}
+
+\item{...}{For advanced use. Set alert_on_open = FALSE to remove alert
+pop-up describing how to save visNetwork output from shiny app.}
 }
 \value{
-A display of the input FCM in the Viewer pane; if with_shiny = TRUE,
+A display of the input FCM in the Viewer pane; if shiny = TRUE,
 the visNetwork object saved into the global environment as
 fcm_view_visNetwork
 }
 \description{
 Display an FCM in the Viewer pane as an interactive visNetwork object. Use
-the with_shiny parameter to interact with the FCM visNetwork object and
+the shiny parameter to interact with the FCM visNetwork object and
 store its output in the global environment via the view_fcm_visNetwork
 variable.
 }

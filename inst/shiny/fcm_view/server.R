@@ -45,17 +45,19 @@ server <- function(input, output) {
       visNetwork::visGetPositions()
   })
 
-  shinyWidgets::sendSweetAlert(
-    title = "",
-    text = shiny::tags$div(
-      shiny::HTML(
-        "Store call to fcm_view() in a variable to save changes
+  if (alert_on_open) {
+    shinyWidgets::sendSweetAlert(
+      title = "",
+      text = shiny::tags$div(
+        shiny::HTML(
+          "Store call to fcm_view() in a variable to save changes
         <br>
         <br>
         <pre>fcm_view_output <- fcm_view(...)</pre>"
-      )
-    ), type = "info"
-  )
+        )
+      ), type = "info"
+    )
+  }
   # ----
 
 
@@ -125,7 +127,7 @@ server <- function(input, output) {
       inputId = "node_shape",
       label = "Node shape:",
       choices = c("dot", "box", "text"),
-      selected = unique(input_nodes()$shape)
+      selected = input_opts()$nodes$shape
     )
   })
 
@@ -247,14 +249,14 @@ server <- function(input, output) {
       updated_nodes_df$color <- node_color
 
       if (input$show_node_labels) {
-        updated_nodes_df$label <- ifelse(updated_nodes_df$color == "transparent", " ", input_nodes()$id)
+        updated_nodes_df$label <- ifelse(updated_nodes_df$color == "transparent", "", input_nodes()$id)
       } else {
-        updated_nodes_df$label = " "
+        updated_nodes_df$label = ""
       }
       # ----
 
       # Filter edges ----
-      edge_color <- ifelse((edges()$from %in% nodes_to_hide | edges()$to %in% nodes_to_hide), "transparent", input_edges()$color)
+      edge_color <- ifelse((edges()$from %in% nodes_to_hide | edges()$to %in% nodes_to_hide), "transparent", input_edges()$base_color)
       updated_edges_df <- edges()
       updated_edges_df$color <- edge_color
 
@@ -270,6 +272,11 @@ server <- function(input, output) {
     }
   })
   # ----
+
+  # observe({
+  #   print(nodes()[, c(1, 2)])
+  #   print(edges()[, c(1:4)])
+  # })
 
   updated_fcm_visNetwork <- shiny::reactive({
     if (!is.null(fcm_display)) {
@@ -290,12 +297,14 @@ server <- function(input, output) {
     }
   })
 
-  shiny::observeEvent(input$save_visNetwork, {
+  shiny::observeEvent(input$close_app, {
+    assign(x = "updated_fcm_visNetwork_obj", value = shiny::isolate(updated_fcm_visNetwork()), envir = shiny_env)
     shiny::stopApp()
   })
 
-  shiny::onStop(function() {
-    assign(x = "save_visNetwork", value = TRUE, envir = shiny_env)
-    assign(x = "updated_fcm_visNetwork_obj", value = shiny::isolate(updated_fcm_visNetwork()), envir = shiny_env)
-  })
+  shiny::onStop(
+    function() {
+      assign(x = "updated_fcm_visNetwork_obj", value = shiny::isolate(updated_fcm_visNetwork()), envir = shiny_env)
+    }
+  )
 }

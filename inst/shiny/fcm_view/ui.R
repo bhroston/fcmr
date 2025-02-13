@@ -12,7 +12,7 @@ ui <- shiny::fluidPage(
         shiny::column(
           width = 12, align = "center",
           shiny::actionButton(
-            "save_visNetwork", "Close App", icon = shiny::icon("check"), width = "100%"
+            "close_app", "Close App", icon = shiny::icon("check"), width = "100%"
           )
         )
       ),
