@@ -136,6 +136,48 @@ upper_adj_matrix <- apply(ivfn_df, c(1, 2), function(element) element[[1]]$upper
 
 Users may display FCMs in RStudio's Viewer pane using `fcm_view()`, which plots an FCM (adjacency matrix) as a `visNetwork` object. The resulting plot is interactive. Users can manipulate node positions (i.e. node layout) to explore the FCM from different angles. The function can be used with any of the three FCM types recognized by `fcmconfr`. For IVFN and TFN-FCMs, `fcm_view()` plots the average edge weight to simplify the output.
 
+`fcm_view()` returns a visNetwork object which, if called without being defined to a variable, plots in RStudio's Viewer pane.
+
+```{r eval=FALSE}
+# Loading FCM from sample_fcms data
+adj_matrix <- sample_fcms$simple_fcms$conventional_fcms[[1]]
+
+# Show FCM in Viewer Pane
+fcm_view(fcm_adj_matrix = adj_matrix)
+
+# Store FCM visNetwork Object in a Variable
+fcm_view_output <- fcm_view(fcm_adj_matrix = adj_matrix)
+fcm_view_output # Shows FCM in Viewer Pane
+```
+
+::: {style="text-align: center;"}
+![visNetwork Output of fcm_view in Viewer pane. Drag nodes to rearrange layout.](images/fcm_view_output.png){width="70%"}
+:::
+
+`fcm_view()` also offers more in-depth ways to interact with FCM layouts through a GUI that can be accessed by adding `shiny = TRUE` to the function call.
+
+```{r eval=FALSE}
+fcm_view(fcm_adj_matrix = adj_matrix, shiny = TRUE)
+```
+
+::: {style="text-align: center;"}
+![The fcm_view() GUI expands the ways users can view FCM layouts from changing node visibility to how the curves of edges are illustrated.](images/fcm_view_gui.png){width="90%"}
+:::
+
+To save the changes made to the FCM `visNetwork` object in the GUI, users will have to assign a variable to the call to `fcm_view()` beforehand.
+
+An alert will pop-up when the GUI launches to remind users that they need to preemptively tell `fcm_view()` whether they want to save changes made in the GUI by storing the call to a variable like the example below.
+
+```{r eval=TRUE}
+# Opens GUI but will not save output
+fcm_view(fcm_adj_matrix = adj_matrix, shiny = TRUE)
+
+# Opens GUI and will save output (into fcm_view_output)
+fcm_view_output <- fcm_view(fcm_adj_matrix = adj_matrix, shiny = TRUE)
+```
+
+*Note: By default, `fcm_view()` has an additional parameter, `alert_on_open` , that users can set to `FALSE` if they want to turn off the alert pop-up.*
+
 Two basic applications of `fcm_view()` are illustrated below, one that plots the FCM in the Viewer pane and one that plots the FCM in a separate Shiny App.
 
 ```{r eval=FALSE}
@@ -146,12 +188,8 @@ adj_matrix <- sample_fcms$simple_fcms$conventional_fcms[[1]]
 fcm_view(fcm_adj_matrix = adj_matrix)
 
 # Show FCM in Separate Shiny App (returns a visNetwork object in the Global Environment)
-fcm_view(fcm_adj_matrix = adj_matrix, with_shiny = TRUE)
+fcm_view(fcm_adj_matrix = adj_matrix, shiny = TRUE)
 ```
-
-::: {style="text-align: center;"}
-![visNetwork Output of fcm_view. Drag nodes to rearrange layout.](images/fcm_view_output.png){width="80%"}
-:::
 
 `fcm_view()` has an additional argument `with_shiny` (default `= FALSE`). If set to TRUE, `fcm_view()` records the `visNetwork` output in the Global Environment as `view_fcm_visNetwork_output`. This output stores node coordinates so nodes can be plotted in the same position if manipulated by the user and can be interacted with as a typical `visNetwork` object for users interested in additional customization.
 
