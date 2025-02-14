@@ -239,9 +239,12 @@ different angles. The function can be used with any of the three FCM
 types recognized by <code>fcmconfr</code>. For IVFN and TFN-FCMs,
 <code><a href="../reference/fcm_view.html">fcm_view()</a></code> plots the average edge weight to simplify the
 output.</p>
-<p>Two basic applications of <code><a href="../reference/fcm_view.html">fcm_view()</a></code> are illustrated
-below, one that plots the FCM in the Viewer pane and one that plots the
-FCM in a separate Shiny App.</p>
+<p><code><a href="../reference/fcm_view.html">fcm_view()</a></code> returns a visNetwork object which, if called
+without being defined to a variable, plots in RStudio’s Viewer pane.</p>
+<p>At its core, <code><a href="../reference/fcm_view.html">fcm_view()</a></code> is just a call to
+<code>visNetwork</code> functions. Users who have experience with
+<code>visNetwork</code> should feel free to plot FCMs directly with
+<code>visNetwork</code> for greater flexibility.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Loading FCM from sample_fcms data</span></span>
 <span><span class="va">adj_matrix</span> <span class="op">&lt;-</span> <span class="va">sample_fcms</span><span class="op">$</span><span class="va">simple_fcms</span><span class="op">$</span><span class="va">conventional_fcms</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
@@ -249,26 +252,53 @@ FCM in a separate Shiny App.</p>
 <span><span class="co"># Show FCM in Viewer Pane</span></span>
 <span><span class="fu"><a href="../reference/fcm_view.html">fcm_view</a></span><span class="op">(</span>fcm_adj_matrix <span class="op">=</span> <span class="va">adj_matrix</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Show FCM in Separate Shiny App (returns a visNetwork object in the Global Environment)</span></span>
-<span><span class="fu"><a href="../reference/fcm_view.html">fcm_view</a></span><span class="op">(</span>fcm_adj_matrix <span class="op">=</span> <span class="va">adj_matrix</span>, with_shiny <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Store FCM visNetwork Object in a Variable</span></span>
+<span><span class="va">fcm_view_output</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fcm_view.html">fcm_view</a></span><span class="op">(</span>fcm_adj_matrix <span class="op">=</span> <span class="va">adj_matrix</span><span class="op">)</span></span>
+<span><span class="va">fcm_view_output</span> <span class="co"># Shows FCM in Viewer Pane</span></span></code></pre></div>
 <div style="text-align: center;">
 <div class="float">
-<img src="images%2Ffcm_view_output.png" style="width:80.0%" alt="visNetwork Output of fcm_view. Drag nodes to rearrange layout."><div class="figcaption">visNetwork Output of fcm_view. Drag nodes to
-rearrange layout.</div>
+<img src="images%2Ffcm_view_output.png" style="width:70.0%" alt="visNetwork Output of fcm_view in Viewer pane. Drag nodes to rearrange layout."><div class="figcaption">visNetwork Output of fcm_view in Viewer pane.
+Drag nodes to rearrange layout.</div>
 </div>
 </div>
-<p><code><a href="../reference/fcm_view.html">fcm_view()</a></code> has an additional argument
-<code>with_shiny</code> (default <code>= FALSE</code>). If set to TRUE,
-<code><a href="../reference/fcm_view.html">fcm_view()</a></code> records the <code>visNetwork</code> output in
-the Global Environment as <code>view_fcm_visNetwork_output</code>. This
-output stores node coordinates so nodes can be plotted in the same
-position if manipulated by the user and can be interacted with as a
-typical <code>visNetwork</code> object for users interested in
-additional customization.</p>
-<p>Note: At its core, <code><a href="../reference/fcm_view.html">fcm_view()</a></code> is just a call to
-<code>visNetwork</code> functions. Users who have experience with
-<code>visNetwork</code> should feel free to plot FCMs directly with
-<code>visNetwork</code> for greater flexibility.</p>
+<p><code><a href="../reference/fcm_view.html">fcm_view()</a></code> also offers more in-depth ways to interact
+with FCM layouts through a GUI that can be accessed by adding
+<code>shiny = TRUE</code> to the function call.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/fcm_view.html">fcm_view</a></span><span class="op">(</span>fcm_adj_matrix <span class="op">=</span> <span class="va">adj_matrix</span>, shiny <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<div style="text-align: center;">
+<div class="float">
+<img src="images%2Ffcm_view_gui.png" style="width:90.0%" alt="The fcm_view() GUI expands the ways users can view FCM layouts from changing node visibility to how the curves of edges are illustrated."><div class="figcaption">The fcm_view() GUI expands the ways users can
+view FCM layouts from changing node visibility to how the curves of
+edges are illustrated.</div>
+</div>
+</div>
+<p>To save the changes made to the FCM <code>visNetwork</code> object in
+the GUI, users will have to assign a variable to the call to
+<code><a href="../reference/fcm_view.html">fcm_view()</a></code> beforehand.</p>
+<p>An alert will pop-up when the GUI launches to remind users that they
+need to preemptively tell <code><a href="../reference/fcm_view.html">fcm_view()</a></code> whether they want to
+save changes made in the GUI by storing the call to a variable like the
+example below.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Opens GUI but will not save output</span></span>
+<span><span class="fu"><a href="../reference/fcm_view.html">fcm_view</a></span><span class="op">(</span>fcm_adj_matrix <span class="op">=</span> <span class="va">adj_matrix</span>, shiny <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Opens GUI and will save output (into fcm_view_output)</span></span>
+<span><span class="va">fcm_view_output</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fcm_view.html">fcm_view</a></span><span class="op">(</span>fcm_adj_matrix <span class="op">=</span> <span class="va">adj_matrix</span>, shiny <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><em>Note: By default, <code><a href="../reference/fcm_view.html">fcm_view()</a></code> has an additional
+parameter, <code>alert_on_open</code> , that users can set to
+<code>FALSE</code> if they want to turn off the alert pop-up.</em></p>
+<p>To open a saved output from <code><a href="../reference/fcm_view.html">fcm_view()</a></code> in the GUI,
+replace the <code>fcm_adj_matrix</code> parameter with
+<code>fcm_visNetwork</code>. The following example shows how to reopen
+the GUI with an <code><a href="../reference/fcm_view.html">fcm_view()</a></code> output:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Opens GUI and will save output (into fcm_view_output)</span></span>
+<span><span class="va">fcm_view_output_1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fcm_view.html">fcm_view</a></span><span class="op">(</span>fcm_adj_matrix <span class="op">=</span> <span class="va">adj_matrix</span>, shiny <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Reopen the GUI and save changes in a new variable</span></span>
+<span><span class="va">fcm_view_output_2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fcm_view.html">fcm_view</a></span><span class="op">(</span>fcm_visNetwork <span class="op">=</span> <span class="va">fcm_view_output_1</span>, shiny <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level3">
@@ -290,7 +320,7 @@ appropriate FCMs to analyze from a dropdown menu titled Adj. Matrix or
 List of Adj. Matrices.</p>
 <p>Matrices conforming to any of the above-noted FCM types
 (conventional, IVFN, or TFN) can be selected for analysis.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/fcmconfr_gui.html">fcmconfr_gui</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <div style="text-align: center;">
 <div class="float">
@@ -332,7 +362,9 @@ FCMs should be aggregated into a single collective model so that dynamic
 simulations can be performed on the aggregate in addition to individual
 FCMs. The user can specify the aggregation method (mean or median) and
 whether zero-weighted edges should be included in the aggregation
-process.</p></li>
+process. See <code>?aggregate_fcms()</code> for more information on
+aggregating FCMs outside of the primary <code><a href="../reference/fcmconfr.html">fcmconfr()</a></code>
+function.</p></li>
 <li><p>Monte Carlo options allow the user to specify whether Monte Carlo
 sampling should be performed to estimate uncertainty in dynamic
 simulation outputs. If yes, the user must specify the number of FCMs
@@ -373,7 +405,7 @@ NOT exit the GUI without clicking Submit. Doing so WILL NOT create a
 call to <code><a href="../reference/fcmconfr.html">fcmconfr()</a></code> and all previously entered information
 will be lost. The following code is an example output from
 <code><a href="../reference/fcmconfr_gui.html">fcmconfr_gui()</a></code>.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/fcmconfr.html">fcmconfr</a></span><span class="op">(</span></span>
 <span>  adj_matrices <span class="op">=</span> <span class="va">sample_fcm_list</span>,</span>
 <span>  <span class="co"># Aggregation and Monte Carlo Sampling</span></span>
@@ -406,7 +438,7 @@ will be lost. The following code is an example output from
 <p>Once the call to <code><a href="../reference/fcmconfr.html">fcmconfr()</a></code> has been generated by the
 GUI, copy-and-paste it into another file and define it as a variable
 (see example below):</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fcmconfr_obj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fcmconfr.html">fcmconfr</a></span><span class="op">(</span></span>
 <span>  adj_matrices <span class="op">=</span> <span class="va">sample_fcm_list</span>,</span>
 <span>  <span class="co"># Aggregation and Monte Carlo Sampling</span></span>
@@ -451,7 +483,7 @@ lambda) given a particular adjacency matrix and squashing function
 (<code>sigmoid</code> or <code>tanh</code>).</p>
 <p>An example call to <code>estimate_lambda()</code> has been provided
 below.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">example_fcm</span> <span class="op">&lt;-</span> <span class="va">sample_fcms</span><span class="op">$</span><span class="va">simple_fcms</span><span class="op">$</span><span class="va">conventional_fcms</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="fu">estimate_lambda</span><span class="op">(</span><span class="va">example_fcm</span>, squashing <span class="op">=</span> <span class="st">"sigmoid"</span><span class="op">)</span></span>
 <span><span class="fu">estimate_lambda</span><span class="op">(</span><span class="va">example_fcm</span>, squashing <span class="op">=</span> <span class="st">"tanh"</span><span class="op">)</span></span></code></pre></div>
@@ -461,7 +493,7 @@ IVFN-FCM or TFN-FCM is provided, <code>estimate_lambda()</code> will
 create a conventional FCM by averaging the edge weights (upper and lower
 for IVFN-FCMs and upper, mode, and lower for TFN-FCMs) for use in
 calculating lambda.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">example_ivfn_fcm</span> <span class="op">&lt;-</span> <span class="va">sample_fcms</span><span class="op">$</span><span class="va">simple_fcms</span><span class="op">$</span><span class="va">ivfn_fcms</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="va">example_tfn_fcm</span> <span class="op">&lt;-</span> <span class="va">sample_fcms</span><span class="op">$</span><span class="va">simple_fcms</span><span class="op">$</span><span class="va">tfn_fcms</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="fu">estimate_lambda</span><span class="op">(</span><span class="va">example_ivfn_fcm</span>, squashing <span class="op">=</span> <span class="st">"sigmoid"</span><span class="op">)</span></span>
@@ -471,7 +503,7 @@ calculating lambda.</p>
 less than the <code>estimate_lambda()</code> output are more likely to
 be appropriate than values greater than the
 <code>estimate_lambda()</code> output.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Estimating lambda for dynamic simulations with multiple FCMs</span></span>
 <span><span class="va">example_fcms</span> <span class="op">&lt;-</span> <span class="va">sample_fcms</span><span class="op">$</span><span class="va">simple_fcms</span><span class="op">$</span><span class="va">conventional_fcms</span></span>
 <span></span>
@@ -485,7 +517,7 @@ work well with all FCMs being analyzed in each call to
 <code><a href="../reference/fcmconfr.html">fcmconfr()</a></code>. Given this, we recommend estimating lambda
 separately for each adjacency matrix and using the minimum lambda value
 in <code><a href="../reference/fcmconfr.html">fcmconfr()</a></code>. See example below:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Unlist the output lambda estimates to create a vector</span></span>
 <span><span class="co"># and calculate the minimum value</span></span>
 <span><span class="va">lambda_for_example_fcms</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">lambda_estimates</span><span class="op">)</span><span class="op">)</span></span>
@@ -572,7 +604,7 @@ into the console. This provides definitions for all possible inputs
 to customize the figure.</p>
 <p>An example call illustrating the defaults for each input has been
 provided below:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Plot Defaults</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fcmconfr_obj</span>,</span>
 <span>     interactive <span class="op">=</span> <span class="cn">FALSE</span>, <span class="co"># Set to TRUE to open shiny app</span></span>
@@ -603,7 +635,7 @@ font size within the app to clearly view axis labels</em>.</p>
 <p>An example call, where the <code>interactive</code> parameter is set
 to <code>TRUE</code> and the x-axis is constrained between -0.5 and 0.5
 has been provided below:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fcmconfr_obj</span>,</span>
 <span>     interactive <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>     xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
@@ -614,6 +646,7 @@ has been provided below:</p>
 controls on left; plot on right).</div>
 </div>
 </div>
+<p>[]</p>
 </div>
 <div class="section level4">
 <h4 id="retrieving-inferences">4.2 Retrieving Inferences<a class="anchor" aria-label="anchor" href="#retrieving-inferences"></a>
@@ -622,7 +655,7 @@ controls on left; plot on right).</div>
 main output from <code><a href="../reference/fcmconfr.html">fcmconfr()</a></code>. They indicate how much each
 node is influenced by a particular change or action. Inferences can be
 accessed as follows:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">all_inferences</span> <span class="op">&lt;-</span> <span class="va">fcmconfr_obj</span><span class="op">$</span><span class="va">inferences</span></span>
 <span></span>
 <span><span class="va">individual_fcm_inferences</span> <span class="op">&lt;-</span> <span class="va">all_inferences</span><span class="op">$</span><span class="va">individual_fcms</span><span class="op">$</span><span class="va">inferences</span></span>
@@ -632,7 +665,7 @@ accessed as follows:</p>
 <p>In addition to accessing inference data manually (as shown above),
 <code>fcmconfr</code> provides the <code><a href="../reference/get_inferences.html">get_inferences()</a></code>
 function to retrieve and store inference results.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fcmconfr_inferences</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_inferences.html">get_inferences</a></span><span class="op">(</span><span class="va">fcmconfr_obj</span>, analysis <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"individual"</span>, <span class="st">"aggregate"</span>, <span class="st">"mc"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>The output of <code><a href="../reference/get_inferences.html">get_inferences()</a></code> is a <code>list</code> of
 dataframes containing the inferences for each analysis. By default,
@@ -656,7 +689,7 @@ the peak simulated value for each node, as specified in the original
 call to <code><a href="../reference/fcmconfr.html">fcmconfr()</a></code>)</p>
 <p>Users interested in calculating their own inferences directly from
 simulation time-series can access thaat data as follows:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Simulations for individual_fcms</span></span>
 <span><span class="va">individual_fcms_sims</span> <span class="op">&lt;-</span> <span class="va">fcmconfr_obj</span><span class="op">$</span><span class="va">inferences</span><span class="op">$</span><span class="va">individual_fcms</span><span class="op">$</span><span class="va">simulations</span></span>
 <span></span>
@@ -670,7 +703,7 @@ every adjacency matrix in a given analysis. Users can retrieve
 simulations for a specific adjacency matrix (e.g.,
 <code>adj_matrix_1</code> from <code>individual_fcms_sims</code>) as
 follows:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sim_1</span> <span class="op">&lt;-</span> <span class="va">individual_fcms_sims</span><span class="op">$</span><span class="va">adj_matrix_1</span><span class="op">$</span><span class="va">simulations</span></span></code></pre></div>
 <p>This returns both the <code>scenario_simulation</code> and
 <code>baseline_simulation</code> data for a given adjacency matrix.</p>
@@ -684,7 +717,7 @@ behavior) of the system as a control.</p>
 (<code>scenario - baseline</code>). Different metrics are used for
 <code>peak</code> vs <code>final</code> inferences as described
 below:</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Continuing from the example above</span></span>
 <span></span>
 <span><span class="co"># Get the state vectors for the scenario simulation</span></span>
@@ -716,7 +749,7 @@ simulation time-series for specific nodes (e.g.,
 <code>Salinization.of.the.Reservoir</code>) as described below. The
 difference between the <code>scenario</code> and <code>baseline</code>
 time-series is the inference.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">salinization_scenario_time_series</span> <span class="op">&lt;-</span> <span class="va">scenario_state_vectors</span><span class="op">$</span><span class="va">Salinization.of.the.Reservoir</span></span>
 <span><span class="va">salinization_baseline_time_series</span> <span class="op">&lt;-</span> <span class="va">baseline_state_vectors</span><span class="op">$</span><span class="va">Salinization.of.the.Reservoir</span></span>
 <span></span>
