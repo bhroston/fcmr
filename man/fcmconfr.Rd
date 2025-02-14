@@ -122,7 +122,9 @@ interactive GUI.
          the mean/median of the edge weight connecting B -> C across all
          maps, and so on) (Aminpour et al., 2020). The user may dictate
          whether to incorporate 0-valued edge weights in the mean/median
-         calculations.
+         calculations. See \code{\link{aggregate_fcms}} for more
+         information on aggregating FCMs outside of the
+         primary \code{\link{fcmconfr}} function.
    \item Monte Carlo Analysis: Generate empirical adj. matrices whose edge
          weights are drawn from edge weights from the input FCMs using
          monte carlo sampling methods.These empirical FCMs are then simulated

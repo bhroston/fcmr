@@ -136,7 +136,9 @@ upper_adj_matrix <- apply(ivfn_df, c(1, 2), function(element) element[[1]]$upper
 
 Users may display FCMs in RStudio's Viewer pane using `fcm_view()`, which plots an FCM (adjacency matrix) as a `visNetwork` object. The resulting plot is interactive. Users can manipulate node positions (i.e. node layout) to explore the FCM from different angles. The function can be used with any of the three FCM types recognized by `fcmconfr`. For IVFN and TFN-FCMs, `fcm_view()` plots the average edge weight to simplify the output.
 
-Two basic applications of `fcm_view()` are illustrated below, one that plots the FCM in the Viewer pane and one that plots the FCM in a separate Shiny App.
+`fcm_view()` returns a visNetwork object which, if called without being defined to a variable, plots in RStudio's Viewer pane.
+
+At its core, `fcm_view()` is just a call to `visNetwork` functions. Users who have experience with `visNetwork` should feel free to plot FCMs directly with `visNetwork` for greater flexibility.
 
 ```{r eval=FALSE}
 # Loading FCM from sample_fcms data
@@ -145,17 +147,48 @@ adj_matrix <- sample_fcms$simple_fcms$conventional_fcms[[1]]
 # Show FCM in Viewer Pane
 fcm_view(fcm_adj_matrix = adj_matrix)
 
-# Show FCM in Separate Shiny App (returns a visNetwork object in the Global Environment)
-fcm_view(fcm_adj_matrix = adj_matrix, with_shiny = TRUE)
+# Store FCM visNetwork Object in a Variable
+fcm_view_output <- fcm_view(fcm_adj_matrix = adj_matrix)
+fcm_view_output # Shows FCM in Viewer Pane
 ```
 
 ::: {style="text-align: center;"}
-![visNetwork Output of fcm_view. Drag nodes to rearrange layout.](images/fcm_view_output.png){width="80%"}
+![visNetwork Output of fcm_view in Viewer pane. Drag nodes to rearrange layout.](images/fcm_view_output.png){width="70%"}
 :::
 
-`fcm_view()` has an additional argument `with_shiny` (default `= FALSE`). If set to TRUE, `fcm_view()` records the `visNetwork` output in the Global Environment as `view_fcm_visNetwork_output`. This output stores node coordinates so nodes can be plotted in the same position if manipulated by the user and can be interacted with as a typical `visNetwork` object for users interested in additional customization.
+`fcm_view()` also offers more in-depth ways to interact with FCM layouts through a GUI that can be accessed by adding `shiny = TRUE` to the function call.
 
-Note: At its core, `fcm_view()` is just a call to `visNetwork` functions. Users who have experience with `visNetwork` should feel free to plot FCMs directly with `visNetwork` for greater flexibility.
+```{r eval=FALSE}
+fcm_view(fcm_adj_matrix = adj_matrix, shiny = TRUE)
+```
+
+::: {style="text-align: center;"}
+![The fcm_view() GUI expands the ways users can view FCM layouts from changing node visibility to how the curves of edges are illustrated.](images/fcm_view_gui.png){width="90%"}
+:::
+
+To save the changes made to the FCM `visNetwork` object in the GUI, users will have to assign a variable to the call to `fcm_view()` beforehand.
+
+An alert will pop-up when the GUI launches to remind users that they need to preemptively tell `fcm_view()` whether they want to save changes made in the GUI by storing the call to a variable like the example below.
+
+```{r eval=FALSE}
+# Opens GUI but will not save output
+fcm_view(fcm_adj_matrix = adj_matrix, shiny = TRUE)
+
+# Opens GUI and will save output (into fcm_view_output)
+fcm_view_output <- fcm_view(fcm_adj_matrix = adj_matrix, shiny = TRUE)
+```
+
+*Note: By default, `fcm_view()` has an additional parameter, `alert_on_open` , that users can set to `FALSE` if they want to turn off the alert pop-up.*
+
+To open a saved output from `fcm_view()` in the GUI, replace the `fcm_adj_matrix` parameter with `fcm_visNetwork`. The following example shows how to reopen the GUI with an `fcm_view()` output:
+
+```{r eval=FALSE}
+# Opens GUI and will save output (into fcm_view_output)
+fcm_view_output_1 <- fcm_view(fcm_adj_matrix = adj_matrix, shiny = TRUE)
+
+# Reopen the GUI and save changes in a new variable
+fcm_view_output_2 <- fcm_view(fcm_visNetwork = fcm_view_output_1, shiny = TRUE)
+```
 
 ## 2. Set Simulation Parameters using `fcmconfr_gui()`
 
@@ -183,7 +216,7 @@ The GUI interface is organized into four tabs: Data, Agg. and Monte Carlo Option
 
 -   Agg. and Monte Carlo Options: The Agg. and Monte Carlo Options tab is where the user specifies their preferences regarding FCM aggregation and Monte Carlo sampling. Aggregation options are only available when datasets contain multiple FCMs. Monte Carlo sampling is available for `list` objects of conventiona, IVFN- and TFN-FCMs as well as individual IVFN-/TFN-FCMs, but not individual conventional FCMs. Aggregation and Monte Carlo options can be toggled off to speed up the simulation process.
 
-    -   Aggregation options allow the user to specify whether multiple FCMs should be aggregated into a single collective model so that dynamic simulations can be performed on the aggregate in addition to individual FCMs. The user can specify the aggregation method (mean or median) and whether zero-weighted edges should be included in the aggregation process.
+    -   Aggregation options allow the user to specify whether multiple FCMs should be aggregated into a single collective model so that dynamic simulations can be performed on the aggregate in addition to individual FCMs. The user can specify the aggregation method (mean or median) and whether zero-weighted edges should be included in the aggregation process. See `?aggregate_fcms()` for more information on aggregating FCMs outside of the primary `fcmconfr()` function.
 
     -   Monte Carlo options allow the user to specify whether Monte Carlo sampling should be performed to estimate uncertainty in dynamic simulation outputs. If yes, the user must specify the number of FCMs that will be generated by Monte Carlo sampling (we recommend 1000 or more). Dynamic simulations will be performed on each of these FCMs, providing a range of inferences for each node, from which the median state and quantiles (25^th^, 75^th^) will be estimated. The user also has the option to perform nonparametric bootstrapping to estimate confidence bounds about the average inference for each node. Confidence limits are user-specified (i.e., 95^th^ percentile, 90^th^ percentile, etc.).
 
@@ -399,6 +432,8 @@ plot(fcmconfr_obj,
 ::: {style="text-align: center;"}
 ![A screenshot of an example `fcmconfr()` object launched inside the Shiny app (user controls on left; plot on right).](images/interactive_plot_gui.png){width="100%"}
 :::
+
+[]
 
 ### 4.2 Retrieving Inferences
 

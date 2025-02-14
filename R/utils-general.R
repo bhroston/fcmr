@@ -106,76 +106,166 @@ standardize_adj_matrices <- function(adj_matrices = list(matrix())) {
 #'
 #' @description
 #' Display an FCM in the Viewer pane as an interactive visNetwork object. Use
-#' the with_shiny parameter to interact with the FCM visNetwork object and
+#' the shiny parameter to interact with the FCM visNetwork object and
 #' store its output in the global environment via the view_fcm_visNetwork
 #' variable.
 #'
-#' @param fcm_adj_matrix An adjacency matrix representing an FCM
-#' @param with_shiny View visNetwork output in a shiny app instead of the viewer
+#' @param fcm_adj_matrix An adjacency matrix representing an FCM. fcm_view
+#' accepts either an fcm_adj_matrix or fcm_visNetwork input but NOT both.
+#' @param fcm_visNetwork An fcm_view visNetwork object output. fcm_view accepts
+#' either an fcm_adj_matrix or fcm_visNetwork input but NOT both.
+#' @param shiny View visNetwork output in a shiny app instead of the viewer
 #' pane. This adds the functionality to store node locations after moving them.
+#' @param ... For advanced use. Set alert_on_open = FALSE to remove alert
+#' pop-up describing how to save visNetwork output from shiny app.
 #'
-#' @returns A display of the input FCM in the Viewer pane; if with_shiny = TRUE,
+#' @returns A display of the input FCM in the Viewer pane; if shiny = TRUE,
 #' the visNetwork object saved into the global environment as
 #' fcm_view_visNetwork
 #'
 #' @export
 #' @example man/examples/ex-fcm_view.R
-fcm_view <- function(fcm_adj_matrix = matrix(), with_shiny = FALSE) {
-  fcm_adj_matrix_input_type <- get_adj_matrices_input_type(fcm_adj_matrix)
+fcm_view <- function(fcm_adj_matrix = matrix(),
+                     fcm_visNetwork = list(), # A visNetwork Object
+                     shiny = FALSE,
+                     ...) {
 
-  if (!(is.logical(with_shiny))) {
+  # Checks ----
+  if (!identical(fcm_adj_matrix, matrix()) & !identical(fcm_visNetwork, list())) {
     stop(cli::format_error(c(
-      "x" = "Error: {.var with_shiny} must be a logical (TRUE/FALSE) value.",
-      "+++++> Input {.var with_shiny} was: {with_shiny}"
+      "x" = "Error: fcm_view accepts either {.var fcm_adj_matrix} OR {.var fcm_visNetwork} as inputs",
+      "+++++> Either input only a {.var fcm_adj_matrix} OR {.var fcm_visNetwork} (a visNetwork object)"
     )))
   }
 
-  fcm_adj_matrix_class <- fcm_adj_matrix_input_type$fcm_class
-  if (fcm_adj_matrix_class == "conventional") {
-    conventional_fcm <- fcm_adj_matrix
-  } else if (fcm_adj_matrix_class == "ivfn") {
-    conventional_fcm <- apply(fcm_adj_matrix, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$upper))
-  } else if (fcm_adj_matrix_class == "tfn") {
-    conventional_fcm <- apply(fcm_adj_matrix, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$mode,  x[[1]]$upper))
+  if (!(is.logical(shiny))) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var shiny} must be a logical (TRUE/FALSE) value.",
+      "+++++> Input {.var shiny} was: {shiny}"
+    )))
   }
 
-  # Translate fcm into an igraph object and then convert to visNetwork
-  fcm_as_igraph_obj <- igraph::graph_from_adjacency_matrix(as.matrix(conventional_fcm), weighted = TRUE, mode = "directed")
-  fcm_as_visNetwork_obj <- visNetwork::visIgraph(fcm_as_igraph_obj) %>%
-    visNetwork::visIgraphLayout()
+  additional_params <- list(...)
+  if (length(additional_params) > 0 & (!("alert_on_open" %in% names(additional_params)))) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var ...} may only be {.var alert_on_open} = TRUE/FALSE",
+      "+++++> Input {.var ...} contained: {names(additional_params)}"
+    )))
+  }
+  if ("alert_on_open" %in% names(additional_params) & !shiny) {
+    warning(cli::format_warning(c(
+      "!" = "Warning: {.var alert_on_open} is only used if {.var shiny} is TRUE",
+      "~~~~~ Ignoring {.var alert_on_open}"
+    )))
+  }
+  if ("alert_on_open" %in% names(additional_params) & !is.logical(additional_params$alert_on_open)) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var alert_on_open} must be a logical (TRUE/FALSE) value.",
+      "+++++> Input {.var alert_on_open} was: {additional_params$alert_on_open}"
+    )))
+  }
+  if ("alert_on_open" %in% names(additional_params)) {
+    alert_on_open <- additional_params$alert_on_open
+  } else {
+    alert_on_open <- TRUE
+  }
 
-  # Add aesthetics for nodes
-  fcm_as_visNetwork_obj$x$nodes$color <- "lightgrey"
-  fcm_as_visNetwork_obj$x$nodes$physics <- FALSE
-  fcm_as_visNetwork_obj$x$nodes$font <- list(size = 14)
-  # fcm_as_visNetwork_obj$x$nodes$hidden <- FALSE
 
-  # Add aesthetics for edges
-  edges_df <- fcm_as_visNetwork_obj$x$edges
-  edges_df$label <- paste(round(edges_df$weight, 2))
-  edges_df$color <- ifelse(edges_df$weight >= 0, "black", "red")
-  edges_df$width <- abs(edges_df$weight*2)
-  # edges_df$hidden <- FALSE
-  fcm_as_visNetwork_obj$x$edges <- edges_df
+  if (identical(methods::is(fcm_adj_matrix), "visNetwork")) {
+    options(warn = 1) # Make sure warning shows before launching shiny app
+    warning(cli::format_warning(c(
+      "!" = "Warning: {.var fcm_adj_matrix} is a 'visNetwork' object",
+      "~~~~~ Replacing {.var fcm_adj_matrix} with {.var fcm_visNetwork} in function call"
+    )))
+    options(warn = 0)
+    fcm_visNetwork <- fcm_adj_matrix
+    fcm_adj_matrix <- matrix()
+  }
+  # ----
 
-  # Load plot
-  fcm_as_visNetwork_obj <- fcm_as_visNetwork_obj %>%
-    #test <- fcm_as_visNetwork_obj %>%
-    visNetwork::visEdges(smooth = list(enabled = TRUE, type = "continuous", roundness = 0.4), physics = FALSE) %>%
-    visNetwork::visIgraphLayout()
+  if (!identical(fcm_visNetwork, list()) & !identical(methods::is(fcm_visNetwork), "visNetwork")) {
+    stop(cli::format_error(c(
+      "x" = "Error: {.var fcm_visNetwork} must be a visNetwork object (preferrably directly from fcm_view",
+      "+++++> Input {.var fcm_visNetwork} was of type: {methods::is(fcm_visNetwork)[1]}"
+    )))
+  } else if (!identical(fcm_visNetwork, list()) & identical(methods::is(fcm_visNetwork), "visNetwork")) {
+    fcm_as_visNetwork_obj <- fcm_visNetwork
+  }
 
-  node_x_coords <- fcm_as_visNetwork_obj$x$nodes$x
-  node_y_coords <- fcm_as_visNetwork_obj$x$nodes$y
+  if (!identical(fcm_adj_matrix, matrix())) {
+    if (length(unique(dim(fcm_adj_matrix))) > 1) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var fcm_adj_matrix} must be a single (n x n) adj. matrix.",
+        "+++++> Input {.var fcm_adj_matrix} had dimensions: {dim(fcm_adj_matrix)}"
+      )))
+    }
 
-  spaced_node_x_coords <- node_x_coords*1.5
-  spaced_node_y_coords <- node_y_coords*2
+    fcm_adj_matrix_input_type <- get_adj_matrices_input_type(fcm_adj_matrix)
 
-  fcm_as_visNetwork_obj$x$nodes$x <- spaced_node_x_coords
-  fcm_as_visNetwork_obj$x$nodes$y <- spaced_node_y_coords
+    if ((fcm_adj_matrix_input_type$adj_matrices_input_is_list) & (length(fcm_adj_matrix) > 1)) {
+      stop(cli::format_error(c(
+        "x" = "Error: {.var fcm_adj_matrix} must be a single adj. matrix.",
+        "+++++> Input {.var fcm_adj_matrix} was a list of {length(fcm_adj_matrix)} adj. matrices."
+      )))
+    } else if ((fcm_adj_matrix_input_type$adj_matrices_input_is_list) & (length(fcm_adj_matrix) == 1)) {
+      fcm_adj_matrix <- fcm_adj_matrix[[1]]
+    }
 
-  if (!with_shiny) {
+    fcm_adj_matrix_class <- fcm_adj_matrix_input_type$fcm_class
+    if (fcm_adj_matrix_class == "conventional") {
+      conventional_fcm <- fcm_adj_matrix
+    } else if (fcm_adj_matrix_class == "ivfn") {
+      conventional_fcm <- apply(fcm_adj_matrix, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$upper))
+    } else if (fcm_adj_matrix_class == "tfn") {
+      conventional_fcm <- apply(fcm_adj_matrix, c(1, 2), function(x) mean(x[[1]]$lower, x[[1]]$mode,  x[[1]]$upper))
+    }
+
+    # Translate fcm into an igraph object and then convert to visNetwork
+    fcm_as_igraph_obj <- igraph::graph_from_adjacency_matrix(as.matrix(conventional_fcm), weighted = TRUE, mode = "directed")
+    fcm_as_visNetwork_obj <- visNetwork::visIgraph(fcm_as_igraph_obj) %>%
+      visNetwork::visIgraphLayout()
+
+    # Add aesthetics for nodes
+    fcm_as_visNetwork_obj$x$nodes$color <- "lightgrey"
+    fcm_as_visNetwork_obj$x$nodes$base_color <- "lightgrey"
+    fcm_as_visNetwork_obj$x$options$nodes$size <- 25 # 25 is the default value for visNetwork
+    fcm_as_visNetwork_obj$x$options$nodes$font <- list(size = 14)
+    fcm_as_visNetwork_obj$x$nodes$physics <- FALSE
+
+    # Add aesthetics for edges
+    edges_df <- fcm_as_visNetwork_obj$x$edges
+    edges_df$label <- paste(round(edges_df$weight, 2))
+    edges_df$color <- ifelse(edges_df$weight >= 0, "black", "red")
+    edges_df$base_color <- edges_df$color
+    edges_df$width <- abs(edges_df$weight*2)
+    # edges_df$hidden <- FALSE
+    fcm_as_visNetwork_obj$x$edges <- edges_df
+
+    # Load plot
+    fcm_as_visNetwork_obj <- fcm_as_visNetwork_obj %>%
+      visNetwork::visIgraphLayout() %>%
+      visNetwork::visEdges(
+        arrows = list(to = list(enabled = TRUE, scaleFactor = 1)),
+        smooth = list(enabled = TRUE, type = "continuous", roundness = 0.4),
+        physics = FALSE
+      )
+
+    node_x_coords <- fcm_as_visNetwork_obj$x$nodes$x
+    node_y_coords <- fcm_as_visNetwork_obj$x$nodes$y
+
+    spaced_node_x_coords <- node_x_coords*1.5
+    spaced_node_y_coords <- node_y_coords*2
+
+    fcm_as_visNetwork_obj$x$nodes$x <- spaced_node_x_coords
+    fcm_as_visNetwork_obj$x$nodes$y <- spaced_node_y_coords
+    # ----
+  }
+
+  if (!shiny) {
     fcm_as_visNetwork_obj
   } else {
+    # Using shiny ----
+
     # Calculate optimal sidebar width so all variable names fit on individual lines
     # with their corresponding check box
     node_names <- fcm_as_visNetwork_obj$x$nodes$id
@@ -185,54 +275,37 @@ fcm_view <- function(fcm_adj_matrix = matrix(), with_shiny = FALSE) {
     sidebar_width <- as.character(round(max_node_name_px_width + 101)) # The +101 adds room for the checkboxes
     sidebar_width <- paste0(sidebar_width, "px")
 
+    # Create temp env to pass variables into and out of shiny app
     shiny_env <- new.env()
     assign("fcm_as_visNetwork_obj", fcm_as_visNetwork_obj, shiny_env)
     assign("sidebar_width", sidebar_width, shiny_env)
-
-    server <- source(system.file(file.path('shiny', 'view_fcm', 'server.R'), package = 'fcmconfr'), local = TRUE)$value
-    ui <- source(system.file(file.path('shiny', 'view_fcm', 'ui.R'), package = 'fcmconfr'), local = TRUE)$value
-
+    assign("alert_on_open", alert_on_open, shiny_env)
+    server <- source(system.file(file.path('shiny', 'fcm_view', 'server.R'), package = 'fcmconfr'), local = TRUE)$value
+    ui <- source(system.file(file.path('shiny', 'fcm_view', 'ui.R'), package = 'fcmconfr'), local = TRUE)$value
     environment(ui) <- shiny_env
     environment(server) <- shiny_env
+
+    # Call shinyApp
     app <- shiny::shinyApp(
       ui = ui,
       server = server
     )
-
     shiny::runApp(app)
 
-    shiny_nodes <- shiny_env$nodes
-    shiny_edges <- shiny_env$edges
-    shiny_coords <- shiny_env$coords
-    shiny_nodes_to_display <- shiny_env$nodes_to_display
-    shiny_nodes_shape <- shiny_env$nodes_shape
-    shiny_nodes_size <- shiny_env$nodes_size
-    shiny_edge_roundness <- shiny_env$edge_roundness
-    shiny_edge_smoothing <- shiny_env$edge_smoothing
-    shiny_font_size <- shiny_env$font_size
+    shiny_fcm_visNetwork <- shiny_env$updated_fcm_visNetwork_obj
+    if (max(abs(shiny_fcm_visNetwork$x$nodes$x)) > 100) {
+      shiny_fcm_visNetwork$x$nodes$x <- shiny_fcm_visNetwork$x$nodes$x/100
+    } else if ((max(abs(shiny_fcm_visNetwork$x$nodes$x)) > 10)) {
+      shiny_fcm_visNetwork$x$nodes$x <- shiny_fcm_visNetwork$x$nodes$x/10
+    }
+    if (max(abs(shiny_fcm_visNetwork$x$nodes$y)) > 100) {
+      shiny_fcm_visNetwork$x$nodes$y <- shiny_fcm_visNetwork$x$nodes$y/100
+    } else if ((max(abs(shiny_fcm_visNetwork$x$nodes$y)) > 10)) {
+      shiny_fcm_visNetwork$x$nodesyx <- shiny_fcm_visNetwork$x$nodes$y/10
+    }
+    # ----
 
-    nodes_to_return_indices <- which(shiny_nodes$id %in% shiny_nodes_to_display)
-    nodes_to_return_df <- shiny_nodes[nodes_to_return_indices, ]
-    nodes_to_return_df$x <- nodes_to_return_df$x/100
-    nodes_to_return_df$y <- nodes_to_return_df$y/100
-    nodes_to_return_df$font <- NULL
-    nodes_to_return_df$size <- shiny_nodes_size
-
-    edges_to_return_indices <- which(shiny_nodes_to_display %in% shiny_edges$from) # | shiny_edges$to %in% shiny_nodes_to_display)
-    edges_to_return_df <- shiny_edges[edges_to_return_indices, ]
-    edges_to_return_df$color <- ifelse(edges_to_return_df$weight > 0, "black", "red")
-    edges_to_return_df$hidden <- NULL
-
-    fcm_as_visNetwork_obj$x$nodes <- nodes_to_return_df
-    fcm_as_visNetwork_obj$x$edges <- edges_to_return_df
-
-    fcm_as_visNetwork_obj <- fcm_as_visNetwork_obj %>%
-      visNetwork::visEdges(smooth = list(enabled = TRUE, type = shiny_edge_smoothing, roundness = shiny_edge_roundness),
-                           font = list(size = shiny_font_size),
-                           physics = FALSE) %>%
-      visNetwork::visNodes(font = list(size = shiny_font_size))
-
-    fcm_as_visNetwork_obj
+    shiny_fcm_visNetwork
   }
 }
 
@@ -241,28 +314,87 @@ fcm_view <- function(fcm_adj_matrix = matrix(), with_shiny = FALSE) {
 #' Estimate lambda
 #'
 #' @description
-#' This calculates optimum lambda value for the sigmoid and tanh squashing
-#' function that guarantees convergence of the simulation
+#' This function calculates the largest possible lambda for the sigmoid and
+#' tanh squashing functions that guarantees convergence of an FCM simulation.
+#' Lambda is estimated such that 'squashed' simulation values are contained
+#' within the near-linear region of the sigmoid or tanh functions.
 #'
-#' It estimates lambda such that the 'squashed' values will be contained within
-#' the near-linear region of the sigmoid or tanh function, and then re-normalizes
-#' those values back to the total possibility spaces of those functions ([0, 1]
-#' and [-1, 1] respectively).
+#' Note: The lambda value estimated will vary for different FCMs.
 #'
 #' @details
-#' This algorithm was first explored in Kottas et al. 2010 (https://doi.org/10.1007/978-3-642-03220-2_5),
-#' expanded upon in Koutsellis et al. 2022 (https://doi.org/10.1007/s12351-022-00717-x), and
-#' further further developed in Koutsellis et al. 2022 (https://doi.org/10.1109/IISA56318.2022.9904369).
+#' This algorithm was first explored by Kottas et al. 2010 (https://doi.org/10.1007/978-3-642-03220-2_5),
+#' Harmati et al. 2018 (https://doi.org/10.1109/FUZZ-IEEE.2018.8491447), and
+#' expanded upon by Koutsellis et al. 2022 (https://doi.org/10.1007/s12351-022-00717-x)
 #'
-#' This applies an algorithm to optimize lambda. Currently, the author only
-#' identifies one such algorithm, but generalizes the function to leave flexibility
-#' for the addition of newly-discovered algorithms in the future.
+#' The function applies an algorithm that can be used to optimize lambda which
+#' comparing the lambda calculated based on the Frobenius-norm
+#' (\eqn{\lambda^{'}}) and S-norm  (\eqn{\lambda^{*}}) of an
+#' adjacency matrix and selects the minimum.
+#'
+#' \deqn{
+#' \lambda _{s} < \min\left( \lambda _{s}^{'} ,\lambda _{s}^{*}\right)
+#' }
+#' \deqn{
+#' \lambda _{h} < \min\left( \lambda _{h}^{'} ,\lambda _{h}^{*}\right)
+#' }
+#'
+#' where \eqn{\lambda _{s}} is the lambda calculation when using the sigmoid
+#' squashing function and \eqn{\lambda _{h}} is the lambda calculation when
+#' using tanh.
+#'
+#' The equations for \eqn{\lambda ^{'}} were developed by
+#' Harmati et al. 2018 (https://doi.org/10.1109/FUZZ-IEEE.2018.8491447) and are
+#' given below.
+#'
+#' \deqn{
+#' \lambda _{s} < \lambda _{s}^{'} =\frac{4}{\| \mathbf{W} \| _{F}}
+#' }
+#'
+#' \deqn{
+#' \lambda _{h} < \lambda _{h}^{'} =\frac{1}{\| \mathbf{W} \| _{F}}
+#' }
+#'
+#' where \eqn{\| \mathbf{W} \| _{F} \ =\ \sqrt{\sum\limits _{i=1}^{n}\sum\limits _{j=1}^{n}\left( w_{ij}^{2}\right)}}
+#' is the Frobenius norm of the adj. matrix (or \code{norm(x, type = "F")}).
+#'
+#' The equations for \eqn{\lambda ^{*}} were developed by
+#' Koutsellis et al. 2022 (https://doi.org/10.1007/s12351-022-00717-x). Unlike
+#' for \eqn{\lambda ^{'}}, the calculations for \eqn{\lambda ^{*}} follow
+#' different steps based on whether calculating \eqn{\lambda} for the sigmoid
+#' or tanh squashing function.
+#'
+#' For sigmoid:
+#' \deqn{
+#' |x_{i}^{k} \| _{\max} =\max\left(\left| 0.211\cdot \sum _{i=1}^{p} w_{ij}^{+} +0.789\cdot \sum _{i=1}^{p} w_{ij}^{-}\right| ,\left| 0.211\cdot \sum _{i=1}^{p} w_{ij}^{-} +0.789\cdot \sum _{i=1}^{p} w_{ij}^{+}\right| \right)
+#' }
+#' \deqn{
+#' \| \mathbf{W} \| _{s} =\underset{i}{\max}\left( |x_{i}^{k} \| _{\max}\right)
+#' }
+#' \deqn{
+#' \lambda _{s} < \lambda _{s}^{*} =\frac{1.317}{\| \mathbf{W} \| _{s}}
+#' }
+#'
+#' For tanh:
+#' \deqn{
+#' \lambda _{h} < \lambda _{h}^{*} =\frac{1}{\| \mathbf{W} \| _{\infty }}
+#' }
+#' \deqn{
+#' \| \mathbf{W} \| _{\infty } =\underset{i}{\max}\sum _{j=1}^{n}| w_{ij}|
+#' }
+#'
+#' Finally, the maximum lambda the ensures convergence of the simulation for
+#' the input adjacency matrix is the minimum of \eqn{\lambda ^{'}} and
+#' \eqn{\lambda ^{*}}.
+#'
+#' Note: This is only algorithm included at present, but the code for
+#' \code{estimate_fcm_lambda} is organized to streamline the addition of
+#' new algorithms in the future.
 #'
 #' @param fcm_adj_matrix An n x n adjacency matrix that represents an FCM
 #' @param squashing A squashing function to apply. Must be one of the following: 'tanh', or 'sigmoid'.
 #'
-#' @returns The maximum lambda that ensures FcM simulation convergence for
-#' the input fcm_adj_matrix
+#' @returns The maximum lambda that ensures simulation convergence for the
+#' input FCM.
 #'
 #' @export
 #' @example man/examples/ex-estimate_fcm_lambda.R
